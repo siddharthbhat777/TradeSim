@@ -11,7 +11,7 @@
 	<groupId>com.siddharth</groupId>
 	<artifactId>tradesim-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Tradesim Backend</name>
+	<name>tradesim-backend</name>
 	<description>A robust Spring Boot–based backend powering a virtual stock trading platform, responsible for user authentication, secure trade execution, portfolio management, real-time stock updates, and leaderboard calculations, with a focus on scalability, data consistency, and security.</description>
 	<url/>
 	<licenses>
