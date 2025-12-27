@@ -59,6 +59,13 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!--Temporary dependencies - can be removed later-->
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>5.0.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>
