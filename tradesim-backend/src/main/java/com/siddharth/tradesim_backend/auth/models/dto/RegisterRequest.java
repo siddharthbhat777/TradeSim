@@ -1,14 +1,9 @@
 package com.siddharth.tradesim_backend.auth.models.dto;
 
-import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
-import com.siddharth.tradesim_backend.auth.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
-
-import java.math.BigDecimal;
-import java.time.Instant;
 
 @Data
 public class RegisterRequest {

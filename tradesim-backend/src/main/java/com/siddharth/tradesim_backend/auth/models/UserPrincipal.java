@@ -1,9 +1,7 @@
 package com.siddharth.tradesim_backend.auth.models;
 
-import com.siddharth.tradesim_backend.auth.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
