@@ -9,5 +9,6 @@ public enum Sector {
     INDUSTRIALS,
     TELECOM,
     REAL_ESTATE,
-    UTILITIES
+    UTILITIES,
+    ENTERTAINMENT
 }

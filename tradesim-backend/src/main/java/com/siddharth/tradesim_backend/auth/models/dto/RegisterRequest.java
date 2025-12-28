@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class RegisterRequest {
-
     @NotBlank(message = "Username is required")
     private String username;
 
@@ -22,4 +21,3 @@ public class RegisterRequest {
     )
     private String password;
 }
-

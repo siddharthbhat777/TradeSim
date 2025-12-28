@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.common.exceptions;
 
-import com.siddharth.tradesim_backend.auth.models.dto.ApiError;
+import com.siddharth.tradesim_backend.common.dto.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.util.stream.Collectors;
 
 @RestControllerAdvice

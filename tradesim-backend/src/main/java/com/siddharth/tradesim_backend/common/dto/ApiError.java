@@ -1,15 +1,10 @@
-package com.siddharth.tradesim_backend.auth.models.dto;
+package com.siddharth.tradesim_backend.common.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class ApiError {
     private String message;
