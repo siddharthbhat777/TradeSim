@@ -11,12 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/register")
+    @PostMapping("register")
     public ResponseEntity<User> register(@Valid @RequestBody RegisterRequest request) {
         User user = new User();
         user.setUsername(request.getUsername());
@@ -27,7 +27,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
-    @PostMapping("/login")
+    @PostMapping("login")
     public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.loginUser(request));
     }
