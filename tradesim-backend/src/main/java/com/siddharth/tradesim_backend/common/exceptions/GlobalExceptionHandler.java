@@ -59,6 +59,25 @@ public class GlobalExceptionHandler {
     }
 
     // =========================
+    // JWT errors
+    // =========================
+    @ExceptionHandler(io.jsonwebtoken.JwtException.class)
+    public ResponseEntity<ApiError> handleJwtException(
+            io.jsonwebtoken.JwtException ex,
+            HttpServletRequest request
+    ) {
+        ApiError error = ApiError.builder()
+                .message("Invalid or expired token")
+                .errorCode("JWT_ERROR")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(error);
+    }
+
+    // =========================
     // Database constraint errors
     // =========================
     @ExceptionHandler(DataIntegrityViolationException.class)

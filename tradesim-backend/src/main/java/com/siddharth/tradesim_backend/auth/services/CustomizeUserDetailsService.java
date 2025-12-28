@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.config;
+package com.siddharth.tradesim_backend.auth.services;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.models.User;
