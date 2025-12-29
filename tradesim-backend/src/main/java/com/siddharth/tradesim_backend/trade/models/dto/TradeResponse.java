@@ -9,7 +9,7 @@ import java.util.UUID;
 public record TradeResponse(
         UUID tradeId,
         UUID stockId,
-        String stockName,
+        String stockSymbol,
         Type type,
         OrderType orderType,
         Status status,
