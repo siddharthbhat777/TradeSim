@@ -6,6 +6,7 @@ import com.siddharth.tradesim_backend.stock.models.dto.CreateStockRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,5 +33,9 @@ public class StockService {
         } catch (Exception e) {
             throw new CreateStockException("Unable to add stock");
         }
+    }
+
+    public List<Stock> getAllStocks() {
+        return stockRepository.findAll();
     }
 }
