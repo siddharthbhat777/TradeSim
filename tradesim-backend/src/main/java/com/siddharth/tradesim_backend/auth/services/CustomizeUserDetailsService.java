@@ -16,11 +16,13 @@ public class CustomizeUserDetailsService implements UserDetailsService {
     private final AuthRepository authRepository;
 
     @Override
-    public @lombok.NonNull UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
-        User user = authRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
-        }
+    public @lombok.NonNull UserDetails loadUserByUsername(@NonNull String input) throws UsernameNotFoundException {
+        User user = authRepository
+                .findByUsernameOrEmail(input)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found")
+                );
+
         return new UserPrincipal(user);
     }
 }
