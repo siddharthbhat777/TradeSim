@@ -3,7 +3,9 @@ package com.siddharth.tradesim_backend.trade.models.dto;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Status;
 import com.siddharth.tradesim_backend.trade.enums.Type;
+
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 public record TradeResponse(
@@ -16,6 +18,7 @@ public record TradeResponse(
         int quantity,
         BigDecimal priceAtExecution,
         BigDecimal totalAmount,
-        BigDecimal updatedBalance
+        BigDecimal updatedBalance,
+        Instant executedAt
 ) {
 }

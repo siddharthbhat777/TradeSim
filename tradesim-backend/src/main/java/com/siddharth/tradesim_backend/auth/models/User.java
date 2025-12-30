@@ -6,6 +6,7 @@ import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
+@Builder
 public class User extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +68,7 @@ public class TradeExecutionService {
         }
 
         trade.setPriceAtExecution(executionPrice);
+        trade.setExecutedAt(Instant.now());
         trade.setStatus(Status.EXECUTED);
 
         authRepository.save(user);

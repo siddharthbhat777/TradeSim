@@ -74,7 +74,8 @@ public class TradeService {
                 trade.getQuantity(),
                 trade.getPriceAtExecution(),
                 totalAmount,
-                user.getBalance()
+                user.getBalance(),
+                trade.getExecutedAt()
         );
     }
 }

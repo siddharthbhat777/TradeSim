@@ -7,7 +7,9 @@ import com.siddharth.tradesim_backend.trade.enums.Type;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -57,4 +59,7 @@ public class Trade extends AuditableEntity {
 
     @Column(precision = 19, scale = 4)
     private BigDecimal limitPrice;
+
+    @Column(name = "executed_at")
+    private Instant executedAt;
 }

@@ -3,9 +3,11 @@ package com.siddharth.tradesim_backend.stock;
 import com.siddharth.tradesim_backend.stock.exceptions.CreateStockException;
 import com.siddharth.tradesim_backend.stock.models.Stock;
 import com.siddharth.tradesim_backend.stock.models.dto.CreateStockRequest;
+import com.siddharth.tradesim_backend.stock.models.dto.StockResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -13,7 +15,21 @@ import java.util.List;
 public class StockService {
     private final StockRepository stockRepository;
 
-    public Stock addStock(CreateStockRequest request) {
+    public List<StockResponse> fetchStocks() {
+        return stockRepository.findAll()
+                .stream()
+                .map(stock -> new StockResponse(
+                        stock.getId(),
+                        stock.getSymbol(),
+                        stock.getCompanyName(),
+                        stock.getCurrentPrice(),
+                        stock.getSector(),
+                        stock.isActive()
+                ))
+                .toList();
+    }
+
+    public StockResponse addStock(CreateStockRequest request) {
         if (stockRepository.existsBySymbol(request.symbol())) {
             throw new CreateStockException("Stock with symbol " + request.symbol() + " already exists");
         }
@@ -27,15 +43,20 @@ public class StockService {
                     .active(true)
                     .build();
 
-            return stockRepository.save(stock);
+            Stock saved = stockRepository.save(stock);
+
+            return new StockResponse(
+                    saved.getId(),
+                    saved.getSymbol(),
+                    saved.getCompanyName(),
+                    saved.getCurrentPrice(),
+                    saved.getSector(),
+                    saved.isActive()
+            );
         } catch (DataIntegrityViolationException e) {
             throw new CreateStockException("Invalid stock data");
         } catch (Exception e) {
             throw new CreateStockException("Unable to add stock");
         }
-    }
-
-    public List<Stock> getAllStocks() {
-        return stockRepository.findAll();
     }
 }
