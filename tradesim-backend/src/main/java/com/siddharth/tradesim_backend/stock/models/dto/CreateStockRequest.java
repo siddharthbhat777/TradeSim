@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.stock.models.dto;
 
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import jakarta.validation.constraints.*;
+
 import java.math.BigDecimal;
 
 public record CreateStockRequest(

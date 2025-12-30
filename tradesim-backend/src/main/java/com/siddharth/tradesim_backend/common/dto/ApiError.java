@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.common.dto;
 
 import lombok.Builder;
 import lombok.Data;
+
 import java.time.Instant;
 
 @Data
