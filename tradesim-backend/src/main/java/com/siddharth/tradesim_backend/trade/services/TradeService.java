@@ -10,11 +10,12 @@ import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Status;
 import com.siddharth.tradesim_backend.trade.enums.Type;
 import com.siddharth.tradesim_backend.trade.models.Trade;
-import com.siddharth.tradesim_backend.trade.models.dto.BuyTradeRequest;
+import com.siddharth.tradesim_backend.trade.models.dto.TradeRequest;
 import com.siddharth.tradesim_backend.trade.models.dto.TradeResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -26,7 +27,7 @@ public class TradeService {
     private final TradeRepository tradeRepository;
     private final TradeExecutionService tradeExecutionService;
 
-    public TradeResponse placeBuyOrder(UUID userId, @Valid BuyTradeRequest request) {
+    public TradeResponse placeOrder(UUID userId, @Valid TradeRequest request) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
         Stock stock = stockRepository.findById(request.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
 
@@ -35,20 +36,21 @@ public class TradeService {
         Trade trade = Trade.builder()
                 .userId(userId)
                 .stockId(stock.getId())
-                .type(Type.BUY)
+                .type(request.getType())
                 .orderType(request.getOrderType())
                 .quantity(request.getQuantity())
                 .status(Status.PENDING)
+                .limitPrice(request.getLimitPrice())
                 .build();
 
+        tradeRepository.save(trade);
         if (request.getOrderType() == OrderType.MARKET) {
-            tradeRepository.save(trade);
             tradeExecutionService.executeTrade(trade, user, marketPrice);
         } else {
-            trade.setLimitPrice(request.getLimitPrice());
-            tradeRepository.save(trade);
+            boolean shouldExecute = (request.getType() == Type.BUY && marketPrice.compareTo(request.getLimitPrice()) <= 0)
+                    || (request.getType() == Type.SELL && marketPrice.compareTo(request.getLimitPrice()) >= 0);
 
-            if (marketPrice.compareTo(request.getLimitPrice()) <= 0) {
+            if (shouldExecute) {
                 tradeExecutionService.executeTrade(trade, user, marketPrice);
             }
         }

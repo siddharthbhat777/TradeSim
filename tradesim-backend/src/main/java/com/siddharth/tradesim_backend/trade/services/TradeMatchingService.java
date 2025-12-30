@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 
 @Slf4j
@@ -32,9 +33,11 @@ public class TradeMatchingService {
                 Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow();
                 User user = authRepository.findById(trade.getUserId()).orElseThrow();
 
-                if (trade.getOrderType() == OrderType.LIMIT &&
-                        trade.getLimitPrice() != null &&
-                        stock.getCurrentPrice().compareTo(trade.getLimitPrice()) <= 0) {
+                boolean priceConditionSatisfied = trade.getOrderType() == OrderType.LIMIT
+                        && trade.getLimitPrice() != null
+                        && stock.getCurrentPrice().compareTo(trade.getLimitPrice()) <= 0;
+
+                if (!stock.isActive() || priceConditionSatisfied) {
                     tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
                 }
             } catch (Exception e) {

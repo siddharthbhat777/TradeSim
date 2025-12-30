@@ -1,17 +1,23 @@
 package com.siddharth.tradesim_backend.auth.models;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
     private final User user;
+
+    public UUID getUserId() {
+        return user.getId();
+    }
 
     @Override
     public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
