@@ -2,6 +2,8 @@ package com.siddharth.tradesim_backend.trade.services;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.models.User;
+import com.siddharth.tradesim_backend.holding.HoldingRepository;
+import com.siddharth.tradesim_backend.holding.models.Holding;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.models.Stock;
 import com.siddharth.tradesim_backend.trade.TradeRepository;
@@ -22,6 +24,7 @@ public class TradeExecutionService {
     private final StockRepository stockRepository;
     private final TradeRepository tradeRepository;
     private final AuthRepository authRepository;
+    private final HoldingRepository holdingRepository;
 
     @Transactional
     public void executeTrade(
@@ -29,49 +32,108 @@ public class TradeExecutionService {
             User user,
             BigDecimal executionPrice
     ) {
-        if (trade.getStatus() != Status.PENDING) {
-            return;
-        }
+        if (trade.getStatus() != Status.PENDING) return;
 
         Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow();
 
         if (!stock.isActive()) {
-            trade.setStatus(Status.FAILED);
-            tradeRepository.save(trade);
+            failTrade(trade);
             return;
         }
 
-        if (trade.getOrderType() == OrderType.LIMIT) {
-            if (trade.getLimitPrice() == null) {
-                trade.setStatus(Status.FAILED);
-                tradeRepository.save(trade);
-                return;
-            }
-
-            boolean limitSatisfied = (trade.getType() == Type.BUY && executionPrice.compareTo(trade.getLimitPrice()) <= 0)
-                    || (trade.getType() == Type.SELL && executionPrice.compareTo(trade.getLimitPrice()) >= 0);
-
-            if (!limitSatisfied) {
-                return;
-            }
+        if (!isLimitSatisfied(trade, executionPrice)) {
+            return;
         }
 
-        BigDecimal totalCost = executionPrice.multiply(BigDecimal.valueOf(trade.getQuantity()));
-
+        boolean success;
         if (trade.getType() == Type.BUY) {
-            if (user.getBalance().compareTo(totalCost) < 0) {
-                trade.setStatus(Status.FAILED);
-                tradeRepository.save(trade);
-                return;
-            }
-            user.setBalance(user.getBalance().subtract(totalCost));
+            success = executeBuyTrade(trade, user, stock, executionPrice);
+        } else {
+            success = executeSellTrade(trade, user, stock, executionPrice);
         }
 
-        trade.setPriceAtExecution(executionPrice);
+        if (!success) {
+            return;
+        }
+
+        finalizeTrade(trade, executionPrice);
+        authRepository.save(user);
+        tradeRepository.save(trade);
+    }
+
+    private boolean executeBuyTrade(
+            Trade trade,
+            User user,
+            Stock stock,
+            BigDecimal price
+    ) {
+        BigDecimal totalCost = price.multiply(BigDecimal.valueOf(trade.getQuantity()));
+
+        if (user.getBalance().compareTo(totalCost) < 0) {
+            failTrade(trade);
+            return false;
+        }
+
+        user.setBalance(user.getBalance().subtract(totalCost));
+
+        Holding holding = holdingRepository.findByUserIdAndStockId(user.getId(), stock.getId())
+                .orElse(
+                        Holding.builder()
+                                .userId(user.getId())
+                                .stockId(stock.getId())
+                                .quantity(0)
+                                .build()
+                );
+
+        holding.setQuantity(holding.getQuantity() + trade.getQuantity());
+        holdingRepository.save(holding);
+
+        return true;
+    }
+
+    private boolean executeSellTrade(
+            Trade trade,
+            User user,
+            Stock stock,
+            BigDecimal price
+    ) {
+        Holding holding = holdingRepository.findByUserIdAndStockId(user.getId(), stock.getId()).orElse(null);
+
+        if (holding == null || holding.getQuantity() < trade.getQuantity()) {
+            failTrade(trade);
+            return false;
+        }
+
+        BigDecimal totalGain = price.multiply(BigDecimal.valueOf(trade.getQuantity()));
+        user.setBalance(user.getBalance().add(totalGain));
+
+        holding.setQuantity(holding.getQuantity() - trade.getQuantity());
+
+        if (holding.getQuantity() == 0) {
+            holdingRepository.delete(holding);
+        } else {
+            holdingRepository.save(holding);
+        }
+
+        return true;
+    }
+
+    private boolean isLimitSatisfied(Trade trade, BigDecimal price) {
+        if (trade.getOrderType() != OrderType.LIMIT) return true;
+        if (trade.getLimitPrice() == null) return false;
+
+        return (trade.getType() == Type.BUY && price.compareTo(trade.getLimitPrice()) <= 0)
+                || (trade.getType() == Type.SELL && price.compareTo(trade.getLimitPrice()) >= 0);
+    }
+
+    private void finalizeTrade(Trade trade, BigDecimal price) {
+        trade.setPriceAtExecution(price);
         trade.setExecutedAt(Instant.now());
         trade.setStatus(Status.EXECUTED);
+    }
 
-        authRepository.save(user);
+    private void failTrade(Trade trade) {
+        trade.setStatus(Status.FAILED);
         tradeRepository.save(trade);
     }
 }

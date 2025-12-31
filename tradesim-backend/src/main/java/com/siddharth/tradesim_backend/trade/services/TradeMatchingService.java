@@ -7,12 +7,14 @@ import com.siddharth.tradesim_backend.stock.models.Stock;
 import com.siddharth.tradesim_backend.trade.TradeRepository;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Status;
+import com.siddharth.tradesim_backend.trade.enums.Type;
 import com.siddharth.tradesim_backend.trade.models.Trade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -33,11 +35,28 @@ public class TradeMatchingService {
                 Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow();
                 User user = authRepository.findById(trade.getUserId()).orElseThrow();
 
-                boolean priceConditionSatisfied = trade.getOrderType() == OrderType.LIMIT
-                        && trade.getLimitPrice() != null
-                        && stock.getCurrentPrice().compareTo(trade.getLimitPrice()) <= 0;
+                if (!stock.isActive()) {
+                    tradeExecutionService.executeTrade(
+                            trade,
+                            user,
+                            stock.getCurrentPrice()
+                    );
+                    continue;
+                }
 
-                if (!stock.isActive() || priceConditionSatisfied) {
+                if (trade.getOrderType() == OrderType.MARKET) {
+                    continue;
+                }
+
+                BigDecimal currentPrice = stock.getCurrentPrice();
+                BigDecimal limitPrice = trade.getLimitPrice();
+
+                if (limitPrice == null) continue;
+
+                boolean shouldExecute = (trade.getType() == Type.BUY && currentPrice.compareTo(limitPrice) <= 0)
+                        || (trade.getType() == Type.SELL && currentPrice.compareTo(limitPrice) >= 0);
+
+                if (shouldExecute) {
                     tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
                 }
             } catch (Exception e) {
