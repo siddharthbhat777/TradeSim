@@ -43,5 +43,5 @@ public class Stock extends AuditableEntity {
     private Sector sector;
 
     @Column(nullable = false)
-    private boolean active = true;
+    private boolean active;
 }

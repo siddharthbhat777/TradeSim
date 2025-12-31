@@ -26,11 +26,4 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.loginUser(request));
     }
-
-    /*@GetMapping("/dev/jwt/generate-key")
-    public String generateJwtSecretKey() {
-        byte[] keyBytes = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS512)
-                .getEncoded();
-        return Base64.getEncoder().encodeToString(keyBytes);
-    }*/
 }
