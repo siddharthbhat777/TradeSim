@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.trade.TradeRepository;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Status;
 import com.siddharth.tradesim_backend.trade.enums.Type;
+import com.siddharth.tradesim_backend.trade.exceptions.TradeException;
 import com.siddharth.tradesim_backend.trade.models.Trade;
 import com.siddharth.tradesim_backend.trade.models.dto.TradeRequest;
 import com.siddharth.tradesim_backend.trade.models.dto.TradeResponse;
@@ -54,6 +55,25 @@ public class TradeService {
                 tradeExecutionService.executeTrade(trade, user, marketPrice);
             }
         }
+
+        return mapToResponse(trade, user, stock);
+    }
+
+    public TradeResponse cancelTrade(UUID tradeId, UUID userId) {
+        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        Trade trade = tradeRepository.findById(tradeId).orElseThrow(() -> new BusinessException("Trade not found"));
+        Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+
+        if (!trade.getUserId().equals(userId)) {
+            throw new TradeException("You are not allowed to cancel this trade");
+        }
+
+        if (trade.getStatus() != Status.PENDING) {
+            throw new TradeException("Only pending trades can be cancelled");
+        }
+
+        trade.setStatus(Status.CANCELLED);
+        tradeRepository.save(trade);
 
         return mapToResponse(trade, user, stock);
     }
