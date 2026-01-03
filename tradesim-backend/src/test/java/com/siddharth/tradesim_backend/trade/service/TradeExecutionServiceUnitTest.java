@@ -457,4 +457,37 @@ class TradeExecutionServiceUnitTest {
         assertThat(holding.getQuantity()).isEqualTo(2);
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10900"));
     }
+
+    @Test
+    void shouldNotExecuteTradeWhenStatusIsNotPending() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setCurrentPrice(new BigDecimal("100"));
+        stock.setActive(true);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.BUY);
+        trade.setOrderType(OrderType.MARKET);
+        trade.setQuantity(10);
+        trade.setStatus(Status.EXECUTED);
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        assertThat(trade.getStatus()).isEqualTo(Status.EXECUTED);
+        assertThat(trade.getPriceAtExecution()).isNull();
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+
+        verify(tradeRepository, never()).save(any());
+        verify(authRepository, never()).save(any());
+        verify(holdingRepository, never()).save(any());
+        verify(holdingRepository, never()).delete(any());
+    }
 }
