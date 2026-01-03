@@ -14,6 +14,7 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -322,5 +323,94 @@ class TradeExecutionServiceUnitTest {
         assertThat(trade.getStatus()).isEqualTo(Status.PENDING);
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+    }
+
+    @Test
+    void shouldExecuteBuyLimitTradeWhenPriceIsAtOrBelowLimitWithExistingHolding() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID holdingId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Holding holding = new Holding();
+        holding.setId(holdingId);
+        holding.setStockId(stockId);
+        holding.setQuantity(12);
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setCurrentPrice(new BigDecimal("70"));
+        stock.setActive(true);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.BUY);
+        trade.setOrderType(OrderType.LIMIT);
+        trade.setLimitPrice(new BigDecimal("80"));
+        trade.setQuantity(10);
+        trade.setStatus(Status.PENDING);
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(authRepository.save(any(User.class))).thenReturn(user);
+
+        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        assertThat(trade.getStatus()).isEqualTo(Status.EXECUTED);
+        assertThat(trade.getPriceAtExecution()).isEqualTo(stock.getCurrentPrice());
+        assertThat(holding.getQuantity()).isEqualTo(22);
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("9300"));
+    }
+
+    @Test
+    void shouldExecuteBuyLimitTradeWhenPriceIsAtOrBelowLimitWithoutExistingHolding() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setCurrentPrice(new BigDecimal("70"));
+        stock.setActive(true);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.BUY);
+        trade.setOrderType(OrderType.LIMIT);
+        trade.setLimitPrice(new BigDecimal("80"));
+        trade.setQuantity(10);
+        trade.setStatus(Status.PENDING);
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(authRepository.save(any(User.class))).thenReturn(user);
+
+        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.empty());
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        ArgumentCaptor<Holding> holdingCaptor = ArgumentCaptor.forClass(Holding.class);
+        verify(holdingRepository).save(holdingCaptor.capture());
+
+        Holding savedHolding = holdingCaptor.getValue();
+
+        assertThat(savedHolding.getQuantity()).isEqualTo(10);
+        assertThat(savedHolding.getStockId()).isEqualTo(stockId);
+        assertThat(savedHolding.getUserId()).isEqualTo(userId);
+        assertThat(trade.getStatus()).isEqualTo(Status.EXECUTED);
+        assertThat(trade.getPriceAtExecution()).isEqualTo(stock.getCurrentPrice());
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("9300"));
     }
 }
