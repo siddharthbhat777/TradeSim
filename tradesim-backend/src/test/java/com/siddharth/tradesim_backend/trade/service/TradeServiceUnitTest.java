@@ -25,8 +25,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TradeServiceUnitTest {
@@ -118,5 +117,41 @@ public class TradeServiceUnitTest {
         assertThat(response.status()).isEqualTo(Status.PENDING);
 
         verify(tradeExecutionService).executeTrade(any(Trade.class), eq(user), eq(stock.getCurrentPrice()));
+    }
+
+    @Test
+    void shouldNotExecuteLimitBuyOrderWhenPriceIsAboveLimit() {
+        UUID userId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .balance(new BigDecimal("10000"))
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .symbol("AAPL")
+                .currentPrice(new BigDecimal("100"))
+                .build();
+
+        TradeRequest request = new TradeRequest();
+        ReflectionTestUtils.setField(request, "stockId", stockId);
+        ReflectionTestUtils.setField(request, "quantity", 10);
+        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "orderType", OrderType.LIMIT);
+        ReflectionTestUtils.setField(request, "limitPrice", new BigDecimal("80"));
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TradeResponse response = tradeService.placeOrder(userId, request);
+
+        assertThat(response.status()).isEqualTo(Status.PENDING);
+        assertThat(response.priceAtExecution()).isNull();
+        assertThat(response.totalAmount()).isNull();
+
+        verify(tradeExecutionService, never()).executeTrade(any(), any(), any());
     }
 }
