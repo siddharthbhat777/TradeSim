@@ -1,0 +1,86 @@
+package com.siddharth.tradesim_backend.trade.service;
+
+import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.trade.TradeRepository;
+import com.siddharth.tradesim_backend.trade.enums.OrderType;
+import com.siddharth.tradesim_backend.trade.enums.Status;
+import com.siddharth.tradesim_backend.trade.enums.Type;
+import com.siddharth.tradesim_backend.trade.model.Trade;
+import com.siddharth.tradesim_backend.trade.model.dto.TradeRequest;
+import com.siddharth.tradesim_backend.trade.model.dto.TradeResponse;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class TradeServiceUnitTest {
+
+    @Mock
+    private StockRepository stockRepository;
+    @Mock
+    private TradeRepository tradeRepository;
+    @Mock
+    private AuthRepository authRepository;
+    @Mock
+    private TradeExecutionService tradeExecutionService;
+
+    @InjectMocks
+    private TradeService tradeService;
+
+    @Test
+    void shouldPlaceBuyMarketOrderAndDelegateExecution() {
+        UUID userId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .balance(new BigDecimal("10000"))
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .symbol("AAPL")
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
+
+        TradeRequest request = new TradeRequest();
+        ReflectionTestUtils.setField(request, "stockId", stockId);
+        ReflectionTestUtils.setField(request, "quantity", 10);
+        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
+        ReflectionTestUtils.setField(request, "limitPrice", null);
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TradeResponse response = tradeService.placeOrder(userId, request);
+
+        assertThat(response.stockId()).isEqualTo(stockId);
+        assertThat(response.type()).isEqualTo(Type.BUY);
+        assertThat(response.orderType()).isEqualTo(OrderType.MARKET);
+        assertThat(response.quantity()).isEqualTo(10);
+        assertThat(response.status()).isEqualTo(Status.PENDING);
+
+        verify(tradeExecutionService).executeTrade(any(Trade.class), eq(user), eq(stock.getCurrentPrice()));
+    }
+}
