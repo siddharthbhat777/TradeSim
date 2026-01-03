@@ -201,4 +201,44 @@ public class TradeServiceUnitTest {
         verify(tradeRepository, never()).save(any());
         verify(tradeExecutionService, never()).executeTrade(any(), any(), any());
     }
+
+    @Test
+    void shouldCancelPendingTradeSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        UUID tradeId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .balance(new BigDecimal("10000"))
+                .build();
+
+        Trade trade = Trade.builder()
+                .id(tradeId)
+                .userId(userId)
+                .stockId(stockId)
+                .status(Status.PENDING)
+                .type(Type.BUY)
+                .orderType(OrderType.MARKET)
+                .quantity(10)
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .symbol("AAPL")
+                .currentPrice(new BigDecimal("100"))
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TradeResponse response = tradeService.cancelTrade(tradeId, userId);
+
+        assertThat(trade.getStatus()).isEqualTo(Status.CANCELLED);
+        assertThat(response.status()).isEqualTo(Status.CANCELLED);
+
+        verify(tradeRepository).save(trade);
+    }
 }
