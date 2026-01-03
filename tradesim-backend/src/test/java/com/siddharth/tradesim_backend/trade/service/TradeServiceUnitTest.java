@@ -15,6 +15,7 @@ import com.siddharth.tradesim_backend.trade.model.dto.TradeRequest;
 import com.siddharth.tradesim_backend.trade.model.dto.TradeResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -75,6 +76,10 @@ public class TradeServiceUnitTest {
 
         TradeResponse response = tradeService.placeOrder(userId, request);
 
+        ArgumentCaptor<Trade> tradeCaptor = ArgumentCaptor.forClass(Trade.class);
+        verify(tradeExecutionService).executeTrade(tradeCaptor.capture(), eq(user), eq(stock.getCurrentPrice()));
+
+        assertThat(tradeCaptor.getValue().getStatus()).isEqualTo(Status.PENDING);
         assertThat(response.stockId()).isEqualTo(stockId);
         assertThat(response.type()).isEqualTo(Type.BUY);
         assertThat(response.orderType()).isEqualTo(OrderType.MARKET);
@@ -114,6 +119,10 @@ public class TradeServiceUnitTest {
 
         TradeResponse response = tradeService.placeOrder(userId, request);
 
+        ArgumentCaptor<Trade> tradeCaptor = ArgumentCaptor.forClass(Trade.class);
+        verify(tradeExecutionService).executeTrade(tradeCaptor.capture(), eq(user), eq(stock.getCurrentPrice()));
+
+        assertThat(tradeCaptor.getValue().getStatus()).isEqualTo(Status.PENDING);
         assertThat(response.stockId()).isEqualTo(stockId);
         assertThat(response.quantity()).isEqualTo(10);
         assertThat(response.type()).isEqualTo(Type.BUY);
