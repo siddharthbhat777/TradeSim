@@ -3,9 +3,9 @@ package com.siddharth.tradesim_backend.auth.model.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class RegisterRequest {
     @NotBlank(message = "Username is required")
     private String username;
