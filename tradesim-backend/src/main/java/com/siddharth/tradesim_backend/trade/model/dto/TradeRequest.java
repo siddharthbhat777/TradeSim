@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.trade.models.dto;
+package com.siddharth.tradesim_backend.trade.model.dto;
 
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Type;

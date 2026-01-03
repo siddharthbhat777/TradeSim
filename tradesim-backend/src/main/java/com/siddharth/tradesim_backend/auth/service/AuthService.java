@@ -1,15 +1,15 @@
-package com.siddharth.tradesim_backend.auth.services;
+package com.siddharth.tradesim_backend.auth.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.exceptions.UserLoginException;
 import com.siddharth.tradesim_backend.auth.exceptions.UserRegistrationException;
-import com.siddharth.tradesim_backend.auth.models.User;
-import com.siddharth.tradesim_backend.auth.models.dto.LoginRequest;
-import com.siddharth.tradesim_backend.auth.models.dto.LoginResponse;
-import com.siddharth.tradesim_backend.auth.models.dto.RegisterRequest;
-import com.siddharth.tradesim_backend.auth.models.dto.RegisterResponse;
+import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
+import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
+import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
+import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;

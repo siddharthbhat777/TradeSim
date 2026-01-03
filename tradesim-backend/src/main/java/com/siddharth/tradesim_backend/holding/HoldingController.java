@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.holding;
 
-import com.siddharth.tradesim_backend.auth.models.UserPrincipal;
-import com.siddharth.tradesim_backend.holding.models.dto.HoldingResponse;
+import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.holding.model.dto.HoldingResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

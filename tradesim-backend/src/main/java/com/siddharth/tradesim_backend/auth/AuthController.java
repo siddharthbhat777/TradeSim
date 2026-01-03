@@ -1,10 +1,10 @@
 package com.siddharth.tradesim_backend.auth;
 
-import com.siddharth.tradesim_backend.auth.models.dto.LoginRequest;
-import com.siddharth.tradesim_backend.auth.models.dto.LoginResponse;
-import com.siddharth.tradesim_backend.auth.models.dto.RegisterRequest;
-import com.siddharth.tradesim_backend.auth.models.dto.RegisterResponse;
-import com.siddharth.tradesim_backend.auth.services.AuthService;
+import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
+import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
+import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
+import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
+import com.siddharth.tradesim_backend.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

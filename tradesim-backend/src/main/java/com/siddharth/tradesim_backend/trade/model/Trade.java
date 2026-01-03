@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.trade.models;
+package com.siddharth.tradesim_backend.trade.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;

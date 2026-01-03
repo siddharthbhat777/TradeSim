@@ -2,7 +2,7 @@ package com.siddharth.tradesim_backend.dev_only;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.Role;
-import com.siddharth.tradesim_backend.auth.models.User;
+import com.siddharth.tradesim_backend.auth.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.stock.models;
+package com.siddharth.tradesim_backend.stock.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import com.siddharth.tradesim_backend.stock.enums.Sector;

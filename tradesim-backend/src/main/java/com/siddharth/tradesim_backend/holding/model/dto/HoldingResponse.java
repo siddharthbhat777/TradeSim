@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.holding.models.dto;
+package com.siddharth.tradesim_backend.holding.model.dto;
 
 import java.math.BigDecimal;
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.holding.models;
+package com.siddharth.tradesim_backend.holding.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import jakarta.persistence.*;

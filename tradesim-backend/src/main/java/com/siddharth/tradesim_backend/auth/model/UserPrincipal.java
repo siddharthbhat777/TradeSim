@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.auth.models;
+package com.siddharth.tradesim_backend.auth.model;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import lombok.NonNull;

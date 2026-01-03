@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.config;
 
-import com.siddharth.tradesim_backend.auth.services.CustomizeUserDetailsService;
-import com.siddharth.tradesim_backend.auth.services.JwtService;
+import com.siddharth.tradesim_backend.auth.service.CustomizeUserDetailsService;
+import com.siddharth.tradesim_backend.auth.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

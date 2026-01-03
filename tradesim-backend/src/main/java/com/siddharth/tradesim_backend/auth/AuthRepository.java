@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.auth;
 
-import com.siddharth.tradesim_backend.auth.models.User;
+import com.siddharth.tradesim_backend.auth.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

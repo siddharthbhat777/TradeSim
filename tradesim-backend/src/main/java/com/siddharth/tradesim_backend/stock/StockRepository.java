@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.stock;
 
-import com.siddharth.tradesim_backend.stock.models.Stock;
+import com.siddharth.tradesim_backend.stock.model.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

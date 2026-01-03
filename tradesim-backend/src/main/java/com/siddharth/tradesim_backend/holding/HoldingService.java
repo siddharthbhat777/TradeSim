@@ -1,9 +1,9 @@
 package com.siddharth.tradesim_backend.holding;
 
-import com.siddharth.tradesim_backend.holding.models.Holding;
-import com.siddharth.tradesim_backend.holding.models.dto.HoldingResponse;
+import com.siddharth.tradesim_backend.holding.model.Holding;
+import com.siddharth.tradesim_backend.holding.model.dto.HoldingResponse;
 import com.siddharth.tradesim_backend.stock.StockRepository;
-import com.siddharth.tradesim_backend.stock.models.Stock;
+import com.siddharth.tradesim_backend.stock.model.Stock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.holding;
 
-import com.siddharth.tradesim_backend.holding.models.Holding;
+import com.siddharth.tradesim_backend.holding.model.Holding;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

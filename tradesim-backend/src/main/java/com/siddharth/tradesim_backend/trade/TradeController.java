@@ -1,9 +1,9 @@
 package com.siddharth.tradesim_backend.trade;
 
-import com.siddharth.tradesim_backend.auth.models.UserPrincipal;
-import com.siddharth.tradesim_backend.trade.models.dto.TradeRequest;
-import com.siddharth.tradesim_backend.trade.models.dto.TradeResponse;
-import com.siddharth.tradesim_backend.trade.services.TradeService;
+import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.trade.model.dto.TradeRequest;
+import com.siddharth.tradesim_backend.trade.model.dto.TradeResponse;
+import com.siddharth.tradesim_backend.trade.service.TradeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

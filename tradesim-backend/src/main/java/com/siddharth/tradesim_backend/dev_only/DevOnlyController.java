@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.dev_only;
 
-import com.siddharth.tradesim_backend.auth.models.User;
-import com.siddharth.tradesim_backend.auth.models.UserPrincipal;
+import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

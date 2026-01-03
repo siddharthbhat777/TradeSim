@@ -1,6 +1,6 @@
-package com.siddharth.tradesim_backend.auth.services;
+package com.siddharth.tradesim_backend.auth.service;
 
-import com.siddharth.tradesim_backend.auth.models.User;
+import com.siddharth.tradesim_backend.auth.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

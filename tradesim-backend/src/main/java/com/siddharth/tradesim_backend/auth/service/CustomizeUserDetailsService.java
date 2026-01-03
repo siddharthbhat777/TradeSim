@@ -1,8 +1,8 @@
-package com.siddharth.tradesim_backend.auth.services;
+package com.siddharth.tradesim_backend.auth.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
-import com.siddharth.tradesim_backend.auth.models.User;
-import com.siddharth.tradesim_backend.auth.models.UserPrincipal;
+import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
