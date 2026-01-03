@@ -61,17 +61,13 @@ class TradeExecutionServiceUnitTest {
         trade.setQuantity(10);
         trade.setStatus(Status.PENDING);
 
-        when(stockRepository.findById(stockId))
-                .thenReturn(Optional.of(stock));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
-        when(tradeRepository.save(any(Trade.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(authRepository.save(any(User.class)))
-                .thenReturn(user);
+        when(authRepository.save(any(User.class))).thenReturn(user);
 
-        when(holdingRepository.findByUserIdAndStockId(userId, stockId))
-                .thenReturn(Optional.empty());
+        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.empty());
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
 
@@ -101,11 +97,9 @@ class TradeExecutionServiceUnitTest {
         trade.setQuantity(12);
         trade.setStatus(Status.PENDING);
 
-        when(stockRepository.findById(stockId))
-                .thenReturn(Optional.of(stock));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
-        when(tradeRepository.save(any(Trade.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
 
@@ -134,17 +128,58 @@ class TradeExecutionServiceUnitTest {
         trade.setQuantity(12);
         trade.setStatus(Status.PENDING);
 
-        when(stockRepository.findById(stockId))
-                .thenReturn(Optional.of(stock));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
-        when(tradeRepository.save(any(Trade.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
 
         assertThat(trade.getStatus()).isEqualTo(Status.FAILED);
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+    }
+
+    @Test
+    void shouldExecuteSellTradeSuccessfully() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID holdingId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Holding holding = new Holding();
+        holding.setId(holdingId);
+        holding.setStockId(stockId);
+        holding.setQuantity(12);
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setCurrentPrice(new BigDecimal("100"));
+        stock.setActive(true);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.SELL);
+        trade.setOrderType(OrderType.MARKET);
+        trade.setQuantity(8);
+        trade.setStatus(Status.PENDING);
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(authRepository.save(any(User.class))).thenReturn(user);
+
+        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        assertThat(trade.getStatus()).isEqualTo(Status.EXECUTED);
+        assertThat(trade.getPriceAtExecution()).isEqualTo(new BigDecimal("100"));
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("10800"));
+        assertThat(holding.getQuantity()).isEqualTo(4);
     }
 
     @Test
@@ -168,14 +203,11 @@ class TradeExecutionServiceUnitTest {
         trade.setQuantity(12);
         trade.setStatus(Status.PENDING);
 
-        when(stockRepository.findById(stockId))
-                .thenReturn(Optional.of(stock));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
-        when(tradeRepository.save(any(Trade.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(holdingRepository.findByUserIdAndStockId(userId, stockId))
-                .thenReturn(Optional.empty());
+        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.empty());
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
 
