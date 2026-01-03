@@ -261,4 +261,35 @@ class TradeExecutionServiceUnitTest {
         verify(holdingRepository, never()).save(any());
         verify(holdingRepository, never()).delete(any());
     }
+
+    @Test
+    void shouldNotExecuteBuyLimitTradeWhenPriceIsAboveLimit() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setCurrentPrice(new BigDecimal("100"));
+        stock.setActive(true);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.BUY);
+        trade.setOrderType(OrderType.LIMIT);
+        trade.setLimitPrice(new BigDecimal("80"));
+        trade.setQuantity(12);
+        trade.setStatus(Status.PENDING);
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        assertThat(trade.getStatus()).isEqualTo(Status.PENDING);
+        assertThat(trade.getPriceAtExecution()).isNull();
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+    }
 }
