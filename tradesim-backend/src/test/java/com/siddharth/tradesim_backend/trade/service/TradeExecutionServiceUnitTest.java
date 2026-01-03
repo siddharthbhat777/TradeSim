@@ -50,10 +50,11 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("10000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -86,10 +87,11 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("1000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -118,9 +120,10 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("10000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setActive(false);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .active(false)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -155,10 +158,11 @@ class TradeExecutionServiceUnitTest {
         holding.setStockId(stockId);
         holding.setQuantity(12);
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -192,10 +196,11 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("10000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -235,10 +240,11 @@ class TradeExecutionServiceUnitTest {
         holding.setStockId(stockId);
         holding.setQuantity(10);
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -272,10 +278,11 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("10000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -292,6 +299,8 @@ class TradeExecutionServiceUnitTest {
         assertThat(trade.getStatus()).isEqualTo(Status.PENDING);
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+        verify(tradeRepository, never()).save(any());
+        verify(authRepository, never()).save(any());
     }
 
     @Test
@@ -303,10 +312,11 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("10000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -323,6 +333,8 @@ class TradeExecutionServiceUnitTest {
         assertThat(trade.getStatus()).isEqualTo(Status.PENDING);
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+        verify(tradeRepository, never()).save(any());
+        verify(authRepository, never()).save(any());
     }
 
     @Test
@@ -340,10 +352,11 @@ class TradeExecutionServiceUnitTest {
         holding.setStockId(stockId);
         holding.setQuantity(12);
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("70"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("70"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -378,10 +391,11 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("10000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("70"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("70"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -429,10 +443,11 @@ class TradeExecutionServiceUnitTest {
         holding.setStockId(stockId);
         holding.setQuantity(12);
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("90"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("90"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
@@ -467,10 +482,11 @@ class TradeExecutionServiceUnitTest {
         user.setId(userId);
         user.setBalance(new BigDecimal("10000"));
 
-        Stock stock = new Stock();
-        stock.setId(stockId);
-        stock.setCurrentPrice(new BigDecimal("100"));
-        stock.setActive(true);
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
 
         Trade trade = new Trade();
         trade.setStockId(stockId);
