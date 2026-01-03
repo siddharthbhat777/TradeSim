@@ -64,11 +64,8 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
         when(authRepository.save(any(User.class))).thenReturn(user);
-
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.empty());
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -101,7 +98,6 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -133,7 +129,6 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -172,11 +167,8 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
         when(authRepository.save(any(User.class))).thenReturn(user);
-
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -210,9 +202,7 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.empty());
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -254,9 +244,7 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -299,6 +287,7 @@ class TradeExecutionServiceUnitTest {
         assertThat(trade.getStatus()).isEqualTo(Status.PENDING);
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+
         verify(tradeRepository, never()).save(any());
         verify(authRepository, never()).save(any());
     }
@@ -333,6 +322,7 @@ class TradeExecutionServiceUnitTest {
         assertThat(trade.getStatus()).isEqualTo(Status.PENDING);
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+
         verify(tradeRepository, never()).save(any());
         verify(authRepository, never()).save(any());
     }
@@ -367,11 +357,8 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
         when(authRepository.save(any(User.class))).thenReturn(user);
-
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -406,11 +393,8 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
         when(authRepository.save(any(User.class))).thenReturn(user);
-
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.empty());
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
@@ -458,11 +442,8 @@ class TradeExecutionServiceUnitTest {
         trade.setStatus(Status.PENDING);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
         when(authRepository.save(any(User.class))).thenReturn(user);
-
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());

@@ -68,9 +68,7 @@ public class TradeServiceUnitTest {
         ReflectionTestUtils.setField(request, "limitPrice", null);
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         TradeResponse response = tradeService.placeOrder(userId, request);
@@ -79,6 +77,44 @@ public class TradeServiceUnitTest {
         assertThat(response.type()).isEqualTo(Type.BUY);
         assertThat(response.orderType()).isEqualTo(OrderType.MARKET);
         assertThat(response.quantity()).isEqualTo(10);
+        assertThat(response.status()).isEqualTo(Status.PENDING);
+
+        verify(tradeExecutionService).executeTrade(any(Trade.class), eq(user), eq(stock.getCurrentPrice()));
+    }
+
+    @Test
+    void shouldPlaceBuyMarketOrderEvenWhenBalanceIsInsufficient() {
+        UUID userId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .balance(new BigDecimal("500"))
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .symbol("AAPL")
+                .currentPrice(new BigDecimal("100"))
+                .active(true)
+                .build();
+
+        TradeRequest request = new TradeRequest();
+        ReflectionTestUtils.setField(request, "stockId", stockId);
+        ReflectionTestUtils.setField(request, "quantity", 10);
+        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
+        ReflectionTestUtils.setField(request, "limitPrice", null);
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TradeResponse response = tradeService.placeOrder(userId, request);
+
+        assertThat(response.stockId()).isEqualTo(stockId);
+        assertThat(response.quantity()).isEqualTo(10);
+        assertThat(response.type()).isEqualTo(Type.BUY);
         assertThat(response.status()).isEqualTo(Status.PENDING);
 
         verify(tradeExecutionService).executeTrade(any(Trade.class), eq(user), eq(stock.getCurrentPrice()));
