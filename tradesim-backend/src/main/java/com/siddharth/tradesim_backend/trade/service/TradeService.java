@@ -62,7 +62,6 @@ public class TradeService {
     public TradeResponse cancelTrade(UUID tradeId, UUID userId) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
         Trade trade = tradeRepository.findById(tradeId).orElseThrow(() -> new BusinessException("Trade not found"));
-        Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
 
         if (!trade.getUserId().equals(userId)) {
             throw new TradeException("You are not allowed to cancel this trade");
@@ -71,6 +70,8 @@ public class TradeService {
         if (trade.getStatus() != Status.PENDING) {
             throw new TradeException("Only pending trades can be cancelled");
         }
+
+        Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
 
         trade.setStatus(Status.CANCELLED);
         tradeRepository.save(trade);

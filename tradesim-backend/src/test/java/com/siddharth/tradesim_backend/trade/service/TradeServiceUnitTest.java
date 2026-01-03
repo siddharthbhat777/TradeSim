@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.trade.TradeRepository;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Status;
 import com.siddharth.tradesim_backend.trade.enums.Type;
+import com.siddharth.tradesim_backend.trade.exceptions.TradeException;
 import com.siddharth.tradesim_backend.trade.model.Trade;
 import com.siddharth.tradesim_backend.trade.model.dto.TradeRequest;
 import com.siddharth.tradesim_backend.trade.model.dto.TradeResponse;
@@ -240,5 +241,74 @@ public class TradeServiceUnitTest {
         assertThat(response.status()).isEqualTo(Status.CANCELLED);
 
         verify(tradeRepository).save(trade);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserTriesToCancelOthersTrade() {
+        UUID ownerUserId = UUID.randomUUID();
+        UUID otherUserId = UUID.randomUUID();
+        UUID tradeId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User otherUser = User.builder()
+                .id(otherUserId)
+                .build();
+
+        Trade trade = Trade.builder()
+                .id(tradeId)
+                .userId(ownerUserId)
+                .stockId(stockId)
+                .status(Status.PENDING)
+                .build();
+
+        when(authRepository.findById(otherUserId)).thenReturn(Optional.of(otherUser));
+        when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+
+        assertThatThrownBy(() -> tradeService.cancelTrade(tradeId, otherUserId)).isInstanceOf(TradeException.class);
+
+        verify(tradeRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTradeIsNotPending() {
+        UUID userId = UUID.randomUUID();
+        UUID tradeId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .build();
+
+        Trade trade = Trade.builder()
+                .id(tradeId)
+                .userId(userId)
+                .stockId(stockId)
+                .status(Status.EXECUTED)
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+
+        assertThatThrownBy(() -> tradeService.cancelTrade(tradeId, userId)).isInstanceOf(TradeException.class);
+
+        verify(tradeRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTradeNotFound() {
+        UUID userId = UUID.randomUUID();
+        UUID tradeId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradeRepository.findById(tradeId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tradeService.cancelTrade(tradeId, userId)).isInstanceOf(BusinessException.class);
+
+        verify(tradeRepository, never()).save(any());
+        verify(stockRepository, never()).findById(any());
     }
 }
