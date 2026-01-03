@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.trade.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trade.TradeRepository;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -152,6 +154,51 @@ public class TradeServiceUnitTest {
         assertThat(response.priceAtExecution()).isNull();
         assertThat(response.totalAmount()).isNull();
 
+        verify(tradeExecutionService, never()).executeTrade(any(), any(), any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        TradeRequest request = new TradeRequest();
+        ReflectionTestUtils.setField(request, "stockId", stockId);
+        ReflectionTestUtils.setField(request, "quantity", 10);
+        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
+
+        when(authRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tradeService.placeOrder(userId, request)).isInstanceOf(BusinessException.class).hasMessageContaining("User not found");
+
+        verify(stockRepository, never()).findById(any());
+        verify(tradeRepository, never()).save(any());
+        verify(tradeExecutionService, never()).executeTrade(any(), any(), any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenStockNotFound() {
+        UUID userId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .balance(new BigDecimal("10000"))
+                .build();
+
+        TradeRequest request = new TradeRequest();
+        ReflectionTestUtils.setField(request, "stockId", stockId);
+        ReflectionTestUtils.setField(request, "quantity", 10);
+        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tradeService.placeOrder(userId, request)).isInstanceOf(BusinessException.class).hasMessageContaining("Stock not found");
+
+        verify(tradeRepository, never()).save(any());
         verify(tradeExecutionService, never()).executeTrade(any(), any(), any());
     }
 }
