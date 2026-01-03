@@ -112,4 +112,37 @@ class TradeExecutionServiceUnitTest {
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("1000"));
     }
+
+    @Test
+    void shouldFailTradeWhenStockIsInactive() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setActive(false);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.BUY);
+        trade.setOrderType(OrderType.MARKET);
+        trade.setQuantity(12);
+        trade.setStatus(Status.PENDING);
+
+        when(stockRepository.findById(stockId))
+                .thenReturn(Optional.of(stock));
+
+        when(tradeRepository.save(any(Trade.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        assertThat(trade.getStatus()).isEqualTo(Status.FAILED);
+        assertThat(trade.getPriceAtExecution()).isNull();
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+    }
 }
