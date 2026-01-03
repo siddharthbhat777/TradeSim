@@ -183,7 +183,7 @@ class TradeExecutionServiceUnitTest {
     }
 
     @Test
-    void shouldFailSellTradeWhenHoldingIsInsufficient() {
+    void shouldFailSellTradeWhenHoldingDoesNotExist() {
         UUID stockId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
@@ -208,6 +208,49 @@ class TradeExecutionServiceUnitTest {
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.empty());
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        assertThat(trade.getStatus()).isEqualTo(Status.FAILED);
+        assertThat(trade.getPriceAtExecution()).isNull();
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+
+        verify(holdingRepository, never()).save(any());
+        verify(holdingRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldFailSellTradeWhenHoldingIsInsufficient() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID holdingId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Holding holding = new Holding();
+        holding.setId(holdingId);
+        holding.setStockId(stockId);
+        holding.setQuantity(10);
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setCurrentPrice(new BigDecimal("100"));
+        stock.setActive(true);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.SELL);
+        trade.setOrderType(OrderType.MARKET);
+        trade.setQuantity(12);
+        trade.setStatus(Status.PENDING);
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
 
         tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
 
