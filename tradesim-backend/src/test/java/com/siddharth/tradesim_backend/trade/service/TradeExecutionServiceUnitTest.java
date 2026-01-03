@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.trade.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.holding.HoldingRepository;
+import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.model.Trade;
 import com.siddharth.tradesim_backend.trade.enums.Status;
@@ -144,5 +145,45 @@ class TradeExecutionServiceUnitTest {
         assertThat(trade.getStatus()).isEqualTo(Status.FAILED);
         assertThat(trade.getPriceAtExecution()).isNull();
         assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+    }
+
+    @Test
+    void shouldFailSellTradeWhenHoldingIsInsufficient() {
+        UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User user = new User();
+        user.setId(userId);
+        user.setBalance(new BigDecimal("10000"));
+
+        Stock stock = new Stock();
+        stock.setId(stockId);
+        stock.setCurrentPrice(new BigDecimal("100"));
+        stock.setActive(true);
+
+        Trade trade = new Trade();
+        trade.setStockId(stockId);
+        trade.setType(Type.SELL);
+        trade.setOrderType(OrderType.MARKET);
+        trade.setQuantity(12);
+        trade.setStatus(Status.PENDING);
+
+        when(stockRepository.findById(stockId))
+                .thenReturn(Optional.of(stock));
+
+        when(tradeRepository.save(any(Trade.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(holdingRepository.findByUserIdAndStockId(userId, stockId))
+                .thenReturn(Optional.empty());
+
+        tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
+
+        assertThat(trade.getStatus()).isEqualTo(Status.FAILED);
+        assertThat(trade.getPriceAtExecution()).isNull();
+        assertThat(user.getBalance()).isEqualTo(new BigDecimal("10000"));
+
+        verify(holdingRepository, never()).save(any());
+        verify(holdingRepository, never()).delete(any());
     }
 }
