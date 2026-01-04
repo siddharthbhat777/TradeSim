@@ -43,7 +43,13 @@ jobs:
 
       - name: Verify container is running
         run: |
-          docker ps | grep tradesim-backend-ci
+          docker ps -a
+
+      - name: Wait for container startup
+        run: sleep 20
+
+      - name: Show container logs (debug)
+        run: docker logs tradesim-backend-ci || true
 
       - name: Stop Docker container
         if: always()
