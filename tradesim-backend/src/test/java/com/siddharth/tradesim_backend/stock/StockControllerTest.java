@@ -45,8 +45,7 @@ class StockControllerTest {
                 true
         );
 
-        when(stockService.fetchStocks())
-                .thenReturn(List.of(stock));
+        when(stockService.fetchStocks()).thenReturn(List.of(stock));
 
         mockMvc.perform(get("/stocks"))
                 .andExpect(status().isOk())

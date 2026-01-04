@@ -83,8 +83,7 @@ class TradeControllerTest {
                 Instant.now()
         );
 
-        when(tradeService.placeOrder(eq(userId), any(TradeRequest.class)))
-                .thenReturn(response);
+        when(tradeService.placeOrder(eq(userId), any(TradeRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/trades/order")
                         .with(org.springframework.security.test.web.servlet.request
@@ -133,8 +132,7 @@ class TradeControllerTest {
                 null
         );
 
-        when(tradeService.cancelTrade(eq(tradeId), eq(userId)))
-                .thenReturn(response);
+        when(tradeService.cancelTrade(eq(tradeId), eq(userId))).thenReturn(response);
 
         mockMvc.perform(
                         put("/trades/{tradeId}/cancel", tradeId)
