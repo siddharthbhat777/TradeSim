@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,6 +27,7 @@ public class TradeMatchingService {
     private final TradeRepository tradeRepository;
     private final StockRepository stockRepository;
 
+    @Transactional
     @Scheduled(fixedRate = 5000)
     public void processPendingTrades() {
         List<Trade> pendingTrades = tradeRepository.findByStatus(Status.PENDING);

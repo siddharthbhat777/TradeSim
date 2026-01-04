@@ -16,6 +16,7 @@ import com.siddharth.tradesim_backend.trade.model.dto.TradeResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class TradeService {
     private final TradeRepository tradeRepository;
     private final TradeExecutionService tradeExecutionService;
 
+    @Transactional
     public TradeResponse placeOrder(UUID userId, @Valid TradeRequest request) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
         Stock stock = stockRepository.findById(request.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
@@ -59,6 +61,7 @@ public class TradeService {
         return mapToResponse(trade, user, stock);
     }
 
+    @Transactional
     public TradeResponse cancelTrade(UUID tradeId, UUID userId) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
         Trade trade = tradeRepository.findById(tradeId).orElseThrow(() -> new BusinessException("Trade not found"));

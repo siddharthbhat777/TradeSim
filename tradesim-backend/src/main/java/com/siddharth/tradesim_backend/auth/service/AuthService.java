@@ -17,6 +17,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,6 +30,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
         if (authRepository.existsByEmail(request.getEmail())) {
             throw new UserRegistrationException("Email already exists");
@@ -63,6 +65,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public LoginResponse loginUser(LoginRequest request) {
         try {
             authenticationManager.authenticate(

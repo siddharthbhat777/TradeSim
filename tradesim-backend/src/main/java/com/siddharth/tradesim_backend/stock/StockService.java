@@ -7,6 +7,7 @@ import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ import java.util.List;
 public class StockService {
     private final StockRepository stockRepository;
 
+    @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
         return stockRepository.findAll()
                 .stream()
@@ -29,6 +31,7 @@ public class StockService {
                 .toList();
     }
 
+    @Transactional
     public StockResponse addStock(CreateStockRequest request) {
         if (stockRepository.existsBySymbol(request.symbol())) {
             throw new CreateStockException("Stock with symbol " + request.symbol() + " already exists");
