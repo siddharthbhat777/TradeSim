@@ -83,7 +83,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenAccountIsSuspendedOrBanned() {
+    void shouldThrowExceptionWhenAccountIsSuspended() {
         LoginRequest request = new LoginRequest();
         ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
         ReflectionTestUtils.setField(request, "password", "password");
@@ -96,6 +96,31 @@ class AuthServiceTest {
                 .role(Role.USER)
                 .balance(BigDecimal.valueOf(1000))
                 .accountStatus(AccountStatus.SUSPENDED)
+                .build();
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mock(Authentication.class));
+        when(authRepository.findByUsernameOrEmail("sid")).thenReturn(Optional.of(user));
+
+        assertThrows(UserLoginException.class, () -> authService.loginUser(request));
+
+        verify(authRepository, never()).save(any());
+        verify(jwtService, never()).generateToken(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAccountIsBanned() {
+        LoginRequest request = new LoginRequest();
+        ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
+        ReflectionTestUtils.setField(request, "password", "password");
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .username("sid")
+                .email("sid@test.com")
+                .password("encoded")
+                .role(Role.USER)
+                .balance(BigDecimal.valueOf(1000))
+                .accountStatus(AccountStatus.BANNED)
                 .build();
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mock(Authentication.class));
