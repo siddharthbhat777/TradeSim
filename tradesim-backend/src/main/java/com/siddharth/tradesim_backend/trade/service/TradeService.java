@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.trade.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
@@ -13,6 +14,7 @@ import com.siddharth.tradesim_backend.trade.exceptions.TradeException;
 import com.siddharth.tradesim_backend.trade.model.Trade;
 import com.siddharth.tradesim_backend.trade.model.dto.TradeRequest;
 import com.siddharth.tradesim_backend.trade.model.dto.TradeResponse;
+import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ public class TradeService {
     @Transactional
     public TradeResponse placeOrder(UUID userId, @Valid TradeRequest request) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        if (user.getAccountStatus() == AccountStatus.DEACTIVATED) throw new StatusException("Cannot trade if account is deactivated");
         Stock stock = stockRepository.findById(request.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
 
         BigDecimal marketPrice = stock.getCurrentPrice();
@@ -64,6 +67,7 @@ public class TradeService {
     @Transactional
     public TradeResponse cancelTrade(UUID tradeId, UUID userId) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        if (user.getAccountStatus() == AccountStatus.DEACTIVATED) throw new StatusException("Cannot trade if account is deactivated");
         Trade trade = tradeRepository.findById(tradeId).orElseThrow(() -> new BusinessException("Trade not found"));
 
         if (!trade.getUserId().equals(userId)) {

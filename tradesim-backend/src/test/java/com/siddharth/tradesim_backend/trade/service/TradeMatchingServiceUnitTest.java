@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.trade.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -53,7 +54,10 @@ class TradeMatchingServiceUnitTest {
                 .status(Status.PENDING)
                 .build();
 
-        User user = User.builder().id(userId).build();
+        User user = User.builder()
+                .id(userId)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
 
         Stock stock = Stock.builder()
                 .id(stockId)
@@ -86,7 +90,10 @@ class TradeMatchingServiceUnitTest {
                 .status(Status.PENDING)
                 .build();
 
-        User user = User.builder().id(userId).build();
+        User user = User.builder()
+                .id(userId)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
 
         Stock stock = Stock.builder()
                 .id(stockId)
@@ -119,7 +126,10 @@ class TradeMatchingServiceUnitTest {
                 .status(Status.PENDING)
                 .build();
 
-        User user = User.builder().id(userId).build();
+        User user = User.builder()
+                .id(userId)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
 
         Stock stock = Stock.builder()
                 .id(stockId)
@@ -152,6 +162,40 @@ class TradeMatchingServiceUnitTest {
                 .build();
 
         when(tradeRepository.findByStatus(Status.PENDING)).thenReturn(List.of(trade));
+
+        tradeMatchingService.processPendingTrades();
+
+        verify(tradeExecutionService, never()).executeTrade(any(), any(), any());
+    }
+
+    @Test
+    void shouldNotExecuteTradeWhenUserIsInactive() {
+        UUID userId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        Trade trade = Trade.builder()
+                .userId(userId)
+                .stockId(stockId)
+                .type(Type.BUY)
+                .orderType(OrderType.LIMIT)
+                .limitPrice(new BigDecimal("100"))
+                .status(Status.PENDING)
+                .build();
+
+        User user = User.builder()
+                .id(userId)
+                .accountStatus(AccountStatus.DEACTIVATED)
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .currentPrice(new BigDecimal("90"))
+                .active(true)
+                .build();
+
+        when(tradeRepository.findByStatus(Status.PENDING)).thenReturn(List.of(trade));
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
         tradeMatchingService.processPendingTrades();
 

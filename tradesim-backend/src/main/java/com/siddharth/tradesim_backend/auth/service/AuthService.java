@@ -79,8 +79,8 @@ public class AuthService {
                     .findByUsernameOrEmail(request.getUsernameOrEmail())
                     .orElseThrow(() -> new UserLoginException("User not found"));
 
-            if (user.getAccountStatus() != AccountStatus.ACTIVE) {
-                throw new UserLoginException("Account is not active");
+            if (user.getAccountStatus() == AccountStatus.SUSPENDED || user.getAccountStatus() == AccountStatus.BANNED) {
+                throw new UserLoginException("Cannot login, your account is " + user.getAccountStatus());
             }
 
             user.setLastLogin(Instant.now());

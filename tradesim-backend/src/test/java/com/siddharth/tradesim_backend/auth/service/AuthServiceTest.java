@@ -83,7 +83,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenAccountIsInactive() {
+    void shouldThrowExceptionWhenAccountIsSuspendedOrBanned() {
         LoginRequest request = new LoginRequest();
         ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
         ReflectionTestUtils.setField(request, "password", "password");

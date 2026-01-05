@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.trade.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -9,6 +10,7 @@ import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Status;
 import com.siddharth.tradesim_backend.trade.enums.Type;
 import com.siddharth.tradesim_backend.trade.model.Trade;
+import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -36,13 +38,9 @@ public class TradeMatchingService {
             try {
                 Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow();
                 User user = authRepository.findById(trade.getUserId()).orElseThrow();
+                if (user.getAccountStatus() != AccountStatus.ACTIVE) continue;
 
                 if (!stock.isActive()) {
-                    tradeExecutionService.executeTrade(
-                            trade,
-                            user,
-                            stock.getCurrentPrice()
-                    );
                     continue;
                 }
 

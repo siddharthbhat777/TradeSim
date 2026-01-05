@@ -11,4 +11,5 @@ import java.util.UUID;
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, UUID> {
     List<Trade> findByStatus(Status status);
+    List<Trade> findByUserIdAndStatus(UUID userId, Status status);
 }
