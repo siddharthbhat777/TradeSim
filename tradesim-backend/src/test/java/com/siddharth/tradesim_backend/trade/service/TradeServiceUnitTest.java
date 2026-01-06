@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trade.TradeRepository;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
@@ -60,7 +61,7 @@ public class TradeServiceUnitTest {
                 .id(stockId)
                 .symbol("AAPL")
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         TradeRequest request = new TradeRequest();
@@ -103,7 +104,7 @@ public class TradeServiceUnitTest {
                 .id(stockId)
                 .symbol("AAPL")
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         TradeRequest request = new TradeRequest();

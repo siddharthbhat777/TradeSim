@@ -53,6 +53,6 @@ class StockControllerTest {
                 .andExpect(jsonPath("$[0].symbol").value("AAPL"))
                 .andExpect(jsonPath("$[0].companyName").value("Apple Inc"))
                 .andExpect(jsonPath("$[0].currentPrice").value(150.25))
-                .andExpect(jsonPath("$[0].active").value(StockStatus.ACTIVE));
+                .andExpect(jsonPath("$[0].status").value(StockStatus.ACTIVE.name()));
     }
 }
