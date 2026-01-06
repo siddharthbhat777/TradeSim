@@ -1,6 +1,7 @@
-package com.siddharth.tradesim_backend.stock;
+package com.siddharth.tradesim_backend.stock.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.CreateStockException;
 import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;

@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.stock;
 import com.siddharth.tradesim_backend.stock.model.dto.ChangeStatusRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
+import com.siddharth.tradesim_backend.stock.service.StockService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
