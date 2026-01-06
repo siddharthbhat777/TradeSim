@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.user;
 
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusRequest;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +18,7 @@ public class UserController {
 
     @PutMapping("change/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ChangeUserStatusResponse> changeStatus(@PathVariable UUID userId, @RequestBody ChangeUserStatusRequest request) {
+    public ResponseEntity<ChangeUserStatusResponse> changeStatus(@PathVariable UUID userId, @Valid @RequestBody ChangeUserStatusRequest request) {
         return ResponseEntity.ok(userService.changeStatus(userId, request.status()));
     }
 }

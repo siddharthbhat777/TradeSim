@@ -11,7 +11,6 @@ import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.enums.Status;
 import com.siddharth.tradesim_backend.trade.enums.Type;
 import com.siddharth.tradesim_backend.trade.model.Trade;
-import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

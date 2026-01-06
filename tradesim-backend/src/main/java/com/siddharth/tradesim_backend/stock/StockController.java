@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.stock;
 
+import com.siddharth.tradesim_backend.stock.model.dto.ChangeStatusRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("stocks")
@@ -26,5 +28,11 @@ public class StockController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StockResponse> addStock(@Valid @RequestBody CreateStockRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(stockService.addStock(request));
+    }
+
+    @PutMapping("change/{stockId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StockResponse> changeStockStatus(@PathVariable UUID stockId, @Valid @RequestBody ChangeStatusRequest request) {
+        return ResponseEntity.ok(stockService.changeStockStatus(stockId, request.status()));
     }
 }
