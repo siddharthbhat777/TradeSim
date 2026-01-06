@@ -25,7 +25,7 @@ import java.util.UUID;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TradeMatchingServiceUnitTest {
+class TradeMatchingServiceTest {
 
     @Mock
     private TradeExecutionService tradeExecutionService;
