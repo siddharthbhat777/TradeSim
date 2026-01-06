@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.stock;
 
 import com.siddharth.tradesim_backend.stock.enums.Sector;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,7 @@ class StockControllerTest {
                 "Apple Inc",
                 BigDecimal.valueOf(150.25),
                 Sector.TECHNOLOGY,
-                true
+                StockStatus.ACTIVE
         );
 
         when(stockService.fetchStocks()).thenReturn(List.of(stock));
@@ -52,6 +53,6 @@ class StockControllerTest {
                 .andExpect(jsonPath("$[0].symbol").value("AAPL"))
                 .andExpect(jsonPath("$[0].companyName").value("Apple Inc"))
                 .andExpect(jsonPath("$[0].currentPrice").value(150.25))
-                .andExpect(jsonPath("$[0].active").value(true));
+                .andExpect(jsonPath("$[0].active").value(StockStatus.ACTIVE));
     }
 }

@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trade.TradeRepository;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
@@ -40,7 +41,7 @@ public class TradeMatchingService {
                 User user = authRepository.findById(trade.getUserId()).orElseThrow();
                 if (user.getAccountStatus() != AccountStatus.ACTIVE) continue;
 
-                if (!stock.isActive()) {
+                if (stock.getStatus() != StockStatus.ACTIVE) {
                     continue;
                 }
 

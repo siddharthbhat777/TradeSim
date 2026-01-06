@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.trade.service;
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.holding.HoldingRepository;
 import com.siddharth.tradesim_backend.holding.model.Holding;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
 import com.siddharth.tradesim_backend.trade.model.Trade;
 import com.siddharth.tradesim_backend.trade.enums.Status;
@@ -53,7 +54,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -87,7 +88,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -118,7 +119,8 @@ class TradeExecutionServiceUnitTest {
 
         Stock stock = Stock.builder()
                 .id(stockId)
-                .active(false)
+                .status(StockStatus.HALTED)
+                .currentPrice(new BigDecimal("100"))
                 .build();
 
         Trade trade = new Trade();
@@ -156,7 +158,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -191,7 +193,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -233,7 +235,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -269,7 +271,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -304,7 +306,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -345,7 +347,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("70"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -381,7 +383,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("70"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -430,7 +432,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("90"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();
@@ -466,7 +468,7 @@ class TradeExecutionServiceUnitTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .currentPrice(new BigDecimal("100"))
-                .active(true)
+                .status(StockStatus.ACTIVE)
                 .build();
 
         Trade trade = new Trade();

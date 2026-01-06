@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.stock.model.dto;
 
 import com.siddharth.tradesim_backend.stock.enums.Sector;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -11,6 +12,6 @@ public record StockResponse(
         String companyName,
         BigDecimal currentPrice,
         Sector sector,
-        boolean active
+        StockStatus status
 ) {
 }

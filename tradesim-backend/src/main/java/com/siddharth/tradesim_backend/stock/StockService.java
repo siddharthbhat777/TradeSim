@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.stock;
 
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.CreateStockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
@@ -26,7 +27,7 @@ public class StockService {
                         stock.getCompanyName(),
                         stock.getCurrentPrice(),
                         stock.getSector(),
-                        stock.isActive()
+                        stock.getStatus()
                 ))
                 .toList();
     }
@@ -43,7 +44,7 @@ public class StockService {
                     .companyName(request.companyName())
                     .currentPrice(request.initialPrice())
                     .sector(request.sector())
-                    .active(true)
+                    .status(StockStatus.ACTIVE)
                     .build();
 
             Stock saved = stockRepository.save(stock);
@@ -54,7 +55,7 @@ public class StockService {
                     saved.getCompanyName(),
                     saved.getCurrentPrice(),
                     saved.getSector(),
-                    saved.isActive()
+                    saved.getStatus()
             );
         } catch (DataIntegrityViolationException e) {
             throw new CreateStockException("Invalid stock data");

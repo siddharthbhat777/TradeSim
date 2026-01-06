@@ -5,6 +5,7 @@ import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.holding.HoldingRepository;
 import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trade.TradeRepository;
 import com.siddharth.tradesim_backend.trade.enums.OrderType;
@@ -36,7 +37,7 @@ public class TradeExecutionService {
 
         Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow();
 
-        if (!stock.isActive()) {
+        if (stock.getStatus() != StockStatus.ACTIVE) {
             failTrade(trade);
             return;
         }

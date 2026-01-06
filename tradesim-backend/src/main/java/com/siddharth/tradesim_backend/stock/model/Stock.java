@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.stock.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -41,6 +42,7 @@ public class Stock extends AuditableEntity {
     @Column(nullable = false)
     private Sector sector;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private boolean active;
+    private StockStatus status;
 }
