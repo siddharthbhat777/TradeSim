@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.trade.service;
+package com.siddharth.tradesim_backend.order.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
@@ -6,11 +6,11 @@ import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
-import com.siddharth.tradesim_backend.trade.TradeRepository;
-import com.siddharth.tradesim_backend.trade.enums.OrderType;
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.enums.Type;
-import com.siddharth.tradesim_backend.trade.model.Trade;
+import com.siddharth.tradesim_backend.order.TradeRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.Status;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.model.Trade;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,7 +49,7 @@ class TradeMatchingServiceTest {
                 .id(tradeId)
                 .userId(userId)
                 .stockId(stockId)
-                .type(Type.BUY)
+                .type(OrderSide.BUY)
                 .orderType(OrderType.LIMIT)
                 .limitPrice(new BigDecimal("100"))
                 .status(Status.PENDING)
@@ -85,7 +85,7 @@ class TradeMatchingServiceTest {
                 .id(tradeId)
                 .userId(userId)
                 .stockId(stockId)
-                .type(Type.SELL)
+                .type(OrderSide.SELL)
                 .orderType(OrderType.LIMIT)
                 .limitPrice(new BigDecimal("80"))
                 .status(Status.PENDING)
@@ -121,7 +121,7 @@ class TradeMatchingServiceTest {
                 .id(tradeId)
                 .userId(userId)
                 .stockId(stockId)
-                .type(Type.BUY)
+                .type(OrderSide.BUY)
                 .orderType(OrderType.LIMIT)
                 .limitPrice(new BigDecimal("80"))
                 .status(Status.PENDING)
@@ -157,7 +157,7 @@ class TradeMatchingServiceTest {
                 .id(tradeId)
                 .userId(userId)
                 .stockId(stockId)
-                .type(Type.BUY)
+                .type(OrderSide.BUY)
                 .orderType(OrderType.MARKET)
                 .status(Status.PENDING)
                 .build();
@@ -177,7 +177,7 @@ class TradeMatchingServiceTest {
         Trade trade = Trade.builder()
                 .userId(userId)
                 .stockId(stockId)
-                .type(Type.BUY)
+                .type(OrderSide.BUY)
                 .orderType(OrderType.LIMIT)
                 .limitPrice(new BigDecimal("100"))
                 .status(Status.PENDING)

@@ -1,24 +1,24 @@
-package com.siddharth.tradesim_backend.trade.model;
+package com.siddharth.tradesim_backend.order.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
-import com.siddharth.tradesim_backend.trade.enums.OrderType;
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.enums.Type;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(
-        name = "trades",
+        name = "orders",
         indexes = {
-                @Index(name = "idx_trade_user", columnList = "user_id"),
-                @Index(name = "idx_trade_stock", columnList = "stock_id"),
-                @Index(name = "idx_trade_created", columnList = "created_at")
+                @Index(name = "idx_order_user", columnList = "user_id"),
+                @Index(name = "idx_order_stock", columnList = "stock_id"),
+                @Index(name = "idx_order_status", columnList = "status"),
+                @Index(name = "idx_order_created", columnList = "created_at")
         }
 )
 @EntityListeners(AuditingEntityListener.class)
@@ -27,7 +27,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Trade extends AuditableEntity {
+public class Order extends AuditableEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
@@ -41,25 +42,22 @@ public class Trade extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Type type;
+    private OrderSide side; // BUY / SELL
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderType orderType; // MARKET / LIMIT
 
     @Column(nullable = false)
     private int quantity;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal priceAtExecution;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Status status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderType orderType;
+    @Column(name = "remaining_quantity", nullable = false)
+    private int remainingQuantity;
 
     @Column(precision = 19, scale = 4)
     private BigDecimal limitPrice;
 
-    @Column(name = "executed_at")
-    private Instant executedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
 }

@@ -1,7 +1,7 @@
-package com.siddharth.tradesim_backend.trade;
+package com.siddharth.tradesim_backend.order;
 
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.model.Trade;
+import com.siddharth.tradesim_backend.order.enums.Status;
+import com.siddharth.tradesim_backend.order.model.Trade;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

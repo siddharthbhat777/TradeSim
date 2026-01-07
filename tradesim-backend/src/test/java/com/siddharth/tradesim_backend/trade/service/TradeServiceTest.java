@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.trade.service;
+package com.siddharth.tradesim_backend.order.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
@@ -6,14 +6,14 @@ import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
-import com.siddharth.tradesim_backend.trade.TradeRepository;
-import com.siddharth.tradesim_backend.trade.enums.OrderType;
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.enums.Type;
-import com.siddharth.tradesim_backend.trade.exceptions.TradeException;
-import com.siddharth.tradesim_backend.trade.model.Trade;
-import com.siddharth.tradesim_backend.trade.model.dto.TradeRequest;
-import com.siddharth.tradesim_backend.trade.model.dto.TradeResponse;
+import com.siddharth.tradesim_backend.order.TradeRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.Status;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.exceptions.OrderException;
+import com.siddharth.tradesim_backend.order.model.Trade;
+import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
+import com.siddharth.tradesim_backend.order.model.dto.TradeResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -64,10 +64,10 @@ public class TradeServiceTest {
                 .status(StockStatus.ACTIVE)
                 .build();
 
-        TradeRequest request = new TradeRequest();
+        OrderRequest request = new OrderRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
-        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
         ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
         ReflectionTestUtils.setField(request, "limitPrice", null);
 
@@ -82,7 +82,7 @@ public class TradeServiceTest {
 
         assertThat(tradeCaptor.getValue().getStatus()).isEqualTo(Status.PENDING);
         assertThat(response.stockId()).isEqualTo(stockId);
-        assertThat(response.type()).isEqualTo(Type.BUY);
+        assertThat(response.type()).isEqualTo(OrderSide.BUY);
         assertThat(response.orderType()).isEqualTo(OrderType.MARKET);
         assertThat(response.quantity()).isEqualTo(10);
         assertThat(response.status()).isEqualTo(Status.PENDING);
@@ -107,10 +107,10 @@ public class TradeServiceTest {
                 .status(StockStatus.ACTIVE)
                 .build();
 
-        TradeRequest request = new TradeRequest();
+        OrderRequest request = new OrderRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
-        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
         ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
         ReflectionTestUtils.setField(request, "limitPrice", null);
 
@@ -126,7 +126,7 @@ public class TradeServiceTest {
         assertThat(tradeCaptor.getValue().getStatus()).isEqualTo(Status.PENDING);
         assertThat(response.stockId()).isEqualTo(stockId);
         assertThat(response.quantity()).isEqualTo(10);
-        assertThat(response.type()).isEqualTo(Type.BUY);
+        assertThat(response.type()).isEqualTo(OrderSide.BUY);
         assertThat(response.status()).isEqualTo(Status.PENDING);
 
         verify(tradeExecutionService).executeTrade(any(Trade.class), eq(user), eq(stock.getCurrentPrice()));
@@ -148,10 +148,10 @@ public class TradeServiceTest {
                 .currentPrice(new BigDecimal("100"))
                 .build();
 
-        TradeRequest request = new TradeRequest();
+        OrderRequest request = new OrderRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
-        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
         ReflectionTestUtils.setField(request, "orderType", OrderType.LIMIT);
         ReflectionTestUtils.setField(request, "limitPrice", new BigDecimal("80"));
 
@@ -173,10 +173,10 @@ public class TradeServiceTest {
         UUID userId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
 
-        TradeRequest request = new TradeRequest();
+        OrderRequest request = new OrderRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
-        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
         ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
 
         when(authRepository.findById(userId)).thenReturn(Optional.empty());
@@ -198,10 +198,10 @@ public class TradeServiceTest {
                 .balance(new BigDecimal("10000"))
                 .build();
 
-        TradeRequest request = new TradeRequest();
+        OrderRequest request = new OrderRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
-        ReflectionTestUtils.setField(request, "type", Type.BUY);
+        ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
         ReflectionTestUtils.setField(request, "orderType", OrderType.MARKET);
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -229,7 +229,7 @@ public class TradeServiceTest {
                 .userId(userId)
                 .stockId(stockId)
                 .status(Status.PENDING)
-                .type(Type.BUY)
+                .type(OrderSide.BUY)
                 .orderType(OrderType.MARKET)
                 .quantity(10)
                 .build();
@@ -274,7 +274,7 @@ public class TradeServiceTest {
         when(authRepository.findById(otherUserId)).thenReturn(Optional.of(otherUser));
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
 
-        assertThatThrownBy(() -> tradeService.cancelTrade(tradeId, otherUserId)).isInstanceOf(TradeException.class);
+        assertThatThrownBy(() -> tradeService.cancelTrade(tradeId, otherUserId)).isInstanceOf(OrderException.class);
 
         verify(tradeRepository, never()).save(any());
     }
@@ -299,7 +299,7 @@ public class TradeServiceTest {
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
 
-        assertThatThrownBy(() -> tradeService.cancelTrade(tradeId, userId)).isInstanceOf(TradeException.class);
+        assertThatThrownBy(() -> tradeService.cancelTrade(tradeId, userId)).isInstanceOf(OrderException.class);
 
         verify(tradeRepository, never()).save(any());
     }

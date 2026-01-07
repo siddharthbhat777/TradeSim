@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.trade.service;
+package com.siddharth.tradesim_backend.order.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
@@ -7,11 +7,11 @@ import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
-import com.siddharth.tradesim_backend.trade.TradeRepository;
-import com.siddharth.tradesim_backend.trade.enums.OrderType;
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.enums.Type;
-import com.siddharth.tradesim_backend.trade.model.Trade;
+import com.siddharth.tradesim_backend.order.TradeRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.Status;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.model.Trade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +47,7 @@ public class TradeExecutionService {
         }
 
         boolean success;
-        if (trade.getType() == Type.BUY) {
+        if (trade.getType() == OrderSide.BUY) {
             success = executeBuyTrade(trade, user, stock, executionPrice);
         } else {
             success = executeSellTrade(trade, user, stock, executionPrice);
@@ -123,8 +123,8 @@ public class TradeExecutionService {
         if (trade.getOrderType() != OrderType.LIMIT) return true;
         if (trade.getLimitPrice() == null) return false;
 
-        return (trade.getType() == Type.BUY && price.compareTo(trade.getLimitPrice()) <= 0)
-                || (trade.getType() == Type.SELL && price.compareTo(trade.getLimitPrice()) >= 0);
+        return (trade.getType() == OrderSide.BUY && price.compareTo(trade.getLimitPrice()) <= 0)
+                || (trade.getType() == OrderSide.SELL && price.compareTo(trade.getLimitPrice()) >= 0);
     }
 
     private void finalizeTrade(Trade trade, BigDecimal price) {

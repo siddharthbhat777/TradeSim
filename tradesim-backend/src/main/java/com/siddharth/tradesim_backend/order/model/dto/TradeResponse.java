@@ -1,8 +1,8 @@
-package com.siddharth.tradesim_backend.trade.model.dto;
+package com.siddharth.tradesim_backend.order.model.dto;
 
-import com.siddharth.tradesim_backend.trade.enums.OrderType;
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.enums.Type;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.Status;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -12,7 +12,7 @@ public record TradeResponse(
         UUID tradeId,
         UUID stockId,
         String stockSymbol,
-        Type type,
+        OrderSide type,
         OrderType orderType,
         Status status,
         int quantity,

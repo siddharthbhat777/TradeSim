@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.trade.enums;
+package com.siddharth.tradesim_backend.order.enums;
 
 public enum Status {
     PENDING,

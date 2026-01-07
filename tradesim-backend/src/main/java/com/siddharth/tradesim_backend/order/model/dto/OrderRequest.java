@@ -1,7 +1,7 @@
-package com.siddharth.tradesim_backend.trade.model.dto;
+package com.siddharth.tradesim_backend.order.model.dto;
 
-import com.siddharth.tradesim_backend.trade.enums.OrderType;
-import com.siddharth.tradesim_backend.trade.enums.Type;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
-public class TradeRequest {
+public class OrderRequest {
     @NotNull
     private UUID stockId;
 
@@ -19,7 +19,7 @@ public class TradeRequest {
     private int quantity;
 
     @NotNull
-    private Type type;
+    private OrderSide type;
 
     @NotNull
     private OrderType orderType;

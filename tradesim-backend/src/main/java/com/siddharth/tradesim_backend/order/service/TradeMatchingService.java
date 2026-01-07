@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.trade.service;
+package com.siddharth.tradesim_backend.order.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
@@ -6,11 +6,11 @@ import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
-import com.siddharth.tradesim_backend.trade.TradeRepository;
-import com.siddharth.tradesim_backend.trade.enums.OrderType;
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.enums.Type;
-import com.siddharth.tradesim_backend.trade.model.Trade;
+import com.siddharth.tradesim_backend.order.TradeRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.Status;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.model.Trade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -53,8 +53,8 @@ public class TradeMatchingService {
 
                 if (limitPrice == null) continue;
 
-                boolean shouldExecute = (trade.getType() == Type.BUY && currentPrice.compareTo(limitPrice) <= 0)
-                        || (trade.getType() == Type.SELL && currentPrice.compareTo(limitPrice) >= 0);
+                boolean shouldExecute = (trade.getType() == OrderSide.BUY && currentPrice.compareTo(limitPrice) <= 0)
+                        || (trade.getType() == OrderSide.SELL && currentPrice.compareTo(limitPrice) >= 0);
 
                 if (shouldExecute) {
                     tradeExecutionService.executeTrade(trade, user, stock.getCurrentPrice());
