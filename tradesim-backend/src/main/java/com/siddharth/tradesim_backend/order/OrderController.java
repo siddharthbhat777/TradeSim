@@ -9,10 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("orders")
@@ -25,5 +24,12 @@ public class OrderController {
     public ResponseEntity<OrderResponse> placeOrder(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody OrderRequest request) {
         OrderResponse response = orderService.createOrder(user.getUserId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("{orderId}/cancel")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Void> cancelOrder(@AuthenticationPrincipal UserPrincipal user, @PathVariable UUID orderId) {
+        orderService.cancelOrder(user.getUserId(), orderId);
+        return ResponseEntity.noContent().build();
     }
 }

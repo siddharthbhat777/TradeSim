@@ -65,4 +65,22 @@ public class OrderService {
                 order.getLimitPrice()
         );
     }
+
+    @Transactional
+    public void cancelOrder(UUID userId, UUID orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new BusinessException("Order not found"));
+
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException("You are not allowed to cancel this order");
+        }
+
+        if (order.getStatus() != OrderStatus.OPEN) {
+            throw new BusinessException("Only open orders can be cancelled");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setRemainingQuantity(0);
+
+        orderRepository.save(order);
+    }
 }
