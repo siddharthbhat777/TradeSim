@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.order;
 
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
+import com.siddharth.tradesim_backend.order.model.dto.TradeRequest;
 import com.siddharth.tradesim_backend.order.model.dto.TradeResponse;
 import com.siddharth.tradesim_backend.order.service.TradeService;
 import jakarta.validation.Valid;
@@ -22,7 +22,7 @@ public class TradeController {
 
     @PostMapping("order")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<TradeResponse> placeOrder(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody OrderRequest request) {
+    public ResponseEntity<TradeResponse> placeOrder(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody TradeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(tradeService.placeOrder(user.getUserId(), request));
     }
 

@@ -12,7 +12,7 @@ import com.siddharth.tradesim_backend.order.enums.Status;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Trade;
-import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
+import com.siddharth.tradesim_backend.order.model.dto.TradeRequest;
 import com.siddharth.tradesim_backend.order.model.dto.TradeResponse;
 import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import jakarta.validation.Valid;
@@ -32,7 +32,7 @@ public class TradeService {
     private final TradeExecutionService tradeExecutionService;
 
     @Transactional
-    public TradeResponse placeOrder(UUID userId, @Valid OrderRequest request) {
+    public TradeResponse placeOrder(UUID userId, @Valid TradeRequest request) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
         if (user.getAccountStatus() == AccountStatus.DEACTIVATED) throw new StatusException("Cannot trade if account is deactivated");
         Stock stock = stockRepository.findById(request.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));

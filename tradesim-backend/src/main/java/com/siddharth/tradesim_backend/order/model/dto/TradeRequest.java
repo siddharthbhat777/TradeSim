@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
-public class OrderRequest {
+public class TradeRequest {
     @NotNull
     private UUID stockId;
 
@@ -19,7 +19,7 @@ public class OrderRequest {
     private int quantity;
 
     @NotNull
-    private OrderSide side;
+    private OrderSide type;
 
     @NotNull
     private OrderType orderType;

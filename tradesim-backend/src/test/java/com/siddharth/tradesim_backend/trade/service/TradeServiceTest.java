@@ -12,7 +12,7 @@ import com.siddharth.tradesim_backend.order.enums.Status;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Trade;
-import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
+import com.siddharth.tradesim_backend.order.model.dto.TradeRequest;
 import com.siddharth.tradesim_backend.order.model.dto.TradeResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,7 +64,7 @@ public class TradeServiceTest {
                 .status(StockStatus.ACTIVE)
                 .build();
 
-        OrderRequest request = new OrderRequest();
+        TradeRequest request = new TradeRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
         ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
@@ -107,7 +107,7 @@ public class TradeServiceTest {
                 .status(StockStatus.ACTIVE)
                 .build();
 
-        OrderRequest request = new OrderRequest();
+        TradeRequest request = new TradeRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
         ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
@@ -148,7 +148,7 @@ public class TradeServiceTest {
                 .currentPrice(new BigDecimal("100"))
                 .build();
 
-        OrderRequest request = new OrderRequest();
+        TradeRequest request = new TradeRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
         ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
@@ -173,7 +173,7 @@ public class TradeServiceTest {
         UUID userId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
 
-        OrderRequest request = new OrderRequest();
+        TradeRequest request = new TradeRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
         ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
@@ -198,7 +198,7 @@ public class TradeServiceTest {
                 .balance(new BigDecimal("10000"))
                 .build();
 
-        OrderRequest request = new OrderRequest();
+        TradeRequest request = new TradeRequest();
         ReflectionTestUtils.setField(request, "stockId", stockId);
         ReflectionTestUtils.setField(request, "quantity", 10);
         ReflectionTestUtils.setField(request, "type", OrderSide.BUY);

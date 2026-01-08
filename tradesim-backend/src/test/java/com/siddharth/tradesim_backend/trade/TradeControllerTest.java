@@ -7,7 +7,7 @@ import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.Status;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
-import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
+import com.siddharth.tradesim_backend.order.model.dto.TradeRequest;
 import com.siddharth.tradesim_backend.order.model.dto.TradeResponse;
 import com.siddharth.tradesim_backend.order.service.TradeService;
 import org.junit.jupiter.api.Test;
@@ -63,7 +63,7 @@ class TradeControllerTest {
 
         UserPrincipal principal = new UserPrincipal(user);
 
-        OrderRequest request = new OrderRequest();
+        TradeRequest request = new TradeRequest();
         ReflectionTestUtils.setField(request, "stockId", UUID.randomUUID());
         ReflectionTestUtils.setField(request, "quantity", 10);
         ReflectionTestUtils.setField(request, "type", OrderSide.BUY);
@@ -83,7 +83,7 @@ class TradeControllerTest {
                 Instant.now()
         );
 
-        when(tradeService.placeOrder(eq(userId), any(OrderRequest.class))).thenReturn(response);
+        when(tradeService.placeOrder(eq(userId), any(TradeRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/trades/order")
                         .with(org.springframework.security.test.web.servlet.request
