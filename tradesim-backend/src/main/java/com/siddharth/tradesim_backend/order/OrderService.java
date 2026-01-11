@@ -8,6 +8,7 @@ import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -21,10 +22,10 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
-
     private final AuthRepository authRepository;
     private final StockRepository stockRepository;
     private final OrderRepository orderRepository;
+    private final OrderBookManager orderBookManager;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -53,6 +54,8 @@ public class OrderService {
                 .build();
 
         orderRepository.save(order);
+
+        orderBookManager.addOrder(order);
 
         return new OrderResponse(
                 order.getId(),
