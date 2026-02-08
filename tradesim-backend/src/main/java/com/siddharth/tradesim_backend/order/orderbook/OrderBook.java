@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.UUID;
 
 @Getter
 public class OrderBook {
@@ -22,5 +23,10 @@ public class OrderBook {
         } else {
             sellOrders.add(entry);
         }
+    }
+
+    public void remove(UUID orderId) {
+        buyOrders.removeIf(o -> o.orderId().equals(orderId));
+        sellOrders.removeIf(o -> o.orderId().equals(orderId));
     }
 }

@@ -27,7 +27,6 @@ public class OrderMatchingEngine {
         OrderBook book = orderBookManager.getBook(stockId);
 
         while (!book.getBuyOrders().isEmpty() && !book.getSellOrders().isEmpty()) {
-
             OrderBookEntry buy = book.getBuyOrders().peek();
             OrderBookEntry sell = book.getSellOrders().peek();
 
@@ -40,7 +39,8 @@ public class OrderMatchingEngine {
             }
 
             int executedQty = Math.min(buy.quantity(), sell.quantity());
-            BigDecimal executionPrice = sell.price(); // common exchange rule
+
+            BigDecimal executionPrice = sell.price();
 
             executeTrade(buy, sell, executedQty, executionPrice);
 

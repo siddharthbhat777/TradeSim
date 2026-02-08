@@ -85,9 +85,11 @@ public class OrderService {
             throw new BusinessException("You are not allowed to cancel this order");
         }
 
-        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.FILLED) {
-            throw new BusinessException("Only orders having any remaining units can be cancelled");
+        if (order.getStatus() != OrderStatus.OPEN && order.getStatus() != OrderStatus.PARTIALLY_FILLED) {
+            throw new BusinessException("Only open or partially filled orders can be cancelled");
         }
+
+        orderBookManager.removeOrder(order);
 
         order.setStatus(OrderStatus.CANCELLED);
         order.setRemainingQuantity(0);

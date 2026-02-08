@@ -20,7 +20,7 @@ public class OrderBookManager {
     private final Map<UUID, OrderBook> books = new ConcurrentHashMap<>();
 
     public OrderBook getBook(UUID stockId) {
-        return books.computeIfAbsent(stockId, id -> new OrderBook());
+        return books.computeIfAbsent(stockId, _ -> new OrderBook());
     }
 
     @PostConstruct
@@ -50,5 +50,12 @@ public class OrderBookManager {
         );
 
         getBook(order.getStockId()).add(entry);
+    }
+
+    public void removeOrder(Order order) {
+        OrderBook book = books.get(order.getStockId());
+        if (book != null) {
+            book.remove(order.getId());
+        }
     }
 }
