@@ -11,7 +11,8 @@ import java.util.UUID;
 @Table(
         name = "fills",
         indexes = {
-                @Index(name = "idx_fill_order", columnList = "order_id"),
+                @Index(name = "idx_fill_buy_order", columnList = "buy_order_id"),
+                @Index(name = "idx_fill_sell_order", columnList = "sell_order_id"),
                 @Index(name = "idx_fill_stock", columnList = "stock_id"),
                 @Index(name = "idx_fill_created", columnList = "executed_at")
         }
@@ -27,8 +28,11 @@ public class Fill {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "order_id", nullable = false)
-    private UUID orderId;
+    @Column(nullable = false)
+    private UUID buyOrderId;
+
+    @Column(nullable = false)
+    private UUID sellOrderId;
 
     @Column(name = "stock_id", nullable = false)
     private UUID stockId;

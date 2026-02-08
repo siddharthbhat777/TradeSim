@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.order;
+package com.siddharth.tradesim_backend.order.repository;
 
 import com.siddharth.tradesim_backend.order.enums.Status;
 import com.siddharth.tradesim_backend.order.model.Trade;
@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, UUID> {
-    List<Trade> findByStatus(Status status);
     List<Trade> findByUserIdAndStatus(UUID userId, Status status);
     List<Trade> findByStockIdAndStatus(UUID stockId, Status status);
 }

@@ -15,4 +15,15 @@ public record OrderBookEntry(
         int quantity,
         Instant createdAt
 ) {
+    public OrderBookEntry withReducedQty(int filledQty) {
+        return new OrderBookEntry(
+                orderId,
+                userId,
+                stockId,
+                side,
+                price,
+                quantity - filledQty,
+                createdAt
+        );
+    }
 }

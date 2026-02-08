@@ -1,14 +1,17 @@
-package com.siddharth.tradesim_backend.order;
+package com.siddharth.tradesim_backend.order.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
+import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -26,6 +29,7 @@ public class OrderService {
     private final StockRepository stockRepository;
     private final OrderRepository orderRepository;
     private final OrderBookManager orderBookManager;
+    private final OrderMatchingEngine orderMatchingEngine;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -55,7 +59,11 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        orderBookManager.addOrder(order);
+        if (order.getOrderType() == OrderType.LIMIT) {
+            orderBookManager.addOrder(order);
+        }
+
+        orderMatchingEngine.match(order.getStockId());
 
         return new OrderResponse(
                 order.getId(),
@@ -77,8 +85,8 @@ public class OrderService {
             throw new BusinessException("You are not allowed to cancel this order");
         }
 
-        if (order.getStatus() != OrderStatus.OPEN) {
-            throw new BusinessException("Only open orders can be cancelled");
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.FILLED) {
+            throw new BusinessException("Only orders having any remaining units can be cancelled");
         }
 
         order.setStatus(OrderStatus.CANCELLED);

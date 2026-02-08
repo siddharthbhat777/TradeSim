@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
-import com.siddharth.tradesim_backend.order.OrderRepository;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
@@ -8,7 +8,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,7 +26,7 @@ public class OrderBookManager {
     @PostConstruct
     public void loadFromDatabase() {
         List<Order> pendingLimitOrders =
-                orderRepository.findByStatusIn(EnumSet.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED))
+                orderRepository.findByStatusIn(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED))
                         .stream()
                         .filter(o -> o.getOrderType() == OrderType.LIMIT)
                         .toList();

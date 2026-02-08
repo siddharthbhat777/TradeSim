@@ -5,7 +5,7 @@ import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
-import com.siddharth.tradesim_backend.order.TradeRepository;
+import com.siddharth.tradesim_backend.order.repository.TradeRepository;
 import com.siddharth.tradesim_backend.order.enums.Status;
 import com.siddharth.tradesim_backend.order.model.Trade;
 import org.junit.jupiter.api.Test;

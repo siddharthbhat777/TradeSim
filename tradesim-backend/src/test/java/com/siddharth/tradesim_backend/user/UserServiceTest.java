@@ -4,7 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.order.TradeRepository;
+import com.siddharth.tradesim_backend.order.repository.TradeRepository;
 import com.siddharth.tradesim_backend.order.enums.Status;
 import com.siddharth.tradesim_backend.order.model.Trade;
 import com.siddharth.tradesim_backend.user.exceptions.StatusException;

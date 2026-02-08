@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.order;
+package com.siddharth.tradesim_backend.order.repository;
 
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;

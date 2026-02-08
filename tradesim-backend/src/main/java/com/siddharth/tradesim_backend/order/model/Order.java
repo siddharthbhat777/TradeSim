@@ -60,4 +60,16 @@ public class Order extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
+
+    public void fill(int filledQty) {
+        if (filledQty <= 0) {
+            throw new IllegalArgumentException("Filled quantity must be positive");
+        }
+
+        if (filledQty > this.remainingQuantity) {
+            throw new IllegalArgumentException("Cannot fill more than remaining quantity");
+        }
+
+        this.remainingQuantity -= filledQty;
+    }
 }
