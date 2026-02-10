@@ -17,26 +17,27 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class OrderBookManager {
     private final OrderRepository orderRepository;
-    private final Map<UUID, OrderBook> books = new ConcurrentHashMap<>();
+    private final Map<UUID, OrderBook> orderBooks = new ConcurrentHashMap<>();
+    private final Map<UUID, Order> inMemoryOrders = new ConcurrentHashMap<>();
 
-    public OrderBook getBook(UUID stockId) {
-        return books.computeIfAbsent(stockId, _ -> new OrderBook());
+    public OrderBook getOrderBook(UUID stockId) {
+        return orderBooks.computeIfAbsent(stockId, _ -> new OrderBook());
     }
 
     @PostConstruct
-    public void loadFromDatabase() {
-        List<Order> pendingLimitOrders =
-                orderRepository.findByStatusIn(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED))
-                        .stream()
-                        .filter(o -> o.getOrderType() == OrderType.LIMIT)
-                        .toList();
+    public void loadPendingOrdersFromDatabase() {
+        List<Order> pendingLimitOrders = orderRepository.findByStatusIn(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED))
+                .stream()
+                .filter(order -> order.getOrderType() == OrderType.LIMIT)
+                .toList();
 
         for (Order order : pendingLimitOrders) {
-            addOrder(order);
+            addOrderToOrderBook(order);
+            registerOrder(order);
         }
     }
 
-    public void addOrder(Order order) {
+    public void addOrderToOrderBook(Order order) {
         if (order.getOrderType() == OrderType.MARKET) return;
 
         OrderBookEntry entry = new OrderBookEntry(
@@ -49,13 +50,26 @@ public class OrderBookManager {
                 order.getCreatedAt()
         );
 
-        getBook(order.getStockId()).add(entry);
+        OrderBook orderBook = getOrderBook(order.getStockId());
+        orderBook.addOrder(entry);
     }
 
-    public void removeOrder(Order order) {
-        OrderBook book = books.get(order.getStockId());
-        if (book != null) {
-            book.remove(order.getId());
+    public void removeOrderFromOrderBook(Order order) {
+        OrderBook orderBook = orderBooks.get(order.getStockId());
+        if (orderBook != null) {
+            orderBook.removeOrder(order.getId());
         }
+    }
+
+    public void registerOrder(Order order) {
+        inMemoryOrders.put(order.getId(), order);
+    }
+
+    public Order getOrder(UUID orderId) {
+        return inMemoryOrders.get(orderId);
+    }
+
+    public void unregisterOrder(UUID orderId) {
+        inMemoryOrders.remove(orderId);
     }
 }

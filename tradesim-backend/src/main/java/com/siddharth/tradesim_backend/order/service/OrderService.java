@@ -60,7 +60,8 @@ public class OrderService {
         orderRepository.save(order);
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            orderBookManager.addOrder(order);
+            orderBookManager.addOrderToOrderBook(order);
+            orderBookManager.registerOrder(order);
         }
 
         orderMatchingEngine.match(order.getStockId());
@@ -89,7 +90,8 @@ public class OrderService {
             throw new BusinessException("Only open or partially filled orders can be cancelled");
         }
 
-        orderBookManager.removeOrder(order);
+        orderBookManager.removeOrderFromOrderBook(order);
+        orderBookManager.unregisterOrder(order.getId());
 
         order.setStatus(OrderStatus.CANCELLED);
         order.setRemainingQuantity(0);

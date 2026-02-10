@@ -17,7 +17,7 @@ public class OrderBook {
         this.sellOrders = new PriorityQueue<>(Comparator.comparing(OrderBookEntry::price).thenComparing(OrderBookEntry::createdAt));
     }
 
-    public void add(OrderBookEntry entry) {
+    public void addOrder(OrderBookEntry entry) {
         if (entry.side() == OrderSide.BUY) {
             buyOrders.add(entry);
         } else {
@@ -25,8 +25,8 @@ public class OrderBook {
         }
     }
 
-    public void remove(UUID orderId) {
-        buyOrders.removeIf(o -> o.orderId().equals(orderId));
-        sellOrders.removeIf(o -> o.orderId().equals(orderId));
+    public void removeOrder(UUID orderId) {
+        buyOrders.removeIf(order -> order.orderId().equals(orderId));
+        sellOrders.removeIf(order -> order.orderId().equals(orderId));
     }
 }

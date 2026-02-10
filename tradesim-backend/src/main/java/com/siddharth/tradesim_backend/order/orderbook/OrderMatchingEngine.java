@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
+import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Fill;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -24,69 +26,88 @@ public class OrderMatchingEngine {
 
     @Transactional
     public void match(UUID stockId) {
-        OrderBook book = orderBookManager.getBook(stockId);
+        OrderBook orderBook = orderBookManager.getOrderBook(stockId);
 
-        while (!book.getBuyOrders().isEmpty() && !book.getSellOrders().isEmpty()) {
-            OrderBookEntry buy = book.getBuyOrders().peek();
-            OrderBookEntry sell = book.getSellOrders().peek();
+        while (!orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
+            OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
+            OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
 
             log.info("MATCH START stock={}", stockId);
-            log.info("BUY={} SELL={}", buy.orderId(), sell.orderId());
-            log.info("QTY buy={} sell={}", buy.quantity(), sell.quantity());
+            log.info("BUY={} SELL={}", buyEntry.orderId(), sellEntry.orderId());
+            log.info("QTY buy={} sell={}", buyEntry.quantity(), sellEntry.quantity());
 
-            if (buy.price().compareTo(sell.price()) < 0) {
+            if (buyEntry.price().compareTo(sellEntry.price()) < 0) {
                 break;
             }
 
-            int executedQty = Math.min(buy.quantity(), sell.quantity());
+            int executedQuantity = Math.min(buyEntry.quantity(), sellEntry.quantity());
 
-            BigDecimal executionPrice = sell.price();
+            BigDecimal executionPrice = sellEntry.price();
 
-            executeTrade(buy, sell, executedQty, executionPrice);
+            executeTrade(buyEntry, sellEntry, executedQuantity, executionPrice);
 
-            book.getBuyOrders().poll();
-            book.getSellOrders().poll();
+            orderBook.getBuyOrders().poll();
+            orderBook.getSellOrders().poll();
 
-            if (buy.quantity() > executedQty) {
-                book.getBuyOrders().add(buy.withReducedQty(executedQty));
+            if (buyEntry.quantity() > executedQuantity) {
+                orderBook.getBuyOrders().add(buyEntry.withReducedQuantity(executedQuantity));
             }
 
-            if (sell.quantity() > executedQty) {
-                book.getSellOrders().add(sell.withReducedQty(executedQty));
+            if (sellEntry.quantity() > executedQuantity) {
+                orderBook.getSellOrders().add(sellEntry.withReducedQuantity(executedQuantity));
             }
         }
     }
 
     private void executeTrade(
-            OrderBookEntry buy,
-            OrderBookEntry sell,
-            int qty,
-            BigDecimal price
+            OrderBookEntry buyEntry,
+            OrderBookEntry sellEntry,
+            int executedQuantity,
+            BigDecimal executionPrice
     ) {
-        Order buyOrder = orderRepository.findById(buy.orderId()).orElseThrow();
-        Order sellOrder = orderRepository.findById(sell.orderId()).orElseThrow();
+        Order buyOrder = Objects.requireNonNull(
+                orderBookManager.getOrder(buyEntry.orderId()),
+                "Buy order not found in memory"
+        );
 
-        buyOrder.fill(qty);
-        sellOrder.fill(qty);
+        Order sellOrder = Objects.requireNonNull(
+                orderBookManager.getOrder(sellEntry.orderId()),
+                "Sell order not found in memory"
+        );
+
+        buyOrder.fillOrderQuantity(executedQuantity);
+        sellOrder.fillOrderQuantity(executedQuantity);
 
         updateStatus(buyOrder);
         updateStatus(sellOrder);
 
-        orderRepository.save(buyOrder);
-        orderRepository.save(sellOrder);
+        if (buyOrder.getStatus() == OrderStatus.FILLED) {
+            orderBookManager.removeOrderFromOrderBook(buyOrder);
+            orderBookManager.unregisterOrder(buyOrder.getId());
+        }
 
-        fillRepository.save(
-                Fill.builder()
-                        .buyOrderId(buyOrder.getId())
-                        .sellOrderId(sellOrder.getId())
-                        .stockId(buy.stockId())
-                        .quantity(qty)
-                        .price(price)
-                        .executedAt(Instant.now())
-                        .build()
-        );
+        if (sellOrder.getStatus() == OrderStatus.FILLED) {
+            orderBookManager.removeOrderFromOrderBook(sellOrder);
+            orderBookManager.unregisterOrder(sellOrder.getId());
+        }
 
-        log.info("EXECUTED {} @ {} (BUY={}, SELL={})", qty, price, buy.orderId(), sell.orderId());
+        if (executedQuantity > 0) {
+            orderRepository.save(buyOrder);
+            orderRepository.save(sellOrder);
+        }
+
+        Fill fillOrder = Fill.builder()
+                .buyOrderId(buyOrder.getId())
+                .sellOrderId(sellOrder.getId())
+                .stockId(buyEntry.stockId())
+                .quantity(executedQuantity)
+                .price(executionPrice)
+                .executedAt(Instant.now())
+                .build();
+
+        fillRepository.save(fillOrder);
+
+        log.info("EXECUTED {} @ {} (BUY={}, SELL={})", executedQuantity, executionPrice, buyEntry.orderId(), sellEntry.orderId());
     }
 
     private void updateStatus(Order order) {
