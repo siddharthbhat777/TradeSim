@@ -4,14 +4,19 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.portfolio.PortfolioService;
+import com.siddharth.tradesim_backend.portfolio.dto.PortfolioHoldingResponse;
+import com.siddharth.tradesim_backend.portfolio.dto.PortfolioResponse;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -20,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -30,6 +36,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderBookManager orderBookManager;
     private final OrderMatchingEngine orderMatchingEngine;
+    private final PortfolioService portfolioService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -44,6 +51,17 @@ public class OrderService {
 
         if (stock.getStatus() != StockStatus.ACTIVE) {
             throw new BusinessException("Stock is not active");
+        }
+
+        if (request.getOrderType() == OrderType.MARKET) {
+            if (request.getSide() == OrderSide.BUY) {
+                BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.getQuantity());
+                if (user.getAvailableBalance().compareTo(estimatedCost) < 0) {
+                    throw new BusinessException("Insufficient balance for market order");
+                }
+            } else { // SELL
+                validateUserHolding(userId, stock.getId(), request.getQuantity());
+            }
         }
 
         Order order = Order.builder()
@@ -64,7 +82,7 @@ public class OrderService {
             orderBookManager.registerOrder(order);
         }
 
-        orderMatchingEngine.match(order.getStockId());
+        orderMatchingEngine.match(order);
 
         return new OrderResponse(
                 order.getId(),
@@ -97,5 +115,23 @@ public class OrderService {
         order.setRemainingQuantity(0);
 
         orderRepository.save(order);
+    }
+
+    private BigDecimal estimateMarketBuyCost(UUID stockId, int requiredQuantity) {
+        OrderBook orderBook = orderBookManager.getOrderBook(stockId);
+        return orderBook.estimateBuyCost(requiredQuantity);
+    }
+
+    private void validateUserHolding(UUID userId, UUID stockId, int quantity) {
+        PortfolioResponse response = portfolioService.fetchPortfolio(userId);
+
+        int availableShares = response.holdings().stream()
+                .filter(holding -> holding.stockId().equals(stockId))
+                .mapToInt(PortfolioHoldingResponse::quantity)
+                .sum();
+
+        if (availableShares < quantity) {
+            throw new BusinessException("Insufficient shares to sell");
+        }
     }
 }
