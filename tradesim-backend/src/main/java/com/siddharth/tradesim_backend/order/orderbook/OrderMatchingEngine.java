@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
@@ -40,7 +41,7 @@ public class OrderMatchingEngine {
             return;
         }
 
-        while (!orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
+        while (order.getRemainingQuantity() > 0 && !orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
             OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
             OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
 
@@ -52,6 +53,9 @@ public class OrderMatchingEngine {
             Order sellOrder = Objects.requireNonNull(orderBookManager.getOrder(sellEntry.orderId()), "Sell order not found in memory");
 
             int executedQuantity = Math.min(buyOrder.getRemainingQuantity(), sellOrder.getRemainingQuantity());
+            if (executedQuantity <= 0) {
+                break;
+            }
 
             BigDecimal executionPrice = sellEntry.price();
 
@@ -68,6 +72,7 @@ public class OrderMatchingEngine {
                 orderBook.getSellOrders().add(sellEntry.withReducedQuantity(executedQuantity));
             }
         }
+        orderRepository.save(order);
     }
 
     private void matchBuy(Order order, OrderBook orderBook) {
@@ -76,6 +81,9 @@ public class OrderMatchingEngine {
             Order sellOrder = Objects.requireNonNull(orderBookManager.getOrder(sellEntry.orderId()), "Sell order not found in memory");
 
             int executedQuantity = Math.min(order.getRemainingQuantity(), sellOrder.getRemainingQuantity());
+            if (executedQuantity <= 0) {
+                break;
+            }
 
             executeTrade(order, sellOrder, executedQuantity, sellEntry.price());
 
@@ -93,6 +101,9 @@ public class OrderMatchingEngine {
             Order buyOrder = Objects.requireNonNull(orderBookManager.getOrder(buyEntry.orderId()), "Buy order not found in memory");
 
             int executedQuantity = Math.min(buyOrder.getRemainingQuantity(), order.getRemainingQuantity());
+            if (executedQuantity <= 0) {
+                break;
+            }
 
             executeTrade(buyOrder, order, executedQuantity, buyEntry.price());
 
@@ -110,11 +121,12 @@ public class OrderMatchingEngine {
             int executedQuantity,
             BigDecimal executionPrice
     ) {
-        buyOrder.fillOrderQuantity(executedQuantity);
-        sellOrder.fillOrderQuantity(executedQuantity);
+        if (buyOrder.getSide() != OrderSide.BUY || sellOrder.getSide() != OrderSide.SELL) {
+            throw new IllegalStateException("Invalid trade sides");
+        }
 
-        updateStatus(buyOrder);
-        updateStatus(sellOrder);
+        buyOrder.execute(executedQuantity);
+        sellOrder.execute(executedQuantity);
 
         if (buyOrder.getStatus() == OrderStatus.FILLED) {
             orderBookManager.unregisterOrder(buyOrder.getId());
@@ -124,41 +136,34 @@ public class OrderMatchingEngine {
             orderBookManager.unregisterOrder(sellOrder.getId());
         }
 
-        if (executedQuantity > 0) {
-            Fill fillOrder = Fill.builder()
-                    .buyOrderId(buyOrder.getId())
-                    .sellOrderId(sellOrder.getId())
-                    .stockId(buyOrder.getStockId())
-                    .quantity(executedQuantity)
-                    .price(executionPrice)
-                    .executedAt(Instant.now())
-                    .build();
+        Fill fillOrder = Fill.builder()
+                .buyOrderId(buyOrder.getId())
+                .sellOrderId(sellOrder.getId())
+                .stockId(buyOrder.getStockId())
+                .quantity(executedQuantity)
+                .price(executionPrice)
+                .executedAt(Instant.now())
+                .build();
 
-            TradeExecution execution = new TradeExecution(
-                    buyOrder.getUserId(),
-                    sellOrder.getUserId(),
-                    buyOrder.getStockId(),
-                    executedQuantity,
-                    executionPrice
-            );
-            portfolioService.settleTrade(execution);
-            orderRepository.save(buyOrder);
-            orderRepository.save(sellOrder);
-            fillRepository.save(fillOrder);
-        }
-    }
-
-    private void updateStatus(Order order) {
-        if (order.getRemainingQuantity() == 0) {
-            order.setStatus(OrderStatus.FILLED);
-        } else {
-            order.setStatus(OrderStatus.PARTIALLY_FILLED);
-        }
+        TradeExecution execution = new TradeExecution(
+                buyOrder.getUserId(),
+                sellOrder.getUserId(),
+                buyOrder.getStockId(),
+                executedQuantity,
+                executionPrice,
+                buyOrder.getOrderType(),
+                sellOrder.getOrderType(),
+                buyOrder.getLimitPrice()
+        );
+        portfolioService.settleTrade(execution);
+        fillRepository.save(fillOrder);
+        orderRepository.save(buyOrder);
+        orderRepository.save(sellOrder);
     }
 
     private void resolveMarketFinalStatus(Order order) {
-        if (order.getRemainingQuantity() == order.getQuantity()) {
-            order.setStatus(OrderStatus.CANCELLED);
+        if (order.getRemainingQuantity() > 0) {
+            order.cancel();
         }
     }
 }

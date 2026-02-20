@@ -50,7 +50,7 @@ public class DevOnlyService {
                     .quantity(holdingRequest.quantity())
                     .build();
         } else {
-            holding.setQuantity(holding.getQuantity() + holdingRequest.quantity());
+            holding.increaseQuantity(holdingRequest.quantity());
         }
 
         holdingRepository.save(holding);

@@ -8,9 +8,6 @@ import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
-import com.siddharth.tradesim_backend.order.repository.TradeRepository;
-import com.siddharth.tradesim_backend.order.enums.Status;
-import com.siddharth.tradesim_backend.order.model.Trade;
 import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,7 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StockService {
     private final StockRepository stockRepository;
-    private final TradeRepository tradeRepository;
+    // private final TradeRepository tradeRepository;
 
     @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
@@ -81,13 +78,13 @@ public class StockService {
             throw new StockStatusException("Cannot change stock status of DELISTED stock");
         try {
 
-            if (status == StockStatus.DELISTED) {
+            /*if (status == StockStatus.DELISTED) {
                 List<Trade> trades = tradeRepository.findByStockIdAndStatus(stockId, Status.PENDING);
                 for (Trade trade : trades) {
                     trade.setStatus(Status.CANCELLED);
                 }
                 tradeRepository.saveAll(trades);
-            }
+            }*/
             stock.setStatus(status);
             Stock saved = stockRepository.save(stock);
             return new StockResponse(

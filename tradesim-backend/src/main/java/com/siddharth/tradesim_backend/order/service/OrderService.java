@@ -4,7 +4,8 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.holding.HoldingRepository;
+import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
@@ -14,9 +15,6 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
-import com.siddharth.tradesim_backend.portfolio.PortfolioService;
-import com.siddharth.tradesim_backend.portfolio.dto.PortfolioHoldingResponse;
-import com.siddharth.tradesim_backend.portfolio.dto.PortfolioResponse;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -34,13 +32,12 @@ public class OrderService {
     private final AuthRepository authRepository;
     private final StockRepository stockRepository;
     private final OrderRepository orderRepository;
+    private final HoldingRepository holdingRepository;
     private final OrderBookManager orderBookManager;
     private final OrderMatchingEngine orderMatchingEngine;
-    private final PortfolioService portfolioService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
-
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
 
         if (user.getAccountStatus() != AccountStatus.ACTIVE) {
@@ -53,16 +50,7 @@ public class OrderService {
             throw new BusinessException("Stock is not active");
         }
 
-        if (request.getOrderType() == OrderType.MARKET) {
-            if (request.getSide() == OrderSide.BUY) {
-                BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.getQuantity());
-                if (user.getAvailableBalance().compareTo(estimatedCost) < 0) {
-                    throw new BusinessException("Insufficient balance for market order");
-                }
-            } else { // SELL
-                validateUserHolding(userId, stock.getId(), request.getQuantity());
-            }
-        }
+        validateOrder(user, stock, request);
 
         Order order = Order.builder()
                 .userId(userId)
@@ -108,13 +96,65 @@ public class OrderService {
             throw new BusinessException("Only open or partially filled orders can be cancelled");
         }
 
+        if (order.getOrderType() == OrderType.LIMIT) {
+            switch (order.getSide()) {
+                case BUY -> {
+                    User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity()));
+                    user.unlockFunds(remainingReserved);
+                    authRepository.save(user);
+                }
+                case SELL -> {
+                    Holding holding = holdingRepository.findByUserIdAndStockId(userId, order.getStockId()).orElseThrow(() -> new BusinessException("Holding not found"));
+                    holding.unlockShares(order.getRemainingQuantity());
+                    holdingRepository.save(holding);
+                }
+            }
+        }
+
         orderBookManager.removeOrderFromOrderBook(order);
         orderBookManager.unregisterOrder(order.getId());
-
-        order.setStatus(OrderStatus.CANCELLED);
-        order.setRemainingQuantity(0);
-
+        order.cancel();
         orderRepository.save(order);
+    }
+
+    private void validateOrder(User user, Stock stock, @Valid OrderRequest request) {
+        switch (request.getOrderType()) {
+            case MARKET -> validateMarketOrder(user, stock, request);
+            case LIMIT -> validateLimitOrder(user, stock, request);
+        }
+    }
+
+    private void validateMarketOrder(User user, Stock stock, @Valid OrderRequest request) {
+        switch (request.getSide()) {
+            case BUY -> validateMarketBuy(user, stock, request);
+            case SELL -> validateUserHolding(user.getId(), stock.getId(), request.getQuantity());
+        }
+    }
+
+    private void validateMarketBuy(User user, Stock stock, @Valid OrderRequest request) {
+        BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.getQuantity());
+        if (user.getAvailableBalance().compareTo(estimatedCost) < 0) {
+            throw new BusinessException("Insufficient balance for market order");
+        }
+    }
+
+    private void validateLimitOrder(User user, Stock stock, @Valid OrderRequest request) {
+        switch (request.getSide()) {
+            case BUY -> validateLimitBuy(user, request);
+            case SELL -> validateLimitSell(user.getId(), stock.getId(), request.getQuantity());
+        }
+    }
+
+    private void validateLimitBuy(User user, @Valid OrderRequest request) {
+        BigDecimal orderValue = request.getLimitPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        user.lockFunds(orderValue);
+    }
+
+    private void validateLimitSell(UUID userId, UUID stockId, int quantity) {
+        Holding holding = holdingRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
+        holding.lockShares(quantity);
+        holdingRepository.save(holding);
     }
 
     private BigDecimal estimateMarketBuyCost(UUID stockId, int requiredQuantity) {
@@ -123,14 +163,8 @@ public class OrderService {
     }
 
     private void validateUserHolding(UUID userId, UUID stockId, int quantity) {
-        PortfolioResponse response = portfolioService.fetchPortfolio(userId);
-
-        int availableShares = response.holdings().stream()
-                .filter(holding -> holding.stockId().equals(stockId))
-                .mapToInt(PortfolioHoldingResponse::quantity)
-                .sum();
-
-        if (availableShares < quantity) {
+        Holding holding = holdingRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
+        if (holding.getAvailableQuantity() < quantity) {
             throw new BusinessException("Insufficient shares to sell");
         }
     }

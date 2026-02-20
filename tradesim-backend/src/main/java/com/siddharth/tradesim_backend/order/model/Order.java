@@ -23,7 +23,6 @@ import java.util.UUID;
 )
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -61,7 +60,11 @@ public class Order extends AuditableEntity {
     @Column(nullable = false)
     private OrderStatus status;
 
-    public void fillOrderQuantity(int filledQuantity) {
+    public void execute(int filledQuantity) {
+        if (this.status == OrderStatus.CANCELLED) {
+            throw new IllegalStateException("Cancelled order cannot be executed");
+        }
+
         if (filledQuantity <= 0) {
             throw new IllegalArgumentException("Filled quantity must be positive");
         }
@@ -71,5 +74,19 @@ public class Order extends AuditableEntity {
         }
 
         this.remainingQuantity -= filledQuantity;
+
+        if (this.remainingQuantity == 0) {
+            this.status = OrderStatus.FILLED;
+        } else {
+            this.status = OrderStatus.PARTIALLY_FILLED;
+        }
+    }
+
+    public void cancel() {
+        if (this.status == OrderStatus.FILLED) {
+            throw new IllegalArgumentException("Filled orders cannot be cancelled");
+        }
+        this.status = OrderStatus.CANCELLED;
+        this.remainingQuantity = 0;
     }
 }

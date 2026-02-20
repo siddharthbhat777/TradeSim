@@ -5,6 +5,7 @@ import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.holding.HoldingRepository;
 import com.siddharth.tradesim_backend.holding.model.Holding;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.dto.PortfolioHoldingResponse;
 import com.siddharth.tradesim_backend.portfolio.dto.PortfolioResponse;
 import com.siddharth.tradesim_backend.portfolio.dto.TradeExecution;
@@ -53,55 +54,60 @@ public class PortfolioService {
 
     @Transactional
     public void settleTrade(TradeExecution execution) {
-        BigDecimal tradeValue = execution.price().multiply(BigDecimal.valueOf(execution.quantity()));
-        addHolding(execution.buyerId(), execution.stockId(), execution.quantity());
-        removeHolding(execution.sellerId(), execution.stockId(), execution.quantity());
+        BigDecimal tradeValue = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
 
-        debitUser(execution.buyerId(), tradeValue);
-        creditUser(execution.sellerId(), tradeValue);
+        User buyer = authRepository.findById(execution.buyerId()).orElseThrow(() -> new BusinessException("User not found"));
+        User seller = authRepository.findById(execution.sellerId()).orElseThrow(() -> new BusinessException("User not found"));
+
+        Holding sellerHolding = holdingRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> new BusinessException("Seller holding not found"));
+
+        settleBuyer(execution, buyer, tradeValue);
+        settleSeller(execution, seller, sellerHolding, tradeValue);
+        Holding buyerHolding = updateBuyerHolding(execution);
+        holdingRepository.save(buyerHolding);
+
+        authRepository.save(buyer);
+        authRepository.save(seller);
+
+        if (sellerHolding.getQuantity() == 0) {
+            holdingRepository.delete(sellerHolding);
+        } else {
+            holdingRepository.save(sellerHolding);
+        }
     }
 
-    private void addHolding(UUID userId, UUID stockId, int quantity) {
-        Holding holding = holdingRepository.findByUserIdAndStockId(userId, stockId).orElse(null);
+    private void settleBuyer(TradeExecution execution, User buyer, BigDecimal tradeValue) {
+        if (execution.buyerOrderType() == OrderType.LIMIT) {
+            if (execution.buyerLimitPrice() == null) {
+                throw new BusinessException("Missing buyer limit price");
+            }
+            BigDecimal reserved = execution.buyerLimitPrice().multiply(BigDecimal.valueOf(execution.quantity()));
+            buyer.unlockFunds(reserved);
+        }
+        buyer.debit(tradeValue);
+    }
 
-        if (holding == null) {
-            holding = Holding.builder()
-                    .userId(userId)
-                    .stockId(stockId)
-                    .quantity(quantity)
+    private void settleSeller(TradeExecution execution, User seller, Holding sellerHolding, BigDecimal tradeValue) {
+        if (execution.sellerOrderType() == OrderType.LIMIT) {
+            sellerHolding.unlockShares(execution.quantity());
+        }
+        sellerHolding.decreaseQuantity(execution.quantity());
+        seller.credit(tradeValue);
+    }
+
+    private Holding updateBuyerHolding(TradeExecution execution) {
+        Holding buyerHolding = holdingRepository.findByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
+
+        if (buyerHolding == null) {
+            buyerHolding = Holding.builder()
+                    .userId(execution.buyerId())
+                    .stockId(execution.stockId())
+                    .quantity(0)
+                    .lockedQuantity(0)
                     .build();
-        } else {
-            holding.setQuantity(holding.getQuantity() + quantity);
         }
 
-        holdingRepository.save(holding);
-    }
-
-    private void removeHolding(UUID userId, UUID stockId, int quantity) {
-        Holding holding = holdingRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("Holding not found"));
-
-        if (holding.getQuantity() < quantity) {
-            throw new BusinessException("Insufficient shares to sell");
-        }
-
-        holding.setQuantity(holding.getQuantity() - quantity);
-
-        if (holding.getQuantity() == 0) {
-            holdingRepository.delete(holding);
-        } else {
-            holdingRepository.save(holding);
-        }
-    }
-
-    private void debitUser(UUID userId, BigDecimal amount) {
-        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
-        user.debit(amount);
-        authRepository.save(user);
-    }
-
-    private void creditUser(UUID userId, BigDecimal amount) {
-        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
-        user.credit(amount);
-        authRepository.save(user);
+        buyerHolding.increaseQuantity(execution.quantity());
+        return buyerHolding;
     }
 }
