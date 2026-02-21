@@ -1,6 +1,10 @@
 package com.siddharth.tradesim_backend.stock.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.CreateStockException;
@@ -21,7 +25,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StockService {
     private final StockRepository stockRepository;
-    // private final TradeRepository tradeRepository;
+    private final OrderRepository orderRepository;
+    private final OrderLifecycleService orderLifecycleService;
 
     @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
@@ -74,17 +79,15 @@ public class StockService {
     public StockResponse changeStockStatus(UUID stockId, StockStatus status) {
         Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
         if (stock.getStatus() == status) throw new StockStatusException("Stock already in this status");
-        if (stock.getStatus() == StockStatus.DELISTED)
-            throw new StockStatusException("Cannot change stock status of DELISTED stock");
+        if (stock.getStatus() == StockStatus.DELISTED) throw new StockStatusException("Cannot change stock status of DELISTED stock");
         try {
+            if (status == StockStatus.DELISTED) {
+                List<Order> openOrders = orderRepository.findByStockIdAndStatusIn(stockId, List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED));
 
-            /*if (status == StockStatus.DELISTED) {
-                List<Trade> trades = tradeRepository.findByStockIdAndStatus(stockId, Status.PENDING);
-                for (Trade trade : trades) {
-                    trade.setStatus(Status.CANCELLED);
+                for (Order order : openOrders) {
+                    orderLifecycleService.cancelOrder(order);
                 }
-                tradeRepository.saveAll(trades);
-            }*/
+            }
             stock.setStatus(status);
             Stock saved = stockRepository.save(stock);
             return new StockResponse(
