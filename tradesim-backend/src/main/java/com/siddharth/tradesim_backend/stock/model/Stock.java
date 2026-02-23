@@ -39,6 +39,9 @@ public class Stock extends AuditableEntity {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal currentPrice;
 
+    @Column(nullable = false)
+    private Long totalVolume;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Sector sector;

@@ -54,6 +54,7 @@ public class StockService {
                     .symbol(request.symbol())
                     .companyName(request.companyName())
                     .currentPrice(request.initialPrice())
+                    .totalVolume(0L)
                     .sector(request.sector())
                     .status(StockStatus.ACTIVE)
                     .build();

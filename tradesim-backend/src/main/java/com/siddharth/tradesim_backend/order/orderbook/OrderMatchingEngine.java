@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.FillRepository;
 import com.siddharth.tradesim_backend.portfolio.PortfolioService;
 import com.siddharth.tradesim_backend.portfolio.dto.TradeExecution;
+import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class OrderMatchingEngine {
     private final OrderRepository orderRepository;
     private final FillRepository fillRepository;
     private final PortfolioService portfolioService;
+    private final MarketStateService marketStateService;
 
     @Transactional
     public void match(Order order) {
@@ -156,6 +158,7 @@ public class OrderMatchingEngine {
                 buyOrder.getLimitPrice()
         );
         portfolioService.settleTrade(execution);
+        marketStateService.recordTrade(buyOrder.getStockId(), executionPrice, executedQuantity);
         fillRepository.save(fillOrder);
         orderRepository.save(buyOrder);
         orderRepository.save(sellOrder);
