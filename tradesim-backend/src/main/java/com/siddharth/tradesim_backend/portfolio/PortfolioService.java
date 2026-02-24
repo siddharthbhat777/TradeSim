@@ -33,7 +33,7 @@ public class PortfolioService {
         BigDecimal totalValue = BigDecimal.ZERO;
         for (Holding holding : holdings) {
             Stock stock = stockRepository.findById(holding.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
-            BigDecimal currentPrice = stock.getCurrentPrice();
+            BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal currentValue = currentPrice.multiply(BigDecimal.valueOf(holding.getQuantity()));
 
             totalValue = totalValue.add(currentValue);

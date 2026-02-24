@@ -11,5 +11,4 @@ import java.util.UUID;
 @Repository
 public interface StockRepository extends JpaRepository<Stock, UUID> {
     boolean existsBySymbol(String symbol);
-    List<Stock> findByStatus(StockStatus status);
 }

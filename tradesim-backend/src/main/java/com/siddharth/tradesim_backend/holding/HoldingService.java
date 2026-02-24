@@ -28,7 +28,7 @@ public class HoldingService {
                     holding.getStockId(),
                     stock.getSymbol(),
                     holding.getQuantity(),
-                    stock.getCurrentPrice()
+                    stock.getLastTradedPrice()
             );
         }).toList();
     }

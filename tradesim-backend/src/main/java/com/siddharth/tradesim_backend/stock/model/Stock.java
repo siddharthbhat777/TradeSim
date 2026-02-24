@@ -37,7 +37,7 @@ public class Stock extends AuditableEntity {
     private String companyName;
 
     @Column(nullable = false, precision = 19, scale = 4)
-    private BigDecimal currentPrice;
+    private BigDecimal lastTradedPrice;
 
     @Column(nullable = false)
     private Long totalVolume;

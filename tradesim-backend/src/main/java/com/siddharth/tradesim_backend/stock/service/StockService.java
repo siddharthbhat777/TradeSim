@@ -27,6 +27,7 @@ public class StockService {
     private final StockRepository stockRepository;
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
+    private final MarketStateService marketStateService;
 
     @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
@@ -36,7 +37,7 @@ public class StockService {
                         stock.getId(),
                         stock.getSymbol(),
                         stock.getCompanyName(),
-                        stock.getCurrentPrice(),
+                        marketStateService.calculateIndicativePrice(stock.getId()),
                         stock.getSector(),
                         stock.getStatus()
                 ))
@@ -53,7 +54,7 @@ public class StockService {
             Stock stock = Stock.builder()
                     .symbol(request.symbol())
                     .companyName(request.companyName())
-                    .currentPrice(request.initialPrice())
+                    .lastTradedPrice(request.initialPrice())
                     .totalVolume(0L)
                     .sector(request.sector())
                     .status(StockStatus.ACTIVE)
@@ -65,7 +66,7 @@ public class StockService {
                     saved.getId(),
                     saved.getSymbol(),
                     saved.getCompanyName(),
-                    saved.getCurrentPrice(),
+                    saved.getLastTradedPrice(),
                     saved.getSector(),
                     saved.getStatus()
             );
@@ -95,7 +96,7 @@ public class StockService {
                     saved.getId(),
                     saved.getSymbol(),
                     saved.getCompanyName(),
-                    saved.getCurrentPrice(),
+                    saved.getLastTradedPrice(),
                     saved.getSector(),
                     saved.getStatus()
             );
