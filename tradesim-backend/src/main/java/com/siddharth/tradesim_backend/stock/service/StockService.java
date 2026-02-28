@@ -18,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,6 +59,7 @@ public class StockService {
                     .totalVolume(0L)
                     .sector(request.sector())
                     .status(StockStatus.ACTIVE)
+                    .priceBandPercent(request.priceBandPercent() != null ? request.priceBandPercent() : BigDecimal.valueOf(10))
                     .build();
 
             Stock saved = stockRepository.save(stock);

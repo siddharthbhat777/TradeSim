@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,20 +31,22 @@ public class OrderMatchingEngine {
     private final MarketStateService marketStateService;
 
     @Transactional
-    public void match(Order order) {
+    public MatchResult match(Order order) {
+        boolean priceBandHit = false;
+        boolean executedSomething = false;
         OrderBook orderBook = orderBookManager.getOrderBook(order.getStockId());
         if (order.getOrderType() == OrderType.MARKET) {
             switch (order.getSide()) {
-                case BUY -> matchBuy(order, orderBook);
-                case SELL -> matchSell(order, orderBook);
+                case BUY -> priceBandHit = matchBuy(order, orderBook);
+                case SELL -> priceBandHit = matchSell(order, orderBook);
             }
 
             resolveMarketFinalStatus(order);
             orderRepository.save(order);
-            return;
+            return new MatchResult(priceBandHit);
         }
 
-        while (order.getRemainingQuantity() > 0 && !orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
+        while (!orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
             OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
             OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
 
@@ -60,6 +63,12 @@ public class OrderMatchingEngine {
             }
 
             BigDecimal executionPrice = sellEntry.price();
+            if (cannotExecute(order.getStockId(), executionPrice)) {
+                priceBandHit = true;
+                orderBook.getSellOrders().poll();
+                continue;
+            }
+            executedSomething = true;
 
             executeTrade(buyOrder, sellOrder, executedQuantity, executionPrice);
 
@@ -75,9 +84,13 @@ public class OrderMatchingEngine {
             }
         }
         orderRepository.save(order);
+        return new MatchResult(priceBandHit && !executedSomething);
     }
 
-    private void matchBuy(Order order, OrderBook orderBook) {
+    private boolean matchBuy(Order order, OrderBook orderBook) {
+        boolean bandEncountered = false;
+        boolean executedSomething = false;
+
         while (order.getRemainingQuantity() > 0 && !orderBook.getSellOrders().isEmpty()) {
             OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
             Order sellOrder = Objects.requireNonNull(orderBookManager.getOrder(sellEntry.orderId()), "Sell order not found in memory");
@@ -87,6 +100,14 @@ public class OrderMatchingEngine {
                 break;
             }
 
+            BigDecimal executionPrice = sellEntry.price();
+            if (cannotExecute(order.getStockId(), executionPrice)) {
+                bandEncountered = true;
+                orderBook.getSellOrders().poll();
+                continue;
+            }
+            executedSomething = true;
+
             executeTrade(order, sellOrder, executedQuantity, sellEntry.price());
 
             orderBook.getSellOrders().poll();
@@ -95,9 +116,13 @@ public class OrderMatchingEngine {
                 orderBook.getSellOrders().add(sellEntry.withReducedQuantity(executedQuantity));
             }
         }
+        return bandEncountered && !executedSomething;
     }
 
-    private void matchSell(Order order, OrderBook orderBook) {
+    private boolean matchSell(Order order, OrderBook orderBook) {
+        boolean bandEncountered = false;
+        boolean executedSomething = false;
+
         while (order.getRemainingQuantity() > 0 && !orderBook.getBuyOrders().isEmpty()) {
             OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
             Order buyOrder = Objects.requireNonNull(orderBookManager.getOrder(buyEntry.orderId()), "Buy order not found in memory");
@@ -107,6 +132,14 @@ public class OrderMatchingEngine {
                 break;
             }
 
+            BigDecimal executionPrice = buyEntry.price();
+            if (cannotExecute(order.getStockId(), executionPrice)) {
+                bandEncountered = true;
+                orderBook.getBuyOrders().poll();
+                continue;
+            }
+            executedSomething = true;
+
             executeTrade(buyOrder, order, executedQuantity, buyEntry.price());
 
             orderBook.getBuyOrders().poll();
@@ -115,6 +148,7 @@ public class OrderMatchingEngine {
                 orderBook.getBuyOrders().add(buyEntry.withReducedQuantity(executedQuantity));
             }
         }
+        return bandEncountered && !executedSomething;
     }
 
     private void executeTrade(
@@ -157,6 +191,7 @@ public class OrderMatchingEngine {
                 sellOrder.getOrderType(),
                 buyOrder.getLimitPrice()
         );
+
         portfolioService.settleTrade(execution);
         marketStateService.recordTrade(buyOrder.getStockId(), executionPrice, executedQuantity);
         fillRepository.save(fillOrder);
@@ -168,5 +203,9 @@ public class OrderMatchingEngine {
         if (order.getRemainingQuantity() > 0) {
             order.cancel();
         }
+    }
+
+    private boolean cannotExecute(UUID stockId, BigDecimal executionPrice) {
+        return !marketStateService.isWithinPriceBand(stockId, executionPrice);
     }
 }

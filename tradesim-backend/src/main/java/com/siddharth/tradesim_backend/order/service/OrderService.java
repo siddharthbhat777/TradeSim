@@ -11,6 +11,7 @@ import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.orderbook.MatchResult;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
@@ -70,7 +71,7 @@ public class OrderService {
             orderBookManager.registerOrder(order);
         }
 
-        orderMatchingEngine.match(order);
+        MatchResult result = orderMatchingEngine.match(order);
 
         return new OrderResponse(
                 order.getId(),
@@ -80,7 +81,8 @@ public class OrderService {
                 order.getStatus(),
                 order.getQuantity(),
                 order.getRemainingQuantity(),
-                order.getLimitPrice()
+                order.getLimitPrice(),
+                result.priceBandHit() ? "Price band limit reached. Remaining quantity pending." : null
         );
     }
 

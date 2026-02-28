@@ -15,6 +15,7 @@ public record OrderResponse(
         OrderStatus status,
         int quantity,
         int remainingQuantity,
-        BigDecimal limitPrice
+        BigDecimal limitPrice,
+        String haltReason
 ) {
 }

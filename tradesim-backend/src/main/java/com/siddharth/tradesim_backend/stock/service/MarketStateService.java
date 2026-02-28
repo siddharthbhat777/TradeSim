@@ -16,6 +16,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class MarketStateService {
+    private static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+
     private final StockRepository stockRepository;
     private final OrderBookManager orderBookManager;
 
@@ -49,7 +51,24 @@ public class MarketStateService {
         }
 
         Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
-
         return stock.getLastTradedPrice();
+    }
+
+    public boolean isWithinPriceBand(UUID stockId, BigDecimal executionPrice) {
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
+
+        BigDecimal referencePrice = stock.getLastTradedPrice();
+        BigDecimal bandPercent = stock.getPriceBandPercent();
+
+        if (referencePrice == null || bandPercent == null) {
+            return true;
+        }
+
+        BigDecimal percent = bandPercent.divide(ONE_HUNDRED, 6, RoundingMode.HALF_UP);
+
+        BigDecimal maxUp = referencePrice.multiply(BigDecimal.ONE.add(percent));
+        BigDecimal maxDown = referencePrice.multiply(BigDecimal.ONE.subtract(percent));
+
+        return executionPrice.compareTo(maxUp) <= 0 && executionPrice.compareTo(maxDown) >= 0;
     }
 }

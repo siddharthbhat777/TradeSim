@@ -49,4 +49,7 @@ public class Stock extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StockStatus status;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal priceBandPercent;
 }

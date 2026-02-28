@@ -32,6 +32,11 @@ public record CreateStockRequest(
         BigDecimal initialPrice,
 
         @NotNull(message = "Sector is required")
-        Sector sector
+        Sector sector,
+
+        @DecimalMin(value = "0.1")
+        @DecimalMax(value = "50")
+        @Digits(integer = 3, fraction = 2)
+        BigDecimal priceBandPercent
 ) {
 }
