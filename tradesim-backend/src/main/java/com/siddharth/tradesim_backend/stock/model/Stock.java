@@ -8,6 +8,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -52,4 +53,17 @@ public class Stock extends AuditableEntity {
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal priceBandPercent;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal dayOpen;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal dayHigh;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal dayLow;
+
+    private Long dayVolume;
+
+    private LocalDate lastTradingDate;
 }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -24,6 +25,26 @@ public class MarketStateService {
     @Transactional
     public void recordTrade(UUID stockId, BigDecimal executionPrice, int quantity) {
         Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
+        LocalDate today = LocalDate.now();
+
+        if (stock.getLastTradingDate() == null || !stock.getLastTradingDate().equals(today)) {
+            stock.setDayOpen(executionPrice);
+            stock.setDayHigh(executionPrice);
+            stock.setDayLow(executionPrice);
+            stock.setDayVolume((long) quantity);
+            stock.setLastTradingDate(today);
+        } else {
+            if (stock.getDayHigh() == null || executionPrice.compareTo(stock.getDayHigh()) > 0) {
+                stock.setDayHigh(executionPrice);
+            }
+
+            if (stock.getDayLow() == null || executionPrice.compareTo(stock.getDayLow()) < 0) {
+                stock.setDayLow(executionPrice);
+            }
+
+            stock.setDayVolume((stock.getDayVolume() == null ? 0 : stock.getDayVolume()) + quantity);
+        }
+
         stock.setLastTradedPrice(executionPrice);
         stock.setTotalVolume(stock.getTotalVolume() + quantity);
         stockRepository.save(stock);
