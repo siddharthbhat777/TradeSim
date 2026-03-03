@@ -54,6 +54,9 @@ public class PortfolioService {
 
     @Transactional
     public void settleTrade(TradeExecution execution) {
+        if (execution.buyerId().equals(execution.sellerId())) {
+            throw new BusinessException("Self-trading is not allowed");
+        }
         BigDecimal tradeValue = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
 
         User buyer = authRepository.findById(execution.buyerId()).orElseThrow(() -> new BusinessException("User not found"));

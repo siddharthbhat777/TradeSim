@@ -68,6 +68,12 @@ public class OrderMatchingEngine {
                 orderBook.getSellOrders().poll();
                 continue;
             }
+
+            if (buyOrder.getUserId().equals(sellOrder.getUserId())) {
+                orderBook.getSellOrders().poll();
+                continue;
+            }
+
             executedSomething = true;
 
             executeTrade(buyOrder, sellOrder, executedQuantity, executionPrice);
@@ -106,6 +112,12 @@ public class OrderMatchingEngine {
                 orderBook.getSellOrders().poll();
                 continue;
             }
+
+            if (order.getUserId().equals(sellOrder.getUserId())) {
+                orderBook.getSellOrders().poll();
+                continue;
+            }
+
             executedSomething = true;
 
             executeTrade(order, sellOrder, executedQuantity, sellEntry.price());
@@ -138,6 +150,12 @@ public class OrderMatchingEngine {
                 orderBook.getBuyOrders().poll();
                 continue;
             }
+
+            if (buyOrder.getUserId().equals(order.getUserId())) {
+                orderBook.getBuyOrders().poll();
+                continue;
+            }
+
             executedSomething = true;
 
             executeTrade(buyOrder, order, executedQuantity, buyEntry.price());
