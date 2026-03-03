@@ -58,9 +58,7 @@ public class MarketStateService {
         OrderBookEntry bestAsk = orderBook.getSellOrders().peek();
 
         if (bestBid != null && bestAsk != null) {
-            return bestBid.price()
-                    .add(bestAsk.price())
-                    .divide(BigDecimal.valueOf(2), 4, RoundingMode.HALF_UP);
+            return bestBid.price().add(bestAsk.price()).divide(BigDecimal.valueOf(2), 4, RoundingMode.HALF_UP);
         }
 
         if (bestBid != null) {
