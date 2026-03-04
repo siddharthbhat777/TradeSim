@@ -1,5 +1,9 @@
 package com.siddharth.tradesim_backend.stock.service;
 
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
@@ -11,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,8 +29,12 @@ public class StockServiceTest {
 
     @Mock
     private StockRepository stockRepository;
-    /*@Mock
-    private TradeRepository tradeRepository;*/
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderLifecycleService orderLifecycleService;
 
     @InjectMocks
     private StockService stockService;
@@ -63,8 +72,8 @@ public class StockServiceTest {
         verify(stockRepository, never()).save(any());
     }
 
-    /*@Test
-    void shouldCancelAllPendingTradesWhenStockIsDelisted() {
+    @Test
+    void shouldCancelAllOpenAndPartiallyFilledOrdersWhenStockIsDelisted() {
         UUID stockId = UUID.randomUUID();
 
         Stock stock = Stock.builder()
@@ -72,21 +81,28 @@ public class StockServiceTest {
                 .status(StockStatus.ACTIVE)
                 .build();
 
-        Trade trade1 = Trade.builder().status(Status.PENDING).build();
-        Trade trade2 = Trade.builder().status(Status.PENDING).build();
+        Order openOrder = Order.builder()
+                .status(OrderStatus.OPEN)
+                .build();
+
+        Order partialOrder = Order.builder()
+                .status(OrderStatus.PARTIALLY_FILLED)
+                .build();
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-        when(tradeRepository.findByStockIdAndStatus(stockId, Status.PENDING)).thenReturn(List.of(trade1, trade2));
+        when(orderRepository.findByStockIdAndStatusIn(eq(stockId), eq(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED)))).thenReturn(List.of(openOrder, partialOrder));
+
         when(stockRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         stockService.changeStockStatus(stockId, StockStatus.DELISTED);
 
-        assertThat(trade1.getStatus()).isEqualTo(Status.CANCELLED);
-        assertThat(trade2.getStatus()).isEqualTo(Status.CANCELLED);
-    }*/
+        verify(orderLifecycleService).cancelOrder(openOrder);
+        verify(orderLifecycleService).cancelOrder(partialOrder);
+        verify(stockRepository).save(stock);
+    }
 
-    /*@Test
-    void shouldNotTouchNonPendingTradesOnDelist() {
+    @Test
+    void shouldNotCancelAnythingWhenNoOpenOrdersExist() {
         UUID stockId = UUID.randomUUID();
 
         Stock stock = Stock.builder()
@@ -95,13 +111,12 @@ public class StockServiceTest {
                 .build();
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-        when(tradeRepository.findByStockIdAndStatus(stockId, Status.PENDING)).thenReturn(List.of());
-        when(tradeRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
+        when(orderRepository.findByStockIdAndStatusIn(eq(stockId), eq(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED)))).thenReturn(List.of());
+
         when(stockRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         stockService.changeStockStatus(stockId, StockStatus.DELISTED);
 
-        verify(tradeRepository).findByStockIdAndStatus(stockId, Status.PENDING);
-        verify(tradeRepository).saveAll(any());
-    }*/
+        verify(orderLifecycleService, never()).cancelOrder(any());
+    }
 }
