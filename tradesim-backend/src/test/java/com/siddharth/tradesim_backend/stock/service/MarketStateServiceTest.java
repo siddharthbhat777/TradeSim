@@ -21,6 +21,7 @@ import java.util.PriorityQueue;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,11 +41,11 @@ class MarketStateServiceTest {
         UUID stockId = UUID.randomUUID();
 
         OrderBook orderBook = mock(OrderBook.class);
-        PriorityQueue<OrderBookEntry> buyOrders = new PriorityQueue<>((a, b) -> b.price().compareTo(a.price()));
-        PriorityQueue<OrderBookEntry> sellOrders = new PriorityQueue<>(Comparator.comparing(OrderBookEntry::price));
+        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
+        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
 
-        buyOrders.add(entry(BigDecimal.valueOf(100)));
-        sellOrders.add(entry(BigDecimal.valueOf(110)));
+        buyOrders.add(buyEntry(BigDecimal.valueOf(100)));
+        sellOrders.add(sellEntry(BigDecimal.valueOf(110)));
 
         when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
         when(orderBook.getBuyOrders()).thenReturn(buyOrders);
@@ -61,10 +62,10 @@ class MarketStateServiceTest {
 
         OrderBook orderBook = mock(OrderBook.class);
 
-        PriorityQueue<OrderBookEntry> buyOrders = new PriorityQueue<>((a, b) -> b.price().compareTo(a.price()));
-        PriorityQueue<OrderBookEntry> sellOrders = new PriorityQueue<>();
+        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
+        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
 
-        buyOrders.add(entry(BigDecimal.valueOf(120)));
+        buyOrders.add(buyEntry(BigDecimal.valueOf(120)));
 
         when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
         when(orderBook.getBuyOrders()).thenReturn(buyOrders);
@@ -81,10 +82,10 @@ class MarketStateServiceTest {
 
         OrderBook orderBook = mock(OrderBook.class);
 
-        PriorityQueue<OrderBookEntry> buyOrders = new PriorityQueue<>();
-        PriorityQueue<OrderBookEntry> sellOrders = new PriorityQueue<>(Comparator.comparing(OrderBookEntry::price));
+        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
+        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
 
-        sellOrders.add(entry(BigDecimal.valueOf(130)));
+        sellOrders.add(sellEntry(BigDecimal.valueOf(130)));
 
         when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
         when(orderBook.getBuyOrders()).thenReturn(buyOrders);
@@ -101,8 +102,8 @@ class MarketStateServiceTest {
 
         OrderBook orderBook = mock(OrderBook.class);
 
-        PriorityQueue<OrderBookEntry> buyOrders = new PriorityQueue<>();
-        PriorityQueue<OrderBookEntry> sellOrders = new PriorityQueue<>();
+        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
+        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
 
         Stock stock = Stock.builder()
                 .id(stockId)
@@ -135,10 +136,9 @@ class MarketStateServiceTest {
         assertThat(stock.getDayOpen()).isEqualByComparingTo("100");
         assertThat(stock.getDayHigh()).isEqualByComparingTo("100");
         assertThat(stock.getDayLow()).isEqualByComparingTo("100");
-        assertThat(stock.getDayVolume()).isEqualTo(10);
+        assertThat(stock.getDayVolume()).isEqualTo(10L);
         assertThat(stock.getLastTradedPrice()).isEqualByComparingTo("100");
-        assertThat(stock.getTotalVolume()).isEqualTo(10);
-
+        assertThat(stock.getTotalVolume()).isEqualTo(10L);
         verify(stockRepository).save(stock);
     }
 
@@ -160,9 +160,8 @@ class MarketStateServiceTest {
         marketStateService.recordTrade(stockId, BigDecimal.valueOf(110), 5);
 
         assertThat(stock.getDayHigh()).isEqualByComparingTo("110");
-        assertThat(stock.getDayVolume()).isEqualTo(25);
-        assertThat(stock.getTotalVolume()).isEqualTo(55);
-
+        assertThat(stock.getDayVolume()).isEqualTo(25L);
+        assertThat(stock.getTotalVolume()).isEqualTo(55L);
         verify(stockRepository).save(stock);
     }
 
@@ -200,7 +199,21 @@ class MarketStateServiceTest {
         assertThat(result).isFalse();
     }
 
-    private OrderBookEntry entry(BigDecimal price) {
+    @Test
+    void shouldThrowWhenStockNotFoundAndNoOrdersExist() {
+        UUID stockId = UUID.randomUUID();
+
+        OrderBook orderBook = mock(OrderBook.class);
+
+        when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
+        when(orderBook.getBuyOrders()).thenReturn(buyQueue());
+        when(orderBook.getSellOrders()).thenReturn(sellQueue());
+        when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class, () -> marketStateService.calculateIndicativePrice(stockId));
+    }
+
+    private OrderBookEntry buyEntry(BigDecimal price) {
         return new OrderBookEntry(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -210,5 +223,25 @@ class MarketStateServiceTest {
                 10,
                 Instant.now()
         );
+    }
+
+    private OrderBookEntry sellEntry(BigDecimal price) {
+        return new OrderBookEntry(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                OrderSide.SELL,
+                price,
+                10,
+                Instant.now()
+        );
+    }
+
+    private PriorityQueue<OrderBookEntry> buyQueue() {
+        return new PriorityQueue<>((a, b) -> b.price().compareTo(a.price()));
+    }
+
+    private PriorityQueue<OrderBookEntry> sellQueue() {
+        return new PriorityQueue<>(Comparator.comparing(OrderBookEntry::price));
     }
 }
