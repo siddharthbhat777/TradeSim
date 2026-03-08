@@ -27,7 +27,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Order extends AuditableEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)

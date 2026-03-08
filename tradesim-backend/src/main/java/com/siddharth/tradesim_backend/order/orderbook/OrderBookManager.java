@@ -12,12 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @RequiredArgsConstructor
 public class OrderBookManager {
     private final OrderRepository orderRepository;
     private final Map<UUID, OrderBook> orderBooks = new ConcurrentHashMap<>();
+    private final Map<UUID, ReentrantLock> stockLocks = new ConcurrentHashMap<>();
     private final Map<UUID, Order> inMemoryOrders = new ConcurrentHashMap<>();
 
     public OrderBook getOrderBook(UUID stockId) {
@@ -71,5 +73,9 @@ public class OrderBookManager {
 
     public void unregisterOrder(UUID orderId) {
         inMemoryOrders.remove(orderId);
+    }
+
+    public ReentrantLock getLock(UUID stockId) {
+        return stockLocks.computeIfAbsent(stockId, _ -> new ReentrantLock());
     }
 }

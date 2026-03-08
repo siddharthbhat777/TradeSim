@@ -7,6 +7,7 @@ import com.siddharth.tradesim_backend.holding.HoldingRepository;
 import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.siddharth.tradesim_backend.order.enums.OrderStatus.CANCELLED;
 import static com.siddharth.tradesim_backend.order.enums.OrderStatus.FILLED;
@@ -33,10 +35,17 @@ public class OrderLifecycleService {
             return;
         }
 
-        releaseLockedAssets(order);
-        order.cancel();
-        orderBookManager.unregisterOrder(order.getId());
-        orderRepository.save(order);
+        ReentrantLock lock = orderBookManager.getLock(order.getStockId());
+        lock.lock();
+        try {
+            releaseLockedAssets(order);
+            orderBookManager.removeOrderFromOrderBook(order);
+            order.cancel();
+            orderBookManager.unregisterOrder(order.getId());
+            orderRepository.save(order);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void releaseLockedAssets(Order order) {
@@ -48,7 +57,7 @@ public class OrderLifecycleService {
                 return;
             }
             if (order.getLimitPrice() == null) {
-                throw new BusinessException("Limit price missing for LIMIT order");
+                throw new OrderException("Limit price missing for LIMIT order");
             }
             User user = authRepository.findById(order.getUserId()).orElseThrow(() -> new BusinessException("User not found"));
             BigDecimal unlockAmount = order.getLimitPrice().multiply(BigDecimal.valueOf(remainingQty));

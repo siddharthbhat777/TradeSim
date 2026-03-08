@@ -53,13 +53,13 @@ class OrderControllerTest {
         UUID orderId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
 
-        OrderRequest request = new OrderRequest();
-
-        ReflectionTestUtils.setField(request, "stockId", stockId);
-        ReflectionTestUtils.setField(request, "quantity", 10);
-        ReflectionTestUtils.setField(request, "side", OrderSide.BUY);
-        ReflectionTestUtils.setField(request, "orderType", OrderType.LIMIT);
-        ReflectionTestUtils.setField(request, "limitPrice", BigDecimal.valueOf(100));
+        OrderRequest request = new OrderRequest(
+                stockId,
+                10,
+                OrderSide.BUY,
+                OrderType.LIMIT,
+                BigDecimal.valueOf(100)
+        );
 
         OrderResponse response = new OrderResponse(
                 orderId,

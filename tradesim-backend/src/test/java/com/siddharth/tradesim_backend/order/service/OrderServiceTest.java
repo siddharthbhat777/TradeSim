@@ -18,11 +18,11 @@ import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -60,18 +60,20 @@ class OrderServiceTest {
 
         userId = UUID.randomUUID();
         stockId = UUID.randomUUID();
+
+        ReentrantLock lock = new ReentrantLock();
+        when(orderBookManager.getLock(any())).thenReturn(lock);
     }
 
     private OrderRequest createLimitBuyRequest() {
-        OrderRequest request = new OrderRequest();
 
-        ReflectionTestUtils.setField(request, "stockId", stockId);
-        ReflectionTestUtils.setField(request, "quantity", 10);
-        ReflectionTestUtils.setField(request, "side", OrderSide.BUY);
-        ReflectionTestUtils.setField(request, "orderType", OrderType.LIMIT);
-        ReflectionTestUtils.setField(request, "limitPrice", BigDecimal.valueOf(100));
-
-        return request;
+        return new OrderRequest(
+                stockId,
+                10,
+                OrderSide.BUY,
+                OrderType.LIMIT,
+                BigDecimal.valueOf(100)
+        );
     }
 
     @Test
@@ -112,13 +114,13 @@ class OrderServiceTest {
         when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false));
 
-        OrderRequest request = new OrderRequest();
-
-        ReflectionTestUtils.setField(request, "stockId", stockId);
-        ReflectionTestUtils.setField(request, "quantity", 5);
-        ReflectionTestUtils.setField(request, "side", OrderSide.SELL);
-        ReflectionTestUtils.setField(request, "orderType", OrderType.LIMIT);
-        ReflectionTestUtils.setField(request, "limitPrice", BigDecimal.valueOf(100));
+        OrderRequest request = new OrderRequest(
+                stockId,
+                5,
+                OrderSide.SELL,
+                OrderType.LIMIT,
+                BigDecimal.valueOf(100)
+        );
 
         orderService.createOrder(userId, request);
 

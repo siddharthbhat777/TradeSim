@@ -5,25 +5,24 @@ import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Getter
-public class OrderRequest {
-    @NotNull
-    private UUID stockId;
+public record OrderRequest(
+        @NotNull
+        UUID stockId,
 
-    @Min(1)
-    private int quantity;
+        @Min(1)
+        int quantity,
 
-    @NotNull
-    private OrderSide side;
+        @NotNull
+        OrderSide side,
 
-    @NotNull
-    private OrderType orderType;
+        @NotNull
+        OrderType orderType,
 
-    @DecimalMin("0.01")
-    private BigDecimal limitPrice;
+        @DecimalMin("0.01")
+        BigDecimal limitPrice
+) {
 }

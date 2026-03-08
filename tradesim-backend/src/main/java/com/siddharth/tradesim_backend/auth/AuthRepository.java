@@ -15,8 +15,6 @@ public interface AuthRepository extends JpaRepository<User, UUID> {
 
     boolean existsByUsername(String username);
 
-    User findByUsername(String username);
-
     @Query("""
             SELECT u FROM User u
             WHERE u.username = :input OR u.email = :input

@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -49,6 +50,9 @@ class OrderLifecycleServiceTest {
 
         userId = UUID.randomUUID();
         stockId = UUID.randomUUID();
+
+        ReentrantLock lock = new ReentrantLock();
+        when(orderBookManager.getLock(any())).thenReturn(lock);
     }
 
     private Order createOrder(OrderSide side, OrderType type, int qty, double price) {

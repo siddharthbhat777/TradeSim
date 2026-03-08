@@ -7,6 +7,7 @@ import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.holding.HoldingRepository;
 import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +47,7 @@ public class OrderService {
             throw new BusinessException("User account is not active");
         }
 
-        Stock stock = stockRepository.findById(request.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+        Stock stock = stockRepository.findById(request.stockId()).orElseThrow(() -> new BusinessException("Stock not found"));
 
         if (stock.getStatus() != StockStatus.ACTIVE) {
             throw new BusinessException("Stock is not active");
@@ -56,22 +58,29 @@ public class OrderService {
         Order order = Order.builder()
                 .userId(userId)
                 .stockId(stock.getId())
-                .side(request.getSide())
-                .orderType(request.getOrderType())
-                .quantity(request.getQuantity())
-                .remainingQuantity(request.getQuantity())
-                .limitPrice(request.getLimitPrice())
+                .side(request.side())
+                .orderType(request.orderType())
+                .quantity(request.quantity())
+                .remainingQuantity(request.quantity())
+                .limitPrice(request.limitPrice())
                 .status(OrderStatus.OPEN)
                 .build();
 
         orderRepository.save(order);
 
-        if (order.getOrderType() == OrderType.LIMIT) {
-            orderBookManager.addOrderToOrderBook(order);
-            orderBookManager.registerOrder(order);
-        }
+        ReentrantLock lock = orderBookManager.getLock(order.getStockId());
+        MatchResult result;
+        lock.lock();
+        try {
+            if (order.getOrderType() == OrderType.LIMIT) {
+                orderBookManager.addOrderToOrderBook(order);
+                orderBookManager.registerOrder(order);
+            }
 
-        MatchResult result = orderMatchingEngine.match(order);
+            result = orderMatchingEngine.match(order);
+        } finally {
+            lock.unlock();
+        }
 
         return new OrderResponse(
                 order.getId(),
@@ -88,14 +97,14 @@ public class OrderService {
 
     @Transactional
     public void cancelOrder(UUID userId, UUID orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new BusinessException("Order not found"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderException("Order not found"));
 
         if (!order.getUserId().equals(userId)) {
             throw new BusinessException("You are not allowed to cancel this order");
         }
 
         if (order.getStatus() != OrderStatus.OPEN && order.getStatus() != OrderStatus.PARTIALLY_FILLED) {
-            throw new BusinessException("Only open or partially filled orders can be cancelled");
+            throw new OrderException("Only open or partially filled orders can be cancelled");
         }
 
         if (order.getOrderType() == OrderType.LIMIT) {
@@ -114,42 +123,48 @@ public class OrderService {
             }
         }
 
-        orderBookManager.removeOrderFromOrderBook(order);
-        orderBookManager.unregisterOrder(order.getId());
-        order.cancel();
-        orderRepository.save(order);
+        ReentrantLock lock = orderBookManager.getLock(order.getStockId());
+        lock.lock();
+        try {
+            orderBookManager.removeOrderFromOrderBook(order);
+            orderBookManager.unregisterOrder(order.getId());
+            order.cancel();
+            orderRepository.save(order);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void validateOrder(User user, Stock stock, @Valid OrderRequest request) {
-        switch (request.getOrderType()) {
+        switch (request.orderType()) {
             case MARKET -> validateMarketOrder(user, stock, request);
             case LIMIT -> validateLimitOrder(user, stock, request);
         }
     }
 
     private void validateMarketOrder(User user, Stock stock, @Valid OrderRequest request) {
-        switch (request.getSide()) {
+        switch (request.side()) {
             case BUY -> validateMarketBuy(user, stock, request);
-            case SELL -> validateUserHolding(user.getId(), stock.getId(), request.getQuantity());
+            case SELL -> validateUserHolding(user.getId(), stock.getId(), request.quantity());
         }
     }
 
     private void validateMarketBuy(User user, Stock stock, @Valid OrderRequest request) {
-        BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.getQuantity());
+        BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.quantity());
         if (user.getAvailableBalance().compareTo(estimatedCost) < 0) {
-            throw new BusinessException("Insufficient balance for market order");
+            throw new OrderException("Insufficient balance for market order");
         }
     }
 
     private void validateLimitOrder(User user, Stock stock, @Valid OrderRequest request) {
-        switch (request.getSide()) {
+        switch (request.side()) {
             case BUY -> validateLimitBuy(user, request);
-            case SELL -> validateLimitSell(user.getId(), stock.getId(), request.getQuantity());
+            case SELL -> validateLimitSell(user.getId(), stock.getId(), request.quantity());
         }
     }
 
     private void validateLimitBuy(User user, @Valid OrderRequest request) {
-        BigDecimal orderValue = request.getLimitPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        BigDecimal orderValue = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
         user.lockFunds(orderValue);
     }
 
@@ -160,8 +175,14 @@ public class OrderService {
     }
 
     private BigDecimal estimateMarketBuyCost(UUID stockId, int requiredQuantity) {
-        OrderBook orderBook = orderBookManager.getOrderBook(stockId);
-        return orderBook.estimateBuyCost(requiredQuantity);
+        ReentrantLock lock = orderBookManager.getLock(stockId);
+        lock.lock();
+        try {
+            OrderBook orderBook = orderBookManager.getOrderBook(stockId);
+            return orderBook.estimateBuyCost(requiredQuantity);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void validateUserHolding(UUID userId, UUID stockId, int quantity) {

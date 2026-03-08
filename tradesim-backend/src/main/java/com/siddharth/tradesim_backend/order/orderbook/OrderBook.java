@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -12,6 +12,9 @@ public class OrderBook {
     private final PriorityQueue<OrderBookEntry> buyOrders;
     private final PriorityQueue<OrderBookEntry> sellOrders;
 
+    private final Map<UUID, OrderBookEntry> buyOrderMap = new HashMap<>();
+    private final Map<UUID, OrderBookEntry> sellOrderMap = new HashMap<>();
+
     public OrderBook() {
         this.buyOrders = new PriorityQueue<>(Comparator.comparing(OrderBookEntry::price).reversed().thenComparing(OrderBookEntry::createdAt));
         this.sellOrders = new PriorityQueue<>(Comparator.comparing(OrderBookEntry::price).thenComparing(OrderBookEntry::createdAt));
@@ -20,14 +23,24 @@ public class OrderBook {
     public void addOrder(OrderBookEntry entry) {
         if (entry.side() == OrderSide.BUY) {
             buyOrders.add(entry);
+            buyOrderMap.put(entry.orderId(), entry);
         } else {
             sellOrders.add(entry);
+            sellOrderMap.put(entry.orderId(), entry);
         }
     }
 
     public void removeOrder(UUID orderId) {
-        buyOrders.removeIf(order -> order.orderId().equals(orderId));
-        sellOrders.removeIf(order -> order.orderId().equals(orderId));
+        OrderBookEntry buyEntry = buyOrderMap.remove(orderId);
+        if (buyEntry != null) {
+            buyOrders.remove(buyEntry);
+            return;
+        }
+
+        OrderBookEntry sellEntry = sellOrderMap.remove(orderId);
+        if (sellEntry != null) {
+            sellOrders.remove(sellEntry);
+        }
     }
 
     public BigDecimal estimateBuyCost(int requiredQuantity) {
@@ -36,7 +49,7 @@ public class OrderBook {
         }
 
         if (sellOrders.isEmpty()) {
-            throw new BusinessException("No liquidity available for market buy");
+            throw new OrderException("No liquidity available for market buy");
         }
 
         int calculatedRequiredQuantity = requiredQuantity;
@@ -58,7 +71,7 @@ public class OrderBook {
         }
 
         if (calculatedRequiredQuantity == requiredQuantity) {
-            throw new BusinessException("No liquidity available for market buy");
+            throw new OrderException("No liquidity available for market buy");
         }
 
         return totalCost;
