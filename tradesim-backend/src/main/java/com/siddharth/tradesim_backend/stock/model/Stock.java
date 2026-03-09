@@ -8,6 +8,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -37,7 +38,10 @@ public class Stock extends AuditableEntity {
     private String companyName;
 
     @Column(nullable = false, precision = 19, scale = 4)
-    private BigDecimal currentPrice;
+    private BigDecimal lastTradedPrice;
+
+    @Column(nullable = false)
+    private Long totalVolume;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -46,4 +50,20 @@ public class Stock extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StockStatus status;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal priceBandPercent;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal dayOpen;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal dayHigh;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal dayLow;
+
+    private Long dayVolume;
+
+    private LocalDate lastTradingDate;
 }

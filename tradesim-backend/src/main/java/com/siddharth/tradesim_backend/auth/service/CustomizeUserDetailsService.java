@@ -17,11 +17,7 @@ public class CustomizeUserDetailsService implements UserDetailsService {
 
     @Override
     public @lombok.NonNull UserDetails loadUserByUsername(@NonNull String input) throws UsernameNotFoundException {
-        User user = authRepository
-                .findByUsernameOrEmail(input)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found")
-                );
+        User user = authRepository.findByUsernameOrEmail(input).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new UserPrincipal(user);
     }

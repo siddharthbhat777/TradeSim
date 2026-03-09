@@ -46,6 +46,7 @@ public class AuthService {
                     .password(passwordEncoder.encode(request.getPassword()))
                     .role(Role.USER)
                     .balance(BigDecimal.valueOf(10000000))
+                    .lockedBalance(BigDecimal.valueOf(0))
                     .accountStatus(AccountStatus.ACTIVE)
                     .build();
 

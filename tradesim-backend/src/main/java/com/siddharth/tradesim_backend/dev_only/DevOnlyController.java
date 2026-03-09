@@ -2,18 +2,17 @@ package com.siddharth.tradesim_backend.dev_only;
 
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.dev_only.dto.HoldingRequest;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("dev")
@@ -37,5 +36,10 @@ public class DevOnlyController {
     @GetMapping("users")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(devOnlyService.fetchUsers());
+    }
+
+    @PutMapping("seed-holding")
+    public ResponseEntity<String> seedHolding(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody HoldingRequest holdingRequest) {
+        return ResponseEntity.ok(devOnlyService.seedHolding(userPrincipal.getUserId(), holdingRequest));
     }
 }

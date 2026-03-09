@@ -1,6 +1,10 @@
 package com.siddharth.tradesim_backend.stock.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.CreateStockException;
@@ -8,15 +12,13 @@ import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
-import com.siddharth.tradesim_backend.trade.TradeRepository;
-import com.siddharth.tradesim_backend.trade.enums.Status;
-import com.siddharth.tradesim_backend.trade.model.Trade;
 import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +26,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StockService {
     private final StockRepository stockRepository;
-    private final TradeRepository tradeRepository;
+    private final OrderRepository orderRepository;
+    private final OrderLifecycleService orderLifecycleService;
+    private final MarketStateService marketStateService;
 
     @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
@@ -34,7 +38,7 @@ public class StockService {
                         stock.getId(),
                         stock.getSymbol(),
                         stock.getCompanyName(),
-                        stock.getCurrentPrice(),
+                        marketStateService.calculateIndicativePrice(stock.getId()),
                         stock.getSector(),
                         stock.getStatus()
                 ))
@@ -51,9 +55,11 @@ public class StockService {
             Stock stock = Stock.builder()
                     .symbol(request.symbol())
                     .companyName(request.companyName())
-                    .currentPrice(request.initialPrice())
+                    .lastTradedPrice(request.initialPrice())
+                    .totalVolume(0L)
                     .sector(request.sector())
                     .status(StockStatus.ACTIVE)
+                    .priceBandPercent(request.priceBandPercent() != null ? request.priceBandPercent() : BigDecimal.valueOf(10))
                     .build();
 
             Stock saved = stockRepository.save(stock);
@@ -62,7 +68,7 @@ public class StockService {
                     saved.getId(),
                     saved.getSymbol(),
                     saved.getCompanyName(),
-                    saved.getCurrentPrice(),
+                    saved.getLastTradedPrice(),
                     saved.getSector(),
                     saved.getStatus()
             );
@@ -77,16 +83,14 @@ public class StockService {
     public StockResponse changeStockStatus(UUID stockId, StockStatus status) {
         Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
         if (stock.getStatus() == status) throw new StockStatusException("Stock already in this status");
-        if (stock.getStatus() == StockStatus.DELISTED)
-            throw new StockStatusException("Cannot change stock status of DELISTED stock");
+        if (stock.getStatus() == StockStatus.DELISTED) throw new StockStatusException("Cannot change stock status of DELISTED stock");
         try {
-
             if (status == StockStatus.DELISTED) {
-                List<Trade> trades = tradeRepository.findByStockIdAndStatus(stockId, Status.PENDING);
-                for (Trade trade : trades) {
-                    trade.setStatus(Status.CANCELLED);
+                List<Order> openOrders = orderRepository.findByStockIdAndStatusIn(stockId, List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED));
+
+                for (Order order : openOrders) {
+                    orderLifecycleService.cancelOrder(order);
                 }
-                tradeRepository.saveAll(trades);
             }
             stock.setStatus(status);
             Stock saved = stockRepository.save(stock);
@@ -94,7 +98,7 @@ public class StockService {
                     saved.getId(),
                     saved.getSymbol(),
                     saved.getCompanyName(),
-                    saved.getCurrentPrice(),
+                    saved.getLastTradedPrice(),
                     saved.getSector(),
                     saved.getStatus()
             );

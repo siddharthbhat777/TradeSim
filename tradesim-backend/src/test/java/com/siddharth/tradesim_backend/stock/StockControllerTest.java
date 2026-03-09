@@ -11,7 +11,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,9 +31,6 @@ class StockControllerTest {
 
     @MockitoBean
     private StockService stockService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void shouldReturnStocks() throws Exception {
