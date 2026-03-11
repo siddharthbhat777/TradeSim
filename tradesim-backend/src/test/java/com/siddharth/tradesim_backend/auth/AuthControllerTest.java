@@ -42,9 +42,7 @@ class AuthControllerTest {
 
     @Test
     void shouldLoginSuccessfully() throws Exception {
-        LoginRequest request = new LoginRequest();
-        ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
-        ReflectionTestUtils.setField(request, "password", "password");
+        LoginRequest request = new LoginRequest("sid", "password");
 
         LoginResponse response = new LoginResponse("mock-jwt-token", "sid", Role.USER);
 
@@ -59,10 +57,7 @@ class AuthControllerTest {
 
     @Test
     void shouldRegisterSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        ReflectionTestUtils.setField(request, "username", "sid");
-        ReflectionTestUtils.setField(request, "email", "sid@test.com");
-        ReflectionTestUtils.setField(request, "password", "Password@123");
+        RegisterRequest request = new RegisterRequest("sid", "sid@test.com", "Password@123");
 
         RegisterResponse response = new RegisterResponse(
                 UUID.randomUUID(),

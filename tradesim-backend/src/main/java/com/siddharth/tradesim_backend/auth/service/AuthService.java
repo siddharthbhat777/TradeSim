@@ -32,18 +32,18 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
-        if (authRepository.existsByEmail(request.getEmail())) {
+        if (authRepository.existsByEmail(request.email())) {
             throw new UserRegistrationException("Email already exists");
         }
-        if (authRepository.existsByUsername(request.getUsername())) {
+        if (authRepository.existsByUsername(request.username())) {
             throw new UserRegistrationException("Username already exists");
         }
 
         try {
             User user = User.builder()
-                    .username(request.getUsername())
-                    .email(request.getEmail())
-                    .password(passwordEncoder.encode(request.getPassword()))
+                    .username(request.username())
+                    .email(request.email())
+                    .password(passwordEncoder.encode(request.password()))
                     .role(Role.USER)
                     .balance(BigDecimal.valueOf(10000000))
                     .lockedBalance(BigDecimal.valueOf(0))
@@ -71,13 +71,13 @@ public class AuthService {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getUsernameOrEmail(),
-                            request.getPassword()
+                            request.usernameOrEmail(),
+                            request.password()
                     )
             );
 
             User user = authRepository
-                    .findByUsernameOrEmail(request.getUsernameOrEmail())
+                    .findByUsernameOrEmail(request.usernameOrEmail())
                     .orElseThrow(() -> new UserLoginException("User not found"));
 
             if (user.getAccountStatus() == AccountStatus.SUSPENDED || user.getAccountStatus() == AccountStatus.BANNED) {
