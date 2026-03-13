@@ -2,7 +2,7 @@ package com.siddharth.tradesim_backend.dev_only;
 
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.dev_only.dto.HoldingRequest;
+import com.siddharth.tradesim_backend.dev_only.dto.PositionRequest;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("dev")
@@ -39,7 +38,7 @@ public class DevOnlyController {
     }
 
     @PutMapping("seed-holding")
-    public ResponseEntity<String> seedHolding(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody HoldingRequest holdingRequest) {
-        return ResponseEntity.ok(devOnlyService.seedHolding(userPrincipal.getUserId(), holdingRequest));
+    public ResponseEntity<String> seedHolding(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody PositionRequest holdingRequest) {
+        return ResponseEntity.ok(devOnlyService.seedPosition(userPrincipal.getUserId(), holdingRequest));
     }
 }

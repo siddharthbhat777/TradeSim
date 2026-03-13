@@ -4,8 +4,6 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.holding.HoldingRepository;
-import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
@@ -13,6 +11,8 @@ import com.siddharth.tradesim_backend.order.orderbook.MatchResult;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -33,7 +33,7 @@ class OrderServiceTest {
     private AuthRepository authRepository;
     private StockRepository stockRepository;
     private OrderRepository orderRepository;
-    private HoldingRepository holdingRepository;
+    private PositionRepository positionRepository;
     private OrderBookManager orderBookManager;
     private OrderMatchingEngine orderMatchingEngine;
 
@@ -45,7 +45,7 @@ class OrderServiceTest {
         authRepository = mock(AuthRepository.class);
         stockRepository = mock(StockRepository.class);
         orderRepository = mock(OrderRepository.class);
-        holdingRepository = mock(HoldingRepository.class);
+        positionRepository = mock(PositionRepository.class);
         orderBookManager = mock(OrderBookManager.class);
         orderMatchingEngine = mock(OrderMatchingEngine.class);
 
@@ -53,7 +53,7 @@ class OrderServiceTest {
                 authRepository,
                 stockRepository,
                 orderRepository,
-                holdingRepository,
+                positionRepository,
                 orderBookManager,
                 orderMatchingEngine
         );
@@ -103,7 +103,7 @@ class OrderServiceTest {
     void shouldCreateLimitSellOrder() {
         User user = mock(User.class);
         Stock stock = mock(Stock.class);
-        Holding holding = mock(Holding.class);
+        Position position = mock(Position.class);
 
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
         when(user.getId()).thenReturn(userId);
@@ -111,7 +111,7 @@ class OrderServiceTest {
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
         when(stock.getId()).thenReturn(stockId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
+        when(positionRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(position));
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false));
 
         OrderRequest request = new OrderRequest(
@@ -124,8 +124,8 @@ class OrderServiceTest {
 
         orderService.createOrder(userId, request);
 
-        verify(holding).lockShares(5);
-        verify(holdingRepository).save(holding);
+        verify(position).lockShares(5);
+        verify(positionRepository).save(position);
     }
 
     @Test

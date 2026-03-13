@@ -4,8 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.holding.HoldingRepository;
-import com.siddharth.tradesim_backend.holding.model.Holding;
+import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
@@ -17,6 +16,7 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -35,7 +35,7 @@ public class OrderService {
     private final AuthRepository authRepository;
     private final StockRepository stockRepository;
     private final OrderRepository orderRepository;
-    private final HoldingRepository holdingRepository;
+    private final PositionRepository positionRepository;
     private final OrderBookManager orderBookManager;
     private final OrderMatchingEngine orderMatchingEngine;
 
@@ -116,9 +116,9 @@ public class OrderService {
                     authRepository.save(user);
                 }
                 case SELL -> {
-                    Holding holding = holdingRepository.findByUserIdAndStockId(userId, order.getStockId()).orElseThrow(() -> new BusinessException("Holding not found"));
-                    holding.unlockShares(order.getRemainingQuantity());
-                    holdingRepository.save(holding);
+                    Position position = positionRepository.findByUserIdAndStockId(userId, order.getStockId()).orElseThrow(() -> new BusinessException("Position not found"));
+                    position.unlockShares(order.getRemainingQuantity());
+                    positionRepository.save(position);
                 }
             }
         }
@@ -145,7 +145,7 @@ public class OrderService {
     private void validateMarketOrder(User user, Stock stock, @Valid OrderRequest request) {
         switch (request.side()) {
             case BUY -> validateMarketBuy(user, stock, request);
-            case SELL -> validateUserHolding(user.getId(), stock.getId(), request.quantity());
+            case SELL -> validateUserPosition(user.getId(), stock.getId(), request.quantity());
         }
     }
 
@@ -169,9 +169,9 @@ public class OrderService {
     }
 
     private void validateLimitSell(UUID userId, UUID stockId, int quantity) {
-        Holding holding = holdingRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
-        holding.lockShares(quantity);
-        holdingRepository.save(holding);
+        Position position = positionRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
+        position.lockShares(quantity);
+        positionRepository.save(position);
     }
 
     private BigDecimal estimateMarketBuyCost(UUID stockId, int requiredQuantity) {
@@ -185,9 +185,9 @@ public class OrderService {
         }
     }
 
-    private void validateUserHolding(UUID userId, UUID stockId, int quantity) {
-        Holding holding = holdingRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
-        if (holding.getAvailableQuantity() < quantity) {
+    private void validateUserPosition(UUID userId, UUID stockId, int quantity) {
+        Position position = positionRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
+        if (position.getAvailableQuantity() < quantity) {
             throw new BusinessException("Insufficient shares to sell");
         }
     }

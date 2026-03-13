@@ -3,12 +3,12 @@ package com.siddharth.tradesim_backend.portfolio;
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.holding.HoldingRepository;
-import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.dto.PortfolioHoldingResponse;
 import com.siddharth.tradesim_backend.portfolio.dto.PortfolioResponse;
 import com.siddharth.tradesim_backend.portfolio.dto.TradeExecution;
+import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import lombok.RequiredArgsConstructor;
@@ -23,25 +23,25 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PortfolioService {
-    private final HoldingRepository holdingRepository;
+    private final PositionRepository positionRepository;
     private final StockRepository stockRepository;
     private final AuthRepository authRepository;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
-        List<Holding> holdings = holdingRepository.findByUserId(userId);
+        List<Position> positions = positionRepository.findByUserId(userId);
         List<PortfolioHoldingResponse> responses = new ArrayList<>();
         BigDecimal totalValue = BigDecimal.ZERO;
-        for (Holding holding : holdings) {
-            Stock stock = stockRepository.findById(holding.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+        for (Position position : positions) {
+            Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
             BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal currentValue = currentPrice.multiply(BigDecimal.valueOf(holding.getQuantity()));
+            BigDecimal currentValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
 
             totalValue = totalValue.add(currentValue);
 
             PortfolioHoldingResponse response = new PortfolioHoldingResponse(
-                    holding.getStockId(),
+                    position.getStockId(),
                     stock.getSymbol(),
-                    holding.getQuantity(),
+                    position.getQuantity(),
                     currentPrice,
                     currentValue
             );
@@ -62,20 +62,20 @@ public class PortfolioService {
         User buyer = authRepository.findById(execution.buyerId()).orElseThrow(() -> new BusinessException("User not found"));
         User seller = authRepository.findById(execution.sellerId()).orElseThrow(() -> new BusinessException("User not found"));
 
-        Holding sellerHolding = holdingRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> new BusinessException("Seller holding not found"));
+        Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> new BusinessException("Seller position not found"));
 
         settleBuyer(execution, buyer, tradeValue);
-        settleSeller(execution, seller, sellerHolding, tradeValue);
-        Holding buyerHolding = updateBuyerHolding(execution);
-        holdingRepository.save(buyerHolding);
+        settleSeller(execution, seller, sellerPosition, tradeValue);
+        Position buyerPosition = updateBuyerPosition(execution);
+        positionRepository.save(buyerPosition);
 
         authRepository.save(buyer);
         authRepository.save(seller);
 
-        if (sellerHolding.getQuantity() == 0) {
-            holdingRepository.delete(sellerHolding);
+        if (sellerPosition.getQuantity() == 0) {
+            positionRepository.delete(sellerPosition);
         } else {
-            holdingRepository.save(sellerHolding);
+            positionRepository.save(sellerPosition);
         }
     }
 
@@ -90,27 +90,29 @@ public class PortfolioService {
         buyer.debit(tradeValue);
     }
 
-    private void settleSeller(TradeExecution execution, User seller, Holding sellerHolding, BigDecimal tradeValue) {
+    private void settleSeller(TradeExecution execution, User seller, Position sellerPosition, BigDecimal tradeValue) {
         if (execution.sellerOrderType() == OrderType.LIMIT) {
-            sellerHolding.unlockShares(execution.quantity());
+            sellerPosition.unlockShares(execution.quantity());
         }
-        sellerHolding.decreaseQuantity(execution.quantity());
+        sellerPosition.decreaseQuantity(execution.quantity());
         seller.credit(tradeValue);
     }
 
-    private Holding updateBuyerHolding(TradeExecution execution) {
-        Holding buyerHolding = holdingRepository.findByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
+    private Position updateBuyerPosition(TradeExecution execution) {
+        Position buyerPosition = positionRepository.findByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
 
-        if (buyerHolding == null) {
-            buyerHolding = Holding.builder()
+        if (buyerPosition == null) {
+            buyerPosition = Position.builder()
                     .userId(execution.buyerId())
                     .stockId(execution.stockId())
+                    .averageBuyPrice(execution.executionPrice())
+                    .realizedPnl(BigDecimal.ZERO)
                     .quantity(0)
                     .lockedQuantity(0)
                     .build();
         }
 
-        buyerHolding.increaseQuantity(execution.quantity());
-        return buyerHolding;
+        buyerPosition.increaseQuantity(execution.quantity());
+        return buyerPosition;
     }
 }
