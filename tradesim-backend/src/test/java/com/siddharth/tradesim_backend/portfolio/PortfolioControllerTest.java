@@ -55,8 +55,10 @@ class PortfolioControllerTest {
                 stockId,
                 "AAPL",
                 10,
+                new BigDecimal("120.00"),
                 new BigDecimal("150.00"),
-                new BigDecimal("1500.00")
+                new BigDecimal("1500.00"),
+                new BigDecimal("300.00")
         );
 
         PortfolioResponse response = new PortfolioResponse(List.of(holding), new BigDecimal("1500.00"));

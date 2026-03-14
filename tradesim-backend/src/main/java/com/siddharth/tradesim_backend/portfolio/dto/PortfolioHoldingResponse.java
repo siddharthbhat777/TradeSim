@@ -7,7 +7,9 @@ public record PortfolioHoldingResponse(
         UUID stockId,
         String symbol,
         int quantity,
+        BigDecimal averageBuyPrice,
         BigDecimal currentPrice,
-        BigDecimal currentValue
+        BigDecimal currentValue,
+        BigDecimal unrealizedPnl
 ) {
 }

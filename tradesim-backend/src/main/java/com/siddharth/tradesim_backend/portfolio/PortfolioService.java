@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,12 +31,22 @@ public class PortfolioService {
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
         List<Position> positions = positionRepository.findByUserId(userId);
+        List<UUID> stockIds = positions.stream().map(Position::getStockId).toList();
+        List<Stock> stocks = stockRepository.findAllById(stockIds);
+        Map<UUID, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getId, s -> s));
+
         List<PortfolioHoldingResponse> responses = new ArrayList<>();
         BigDecimal totalValue = BigDecimal.ZERO;
+
         for (Position position : positions) {
-            Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+            Stock stock = stockMap.get(position.getStockId());
+            if (stock == null) {
+                throw new BusinessException("Stock not found");
+            }
             BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal currentValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+
+            BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
 
             totalValue = totalValue.add(currentValue);
 
@@ -42,8 +54,10 @@ public class PortfolioService {
                     position.getStockId(),
                     stock.getSymbol(),
                     position.getQuantity(),
+                    position.getAverageBuyPrice(),
                     currentPrice,
-                    currentValue
+                    currentValue,
+                    unrealizedPnl
             );
 
             responses.add(response);
@@ -72,7 +86,7 @@ public class PortfolioService {
         authRepository.save(buyer);
         authRepository.save(seller);
 
-        if (sellerPosition.getQuantity() == 0) {
+        if (sellerPosition.getQuantity() == 0 && sellerPosition.getLockedQuantity() == 0) {
             positionRepository.delete(sellerPosition);
         } else {
             positionRepository.save(sellerPosition);
@@ -94,7 +108,12 @@ public class PortfolioService {
         if (execution.sellerOrderType() == OrderType.LIMIT) {
             sellerPosition.unlockShares(execution.quantity());
         }
+        BigDecimal executionPrice = execution.executionPrice();
+        BigDecimal averagePrice = sellerPosition.getAverageBuyPrice();
+
+        BigDecimal pnl = executionPrice.subtract(averagePrice).multiply(BigDecimal.valueOf(execution.quantity()));
         sellerPosition.decreaseQuantity(execution.quantity());
+        sellerPosition.addRealizedPnl(pnl);
         seller.credit(tradeValue);
     }
 
@@ -112,6 +131,7 @@ public class PortfolioService {
                     .build();
         }
 
+        buyerPosition.updateAverageBuyPrice(execution.executionPrice(), execution.quantity());
         buyerPosition.increaseQuantity(execution.quantity());
         return buyerPosition;
     }

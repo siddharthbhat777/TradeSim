@@ -50,6 +50,8 @@ class PortfolioServiceTest {
                 .stockId(stockId)
                 .quantity(10)
                 .lockedQuantity(0)
+                .averageBuyPrice(BigDecimal.valueOf(90))
+                .realizedPnl(BigDecimal.ZERO)
                 .build();
 
         Stock stock = Stock.builder()
@@ -59,7 +61,7 @@ class PortfolioServiceTest {
                 .build();
 
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
-        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stockRepository.findAllById(List.of(stockId))).thenReturn(List.of(stock));
 
         PortfolioResponse response = portfolioService.fetchPortfolio(userId);
 
@@ -77,10 +79,11 @@ class PortfolioServiceTest {
                 .stockId(stockId)
                 .quantity(10)
                 .lockedQuantity(0)
+                .averageBuyPrice(BigDecimal.valueOf(90))
+                .realizedPnl(BigDecimal.ZERO)
                 .build();
 
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
-        when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
 
         assertThrows(BusinessException.class, () -> portfolioService.fetchPortfolio(userId));
     }
@@ -131,6 +134,7 @@ class PortfolioServiceTest {
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(5);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 
@@ -169,6 +173,7 @@ class PortfolioServiceTest {
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(10);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 
@@ -203,6 +208,7 @@ class PortfolioServiceTest {
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(0);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 

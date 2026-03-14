@@ -101,16 +101,21 @@ public class Position extends AuditableEntity {
         this.quantity -= quantity;
     }
 
-    public void updateAverageBuyPrice(BigDecimal executionPrice, int executedQty) {
-        if (executedQty <= 0) {
+    public void updateAverageBuyPrice(BigDecimal executionPrice, int executedQuantity) {
+        if (executedQuantity <= 0) {
             throw new IllegalArgumentException("Executed quantity must be positive");
         }
 
+        if (this.quantity == 0 || this.averageBuyPrice == null) {
+            this.averageBuyPrice = executionPrice;
+            return;
+        }
+
         BigDecimal totalCost = this.averageBuyPrice.multiply(BigDecimal.valueOf(this.quantity));
-        BigDecimal newCost = executionPrice.multiply(BigDecimal.valueOf(executedQty));
+        BigDecimal newCost = executionPrice.multiply(BigDecimal.valueOf(executedQuantity));
 
         BigDecimal newTotalCost = totalCost.add(newCost);
-        int newTotalQuantity = this.quantity + executedQty;
+        int newTotalQuantity = this.quantity + executedQuantity;
 
         this.averageBuyPrice = newTotalCost.divide(BigDecimal.valueOf(newTotalQuantity), 4, java.math.RoundingMode.HALF_UP);
     }
