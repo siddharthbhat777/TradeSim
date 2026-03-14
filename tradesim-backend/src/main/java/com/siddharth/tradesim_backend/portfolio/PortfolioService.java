@@ -37,18 +37,25 @@ public class PortfolioService {
 
         List<PortfolioHoldingResponse> responses = new ArrayList<>();
         BigDecimal totalValue = BigDecimal.ZERO;
+        BigDecimal totalInvested = BigDecimal.ZERO;
+        BigDecimal totalUnrealizedPnl = BigDecimal.ZERO;
+        BigDecimal totalRealizedPnl = BigDecimal.ZERO;
 
         for (Position position : positions) {
             Stock stock = stockMap.get(position.getStockId());
             if (stock == null) {
                 throw new BusinessException("Stock not found");
             }
+
             BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal currentValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
-
             BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal invested = position.getAverageBuyPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
 
             totalValue = totalValue.add(currentValue);
+            totalInvested = totalInvested.add(invested);
+            totalUnrealizedPnl = totalUnrealizedPnl.add(unrealizedPnl);
+            totalRealizedPnl = totalRealizedPnl.add(position.getRealizedPnl());
 
             PortfolioHoldingResponse response = new PortfolioHoldingResponse(
                     position.getStockId(),
@@ -63,7 +70,15 @@ public class PortfolioService {
             responses.add(response);
         }
 
-        return new PortfolioResponse(responses, totalValue);
+        BigDecimal totalPnl = totalRealizedPnl.add(totalUnrealizedPnl);
+        return new PortfolioResponse(
+                responses,
+                totalValue,
+                totalInvested,
+                totalUnrealizedPnl,
+                totalRealizedPnl,
+                totalPnl
+        );
     }
 
     @Transactional

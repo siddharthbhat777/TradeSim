@@ -1,7 +1,7 @@
-package com.siddharth.tradesim_backend.holding;
+package com.siddharth.tradesim_backend.position;
 
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.holding.model.dto.HoldingResponse;
+import com.siddharth.tradesim_backend.position.model.dto.PositionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("holdings")
+@RequestMapping("positions")
 @RequiredArgsConstructor
-public class HoldingController {
-    private final HoldingService holdingService;
+public class PositionController {
+    private final PositionService positionService;
 
     @GetMapping
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<HoldingResponse>> getHoldings(@AuthenticationPrincipal UserPrincipal user) {
-        return ResponseEntity.ok(holdingService.fetchHoldings(user.getUserId()));
+    public ResponseEntity<List<PositionResponse>> getPositions(@AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(positionService.fetchPositions(principal.getUserId()));
     }
 }
