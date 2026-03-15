@@ -1,12 +1,15 @@
-package com.siddharth.tradesim_backend.portfolio;
+package com.siddharth.tradesim_backend.portfolio.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
-import com.siddharth.tradesim_backend.portfolio.dto.PortfolioHoldingResponse;
-import com.siddharth.tradesim_backend.portfolio.dto.PortfolioResponse;
-import com.siddharth.tradesim_backend.portfolio.dto.TradeExecution;
+import com.siddharth.tradesim_backend.portfolio.PortfolioSnapshotRepository;
+import com.siddharth.tradesim_backend.portfolio.model.PortfolioSnapshot;
+import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioHistoryResponse;
+import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioHoldingResponse;
+import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;
+import com.siddharth.tradesim_backend.portfolio.model.dto.TradeExecution;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
@@ -28,6 +31,7 @@ public class PortfolioService {
     private final PositionRepository positionRepository;
     private final StockRepository stockRepository;
     private final AuthRepository authRepository;
+    private final PortfolioSnapshotRepository portfolioSnapshotRepository;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
@@ -82,6 +86,21 @@ public class PortfolioService {
                 totalPnl,
                 equity
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PortfolioHistoryResponse> fetchPortfolioHistory(UUID userId) {
+        List<PortfolioSnapshot> portfolioSnapshots = portfolioSnapshotRepository.findByUserIdOrderBySnapshotDate(userId);
+
+        return portfolioSnapshots.stream()
+                .map(snapshot -> new PortfolioHistoryResponse(
+                        snapshot.getSnapshotDate(),
+                        snapshot.getTotalValue(),
+                        snapshot.getUnrealizedPnl(),
+                        snapshot.getRealizedPnl(),
+                        snapshot.getEquity()
+                ))
+                .toList();
     }
 
     @Transactional
