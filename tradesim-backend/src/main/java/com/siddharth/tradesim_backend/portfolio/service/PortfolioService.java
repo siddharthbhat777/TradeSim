@@ -6,10 +6,7 @@ import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.PortfolioSnapshotRepository;
 import com.siddharth.tradesim_backend.portfolio.model.PortfolioSnapshot;
-import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioHistoryResponse;
-import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioHoldingResponse;
-import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;
-import com.siddharth.tradesim_backend.portfolio.model.dto.TradeExecution;
+import com.siddharth.tradesim_backend.portfolio.model.dto.*;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
@@ -19,10 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.math.RoundingMode;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,6 +95,53 @@ public class PortfolioService {
                         snapshot.getRealizedPnl(),
                         snapshot.getEquity()
                 ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PortfolioExposureResponse> fetchExposure(UUID userId) {
+        List<Position> positions = positionRepository.findByUserId(userId);
+
+        if (positions.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> stockIds = positions.stream().map(Position::getStockId).toList();
+        Map<UUID, Stock> stockMap = stockRepository.findAllById(stockIds).stream().collect(Collectors.toMap(Stock::getId, s -> s));
+        BigDecimal totalValue = BigDecimal.ZERO;
+        Map<UUID, BigDecimal> positionValues = new HashMap<>();
+
+        for (Position position : positions) {
+            Stock stock = stockMap.get(position.getStockId());
+            BigDecimal currentPrice = stock.getLastTradedPrice();
+            BigDecimal value = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+
+            positionValues.put(position.getStockId(), value);
+
+            totalValue = totalValue.add(value);
+        }
+
+        BigDecimal finalTotalValue = totalValue;
+
+        return positions.stream()
+                .map(position -> {
+                    Stock stock = stockMap.get(position.getStockId());
+                    BigDecimal value = positionValues.get(position.getStockId());
+                    BigDecimal exposurePercent = BigDecimal.ZERO;
+
+                    if (finalTotalValue.compareTo(BigDecimal.ZERO) > 0) {
+                        exposurePercent = value
+                                .multiply(BigDecimal.valueOf(100))
+                                .divide(finalTotalValue, 4, RoundingMode.HALF_UP);
+                    }
+
+                    return new PortfolioExposureResponse(
+                            position.getStockId(),
+                            stock.getSymbol(),
+                            value,
+                            exposurePercent
+                    );
+                })
                 .toList();
     }
 
