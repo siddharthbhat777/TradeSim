@@ -48,7 +48,8 @@ public class Position extends AuditableEntity {
 
     @Column(nullable = false, precision = 19, scale = 4)
     @Setter(AccessLevel.NONE)
-    private BigDecimal averageBuyPrice;
+    @Builder.Default
+    private BigDecimal averageBuyPrice = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 19, scale = 4)
     @Setter(AccessLevel.NONE)

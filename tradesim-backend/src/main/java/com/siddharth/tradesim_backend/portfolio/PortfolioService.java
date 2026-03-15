@@ -30,6 +30,7 @@ public class PortfolioService {
     private final AuthRepository authRepository;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
+        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
         List<Position> positions = positionRepository.findByUserId(userId);
         List<UUID> stockIds = positions.stream().map(Position::getStockId).toList();
         List<Stock> stocks = stockRepository.findAllById(stockIds);
@@ -40,6 +41,7 @@ public class PortfolioService {
         BigDecimal totalInvested = BigDecimal.ZERO;
         BigDecimal totalUnrealizedPnl = BigDecimal.ZERO;
         BigDecimal totalRealizedPnl = BigDecimal.ZERO;
+        BigDecimal equity = user.calculateEquity(totalUnrealizedPnl);
 
         for (Position position : positions) {
             Stock stock = stockMap.get(position.getStockId());
@@ -77,7 +79,8 @@ public class PortfolioService {
                 totalInvested,
                 totalUnrealizedPnl,
                 totalRealizedPnl,
-                totalPnl
+                totalPnl,
+                equity
         );
     }
 

@@ -45,6 +45,8 @@ class PortfolioServiceTest {
         UUID userId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
 
+        User user = mock(User.class);
+
         Position position = Position.builder()
                 .userId(userId)
                 .stockId(stockId)
@@ -62,6 +64,8 @@ class PortfolioServiceTest {
 
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findAllById(List.of(stockId))).thenReturn(List.of(stock));
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(user.calculateEquity(any())).thenReturn(BigDecimal.valueOf(1000));
 
         PortfolioResponse response = portfolioService.fetchPortfolio(userId);
 
@@ -74,6 +78,8 @@ class PortfolioServiceTest {
         UUID userId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
 
+        User user = mock(User.class);
+
         Position position = Position.builder()
                 .userId(userId)
                 .stockId(stockId)
@@ -83,7 +89,9 @@ class PortfolioServiceTest {
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
+        when(stockRepository.findAllById(any())).thenReturn(List.of());
 
         assertThrows(BusinessException.class, () -> portfolioService.fetchPortfolio(userId));
     }

@@ -59,6 +59,7 @@ class PortfolioControllerTest {
                 new BigDecimal("300.00"),
                 BigDecimal.ZERO,
                 new BigDecimal("1200.00"),
+                new BigDecimal("1500.00"),
                 new BigDecimal("1500.00")
         );
 

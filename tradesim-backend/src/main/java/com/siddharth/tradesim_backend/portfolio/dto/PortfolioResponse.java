@@ -9,6 +9,7 @@ public record PortfolioResponse(
         BigDecimal totalInvested,
         BigDecimal totalUnrealizedPnl,
         BigDecimal totalRealizedPnl,
-        BigDecimal totalPnl
+        BigDecimal totalPnl,
+        BigDecimal equity
 ) {
 }
