@@ -6,7 +6,7 @@ import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.FillRepository;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
-import com.siddharth.tradesim_backend.portfolio.PortfolioService;
+import com.siddharth.tradesim_backend.portfolio.service.PortfolioService;
 import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

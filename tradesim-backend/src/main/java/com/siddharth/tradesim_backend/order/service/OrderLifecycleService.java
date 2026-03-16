@@ -3,14 +3,14 @@ package com.siddharth.tradesim_backend.order.service;
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.holding.HoldingRepository;
-import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +27,7 @@ public class OrderLifecycleService {
     private final OrderRepository orderRepository;
     private final OrderBookManager orderBookManager;
     private final AuthRepository authRepository;
-    private final HoldingRepository holdingRepository;
+    private final PositionRepository positionRepository;
 
     @Transactional
     public void cancelOrder(Order order) {
@@ -63,8 +63,9 @@ public class OrderLifecycleService {
             BigDecimal unlockAmount = order.getLimitPrice().multiply(BigDecimal.valueOf(remainingQty));
             user.unlockFunds(unlockAmount);
         } else {
-            Holding holding = holdingRepository.findByUserIdAndStockId(order.getUserId(), order.getStockId()).orElseThrow(() -> new BusinessException("Holding not found"));
-            holding.unlockShares(remainingQty);
+            Position position = positionRepository.findByUserIdAndStockId(order.getUserId(), order.getStockId()).orElseThrow(() -> new BusinessException("Position not found"));
+            position.unlockShares(remainingQty);
+            positionRepository.save(position);
         }
     }
 }

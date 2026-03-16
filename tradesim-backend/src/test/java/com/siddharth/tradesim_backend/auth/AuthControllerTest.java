@@ -14,7 +14,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
@@ -42,9 +41,7 @@ class AuthControllerTest {
 
     @Test
     void shouldLoginSuccessfully() throws Exception {
-        LoginRequest request = new LoginRequest();
-        ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
-        ReflectionTestUtils.setField(request, "password", "password");
+        LoginRequest request = new LoginRequest("sid", "password");
 
         LoginResponse response = new LoginResponse("mock-jwt-token", "sid", Role.USER);
 
@@ -59,10 +56,7 @@ class AuthControllerTest {
 
     @Test
     void shouldRegisterSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        ReflectionTestUtils.setField(request, "username", "sid");
-        ReflectionTestUtils.setField(request, "email", "sid@test.com");
-        ReflectionTestUtils.setField(request, "password", "Password@123");
+        RegisterRequest request = new RegisterRequest("sid", "sid@test.com", "Password@123");
 
         RegisterResponse response = new RegisterResponse(
                 UUID.randomUUID(),

@@ -4,8 +4,9 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.portfolio.dto.PortfolioHoldingResponse;
-import com.siddharth.tradesim_backend.portfolio.dto.PortfolioResponse;
+import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioHoldingResponse;
+import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;
+import com.siddharth.tradesim_backend.portfolio.service.PortfolioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,15 +52,17 @@ class PortfolioControllerTest {
 
         UserPrincipal principal = new UserPrincipal(user);
 
-        PortfolioHoldingResponse holding = new PortfolioHoldingResponse(
-                stockId,
-                "AAPL",
-                10,
-                new BigDecimal("150.00"),
+        PortfolioHoldingResponse holding = createHolding(stockId);
+
+        PortfolioResponse response = new PortfolioResponse(
+                List.of(holding),
+                new BigDecimal("1500.00"),
+                new BigDecimal("300.00"),
+                BigDecimal.ZERO,
+                new BigDecimal("1200.00"),
+                new BigDecimal("1500.00"),
                 new BigDecimal("1500.00")
         );
-
-        PortfolioResponse response = new PortfolioResponse(List.of(holding), new BigDecimal("1500.00"));
 
         when(portfolioService.fetchPortfolio(userId)).thenReturn(response);
 
@@ -77,5 +80,17 @@ class PortfolioControllerTest {
                 .andExpect(jsonPath("$.holdings[0].symbol").value("AAPL"))
                 .andExpect(jsonPath("$.holdings[0].quantity").value(10))
                 .andExpect(jsonPath("$.totalValue").value(1500.00));
+    }
+
+    private PortfolioHoldingResponse createHolding(UUID stockId) {
+        return new PortfolioHoldingResponse(
+                stockId,
+                "AAPL",
+                10,
+                new BigDecimal("120.00"),
+                new BigDecimal("150.00"),
+                new BigDecimal("1500.00"),
+                new BigDecimal("300.00")
+        );
     }
 }

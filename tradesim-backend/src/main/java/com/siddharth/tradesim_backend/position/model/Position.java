@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.holding.model;
+package com.siddharth.tradesim_backend.position.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
@@ -6,18 +6,19 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(
-        name = "holdings",
+        name = "positions",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"user_id", "stock_id"})
         },
         indexes = {
-                @Index(name = "idx_holding_user", columnList = "user_id"),
-                @Index(name = "idx_holding_stock", columnList = "stock_id")
+                @Index(name = "idx_position_user", columnList = "user_id"),
+                @Index(name = "idx_position_stock", columnList = "stock_id")
         }
 )
 @Getter
@@ -25,7 +26,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Holding extends AuditableEntity {
+public class Position extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
@@ -44,6 +45,15 @@ public class Holding extends AuditableEntity {
     @Column(nullable = false)
     @Setter(AccessLevel.NONE)
     private int lockedQuantity;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    @Setter(AccessLevel.NONE)
+    @Builder.Default
+    private BigDecimal averageBuyPrice = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    @Setter(AccessLevel.NONE)
+    private BigDecimal realizedPnl;
 
     public int getAvailableQuantity() {
         return quantity - lockedQuantity;
@@ -84,9 +94,38 @@ public class Holding extends AuditableEntity {
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
         }
+
         if (this.quantity < quantity) {
             throw new BusinessException("Insufficient shares");
         }
+
         this.quantity -= quantity;
+    }
+
+    public void updateAverageBuyPrice(BigDecimal executionPrice, int executedQuantity) {
+        if (executedQuantity <= 0) {
+            throw new IllegalArgumentException("Executed quantity must be positive");
+        }
+
+        if (this.quantity == 0 || this.averageBuyPrice == null) {
+            this.averageBuyPrice = executionPrice;
+            return;
+        }
+
+        BigDecimal totalCost = this.averageBuyPrice.multiply(BigDecimal.valueOf(this.quantity));
+        BigDecimal newCost = executionPrice.multiply(BigDecimal.valueOf(executedQuantity));
+
+        BigDecimal newTotalCost = totalCost.add(newCost);
+        int newTotalQuantity = this.quantity + executedQuantity;
+
+        this.averageBuyPrice = newTotalCost.divide(BigDecimal.valueOf(newTotalQuantity), 4, java.math.RoundingMode.HALF_UP).setScale(4, java.math.RoundingMode.HALF_UP);
+    }
+
+    public void addRealizedPnl(BigDecimal pnl) {
+        if (pnl == null) {
+            throw new IllegalArgumentException("PnL cannot be null");
+        }
+
+        this.realizedPnl = this.realizedPnl.add(pnl);
     }
 }

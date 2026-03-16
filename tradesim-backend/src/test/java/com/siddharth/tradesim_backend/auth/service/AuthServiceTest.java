@@ -16,7 +16,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -40,9 +39,7 @@ class AuthServiceTest {
 
     @Test
     void shouldLoginUserSuccessfullyWhenCredentialsAreValid() {
-        LoginRequest request = new LoginRequest();
-        ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
-        ReflectionTestUtils.setField(request, "password", "password");
+        LoginRequest request = new LoginRequest("sid", "password");
 
         User user = User.builder()
                 .id(UUID.randomUUID())
@@ -70,9 +67,7 @@ class AuthServiceTest {
 
     @Test
     void shouldThrowExceptionWhenCredentialsAreInvalid() {
-        LoginRequest request = new LoginRequest();
-        ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
-        ReflectionTestUtils.setField(request, "password", "wrong");
+        LoginRequest request = new LoginRequest("sid", "wrong");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(new BadCredentialsException("Bad credentials"));
 
@@ -84,9 +79,7 @@ class AuthServiceTest {
 
     @Test
     void shouldThrowExceptionWhenAccountIsSuspended() {
-        LoginRequest request = new LoginRequest();
-        ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
-        ReflectionTestUtils.setField(request, "password", "password");
+        LoginRequest request = new LoginRequest("sid", "password");
 
         User user = User.builder()
                 .id(UUID.randomUUID())
@@ -109,9 +102,7 @@ class AuthServiceTest {
 
     @Test
     void shouldThrowExceptionWhenAccountIsBanned() {
-        LoginRequest request = new LoginRequest();
-        ReflectionTestUtils.setField(request, "usernameOrEmail", "sid");
-        ReflectionTestUtils.setField(request, "password", "password");
+        LoginRequest request = new LoginRequest("sid", "password");
 
         User user = User.builder()
                 .id(UUID.randomUUID())

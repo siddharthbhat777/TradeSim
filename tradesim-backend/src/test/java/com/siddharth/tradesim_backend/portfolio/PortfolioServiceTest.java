@@ -3,11 +3,12 @@ package com.siddharth.tradesim_backend.portfolio;
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.holding.HoldingRepository;
-import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
-import com.siddharth.tradesim_backend.portfolio.dto.PortfolioResponse;
-import com.siddharth.tradesim_backend.portfolio.dto.TradeExecution;
+import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;
+import com.siddharth.tradesim_backend.portfolio.model.dto.TradeExecution;
+import com.siddharth.tradesim_backend.portfolio.service.PortfolioService;
+import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.*;
 class PortfolioServiceTest {
 
     @Mock
-    private HoldingRepository holdingRepository;
+    private PositionRepository positionRepository;
 
     @Mock
     private StockRepository stockRepository;
@@ -45,10 +46,15 @@ class PortfolioServiceTest {
         UUID userId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
 
-        Holding holding = Holding.builder()
+        User user = mock(User.class);
+
+        Position position = Position.builder()
                 .userId(userId)
                 .stockId(stockId)
                 .quantity(10)
+                .lockedQuantity(0)
+                .averageBuyPrice(BigDecimal.valueOf(90))
+                .realizedPnl(BigDecimal.ZERO)
                 .build();
 
         Stock stock = Stock.builder()
@@ -57,8 +63,10 @@ class PortfolioServiceTest {
                 .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
-        when(holdingRepository.findByUserId(userId)).thenReturn(List.of(holding));
-        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
+        when(stockRepository.findAllById(List.of(stockId))).thenReturn(List.of(stock));
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(user.calculateEquity(any())).thenReturn(BigDecimal.valueOf(1000));
 
         PortfolioResponse response = portfolioService.fetchPortfolio(userId);
 
@@ -71,14 +79,20 @@ class PortfolioServiceTest {
         UUID userId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
 
-        Holding holding = Holding.builder()
+        User user = mock(User.class);
+
+        Position position = Position.builder()
                 .userId(userId)
                 .stockId(stockId)
                 .quantity(10)
+                .lockedQuantity(0)
+                .averageBuyPrice(BigDecimal.valueOf(90))
+                .realizedPnl(BigDecimal.ZERO)
                 .build();
 
-        when(holdingRepository.findByUserId(userId)).thenReturn(List.of(holding));
-        when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
+        when(stockRepository.findAllById(any())).thenReturn(List.of());
 
         assertThrows(BusinessException.class, () -> portfolioService.fetchPortfolio(userId));
     }
@@ -111,7 +125,7 @@ class PortfolioServiceTest {
         User buyer = mock(User.class);
         User seller = mock(User.class);
 
-        Holding sellerHolding = mock(Holding.class);
+        Position sellerPosition = mock(Position.class);
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -126,16 +140,17 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(holdingRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerHolding));
-        when(holdingRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
-        when(sellerHolding.getQuantity()).thenReturn(5);
+        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(sellerPosition.getQuantity()).thenReturn(5);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 
         verify(buyer).debit(BigDecimal.valueOf(500));
         verify(seller).credit(BigDecimal.valueOf(500));
-        verify(sellerHolding).decreaseQuantity(5);
-        verify(holdingRepository, times(2)).save(any(Holding.class));
+        verify(sellerPosition).decreaseQuantity(5);
+        verify(positionRepository, times(2)).save(any(Position.class));
         verify(authRepository).save(buyer);
         verify(authRepository).save(seller);
     }
@@ -149,7 +164,7 @@ class PortfolioServiceTest {
         User buyer = mock(User.class);
         User seller = mock(User.class);
 
-        Holding sellerHolding = mock(Holding.class);
+        Position sellerPosition = mock(Position.class);
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -164,9 +179,10 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(holdingRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerHolding));
-        when(holdingRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
-        when(sellerHolding.getQuantity()).thenReturn(10);
+        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(sellerPosition.getQuantity()).thenReturn(10);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 
@@ -175,7 +191,7 @@ class PortfolioServiceTest {
     }
 
     @Test
-    void shouldDeleteSellerHoldingWhenQuantityBecomesZero() {
+    void shouldDeleteSellerPositionWhenQuantityBecomesZero() {
         UUID buyerId = UUID.randomUUID();
         UUID sellerId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
@@ -183,7 +199,7 @@ class PortfolioServiceTest {
         User buyer = mock(User.class);
         User seller = mock(User.class);
 
-        Holding sellerHolding = mock(Holding.class);
+        Position sellerPosition = mock(Position.class);
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -198,12 +214,13 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(holdingRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerHolding));
-        when(holdingRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
-        when(sellerHolding.getQuantity()).thenReturn(0);
+        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(sellerPosition.getQuantity()).thenReturn(0);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 
-        verify(holdingRepository).delete(sellerHolding);
+        verify(positionRepository).delete(sellerPosition);
     }
 }

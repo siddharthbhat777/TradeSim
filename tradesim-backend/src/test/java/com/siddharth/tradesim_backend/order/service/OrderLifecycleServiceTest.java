@@ -2,14 +2,14 @@ package com.siddharth.tradesim_backend.order.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.holding.HoldingRepository;
-import com.siddharth.tradesim_backend.holding.model.Holding;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -29,7 +29,7 @@ class OrderLifecycleServiceTest {
     private OrderRepository orderRepository;
     private OrderBookManager orderBookManager;
     private AuthRepository authRepository;
-    private HoldingRepository holdingRepository;
+    private PositionRepository positionRepository;
 
     private UUID userId;
     private UUID stockId;
@@ -39,13 +39,13 @@ class OrderLifecycleServiceTest {
         orderRepository = mock(OrderRepository.class);
         orderBookManager = mock(OrderBookManager.class);
         authRepository = mock(AuthRepository.class);
-        holdingRepository = mock(HoldingRepository.class);
+        positionRepository = mock(PositionRepository.class);
 
         service = new OrderLifecycleService(
                 orderRepository,
                 orderBookManager,
                 authRepository,
-                holdingRepository
+                positionRepository
         );
 
         userId = UUID.randomUUID();
@@ -92,13 +92,13 @@ class OrderLifecycleServiceTest {
     void shouldCancelSellOrderAndUnlockShares() {
         Order order = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 100);
 
-        Holding holding = mock(Holding.class);
+        Position position = mock(Position.class);
 
-        when(holdingRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(holding));
+        when(positionRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(position));
 
         service.cancelOrder(order);
 
-        verify(holding).unlockShares(5);
+        verify(position).unlockShares(5);
         verify(orderBookManager).unregisterOrder(order.getId());
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
