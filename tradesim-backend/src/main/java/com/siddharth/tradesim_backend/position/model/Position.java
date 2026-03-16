@@ -118,7 +118,7 @@ public class Position extends AuditableEntity {
         BigDecimal newTotalCost = totalCost.add(newCost);
         int newTotalQuantity = this.quantity + executedQuantity;
 
-        this.averageBuyPrice = newTotalCost.divide(BigDecimal.valueOf(newTotalQuantity), 4, java.math.RoundingMode.HALF_UP);
+        this.averageBuyPrice = newTotalCost.divide(BigDecimal.valueOf(newTotalQuantity), 4, java.math.RoundingMode.HALF_UP).setScale(4, java.math.RoundingMode.HALF_UP);
     }
 
     public void addRealizedPnl(BigDecimal pnl) {
