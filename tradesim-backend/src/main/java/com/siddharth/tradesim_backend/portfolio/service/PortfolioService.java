@@ -177,8 +177,8 @@ public class PortfolioService {
             if (execution.buyerLimitPrice() == null) {
                 throw new BusinessException("Missing buyer limit price");
             }
-            BigDecimal reserved = execution.buyerLimitPrice().multiply(BigDecimal.valueOf(execution.quantity()));
-            buyer.unlockFunds(reserved);
+            BigDecimal reservedMargin = execution.buyerLimitPrice().multiply(BigDecimal.valueOf(execution.quantity())).divide(BigDecimal.valueOf(buyer.getLeverage()), 4, RoundingMode.HALF_UP);
+            buyer.unlockFunds(reservedMargin);
         }
         buyer.debit(tradeValue);
     }

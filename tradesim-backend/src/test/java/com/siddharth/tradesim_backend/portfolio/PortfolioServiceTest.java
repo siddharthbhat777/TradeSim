@@ -181,12 +181,13 @@ class PortfolioServiceTest {
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(buyer.getLeverage()).thenReturn(10);
         when(sellerPosition.getQuantity()).thenReturn(10);
         when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 
-        verify(buyer).unlockFunds(BigDecimal.valueOf(500));
+        verify(buyer).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(50)) == 0));
         verify(buyer).debit(BigDecimal.valueOf(450));
     }
 

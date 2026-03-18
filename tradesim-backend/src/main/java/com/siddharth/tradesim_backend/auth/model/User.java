@@ -41,11 +41,13 @@ public class User extends AuditableEntity {
 
     @Column(nullable = false, precision = 19, scale = 4)
     @Getter(AccessLevel.NONE)
-    private BigDecimal balance;
+    @Builder.Default
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 19, scale = 4)
     @Getter(AccessLevel.NONE)
-    private BigDecimal lockedBalance;
+    @Builder.Default
+    private BigDecimal lockedBalance = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
