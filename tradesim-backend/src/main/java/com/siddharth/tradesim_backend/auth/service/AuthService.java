@@ -48,6 +48,8 @@ public class AuthService {
                     .balance(BigDecimal.valueOf(10000000))
                     .lockedBalance(BigDecimal.valueOf(0))
                     .accountStatus(AccountStatus.ACTIVE)
+                    .leverage(5)
+                    .maintenanceMarginPercent(BigDecimal.valueOf(25))
                     .build();
 
             User saved = authRepository.save(user);

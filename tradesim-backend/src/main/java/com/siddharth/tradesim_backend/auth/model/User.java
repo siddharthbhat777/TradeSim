@@ -51,6 +51,12 @@ public class User extends AuditableEntity {
     @Column(nullable = false)
     private AccountStatus accountStatus;
 
+    @Column(nullable = false)
+    private int leverage;
+
+    @Column(nullable = false, precision = 5, scale = 2)
+    private BigDecimal maintenanceMarginPercent;
+
     private Instant lastLogin;
 
     public BigDecimal getAvailableBalance() {
@@ -61,9 +67,7 @@ public class User extends AuditableEntity {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Debit amount must be positive");
         }
-        if (getAvailableBalance().compareTo(amount) < 0) {
-            throw new BusinessException("Insufficient balance");
-        }
+
         this.balance = this.balance.subtract(amount);
     }
 

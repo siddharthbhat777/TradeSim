@@ -17,6 +17,7 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.risk.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -38,6 +40,7 @@ public class OrderService {
     private final PositionRepository positionRepository;
     private final OrderBookManager orderBookManager;
     private final OrderMatchingEngine orderMatchingEngine;
+    private final RiskService riskService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -78,6 +81,7 @@ public class OrderService {
             }
 
             result = orderMatchingEngine.match(order);
+            riskService.checkLiquidation(user);
         } finally {
             lock.unlock();
         }
@@ -151,9 +155,7 @@ public class OrderService {
 
     private void validateMarketBuy(User user, Stock stock, @Valid OrderRequest request) {
         BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.quantity());
-        if (user.getAvailableBalance().compareTo(estimatedCost) < 0) {
-            throw new OrderException("Insufficient balance for market order");
-        }
+        riskService.validateBuyOrder(user, estimatedCost);
     }
 
     private void validateLimitOrder(User user, Stock stock, @Valid OrderRequest request) {
@@ -165,7 +167,8 @@ public class OrderService {
 
     private void validateLimitBuy(User user, @Valid OrderRequest request) {
         BigDecimal orderValue = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
-        user.lockFunds(orderValue);
+        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
+        user.lockFunds(requiredMargin);
     }
 
     private void validateLimitSell(UUID userId, UUID stockId, int quantity) {
