@@ -40,7 +40,6 @@ public class PortfolioService {
         BigDecimal totalInvested = BigDecimal.ZERO;
         BigDecimal totalUnrealizedPnl = BigDecimal.ZERO;
         BigDecimal totalRealizedPnl = BigDecimal.ZERO;
-        BigDecimal equity = user.calculateEquity(totalUnrealizedPnl);
 
         for (Position position : positions) {
             Stock stock = stockMap.get(position.getStockId());
@@ -71,6 +70,7 @@ public class PortfolioService {
             responses.add(response);
         }
 
+        BigDecimal equity = user.calculateEquity(totalUnrealizedPnl);
         BigDecimal totalPnl = totalRealizedPnl.add(totalUnrealizedPnl);
         return new PortfolioResponse(
                 responses,

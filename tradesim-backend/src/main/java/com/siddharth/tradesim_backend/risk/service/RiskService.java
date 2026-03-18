@@ -6,6 +6,7 @@ import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.dto.RiskResponse;
+import com.siddharth.tradesim_backend.risk.enums.RiskLevel;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import lombok.RequiredArgsConstructor;
@@ -63,8 +64,27 @@ public class RiskService {
         }
 
         BigDecimal equity = user.calculateEquity(totalUnrealizedPnl);
-        BigDecimal marginUsed = totalPositionValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal marginUsed = BigDecimal.ZERO;
+        if (totalPositionValue.compareTo(BigDecimal.ZERO) > 0) {
+            marginUsed = totalPositionValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
+        }
+
         BigDecimal maintenanceMargin = marginUsed.multiply(user.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+        BigDecimal marginRatio = BigDecimal.ZERO;
+        if (maintenanceMargin.compareTo(BigDecimal.ZERO) > 0) {
+            marginRatio = equity.divide(maintenanceMargin, 4, RoundingMode.HALF_UP);
+        }
+
+        RiskLevel riskLevel;
+        if (maintenanceMargin.compareTo(BigDecimal.ZERO) == 0) {
+            riskLevel = RiskLevel.SAFE;
+        } else if (marginRatio.compareTo(BigDecimal.ONE) < 0) {
+            riskLevel = RiskLevel.LIQUIDATION;
+        } else if (marginRatio.compareTo(BigDecimal.valueOf(2)) < 0) {
+            riskLevel = RiskLevel.WARNING;
+        } else {
+            riskLevel = RiskLevel.SAFE;
+        }
 
         boolean isUnderLiquidation = equity.compareTo(maintenanceMargin) < 0;
 
@@ -73,6 +93,8 @@ public class RiskService {
                 marginUsed,
                 maintenanceMargin,
                 totalUnrealizedPnl,
+                marginRatio,
+                riskLevel,
                 isUnderLiquidation
         );
     }
