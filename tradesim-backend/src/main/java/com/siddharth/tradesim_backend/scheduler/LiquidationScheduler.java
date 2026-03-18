@@ -2,7 +2,7 @@ package com.siddharth.tradesim_backend.scheduler;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.risk.RiskService;
+import com.siddharth.tradesim_backend.risk.service.RiskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

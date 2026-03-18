@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.risk;
+package com.siddharth.tradesim_backend.risk.service;
 
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;

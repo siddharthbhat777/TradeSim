@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.risk;
 
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.risk.service.RiskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ class RiskServiceTest {
 
     @BeforeEach
     void setup() {
-        riskService = new RiskService(null, null, null);
+        riskService = new RiskService(null, null, null, null);
 
         user = User.builder()
                 .balance(BigDecimal.valueOf(1000))
