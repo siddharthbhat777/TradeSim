@@ -71,20 +71,14 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        ReentrantLock lock = orderBookManager.getLock(order.getStockId());
-        MatchResult result;
-        lock.lock();
-        try {
-            if (order.getOrderType() == OrderType.LIMIT) {
-                orderBookManager.addOrderToOrderBook(order);
-                orderBookManager.registerOrder(order);
-            }
+        MatchResult result = orderMatchingEngine.match(order);
 
-            result = orderMatchingEngine.match(order);
-            riskService.checkLiquidation(user);
-        } finally {
-            lock.unlock();
+        if (order.getOrderType() == OrderType.LIMIT) {
+            orderBookManager.addOrderToOrderBook(order);
+            orderBookManager.registerOrder(order);
         }
+
+        riskService.checkLiquidation(user);
 
         return new OrderResponse(
                 order.getId(),

@@ -56,7 +56,18 @@ public class LiquidationService {
                         .status(OrderStatus.OPEN)
                         .build();
 
+                int beforeQuantity = position.getQuantity();
+
                 orderMatchingEngine.match(liquidationOrder);
+
+                if (liquidationOrder.getStatus() == OrderStatus.CANCELLED) {
+                    break;
+                }
+
+                int afterQuantity = position.getQuantity();
+                if (afterQuantity >= beforeQuantity) {
+                    break;
+                }
             }
         }
     }

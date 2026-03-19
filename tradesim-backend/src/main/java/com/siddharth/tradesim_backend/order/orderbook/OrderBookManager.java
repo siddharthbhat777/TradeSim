@@ -22,6 +22,16 @@ public class OrderBookManager {
     private final Map<UUID, ReentrantLock> stockLocks = new ConcurrentHashMap<>();
     private final Map<UUID, Order> inMemoryOrders = new ConcurrentHashMap<>();
 
+    public <T> T withLock(UUID stockId, java.util.function.Function<OrderBook, T> action) {
+        ReentrantLock lock = getLock(stockId);
+        lock.lock();
+        try {
+            return action.apply(getOrderBook(stockId));
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public OrderBook getOrderBook(UUID stockId) {
         return orderBooks.computeIfAbsent(stockId, _ -> new OrderBook());
     }
