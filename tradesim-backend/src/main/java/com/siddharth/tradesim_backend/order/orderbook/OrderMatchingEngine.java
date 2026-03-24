@@ -98,7 +98,11 @@ public class OrderMatchingEngine {
         List<OrderBookEntry> skipped = new ArrayList<>();
         while (order.getRemainingQuantity() > 0 && !orderBook.getSellOrders().isEmpty()) {
             OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
-            Order sellOrder = Objects.requireNonNull(orderBookManager.getOrder(sellEntry.orderId()), "Sell order not found in memory");
+            Order sellOrder = orderBookManager.getOrderOrLoad(sellEntry.orderId());
+            if (sellOrder == null) {
+                orderBook.getSellOrders().poll();
+                continue;
+            }
 
             int executedQuantity = Math.min(order.getRemainingQuantity(), sellOrder.getRemainingQuantity());
             if (executedQuantity <= 0) {
@@ -135,7 +139,11 @@ public class OrderMatchingEngine {
         List<OrderBookEntry> skipped = new ArrayList<>();
         while (order.getRemainingQuantity() > 0 && !orderBook.getBuyOrders().isEmpty()) {
             OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
-            Order buyOrder = Objects.requireNonNull(orderBookManager.getOrder(buyEntry.orderId()), "Buy order not found in memory");
+            Order buyOrder = orderBookManager.getOrderOrLoad(buyEntry.orderId());
+            if (buyOrder == null) {
+                orderBook.getBuyOrders().poll();
+                continue;
+            }
 
             int executedQuantity = Math.min(buyOrder.getRemainingQuantity(), order.getRemainingQuantity());
             if (executedQuantity <= 0) {
@@ -179,11 +187,11 @@ public class OrderMatchingEngine {
         sellOrder.execute(executedQuantity);
 
         if (buyOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.unregisterOrder(buyOrder.getId());
+            orderBookManager.removeOrder(buyOrder);
         }
 
         if (sellOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.unregisterOrder(sellOrder.getId());
+            orderBookManager.removeOrder(sellOrder);
         }
 
         Fill fillOrder = Fill.builder()

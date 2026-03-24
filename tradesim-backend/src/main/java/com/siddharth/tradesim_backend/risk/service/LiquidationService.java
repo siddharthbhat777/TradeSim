@@ -5,7 +5,9 @@ import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
@@ -16,6 +18,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -23,52 +28,67 @@ public class LiquidationService {
     private final PositionRepository positionRepository;
     private final StockRepository stockRepository;
     private final OrderMatchingEngine orderMatchingEngine;
+    private final OrderBookManager orderBookManager;
+    private final OrderRepository orderRepository;
+    private final Set<UUID> liquidatingUsers = ConcurrentHashMap.newKeySet();
 
     public void liquidateUser(User user) {
-        List<Position> positions = positionRepository.findByUserId(user.getId());
+        if (!liquidatingUsers.add(user.getId())) {
+            return;
+        }
 
-        if (positions.isEmpty()) return;
+        try {
+            List<Position> positions = positionRepository.findByUserId(user.getId());
 
-        positions.sort((position1, position2) -> {
-            BigDecimal loss1 = getUnrealizedLoss(position1);
-            BigDecimal loss2 = getUnrealizedLoss(position2);
-            return loss2.compareTo(loss1);
-        });
+            if (positions.isEmpty()) return;
 
-        for (Position position : positions) {
+            positions.sort((position1, position2) -> {
+                BigDecimal loss1 = getUnrealizedLoss(position1);
+                BigDecimal loss2 = getUnrealizedLoss(position2);
+                return loss2.compareTo(loss1);
+            });
 
-            if (position.getQuantity() <= 0) continue;
+            for (Position position : positions) {
 
-            while (position.getQuantity() > 0) {
-                if (!shouldLiquidate(user)) {
-                    return;
-                }
+                if (position.getQuantity() <= 0) continue;
 
-                int sellQuantity = Math.max(1, position.getQuantity() / 10);
+                while (true) {
+                    Position freshPosition = positionRepository.findById(position.getId()).orElse(null);
+                    if (freshPosition == null || freshPosition.getQuantity() <= 0) {
+                        break;
+                    }
 
-                Order liquidationOrder = Order.builder()
-                        .userId(user.getId())
-                        .stockId(position.getStockId())
-                        .side(OrderSide.SELL)
-                        .orderType(OrderType.MARKET)
-                        .quantity(sellQuantity)
-                        .remainingQuantity(sellQuantity)
-                        .status(OrderStatus.OPEN)
-                        .build();
+                    if (!shouldLiquidate(user)) {
+                        return;
+                    }
 
-                int beforeQuantity = position.getQuantity();
+                    boolean hasLiquidity = orderBookManager.withLock(freshPosition.getStockId(), orderBook -> !orderBook.getBuyOrders().isEmpty());
+                    if (!hasLiquidity) {
+                        break;
+                    }
 
-                orderMatchingEngine.match(liquidationOrder);
+                    int sellQuantity = Math.max(1, freshPosition.getQuantity() / 10);
 
-                if (liquidationOrder.getStatus() == OrderStatus.CANCELLED) {
-                    break;
-                }
+                    Order liquidationOrder = Order.builder()
+                            .userId(user.getId())
+                            .stockId(freshPosition.getStockId())
+                            .side(OrderSide.SELL)
+                            .orderType(OrderType.MARKET)
+                            .quantity(sellQuantity)
+                            .remainingQuantity(sellQuantity)
+                            .status(OrderStatus.OPEN)
+                            .build();
 
-                int afterQuantity = position.getQuantity();
-                if (afterQuantity >= beforeQuantity) {
-                    break;
+                    orderRepository.save(liquidationOrder);
+                    orderMatchingEngine.match(liquidationOrder);
+
+                    if (liquidationOrder.getStatus() == OrderStatus.CANCELLED) {
+                        break;
+                    }
                 }
             }
+        } finally {
+            liquidatingUsers.remove(user.getId());
         }
     }
 

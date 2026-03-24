@@ -49,55 +49,31 @@ class OrderBookManagerTest {
     }
 
     @Test
-    void shouldRegisterAndRetrieveOrder() {
+    void shouldAddOrderToBookAndMemory() {
         Order order = createOrder(OrderSide.BUY);
 
-        orderBookManager.registerOrder(order);
+        orderBookManager.addOrder(order);
 
         Order stored = orderBookManager.getOrder(order.getId());
+        OrderBook orderBook = orderBookManager.getOrderBook(stockId);
 
         assertNotNull(stored);
         assertEquals(order.getId(), stored.getId());
-    }
-
-    @Test
-    void shouldAddOrderToCorrectOrderBook() {
-        Order order = createOrder(OrderSide.BUY);
-
-        orderBookManager.registerOrder(order);
-        orderBookManager.addOrderToOrderBook(order);
-
-        OrderBook orderBook = orderBookManager.getOrderBook(stockId);
-
         assertEquals(1, orderBook.getBuyOrders().size());
         assertEquals(0, orderBook.getSellOrders().size());
     }
 
     @Test
-    void shouldRemoveOrderFromOrderBook() {
+    void shouldRemoveOrderFromBookAndMemory() {
         Order order = createOrder(OrderSide.SELL);
 
-        orderBookManager.registerOrder(order);
-        orderBookManager.addOrderToOrderBook(order);
-
-        orderBookManager.removeOrderFromOrderBook(order);
+        orderBookManager.addOrder(order);
+        orderBookManager.removeOrder(order);
 
         OrderBook orderBook = orderBookManager.getOrderBook(stockId);
 
         assertEquals(0, orderBook.getSellOrders().size());
-    }
-
-    @Test
-    void shouldUnregisterOrder() {
-        Order order = createOrder(OrderSide.BUY);
-
-        orderBookManager.registerOrder(order);
-
-        orderBookManager.unregisterOrder(order.getId());
-
-        Order stored = orderBookManager.getOrder(order.getId());
-
-        assertNull(stored);
+        assertNull(orderBookManager.getOrder(order.getId()));
     }
 
     @Test

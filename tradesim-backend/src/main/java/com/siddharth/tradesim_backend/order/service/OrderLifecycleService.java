@@ -39,9 +39,8 @@ public class OrderLifecycleService {
         lock.lock();
         try {
             releaseLockedAssets(order);
-            orderBookManager.removeOrderFromOrderBook(order);
+            orderBookManager.removeOrder(order);
             order.cancel();
-            orderBookManager.unregisterOrder(order.getId());
             orderRepository.save(order);
         } finally {
             lock.unlock();

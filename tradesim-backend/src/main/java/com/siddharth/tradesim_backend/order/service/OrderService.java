@@ -71,12 +71,11 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        MatchResult result = orderMatchingEngine.match(order);
-
         if (order.getOrderType() == OrderType.LIMIT) {
-            orderBookManager.addOrderToOrderBook(order);
-            orderBookManager.registerOrder(order);
+            orderBookManager.addOrder(order);
         }
+
+        MatchResult result = orderMatchingEngine.match(order);
 
         riskService.checkLiquidation(user);
 
@@ -124,8 +123,7 @@ public class OrderService {
         ReentrantLock lock = orderBookManager.getLock(order.getStockId());
         lock.lock();
         try {
-            orderBookManager.removeOrderFromOrderBook(order);
-            orderBookManager.unregisterOrder(order.getId());
+            orderBookManager.removeOrder(order);
             order.cancel();
             orderRepository.save(order);
         } finally {

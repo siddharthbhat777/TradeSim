@@ -83,7 +83,7 @@ class OrderLifecycleServiceTest {
         service.cancelOrder(order);
 
         verify(user).unlockFunds(BigDecimal.valueOf(1000.0));
-        verify(orderBookManager).unregisterOrder(order.getId());
+        verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
     }
@@ -99,7 +99,7 @@ class OrderLifecycleServiceTest {
         service.cancelOrder(order);
 
         verify(position).unlockShares(5);
-        verify(orderBookManager).unregisterOrder(order.getId());
+        verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
     }
@@ -111,7 +111,7 @@ class OrderLifecycleServiceTest {
         service.cancelOrder(order);
 
         verify(authRepository, never()).findById(any());
-        verify(orderBookManager).unregisterOrder(order.getId());
+        verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
     }
@@ -125,7 +125,7 @@ class OrderLifecycleServiceTest {
         service.cancelOrder(order);
 
         verify(orderRepository, never()).save(any());
-        verify(orderBookManager, never()).unregisterOrder(any());
+        verify(orderBookManager, never()).removeOrder(any());
     }
 
     @Test
@@ -137,6 +137,6 @@ class OrderLifecycleServiceTest {
         service.cancelOrder(order);
 
         verify(orderRepository, never()).save(any());
-        verify(orderBookManager, never()).unregisterOrder(any());
+        verify(orderBookManager, never()).removeOrder(any());
     }
 }

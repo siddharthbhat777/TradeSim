@@ -98,8 +98,7 @@ class OrderServiceTest {
 
         verify(user).lockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
         verify(orderRepository).save(any());
-        verify(orderBookManager).addOrderToOrderBook(any());
-        verify(orderBookManager).registerOrder(any());
+        verify(orderBookManager).addOrder(any());
         verify(orderMatchingEngine).match(any());
     }
 
@@ -146,5 +145,4 @@ class OrderServiceTest {
 
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
     }
-
 }
