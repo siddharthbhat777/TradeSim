@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.siddharth.tradesim_backend.order.enums.OrderStatus.CANCELLED;
@@ -39,9 +40,8 @@ public class OrderLifecycleService {
         lock.lock();
         try {
             releaseLockedAssets(order);
-            orderBookManager.removeOrderFromOrderBook(order);
+            orderBookManager.removeOrder(order);
             order.cancel();
-            orderBookManager.unregisterOrder(order.getId());
             orderRepository.save(order);
         } finally {
             lock.unlock();
@@ -60,7 +60,7 @@ public class OrderLifecycleService {
                 throw new OrderException("Limit price missing for LIMIT order");
             }
             User user = authRepository.findById(order.getUserId()).orElseThrow(() -> new BusinessException("User not found"));
-            BigDecimal unlockAmount = order.getLimitPrice().multiply(BigDecimal.valueOf(remainingQty));
+            BigDecimal unlockAmount = order.getLimitPrice().multiply(BigDecimal.valueOf(remainingQty)).divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
             user.unlockFunds(unlockAmount);
         } else {
             Position position = positionRepository.findByUserIdAndStockId(order.getUserId(), order.getStockId()).orElseThrow(() -> new BusinessException("Position not found"));

@@ -43,6 +43,16 @@ public class OrderBook {
         }
     }
 
+    public void updateOrder(OrderBookEntry oldEntry, int executedQty) {
+        removeOrder(oldEntry.orderId());
+
+        int remaining = oldEntry.quantity() - executedQty;
+        if (remaining > 0) {
+            OrderBookEntry updated = oldEntry.withReducedQuantity(executedQty);
+            addOrder(updated);
+        }
+    }
+
     public BigDecimal estimateBuyCost(int requiredQuantity) {
         if (requiredQuantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");

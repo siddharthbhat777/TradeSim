@@ -17,6 +17,7 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.risk.service.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -38,6 +40,7 @@ public class OrderService {
     private final PositionRepository positionRepository;
     private final OrderBookManager orderBookManager;
     private final OrderMatchingEngine orderMatchingEngine;
+    private final RiskService riskService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -68,19 +71,13 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        ReentrantLock lock = orderBookManager.getLock(order.getStockId());
-        MatchResult result;
-        lock.lock();
-        try {
-            if (order.getOrderType() == OrderType.LIMIT) {
-                orderBookManager.addOrderToOrderBook(order);
-                orderBookManager.registerOrder(order);
-            }
-
-            result = orderMatchingEngine.match(order);
-        } finally {
-            lock.unlock();
+        if (order.getOrderType() == OrderType.LIMIT) {
+            orderBookManager.addOrder(order);
         }
+
+        MatchResult result = orderMatchingEngine.match(order);
+
+        riskService.checkLiquidation(user);
 
         return new OrderResponse(
                 order.getId(),
@@ -111,7 +108,7 @@ public class OrderService {
             switch (order.getSide()) {
                 case BUY -> {
                     User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
-                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity()));
+                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity())).divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
                     user.unlockFunds(remainingReserved);
                     authRepository.save(user);
                 }
@@ -126,8 +123,7 @@ public class OrderService {
         ReentrantLock lock = orderBookManager.getLock(order.getStockId());
         lock.lock();
         try {
-            orderBookManager.removeOrderFromOrderBook(order);
-            orderBookManager.unregisterOrder(order.getId());
+            orderBookManager.removeOrder(order);
             order.cancel();
             orderRepository.save(order);
         } finally {
@@ -151,12 +147,13 @@ public class OrderService {
 
     private void validateMarketBuy(User user, Stock stock, @Valid OrderRequest request) {
         BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.quantity());
-        if (user.getAvailableBalance().compareTo(estimatedCost) < 0) {
-            throw new OrderException("Insufficient balance for market order");
-        }
+        riskService.validateBuyOrder(user, estimatedCost);
     }
 
     private void validateLimitOrder(User user, Stock stock, @Valid OrderRequest request) {
+        if (request.limitPrice() == null) {
+            throw new OrderException("Limit price missing for LIMIT order");
+        }
         switch (request.side()) {
             case BUY -> validateLimitBuy(user, request);
             case SELL -> validateLimitSell(user.getId(), stock.getId(), request.quantity());
@@ -165,7 +162,8 @@ public class OrderService {
 
     private void validateLimitBuy(User user, @Valid OrderRequest request) {
         BigDecimal orderValue = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
-        user.lockFunds(orderValue);
+        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
+        user.lockFunds(requiredMargin);
     }
 
     private void validateLimitSell(UUID userId, UUID stockId, int quantity) {

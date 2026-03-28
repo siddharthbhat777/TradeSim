@@ -1,14 +1,14 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
-import com.siddharth.tradesim_backend.order.enums.OrderType;
-import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Fill;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.FillRepository;
-import com.siddharth.tradesim_backend.portfolio.service.PortfolioService;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.portfolio.model.dto.TradeExecution;
+import com.siddharth.tradesim_backend.portfolio.service.PortfolioService;
 import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -32,74 +33,84 @@ public class OrderMatchingEngine {
 
     @Transactional
     public MatchResult match(Order order) {
-        boolean priceBandHit = false;
-        boolean executedSomething = false;
-        OrderBook orderBook = orderBookManager.getOrderBook(order.getStockId());
-        if (order.getOrderType() == OrderType.MARKET) {
-            switch (order.getSide()) {
-                case BUY -> priceBandHit = matchBuy(order, orderBook);
-                case SELL -> priceBandHit = matchSell(order, orderBook);
+        return orderBookManager.withLock(order.getStockId(), orderBook -> {
+            boolean priceBandHit = false;
+            boolean executedSomething = false;
+            if (order.getOrderType() == OrderType.MARKET) {
+                switch (order.getSide()) {
+                    case BUY -> priceBandHit = matchBuy(order, orderBook);
+                    case SELL -> priceBandHit = matchSell(order, orderBook);
+                }
+
+                resolveMarketFinalStatus(order);
+                orderRepository.save(order);
+                return new MatchResult(priceBandHit);
             }
 
-            resolveMarketFinalStatus(order);
+            List<OrderBookEntry> skipped = new ArrayList<>();
+            while (!orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
+                OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
+                OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
+
+                if (buyEntry.price().compareTo(sellEntry.price()) < 0) {
+                    break;
+                }
+
+                Order buyOrder = orderBookManager.getOrderOrLoad(buyEntry.orderId());
+                if (buyOrder == null) {
+                    orderBook.getBuyOrders().poll();
+                    continue;
+                }
+
+                Order sellOrder = orderBookManager.getOrderOrLoad(sellEntry.orderId());
+                if (sellOrder == null) {
+                    orderBook.getSellOrders().poll();
+                    continue;
+                }
+
+                int executedQuantity = Math.min(buyOrder.getRemainingQuantity(), sellOrder.getRemainingQuantity());
+                if (executedQuantity <= 0) {
+                    break;
+                }
+
+                BigDecimal executionPrice = sellEntry.price();
+                if (cannotExecute(order.getStockId(), executionPrice)) {
+                    priceBandHit = true;
+                    skipped.add(orderBook.getSellOrders().poll());
+                    continue;
+                }
+
+                if (buyOrder.getUserId().equals(sellOrder.getUserId())) {
+                    skipped.add(orderBook.getSellOrders().poll());
+                    continue;
+                }
+
+                executedSomething = true;
+
+                executeTrade(buyOrder, sellOrder, executedQuantity, executionPrice);
+
+                orderBook.updateOrder(buyEntry, executedQuantity);
+                orderBook.updateOrder(sellEntry, executedQuantity);
+            }
+
+            skipped.forEach(orderBook::addOrder);
             orderRepository.save(order);
-            return new MatchResult(priceBandHit);
-        }
-
-        while (!orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
-            OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
-            OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
-
-            if (buyEntry.price().compareTo(sellEntry.price()) < 0) {
-                break;
-            }
-
-            Order buyOrder = Objects.requireNonNull(orderBookManager.getOrder(buyEntry.orderId()), "Buy order not found in memory");
-            Order sellOrder = Objects.requireNonNull(orderBookManager.getOrder(sellEntry.orderId()), "Sell order not found in memory");
-
-            int executedQuantity = Math.min(buyOrder.getRemainingQuantity(), sellOrder.getRemainingQuantity());
-            if (executedQuantity <= 0) {
-                break;
-            }
-
-            BigDecimal executionPrice = sellEntry.price();
-            if (cannotExecute(order.getStockId(), executionPrice)) {
-                priceBandHit = true;
-                orderBook.getSellOrders().poll();
-                continue;
-            }
-
-            if (buyOrder.getUserId().equals(sellOrder.getUserId())) {
-                orderBook.getSellOrders().poll();
-                continue;
-            }
-
-            executedSomething = true;
-
-            executeTrade(buyOrder, sellOrder, executedQuantity, executionPrice);
-
-            orderBook.getBuyOrders().poll();
-            orderBook.getSellOrders().poll();
-
-            if (buyEntry.quantity() > executedQuantity) {
-                orderBook.getBuyOrders().add(buyEntry.withReducedQuantity(executedQuantity));
-            }
-
-            if (sellEntry.quantity() > executedQuantity) {
-                orderBook.getSellOrders().add(sellEntry.withReducedQuantity(executedQuantity));
-            }
-        }
-        orderRepository.save(order);
-        return new MatchResult(priceBandHit && !executedSomething);
+            return new MatchResult(priceBandHit && !executedSomething);
+        });
     }
 
     private boolean matchBuy(Order order, OrderBook orderBook) {
         boolean bandEncountered = false;
         boolean executedSomething = false;
 
+        List<OrderBookEntry> skipped = new ArrayList<>();
         while (order.getRemainingQuantity() > 0 && !orderBook.getSellOrders().isEmpty()) {
             OrderBookEntry sellEntry = orderBook.getSellOrders().peek();
-            Order sellOrder = Objects.requireNonNull(orderBookManager.getOrder(sellEntry.orderId()), "Sell order not found in memory");
+            Order sellOrder = orderBookManager.getOrderOrLoad(sellEntry.orderId());
+            if (sellOrder == null) {
+                orderBook.getSellOrders().poll();
+                continue;
+            }
 
             int executedQuantity = Math.min(order.getRemainingQuantity(), sellOrder.getRemainingQuantity());
             if (executedQuantity <= 0) {
@@ -109,12 +120,12 @@ public class OrderMatchingEngine {
             BigDecimal executionPrice = sellEntry.price();
             if (cannotExecute(order.getStockId(), executionPrice)) {
                 bandEncountered = true;
-                orderBook.getSellOrders().poll();
+                skipped.add(orderBook.getSellOrders().poll());
                 continue;
             }
 
             if (order.getUserId().equals(sellOrder.getUserId())) {
-                orderBook.getSellOrders().poll();
+                skipped.add(orderBook.getSellOrders().poll());
                 continue;
             }
 
@@ -122,12 +133,10 @@ public class OrderMatchingEngine {
 
             executeTrade(order, sellOrder, executedQuantity, sellEntry.price());
 
-            orderBook.getSellOrders().poll();
-
-            if (sellEntry.quantity() > executedQuantity) {
-                orderBook.getSellOrders().add(sellEntry.withReducedQuantity(executedQuantity));
-            }
+            orderBook.updateOrder(sellEntry, executedQuantity);
         }
+
+        skipped.forEach(orderBook::addOrder);
         return bandEncountered && !executedSomething;
     }
 
@@ -135,9 +144,14 @@ public class OrderMatchingEngine {
         boolean bandEncountered = false;
         boolean executedSomething = false;
 
+        List<OrderBookEntry> skipped = new ArrayList<>();
         while (order.getRemainingQuantity() > 0 && !orderBook.getBuyOrders().isEmpty()) {
             OrderBookEntry buyEntry = orderBook.getBuyOrders().peek();
-            Order buyOrder = Objects.requireNonNull(orderBookManager.getOrder(buyEntry.orderId()), "Buy order not found in memory");
+            Order buyOrder = orderBookManager.getOrderOrLoad(buyEntry.orderId());
+            if (buyOrder == null) {
+                orderBook.getBuyOrders().poll();
+                continue;
+            }
 
             int executedQuantity = Math.min(buyOrder.getRemainingQuantity(), order.getRemainingQuantity());
             if (executedQuantity <= 0) {
@@ -147,12 +161,12 @@ public class OrderMatchingEngine {
             BigDecimal executionPrice = buyEntry.price();
             if (cannotExecute(order.getStockId(), executionPrice)) {
                 bandEncountered = true;
-                orderBook.getBuyOrders().poll();
+                skipped.add(orderBook.getBuyOrders().poll());
                 continue;
             }
 
             if (buyOrder.getUserId().equals(order.getUserId())) {
-                orderBook.getBuyOrders().poll();
+                skipped.add(orderBook.getBuyOrders().poll());
                 continue;
             }
 
@@ -160,12 +174,10 @@ public class OrderMatchingEngine {
 
             executeTrade(buyOrder, order, executedQuantity, buyEntry.price());
 
-            orderBook.getBuyOrders().poll();
-
-            if (buyEntry.quantity() > executedQuantity) {
-                orderBook.getBuyOrders().add(buyEntry.withReducedQuantity(executedQuantity));
-            }
+            orderBook.updateOrder(buyEntry, executedQuantity);
         }
+
+        skipped.forEach(orderBook::addOrder);
         return bandEncountered && !executedSomething;
     }
 
@@ -183,11 +195,11 @@ public class OrderMatchingEngine {
         sellOrder.execute(executedQuantity);
 
         if (buyOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.unregisterOrder(buyOrder.getId());
+            orderBookManager.removeOrder(buyOrder);
         }
 
         if (sellOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.unregisterOrder(sellOrder.getId());
+            orderBookManager.removeOrder(sellOrder);
         }
 
         Fill fillOrder = Fill.builder()

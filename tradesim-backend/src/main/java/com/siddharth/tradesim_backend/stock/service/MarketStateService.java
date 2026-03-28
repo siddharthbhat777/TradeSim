@@ -1,6 +1,5 @@
 package com.siddharth.tradesim_backend.stock.service;
 
-import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.stock.StockRepository;
@@ -46,31 +45,31 @@ public class MarketStateService {
         }
 
         stock.setLastTradedPrice(executionPrice);
-        stock.setTotalVolume(stock.getTotalVolume() + quantity);
+        stock.setTotalVolume((stock.getTotalVolume() == null ? 0 : stock.getTotalVolume()) + quantity);
         stockRepository.save(stock);
     }
 
     @Transactional(readOnly = true)
     public BigDecimal calculateIndicativePrice(UUID stockId) {
-        OrderBook orderBook = orderBookManager.getOrderBook(stockId);
+        return orderBookManager.withLock(stockId, orderBook -> {
+            OrderBookEntry bestBid = orderBook.getBuyOrders().peek();
+            OrderBookEntry bestAsk = orderBook.getSellOrders().peek();
 
-        OrderBookEntry bestBid = orderBook.getBuyOrders().peek();
-        OrderBookEntry bestAsk = orderBook.getSellOrders().peek();
+            if (bestBid != null && bestAsk != null) {
+                return bestBid.price().add(bestAsk.price()).divide(BigDecimal.valueOf(2), 4, RoundingMode.HALF_UP);
+            }
 
-        if (bestBid != null && bestAsk != null) {
-            return bestBid.price().add(bestAsk.price()).divide(BigDecimal.valueOf(2), 4, RoundingMode.HALF_UP);
-        }
+            if (bestBid != null) {
+                return bestBid.price();
+            }
 
-        if (bestBid != null) {
-            return bestBid.price();
-        }
+            if (bestAsk != null) {
+                return bestAsk.price();
+            }
 
-        if (bestAsk != null) {
-            return bestAsk.price();
-        }
-
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
-        return stock.getLastTradedPrice();
+            Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
+            return stock.getLastTradedPrice();
+        });
     }
 
     public boolean isWithinPriceBand(UUID stockId, BigDecimal executionPrice) {

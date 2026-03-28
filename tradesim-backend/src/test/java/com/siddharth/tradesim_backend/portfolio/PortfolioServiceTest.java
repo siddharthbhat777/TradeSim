@@ -144,12 +144,14 @@ class PortfolioServiceTest {
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(5);
         when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+        when(buyer.getLeverage()).thenReturn(5);
+        when(seller.getMarginLoan()).thenReturn(BigDecimal.ZERO);
 
         portfolioService.settleTrade(execution);
 
-        verify(buyer).debit(BigDecimal.valueOf(500));
+        verify(buyer).debit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(100)) == 0));
+        verify(buyer).increaseMarginLoan(argThat(amount -> amount.compareTo(BigDecimal.valueOf(400)) == 0));
         verify(seller).credit(BigDecimal.valueOf(500));
-        verify(sellerPosition).decreaseQuantity(5);
         verify(positionRepository, times(2)).save(any(Position.class));
         verify(authRepository).save(buyer);
         verify(authRepository).save(seller);
@@ -181,13 +183,16 @@ class PortfolioServiceTest {
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(buyer.getLeverage()).thenReturn(10);
+        when(seller.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(sellerPosition.getQuantity()).thenReturn(10);
         when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
 
         portfolioService.settleTrade(execution);
 
-        verify(buyer).unlockFunds(BigDecimal.valueOf(500));
-        verify(buyer).debit(BigDecimal.valueOf(450));
+        verify(buyer).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(50)) == 0));
+        verify(buyer).debit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(45)) == 0));
+        verify(buyer).increaseMarginLoan(argThat(amount -> amount.compareTo(BigDecimal.valueOf(405)) == 0));
     }
 
     @Test
@@ -218,9 +223,99 @@ class PortfolioServiceTest {
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(0);
         when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+        when(buyer.getLeverage()).thenReturn(5);
+        when(seller.getMarginLoan()).thenReturn(BigDecimal.ZERO);
 
         portfolioService.settleTrade(execution);
 
         verify(positionRepository).delete(sellerPosition);
+    }
+
+    @Test
+    void shouldIncreaseMarginLoanAndKeepCashNonNegativeOnBuy() {
+        UUID buyerId = UUID.randomUUID();
+        UUID sellerId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User buyer = User.builder()
+                .id(buyerId)
+                .balance(BigDecimal.valueOf(100))
+                .lockedBalance(BigDecimal.ZERO)
+                .marginLoan(BigDecimal.ZERO)
+                .leverage(10)
+                .maintenanceMarginPercent(BigDecimal.valueOf(25))
+                .build();
+
+        User seller = mock(User.class);
+        when(seller.getMarginLoan()).thenReturn(BigDecimal.ZERO);
+
+        Position sellerPosition = mock(Position.class);
+        when(sellerPosition.getQuantity()).thenReturn(5);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+
+        TradeExecution execution = new TradeExecution(
+                buyerId,
+                sellerId,
+                stockId,
+                5,
+                BigDecimal.valueOf(100),
+                OrderType.MARKET,
+                OrderType.MARKET,
+                null
+        );
+
+        when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
+        when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
+        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+
+        portfolioService.settleTrade(execution);
+
+        assertThat(buyer.getAvailableBalance()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
+        assertThat(buyer.getMarginLoan()).isEqualByComparingTo(BigDecimal.valueOf(450));
+    }
+
+    @Test
+    void shouldRepayMarginLoanBeforeCreditingCashOnSell() {
+        UUID buyerId = UUID.randomUUID();
+        UUID sellerId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        User buyer = mock(User.class);
+        when(buyer.getLeverage()).thenReturn(5);
+
+        User seller = User.builder()
+                .id(sellerId)
+                .balance(BigDecimal.ZERO)
+                .lockedBalance(BigDecimal.ZERO)
+                .marginLoan(BigDecimal.valueOf(300))
+                .leverage(5)
+                .maintenanceMarginPercent(BigDecimal.valueOf(25))
+                .build();
+
+        Position sellerPosition = mock(Position.class);
+        when(sellerPosition.getQuantity()).thenReturn(5);
+        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+
+        TradeExecution execution = new TradeExecution(
+                buyerId,
+                sellerId,
+                stockId,
+                5,
+                BigDecimal.valueOf(100),
+                OrderType.MARKET,
+                OrderType.MARKET,
+                null
+        );
+
+        when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
+        when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
+        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+
+        portfolioService.settleTrade(execution);
+
+        assertThat(seller.getMarginLoan()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(seller.getAvailableBalance()).isEqualByComparingTo(BigDecimal.valueOf(200));
     }
 }

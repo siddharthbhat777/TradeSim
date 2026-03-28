@@ -73,12 +73,10 @@ class OrderMatchingEngineTest {
     @Test
     void shouldFullyMatchLimitOrders() {
         Order sell = createOrder(OrderSide.SELL, OrderType.LIMIT, 10, 100);
-        orderBookManager.registerOrder(sell);
-        orderBookManager.addOrderToOrderBook(sell);
+        orderBookManager.addOrder(sell);
 
         Order buy = createOrder(OrderSide.BUY, OrderType.LIMIT, 10, 100);
-        orderBookManager.registerOrder(buy);
-        orderBookManager.addOrderToOrderBook(buy);
+        orderBookManager.addOrder(buy);
         engine.match(buy);
 
         assertEquals(OrderStatus.FILLED, buy.getStatus());
@@ -90,12 +88,10 @@ class OrderMatchingEngineTest {
     @Test
     void shouldPartiallyFillOrder() {
         Order sell = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 100);
-        orderBookManager.registerOrder(sell);
-        orderBookManager.addOrderToOrderBook(sell);
+        orderBookManager.addOrder(sell);
 
         Order buy = createOrder(OrderSide.BUY, OrderType.LIMIT, 10, 100);
-        orderBookManager.registerOrder(buy);
-        orderBookManager.addOrderToOrderBook(buy);
+        orderBookManager.addOrder(buy);
         engine.match(buy);
 
         assertEquals(OrderStatus.PARTIALLY_FILLED, buy.getStatus());
@@ -108,14 +104,11 @@ class OrderMatchingEngineTest {
         Order sell1 = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 100);
         Order sell2 = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 101);
 
-        orderBookManager.registerOrder(sell1);
-        orderBookManager.addOrderToOrderBook(sell1);
-        orderBookManager.registerOrder(sell2);
-        orderBookManager.addOrderToOrderBook(sell2);
+        orderBookManager.addOrder(sell1);
+        orderBookManager.addOrder(sell2);
 
         Order buy = createOrder(OrderSide.BUY, OrderType.LIMIT, 5, 105);
-        orderBookManager.registerOrder(buy);
-        orderBookManager.addOrderToOrderBook(buy);
+        orderBookManager.addOrder(buy);
         engine.match(buy);
 
         assertEquals(OrderStatus.FILLED, buy.getStatus());
@@ -129,14 +122,11 @@ class OrderMatchingEngineTest {
         Thread.sleep(1);
         Order sell2 = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 100);
 
-        orderBookManager.registerOrder(sell1);
-        orderBookManager.addOrderToOrderBook(sell1);
-        orderBookManager.registerOrder(sell2);
-        orderBookManager.addOrderToOrderBook(sell2);
+        orderBookManager.addOrder(sell1);
+        orderBookManager.addOrder(sell2);
 
         Order buy = createOrder(OrderSide.BUY, OrderType.LIMIT, 5, 100);
-        orderBookManager.registerOrder(buy);
-        orderBookManager.addOrderToOrderBook(buy);
+        orderBookManager.addOrder(buy);
         engine.match(buy);
 
         assertEquals(OrderStatus.FILLED, sell1.getStatus());
@@ -148,14 +138,11 @@ class OrderMatchingEngineTest {
         Order sell1 = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 100);
         Order sell2 = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 101);
 
-        orderBookManager.registerOrder(sell1);
-        orderBookManager.addOrderToOrderBook(sell1);
-        orderBookManager.registerOrder(sell2);
-        orderBookManager.addOrderToOrderBook(sell2);
+        orderBookManager.addOrder(sell1);
+        orderBookManager.addOrder(sell2);
 
         Order buy = createOrder(OrderSide.BUY, OrderType.MARKET, 8, 0);
-        orderBookManager.registerOrder(buy);
-        orderBookManager.addOrderToOrderBook(buy);
+        orderBookManager.addOrder(buy);
         engine.match(buy);
 
         assertEquals(OrderStatus.FILLED, sell1.getStatus());
@@ -179,8 +166,7 @@ class OrderMatchingEngineTest {
                 .status(OrderStatus.OPEN)
                 .build();
 
-        orderBookManager.registerOrder(sell);
-        orderBookManager.addOrderToOrderBook(sell);
+        orderBookManager.addOrder(sell);
 
         Order buy = Order.builder()
                 .id(UUID.randomUUID())
@@ -194,8 +180,7 @@ class OrderMatchingEngineTest {
                 .status(OrderStatus.OPEN)
                 .build();
 
-        orderBookManager.registerOrder(buy);
-        orderBookManager.addOrderToOrderBook(buy);
+        orderBookManager.addOrder(buy);
         engine.match(buy);
 
         assertEquals(OrderStatus.OPEN, buy.getStatus());
@@ -207,12 +192,10 @@ class OrderMatchingEngineTest {
         when(marketStateService.isWithinPriceBand(any(), any())).thenReturn(false);
 
         Order sell = createOrder(OrderSide.SELL, OrderType.LIMIT, 10, 100);
-        orderBookManager.registerOrder(sell);
-        orderBookManager.addOrderToOrderBook(sell);
+        orderBookManager.addOrder(sell);
 
         Order buy = createOrder(OrderSide.BUY, OrderType.LIMIT, 10, 100);
-        orderBookManager.registerOrder(buy);
-        orderBookManager.addOrderToOrderBook(buy);
+        orderBookManager.addOrder(buy);
         MatchResult result = engine.match(buy);
 
         assertTrue(result.priceBandHit());

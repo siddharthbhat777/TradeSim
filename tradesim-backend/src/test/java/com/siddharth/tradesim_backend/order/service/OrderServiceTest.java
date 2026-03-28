@@ -13,6 +13,7 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.risk.service.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -48,6 +49,7 @@ class OrderServiceTest {
         positionRepository = mock(PositionRepository.class);
         orderBookManager = mock(OrderBookManager.class);
         orderMatchingEngine = mock(OrderMatchingEngine.class);
+        RiskService riskService = mock(RiskService.class);
 
         orderService = new OrderService(
                 authRepository,
@@ -55,7 +57,8 @@ class OrderServiceTest {
                 orderRepository,
                 positionRepository,
                 orderBookManager,
-                orderMatchingEngine
+                orderMatchingEngine,
+                riskService
         );
 
         userId = UUID.randomUUID();
@@ -84,6 +87,7 @@ class OrderServiceTest {
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(user.getLeverage()).thenReturn(5);
         when(stock.getId()).thenReturn(stockId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false));
@@ -92,10 +96,9 @@ class OrderServiceTest {
 
         orderService.createOrder(userId, request);
 
-        verify(user).lockFunds(BigDecimal.valueOf(1000));
+        verify(user).lockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
         verify(orderRepository).save(any());
-        verify(orderBookManager).addOrderToOrderBook(any());
-        verify(orderBookManager).registerOrder(any());
+        verify(orderBookManager).addOrder(any());
         verify(orderMatchingEngine).match(any());
     }
 
@@ -143,4 +146,25 @@ class OrderServiceTest {
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
     }
 
+    @Test
+    void shouldRejectLimitOrderWithoutLimitPrice() {
+        User user = mock(User.class);
+        Stock stock = mock(Stock.class);
+
+        when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(stock.getId()).thenReturn(stockId);
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        OrderRequest request = new OrderRequest(
+                stockId,
+                10,
+                OrderSide.BUY,
+                OrderType.LIMIT,
+                null
+        );
+
+        assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
+    }
 }

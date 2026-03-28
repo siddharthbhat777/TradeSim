@@ -8,6 +8,7 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,6 +20,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,16 +42,12 @@ class MarketStateServiceTest {
     void shouldCalculateMidPriceWhenBidAndAskExist() {
         UUID stockId = UUID.randomUUID();
 
-        OrderBook orderBook = mock(OrderBook.class);
-        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
-        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
+        OrderBook orderBook = new OrderBook();
 
-        buyOrders.add(buyEntry(BigDecimal.valueOf(100)));
-        sellOrders.add(sellEntry(BigDecimal.valueOf(110)));
+        orderBook.addOrder(buyEntry(BigDecimal.valueOf(100)));
+        orderBook.addOrder(sellEntry(BigDecimal.valueOf(110)));
 
-        when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
-        when(orderBook.getBuyOrders()).thenReturn(buyOrders);
-        when(orderBook.getSellOrders()).thenReturn(sellOrders);
+        mockWithLock(stockId, orderBook);
 
         BigDecimal price = marketStateService.calculateIndicativePrice(stockId);
 
@@ -60,16 +58,11 @@ class MarketStateServiceTest {
     void shouldReturnBidPriceWhenOnlyBidExists() {
         UUID stockId = UUID.randomUUID();
 
-        OrderBook orderBook = mock(OrderBook.class);
+        OrderBook orderBook = new OrderBook();
 
-        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
-        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
+        orderBook.addOrder(buyEntry(BigDecimal.valueOf(120)));
 
-        buyOrders.add(buyEntry(BigDecimal.valueOf(120)));
-
-        when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
-        when(orderBook.getBuyOrders()).thenReturn(buyOrders);
-        when(orderBook.getSellOrders()).thenReturn(sellOrders);
+        mockWithLock(stockId, orderBook);
 
         BigDecimal price = marketStateService.calculateIndicativePrice(stockId);
 
@@ -80,16 +73,11 @@ class MarketStateServiceTest {
     void shouldReturnAskPriceWhenOnlyAskExists() {
         UUID stockId = UUID.randomUUID();
 
-        OrderBook orderBook = mock(OrderBook.class);
+        OrderBook orderBook = new OrderBook();
 
-        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
-        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
+        orderBook.addOrder(sellEntry(BigDecimal.valueOf(130)));
 
-        sellOrders.add(sellEntry(BigDecimal.valueOf(130)));
-
-        when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
-        when(orderBook.getBuyOrders()).thenReturn(buyOrders);
-        when(orderBook.getSellOrders()).thenReturn(sellOrders);
+        mockWithLock(stockId, orderBook);
 
         BigDecimal price = marketStateService.calculateIndicativePrice(stockId);
 
@@ -100,19 +88,14 @@ class MarketStateServiceTest {
     void shouldReturnLastTradedPriceWhenNoOrdersExist() {
         UUID stockId = UUID.randomUUID();
 
-        OrderBook orderBook = mock(OrderBook.class);
-
-        PriorityQueue<OrderBookEntry> buyOrders = buyQueue();
-        PriorityQueue<OrderBookEntry> sellOrders = sellQueue();
+        OrderBook orderBook = new OrderBook();
 
         Stock stock = Stock.builder()
                 .id(stockId)
                 .lastTradedPrice(BigDecimal.valueOf(95))
                 .build();
 
-        when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
-        when(orderBook.getBuyOrders()).thenReturn(buyOrders);
-        when(orderBook.getSellOrders()).thenReturn(sellOrders);
+        mockWithLock(stockId, orderBook);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
         BigDecimal price = marketStateService.calculateIndicativePrice(stockId);
@@ -205,7 +188,7 @@ class MarketStateServiceTest {
 
         OrderBook orderBook = mock(OrderBook.class);
 
-        when(orderBookManager.getOrderBook(stockId)).thenReturn(orderBook);
+        mockWithLock(stockId, orderBook);
         when(orderBook.getBuyOrders()).thenReturn(buyQueue());
         when(orderBook.getSellOrders()).thenReturn(sellQueue());
         when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
@@ -243,5 +226,13 @@ class MarketStateServiceTest {
 
     private PriorityQueue<OrderBookEntry> sellQueue() {
         return new PriorityQueue<>(Comparator.comparing(OrderBookEntry::price));
+    }
+
+    private void mockWithLock(UUID stockId, OrderBook orderBook) {
+        when(orderBookManager.withLock(eq(stockId), ArgumentMatchers.<Function<OrderBook, ?>>any()))
+                .thenAnswer(invocation -> {
+                    Function<OrderBook, ?> fn = invocation.getArgument(1);
+                    return fn.apply(orderBook);
+                });
     }
 }
