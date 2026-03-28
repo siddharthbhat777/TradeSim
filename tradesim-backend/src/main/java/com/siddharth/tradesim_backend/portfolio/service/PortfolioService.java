@@ -180,7 +180,14 @@ public class PortfolioService {
             BigDecimal reservedMargin = execution.buyerLimitPrice().multiply(BigDecimal.valueOf(execution.quantity())).divide(BigDecimal.valueOf(buyer.getLeverage()), 4, RoundingMode.HALF_UP);
             buyer.unlockFunds(reservedMargin);
         }
-        buyer.debit(tradeValue);
+
+        BigDecimal requiredMargin = tradeValue.divide(BigDecimal.valueOf(buyer.getLeverage()), 4, RoundingMode.HALF_UP);
+        buyer.debit(requiredMargin);
+
+        BigDecimal loanIncrease = tradeValue.subtract(requiredMargin);
+        if (loanIncrease.compareTo(BigDecimal.ZERO) > 0) {
+            buyer.increaseMarginLoan(loanIncrease);
+        }
     }
 
     private void settleSeller(TradeExecution execution, User seller, Position sellerPosition, BigDecimal tradeValue) {
@@ -193,7 +200,16 @@ public class PortfolioService {
         BigDecimal pnl = executionPrice.subtract(averagePrice).multiply(BigDecimal.valueOf(execution.quantity()));
         sellerPosition.decreaseQuantity(execution.quantity());
         sellerPosition.addRealizedPnl(pnl);
-        seller.credit(tradeValue);
+
+        BigDecimal remainingProceeds = tradeValue;
+        BigDecimal loanToRepay = seller.getMarginLoan().min(remainingProceeds);
+        if (loanToRepay.compareTo(BigDecimal.ZERO) > 0) {
+            seller.decreaseMarginLoan(loanToRepay);
+            remainingProceeds = remainingProceeds.subtract(loanToRepay);
+        }
+        if (remainingProceeds.compareTo(BigDecimal.ZERO) > 0) {
+            seller.credit(remainingProceeds);
+        }
     }
 
     private Position updateBuyerPosition(TradeExecution execution) {

@@ -47,6 +47,7 @@ public class AuthService {
                     .role(Role.USER)
                     .balance(BigDecimal.valueOf(10000000))
                     .lockedBalance(BigDecimal.valueOf(0))
+                    .marginLoan(BigDecimal.ZERO)
                     .accountStatus(AccountStatus.ACTIVE)
                     .leverage(5)
                     .maintenanceMarginPercent(BigDecimal.valueOf(25))

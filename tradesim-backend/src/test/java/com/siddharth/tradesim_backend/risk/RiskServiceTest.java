@@ -53,6 +53,7 @@ class RiskServiceTest {
         user = User.builder()
                 .balance(BigDecimal.valueOf(1000))
                 .lockedBalance(BigDecimal.ZERO)
+                .marginLoan(BigDecimal.ZERO)
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
@@ -141,7 +142,8 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
-                .balance(BigDecimal.valueOf(-950))
+                .balance(BigDecimal.ZERO)
+                .marginLoan(BigDecimal.valueOf(950))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(50))
                 .build();
@@ -172,7 +174,8 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
-                .balance(BigDecimal.valueOf(-850))
+                .balance(BigDecimal.ZERO)
+                .marginLoan(BigDecimal.valueOf(850))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(50))
                 .build();
