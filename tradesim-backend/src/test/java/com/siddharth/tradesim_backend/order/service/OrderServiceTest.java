@@ -145,4 +145,26 @@ class OrderServiceTest {
 
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
     }
+
+    @Test
+    void shouldRejectLimitOrderWithoutLimitPrice() {
+        User user = mock(User.class);
+        Stock stock = mock(Stock.class);
+
+        when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(stock.getId()).thenReturn(stockId);
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        OrderRequest request = new OrderRequest(
+                stockId,
+                10,
+                OrderSide.BUY,
+                OrderType.LIMIT,
+                null
+        );
+
+        assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
+    }
 }

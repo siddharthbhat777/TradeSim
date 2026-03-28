@@ -141,7 +141,7 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
-                .balance(BigDecimal.valueOf(100))
+                .balance(BigDecimal.valueOf(-950))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(50))
                 .build();
@@ -155,7 +155,7 @@ class RiskServiceTest {
 
         Stock stock = Stock.builder()
                 .id(position.getStockId())
-                .lastTradedPrice(BigDecimal.valueOf(10))
+                .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
@@ -172,7 +172,7 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
-                .balance(BigDecimal.valueOf(200))
+                .balance(BigDecimal.valueOf(-850))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(50))
                 .build();
@@ -186,7 +186,7 @@ class RiskServiceTest {
 
         Stock stock = Stock.builder()
                 .id(position.getStockId())
-                .lastTradedPrice(BigDecimal.valueOf(90))
+                .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));

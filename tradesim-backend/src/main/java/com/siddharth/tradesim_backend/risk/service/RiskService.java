@@ -63,7 +63,7 @@ public class RiskService {
             totalUnrealizedPnl = totalUnrealizedPnl.add(unrealizedPnl);
         }
 
-        BigDecimal equity = user.calculateEquity(totalUnrealizedPnl);
+        BigDecimal equity = user.calculateEquity(totalPositionValue);
         BigDecimal marginUsed = BigDecimal.ZERO;
         if (totalPositionValue.compareTo(BigDecimal.ZERO) > 0) {
             marginUsed = totalPositionValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);

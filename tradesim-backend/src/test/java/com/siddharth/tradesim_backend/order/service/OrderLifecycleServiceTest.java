@@ -79,10 +79,11 @@ class OrderLifecycleServiceTest {
 
         User user = mock(User.class);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(user.getLeverage()).thenReturn(5);
 
         service.cancelOrder(order);
 
-        verify(user).unlockFunds(BigDecimal.valueOf(1000.0));
+        verify(user).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
         verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());

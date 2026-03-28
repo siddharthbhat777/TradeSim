@@ -70,7 +70,7 @@ public class PortfolioService {
             responses.add(response);
         }
 
-        BigDecimal equity = user.calculateEquity(totalUnrealizedPnl);
+        BigDecimal equity = user.calculateEquity(totalValue);
         BigDecimal totalPnl = totalRealizedPnl.add(totalUnrealizedPnl);
         return new PortfolioResponse(
                 responses,

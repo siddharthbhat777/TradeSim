@@ -108,7 +108,7 @@ public class OrderService {
             switch (order.getSide()) {
                 case BUY -> {
                     User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
-                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity()));
+                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity())).divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
                     user.unlockFunds(remainingReserved);
                     authRepository.save(user);
                 }
@@ -151,6 +151,9 @@ public class OrderService {
     }
 
     private void validateLimitOrder(User user, Stock stock, @Valid OrderRequest request) {
+        if (request.limitPrice() == null) {
+            throw new OrderException("Limit price missing for LIMIT order");
+        }
         switch (request.side()) {
             case BUY -> validateLimitBuy(user, request);
             case SELL -> validateLimitSell(user.getId(), stock.getId(), request.quantity());

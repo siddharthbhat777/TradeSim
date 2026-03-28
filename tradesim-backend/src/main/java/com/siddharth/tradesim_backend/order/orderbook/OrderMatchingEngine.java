@@ -19,7 +19,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -57,8 +56,17 @@ public class OrderMatchingEngine {
                     break;
                 }
 
-                Order buyOrder = Objects.requireNonNull(orderBookManager.getOrder(buyEntry.orderId()), "Buy order not found in memory");
-                Order sellOrder = Objects.requireNonNull(orderBookManager.getOrder(sellEntry.orderId()), "Sell order not found in memory");
+                Order buyOrder = orderBookManager.getOrderOrLoad(buyEntry.orderId());
+                if (buyOrder == null) {
+                    orderBook.getBuyOrders().poll();
+                    continue;
+                }
+
+                Order sellOrder = orderBookManager.getOrderOrLoad(sellEntry.orderId());
+                if (sellOrder == null) {
+                    orderBook.getSellOrders().poll();
+                    continue;
+                }
 
                 int executedQuantity = Math.min(buyOrder.getRemainingQuantity(), sellOrder.getRemainingQuantity());
                 if (executedQuantity <= 0) {

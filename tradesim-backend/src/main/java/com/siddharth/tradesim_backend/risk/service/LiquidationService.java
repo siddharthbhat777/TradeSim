@@ -6,11 +6,13 @@ import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
+import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class LiquidationService {
     private final OrderMatchingEngine orderMatchingEngine;
     private final OrderBookManager orderBookManager;
     private final OrderRepository orderRepository;
+    private final MarketStateService marketStateService;
     private final Set<UUID> liquidatingUsers = ConcurrentHashMap.newKeySet();
 
     public void liquidateUser(User user) {
@@ -62,8 +65,20 @@ public class LiquidationService {
                         return;
                     }
 
-                    boolean hasLiquidity = orderBookManager.withLock(freshPosition.getStockId(), orderBook -> !orderBook.getBuyOrders().isEmpty());
-                    if (!hasLiquidity) {
+                    boolean hasExecutableLiquidity = orderBookManager.withLock(
+                            freshPosition.getStockId(),
+                            orderBook -> {
+                                OrderBookEntry bestBid = orderBook.getBuyOrders().peek();
+                                if (bestBid == null) {
+                                    return false;
+                                }
+                                if (bestBid.userId() != null && bestBid.userId().equals(user.getId())) {
+                                    return false;
+                                }
+                                return marketStateService.isWithinPriceBand(freshPosition.getStockId(), bestBid.price());
+                            }
+                    );
+                    if (!hasExecutableLiquidity) {
                         break;
                     }
 
@@ -105,20 +120,16 @@ public class LiquidationService {
         List<Position> positions = positionRepository.findByUserId(user.getId());
 
         BigDecimal totalPositionValue = BigDecimal.ZERO;
-        BigDecimal totalUnrealizedPnl = BigDecimal.ZERO;
 
         for (Position position : positions) {
             Stock stock = stockRepository.findById(position.getStockId()).orElseThrow();
 
             BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal positionValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
-
             totalPositionValue = totalPositionValue.add(positionValue);
-            totalUnrealizedPnl = totalUnrealizedPnl.add(unrealizedPnl);
         }
 
-        BigDecimal equity = user.calculateEquity(totalUnrealizedPnl);
+        BigDecimal equity = user.calculateEquity(totalPositionValue);
         BigDecimal marginUsed = totalPositionValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
         BigDecimal maintenanceMargin = marginUsed.multiply(user.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
 

@@ -102,11 +102,11 @@ public class User extends AuditableEntity {
         this.lockedBalance = this.lockedBalance.subtract(amount);
     }
 
-    public BigDecimal calculateEquity(BigDecimal unrealizedPnl) {
-        if (unrealizedPnl == null) {
-            throw new IllegalArgumentException("Unrealized PnL cannot be null");
+    public BigDecimal calculateEquity(BigDecimal totalPositionValue) {
+        if (totalPositionValue == null) {
+            throw new IllegalArgumentException("Total position value cannot be null");
         }
 
-        return balance.add(unrealizedPnl);
+        return balance.add(totalPositionValue);
     }
 }
