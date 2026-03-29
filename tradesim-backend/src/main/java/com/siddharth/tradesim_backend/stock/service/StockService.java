@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.stock.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
@@ -29,6 +30,7 @@ public class StockService {
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
+    private final ExchangeRepository exchangeRepository;
 
     @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
@@ -55,12 +57,15 @@ public class StockService {
             Stock stock = Stock.builder()
                     .symbol(request.symbol())
                     .companyName(request.companyName())
+                    .exchangeId(request.exchangeId())
                     .lastTradedPrice(request.initialPrice())
                     .totalVolume(0L)
                     .sector(request.sector())
                     .status(StockStatus.ACTIVE)
                     .priceBandPercent(request.priceBandPercent() != null ? request.priceBandPercent() : BigDecimal.valueOf(10))
                     .build();
+
+            exchangeRepository.findById(request.exchangeId()).orElseThrow(() -> new BusinessException("Exchange not found"));
 
             Stock saved = stockRepository.save(stock);
 

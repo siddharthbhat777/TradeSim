@@ -13,6 +13,7 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.risk.service.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
@@ -37,6 +38,7 @@ class OrderServiceTest {
     private PositionRepository positionRepository;
     private OrderBookManager orderBookManager;
     private OrderMatchingEngine orderMatchingEngine;
+    private ExchangeService exchangeService;
 
     private UUID userId;
     private UUID stockId;
@@ -49,6 +51,7 @@ class OrderServiceTest {
         positionRepository = mock(PositionRepository.class);
         orderBookManager = mock(OrderBookManager.class);
         orderMatchingEngine = mock(OrderMatchingEngine.class);
+        exchangeService = mock(ExchangeService.class);
         RiskService riskService = mock(RiskService.class);
 
         orderService = new OrderService(
@@ -58,7 +61,8 @@ class OrderServiceTest {
                 positionRepository,
                 orderBookManager,
                 orderMatchingEngine,
-                riskService
+                riskService,
+                exchangeService
         );
 
         userId = UUID.randomUUID();
@@ -91,6 +95,7 @@ class OrderServiceTest {
         when(stock.getId()).thenReturn(stockId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false));
+        doNothing().when(exchangeService).assertTradingAllowed(stockId);
 
         OrderRequest request = createLimitBuyRequest();
 
@@ -116,6 +121,7 @@ class OrderServiceTest {
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(positionRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(position));
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false));
+        doNothing().when(exchangeService).assertTradingAllowed(stockId);
 
         OrderRequest request = new OrderRequest(
                 stockId,
@@ -140,6 +146,7 @@ class OrderServiceTest {
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(stock.getStatus()).thenReturn(StockStatus.HALTED);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        doNothing().when(exchangeService).assertTradingAllowed(stockId);
 
         OrderRequest request = createLimitBuyRequest();
 
@@ -156,6 +163,7 @@ class OrderServiceTest {
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
         when(stock.getId()).thenReturn(stockId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        doNothing().when(exchangeService).assertTradingAllowed(stockId);
 
         OrderRequest request = new OrderRequest(
                 stockId,

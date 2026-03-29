@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.stock.enums.Sector;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record CreateStockRequest(
         @NotBlank(message = "Stock symbol is required")
@@ -17,6 +18,9 @@ public record CreateStockRequest(
         @NotBlank(message = "Company name is required")
         @Size(max = 100, message = "Company name must not exceed 100 characters")
         String companyName,
+
+        @NotNull(message = "Exchange ID is required")
+        UUID exchangeId,
 
         @NotNull(message = "Initial price is required")
         @DecimalMin(

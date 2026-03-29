@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
@@ -41,6 +42,7 @@ public class OrderService {
     private final OrderBookManager orderBookManager;
     private final OrderMatchingEngine orderMatchingEngine;
     private final RiskService riskService;
+    private final ExchangeService exchangeService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -51,6 +53,8 @@ public class OrderService {
         }
 
         Stock stock = stockRepository.findById(request.stockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+
+        exchangeService.assertTradingAllowed(stock.getExchangeId());
 
         if (stock.getStatus() != StockStatus.ACTIVE) {
             throw new BusinessException("Stock is not active");
