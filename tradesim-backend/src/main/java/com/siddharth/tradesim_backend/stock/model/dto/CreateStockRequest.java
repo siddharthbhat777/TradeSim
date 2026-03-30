@@ -15,9 +15,8 @@ public record CreateStockRequest(
         )
         String symbol,
 
-        @NotBlank(message = "Company name is required")
-        @Size(max = 100, message = "Company name must not exceed 100 characters")
-        String companyName,
+        @NotNull(message = "Company ID is required")
+        UUID companyId,
 
         @NotNull(message = "Exchange ID is required")
         UUID exchangeId,

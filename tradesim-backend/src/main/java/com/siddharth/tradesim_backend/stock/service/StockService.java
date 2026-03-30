@@ -1,5 +1,8 @@
 package com.siddharth.tradesim_backend.stock.service;
 
+import com.siddharth.tradesim_backend.company.CompanyRepository;
+import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
+import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
@@ -31,6 +34,7 @@ public class StockService {
     private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
     private final ExchangeRepository exchangeRepository;
+    private final CompanyRepository companyRepository;
 
     @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
@@ -53,10 +57,18 @@ public class StockService {
             throw new CreateStockException("Stock with symbol " + request.symbol() + " already exists");
         }
 
+        Company company = companyRepository.findById(request.companyId()).orElseThrow(() -> new BusinessException("Company not found"));
+        if (company.getStatus() != CompanyStatus.ACTIVE) {
+            throw new BusinessException("Company is not active");
+        }
+
+        exchangeRepository.findById(request.exchangeId()).orElseThrow(() -> new BusinessException("Exchange not found"));
+
         try {
             Stock stock = Stock.builder()
                     .symbol(request.symbol())
-                    .companyName(request.companyName())
+                    .companyName(company.getName())
+                    .companyId(company.getId())
                     .exchangeId(request.exchangeId())
                     .lastTradedPrice(request.initialPrice())
                     .totalVolume(0L)
@@ -64,8 +76,6 @@ public class StockService {
                     .status(StockStatus.ACTIVE)
                     .priceBandPercent(request.priceBandPercent() != null ? request.priceBandPercent() : BigDecimal.valueOf(10))
                     .build();
-
-            exchangeRepository.findById(request.exchangeId()).orElseThrow(() -> new BusinessException("Exchange not found"));
 
             Stock saved = stockRepository.save(stock);
 

@@ -1,13 +1,21 @@
 package com.siddharth.tradesim_backend.stock.service;
 
+import com.siddharth.tradesim_backend.company.CompanyRepository;
+import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
+import com.siddharth.tradesim_backend.company.model.Company;
+import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,7 +31,10 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class StockServiceTest {
@@ -35,6 +47,12 @@ public class StockServiceTest {
 
     @Mock
     private OrderLifecycleService orderLifecycleService;
+
+    @Mock
+    private ExchangeRepository exchangeRepository;
+
+    @Mock
+    private CompanyRepository companyRepository;
 
     @InjectMocks
     private StockService stockService;
@@ -91,7 +109,6 @@ public class StockServiceTest {
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(orderRepository.findByStockIdAndStatusIn(eq(stockId), eq(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED)))).thenReturn(List.of(openOrder, partialOrder));
-
         when(stockRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         stockService.changeStockStatus(stockId, StockStatus.DELISTED);
@@ -112,11 +129,75 @@ public class StockServiceTest {
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(orderRepository.findByStockIdAndStatusIn(eq(stockId), eq(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED)))).thenReturn(List.of());
-
         when(stockRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         stockService.changeStockStatus(stockId, StockStatus.DELISTED);
 
         verify(orderLifecycleService, never()).cancelOrder(any());
+    }
+
+    @Test
+    void shouldAddStockWhenCompanyAndExchangeAreValid() {
+        UUID companyId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        CreateStockRequest request = new CreateStockRequest(
+                "AAPL",
+                companyId,
+                exchangeId,
+                BigDecimal.valueOf(150.25),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN
+        );
+
+        Company company = Company.builder()
+                .id(companyId)
+                .name("Apple Inc")
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        when(stockRepository.existsBySymbol(request.symbol())).thenReturn(false);
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(Exchange.builder().id(exchangeId).build()));
+        when(stockRepository.save(any(Stock.class))).thenAnswer(i -> {
+            Stock stock = i.getArgument(0);
+            stock.setId(UUID.randomUUID());
+            return stock;
+        });
+
+        StockResponse response = stockService.addStock(request);
+
+        assertThat(response.symbol()).isEqualTo("AAPL");
+        assertThat(response.companyName()).isEqualTo("Apple Inc");
+        verify(stockRepository).save(any(Stock.class));
+    }
+
+    @Test
+    void shouldRejectInactiveCompanyWhenAddingStock() {
+        UUID companyId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        CreateStockRequest request = new CreateStockRequest(
+                "AAPL",
+                companyId,
+                exchangeId,
+                BigDecimal.valueOf(150.25),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN
+        );
+
+        Company company = Company.builder()
+                .id(companyId)
+                .name("Apple Inc")
+                .status(CompanyStatus.INACTIVE)
+                .build();
+
+        when(stockRepository.existsBySymbol(request.symbol())).thenReturn(false);
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> stockService.addStock(request));
+
+        assertThat(exception.getMessage()).isEqualTo("Company is not active");
+        verify(stockRepository, never()).save(any());
     }
 }
