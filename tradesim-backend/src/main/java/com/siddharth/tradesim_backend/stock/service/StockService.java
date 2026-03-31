@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.stock.service;
 
-import com.siddharth.tradesim_backend.company.CompanyRepository;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;

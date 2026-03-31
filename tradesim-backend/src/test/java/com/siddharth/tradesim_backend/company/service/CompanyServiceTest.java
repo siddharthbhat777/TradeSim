@@ -1,10 +1,11 @@
-package com.siddharth.tradesim_backend.company;
+package com.siddharth.tradesim_backend.company.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

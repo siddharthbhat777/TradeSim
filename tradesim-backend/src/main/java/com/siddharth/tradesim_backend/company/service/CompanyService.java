@@ -1,10 +1,11 @@
-package com.siddharth.tradesim_backend.company;
+package com.siddharth.tradesim_backend.company.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;

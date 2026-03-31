@@ -1,0 +1,6 @@
+package com.siddharth.tradesim_backend.company.enums;
+
+public enum CompanyManagerAssignmentStatus {
+    ACTIVE,
+    REVOKED
+}
