@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.company.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
-import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStatus;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -12,17 +12,17 @@ import java.util.UUID;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(
-        name = "company_manager_assignments",
+        name = "company_representative_assignments",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_company_manager_company_user",
+                        name = "uk_company_representative_company_user",
                         columnNames = {"company_id", "user_id"}
                 )
         },
         indexes = {
-                @Index(name = "idx_company_manager_company", columnList = "company_id"),
-                @Index(name = "idx_company_manager_user", columnList = "user_id"),
-                @Index(name = "idx_company_manager_status", columnList = "status")
+                @Index(name = "idx_company_representative_company", columnList = "company_id"),
+                @Index(name = "idx_company_representative_user", columnList = "user_id"),
+                @Index(name = "idx_company_representative_status", columnList = "status")
         }
 )
 @Getter
@@ -30,7 +30,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CompanyManagerAssignment extends AuditableEntity {
+public class CompanyRepresentativeAssignment extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
@@ -47,7 +47,7 @@ public class CompanyManagerAssignment extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CompanyManagerAssignmentStatus status;
+    private CompanyRepresentativeAssignmentStatus status;
 
     @Column(name = "revoked_at")
     private Instant revokedAt;

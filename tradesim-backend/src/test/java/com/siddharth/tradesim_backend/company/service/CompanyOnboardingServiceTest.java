@@ -5,9 +5,9 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
-import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStatus;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
-import com.siddharth.tradesim_backend.company.model.dto.CompanyManagerAssignmentResponse;
+import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyOnboardingResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyOnboardingRequest;
@@ -34,16 +34,16 @@ class CompanyOnboardingServiceTest {
     private AuthService authService;
 
     @Mock
-    private CompanyManagerAssignmentService companyManagerAssignmentService;
+    private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
 
     @InjectMocks
     private CompanyOnboardingService companyOnboardingService;
 
     @Test
-    void shouldOnboardCompanyWithInitialManager() {
+    void shouldOnboardCompanyWithInitialRepresentative() {
         UUID adminUserId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
-        UUID managerId = UUID.randomUUID();
+        UUID representativeId = UUID.randomUUID();
 
         CreateCompanyRequest companyRequest = new CreateCompanyRequest(
                 "Apple Inc",
@@ -51,13 +51,13 @@ class CompanyOnboardingServiceTest {
                 "United States"
         );
 
-        RegisterRequest managerRequest = new RegisterRequest(
-                "apple_manager",
-                "apple_manager@example.com",
-                "Manager@123"
+        RegisterRequest representativeRequest = new RegisterRequest(
+                "apple_representative",
+                "apple_representative@example.com",
+                "Representative@123"
         );
 
-        CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(companyRequest, managerRequest);
+        CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(companyRequest, representativeRequest);
 
         CompanyResponse companyResponse = new CompanyResponse(
                 companyId,
@@ -67,31 +67,31 @@ class CompanyOnboardingServiceTest {
                 CompanyStatus.ACTIVE
         );
 
-        RegisterResponse managerResponse = new RegisterResponse(
-                managerId,
-                "apple_manager",
-                "apple_manager@example.com",
-                Role.COMPANY_MANAGER,
+        RegisterResponse representativeResponse = new RegisterResponse(
+                representativeId,
+                "apple_representative",
+                "apple_representative@example.com",
+                Role.COMPANY_REPRESENTATIVE,
                 AccountStatus.ACTIVE
         );
 
-        CompanyManagerAssignmentResponse assignmentResponse = new CompanyManagerAssignmentResponse(
+        CompanyRepresentativeAssignmentResponse assignmentResponse = new CompanyRepresentativeAssignmentResponse(
                 UUID.randomUUID(),
                 companyId,
-                managerId,
+                representativeId,
                 adminUserId,
-                CompanyManagerAssignmentStatus.ACTIVE,
+                CompanyRepresentativeAssignmentStatus.ACTIVE,
                 null
         );
 
         when(companyService.createCompany(eq(companyRequest))).thenReturn(companyResponse);
-        when(authService.registerCompanyManager(eq(managerRequest))).thenReturn(managerResponse);
-        when(companyManagerAssignmentService.assignManager(eq(companyId), eq(managerId), eq(adminUserId))).thenReturn(assignmentResponse);
+        when(authService.registerCompanyRepresentative(eq(representativeRequest))).thenReturn(representativeResponse);
+        when(companyRepresentativeAssignmentService.assignRepresentative(eq(companyId), eq(representativeId), eq(adminUserId))).thenReturn(assignmentResponse);
 
         CompanyOnboardingResponse response = companyOnboardingService.onboardCompany(request, adminUserId);
 
         assertThat(response.company().id()).isEqualTo(companyId);
-        assertThat(response.manager().id()).isEqualTo(managerId);
-        assertThat(response.assignment().status()).isEqualTo(CompanyManagerAssignmentStatus.ACTIVE);
+        assertThat(response.representative().id()).isEqualTo(representativeId);
+        assertThat(response.assignment().status()).isEqualTo(CompanyRepresentativeAssignmentStatus.ACTIVE);
     }
 }

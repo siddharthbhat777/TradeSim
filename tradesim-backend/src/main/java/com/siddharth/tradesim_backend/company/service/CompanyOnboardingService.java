@@ -2,8 +2,8 @@ package com.siddharth.tradesim_backend.company.service;
 
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
-import com.siddharth.tradesim_backend.company.model.dto.CompanyManagerAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyOnboardingResponse;
+import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyOnboardingRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,14 +17,14 @@ import java.util.UUID;
 public class CompanyOnboardingService {
     private final CompanyService companyService;
     private final AuthService authService;
-    private final CompanyManagerAssignmentService companyManagerAssignmentService;
+    private final CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
 
     @Transactional
     public CompanyOnboardingResponse onboardCompany(CreateCompanyOnboardingRequest request, UUID adminUserId) {
         CompanyResponse company = companyService.createCompany(request.company());
-        RegisterResponse manager = authService.registerCompanyManager(request.manager());
-        CompanyManagerAssignmentResponse assignment = companyManagerAssignmentService.assignManager(company.id(), manager.id(), adminUserId);
+        RegisterResponse representative = authService.registerCompanyRepresentative(request.representative());
+        CompanyRepresentativeAssignmentResponse assignment = companyRepresentativeAssignmentService.assignRepresentative(company.id(), representative.id(), adminUserId);
 
-        return new CompanyOnboardingResponse(company, manager, assignment);
+        return new CompanyOnboardingResponse(company, representative, assignment);
     }
 }

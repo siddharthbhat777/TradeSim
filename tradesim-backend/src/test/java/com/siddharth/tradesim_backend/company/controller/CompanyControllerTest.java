@@ -2,7 +2,7 @@ package com.siddharth.tradesim_backend.company.controller;
 
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
-import com.siddharth.tradesim_backend.company.service.CompanyManagerAssignmentService;
+import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class CompanyControllerTest {
     private CompanyService companyService;
 
     @MockitoBean
-    private CompanyManagerAssignmentService companyManagerAssignmentService;
+    private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
 
     @MockitoBean
     private CompanyOnboardingService companyOnboardingService;

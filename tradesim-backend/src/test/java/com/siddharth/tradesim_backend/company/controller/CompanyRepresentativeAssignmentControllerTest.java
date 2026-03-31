@@ -4,10 +4,10 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStatus;
-import com.siddharth.tradesim_backend.company.model.dto.AssignCompanyManagerRequest;
-import com.siddharth.tradesim_backend.company.model.dto.CompanyManagerAssignmentResponse;
-import com.siddharth.tradesim_backend.company.service.CompanyManagerAssignmentService;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
+import com.siddharth.tradesim_backend.company.model.dto.AssignCompanyRepresentativeRequest;
+import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
+import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class CompanyManagerAssignmentControllerTest {
+class CompanyRepresentativeAssignmentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,7 +45,7 @@ class CompanyManagerAssignmentControllerTest {
     private CompanyService companyService;
 
     @MockitoBean
-    private CompanyManagerAssignmentService companyManagerAssignmentService;
+    private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
 
     @MockitoBean
     private CompanyOnboardingService companyOnboardingService;
@@ -54,10 +54,10 @@ class CompanyManagerAssignmentControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void adminShouldAssignCompanyManager() throws Exception {
+    void adminShouldAssignCompanyRepresentative() throws Exception {
         UUID adminId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
-        UUID managerUserId = UUID.randomUUID();
+        UUID representativeUserId = UUID.randomUUID();
         UUID assignmentId = UUID.randomUUID();
 
         User admin = User.builder()
@@ -70,21 +70,21 @@ class CompanyManagerAssignmentControllerTest {
 
         UserPrincipal principal = new UserPrincipal(admin);
 
-        AssignCompanyManagerRequest request = new AssignCompanyManagerRequest(managerUserId);
+        AssignCompanyRepresentativeRequest request = new AssignCompanyRepresentativeRequest(representativeUserId);
 
-        CompanyManagerAssignmentResponse response = new CompanyManagerAssignmentResponse(
+        CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
                 assignmentId,
                 companyId,
-                managerUserId,
+                representativeUserId,
                 adminId,
-                CompanyManagerAssignmentStatus.ACTIVE,
+                CompanyRepresentativeAssignmentStatus.ACTIVE,
                 null
         );
 
-        when(companyManagerAssignmentService.assignManager(eq(companyId), eq(managerUserId), eq(adminId))).thenReturn(response);
+        when(companyRepresentativeAssignmentService.assignRepresentative(eq(companyId), eq(representativeUserId), eq(adminId))).thenReturn(response);
 
         mockMvc.perform(
-                        post("/companies/{companyId}/managers", companyId)
+                        post("/companies/{companyId}/representatives", companyId)
                                 .with(authentication(
                                         new UsernamePasswordAuthenticationToken(
                                                 principal,
@@ -98,15 +98,15 @@ class CompanyManagerAssignmentControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(assignmentId.toString()))
                 .andExpect(jsonPath("$.companyId").value(companyId.toString()))
-                .andExpect(jsonPath("$.userId").value(managerUserId.toString()))
+                .andExpect(jsonPath("$.userId").value(representativeUserId.toString()))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
 
     @Test
-    void nonAdminShouldNotAssignCompanyManager() throws Exception {
+    void nonAdminShouldNotAssignCompanyRepresentative() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
-        UUID managerUserId = UUID.randomUUID();
+        UUID representativeUserId = UUID.randomUUID();
 
         User user = User.builder()
                 .id(userId)
@@ -118,10 +118,10 @@ class CompanyManagerAssignmentControllerTest {
 
         UserPrincipal principal = new UserPrincipal(user);
 
-        AssignCompanyManagerRequest request = new AssignCompanyManagerRequest(managerUserId);
+        AssignCompanyRepresentativeRequest request = new AssignCompanyRepresentativeRequest(representativeUserId);
 
         mockMvc.perform(
-                        post("/companies/{companyId}/managers", companyId)
+                        post("/companies/{companyId}/representatives", companyId)
                                 .with(authentication(
                                         new UsernamePasswordAuthenticationToken(
                                                 principal,
@@ -136,7 +136,7 @@ class CompanyManagerAssignmentControllerTest {
     }
 
     @Test
-    void adminShouldFetchActiveCompanyManagers() throws Exception {
+    void adminShouldFetchActiveCompanyRepresentatives() throws Exception {
         UUID adminId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
 
@@ -150,20 +150,19 @@ class CompanyManagerAssignmentControllerTest {
 
         UserPrincipal principal = new UserPrincipal(admin);
 
-        CompanyManagerAssignmentResponse response = new CompanyManagerAssignmentResponse(
+        CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
                 UUID.randomUUID(),
                 companyId,
                 UUID.randomUUID(),
                 adminId,
-                CompanyManagerAssignmentStatus.ACTIVE,
+                CompanyRepresentativeAssignmentStatus.ACTIVE,
                 null
         );
 
-        when(companyManagerAssignmentService.fetchActiveAssignments(eq(companyId)))
-                .thenReturn(List.of(response));
+        when(companyRepresentativeAssignmentService.fetchActiveAssignments(eq(companyId))).thenReturn(List.of(response));
 
         mockMvc.perform(
-                        get("/companies/{companyId}/managers", companyId)
+                        get("/companies/{companyId}/representatives", companyId)
                                 .with(authentication(
                                         new UsernamePasswordAuthenticationToken(
                                                 principal,
@@ -178,10 +177,10 @@ class CompanyManagerAssignmentControllerTest {
     }
 
     @Test
-    void adminShouldRevokeCompanyManager() throws Exception {
+    void adminShouldRevokeCompanyRepresentative() throws Exception {
         UUID adminId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
-        UUID managerUserId = UUID.randomUUID();
+        UUID representativeUserId = UUID.randomUUID();
 
         User admin = User.builder()
                 .id(adminId)
@@ -193,19 +192,19 @@ class CompanyManagerAssignmentControllerTest {
 
         UserPrincipal principal = new UserPrincipal(admin);
 
-        CompanyManagerAssignmentResponse response = new CompanyManagerAssignmentResponse(
+        CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
                 UUID.randomUUID(),
                 companyId,
-                managerUserId,
+                representativeUserId,
                 adminId,
-                CompanyManagerAssignmentStatus.REVOKED,
+                CompanyRepresentativeAssignmentStatus.REVOKED,
                 java.time.Instant.now()
         );
 
-        when(companyManagerAssignmentService.revokeManager(eq(companyId), eq(managerUserId))).thenReturn(response);
+        when(companyRepresentativeAssignmentService.revokeRepresentative(eq(companyId), eq(representativeUserId))).thenReturn(response);
 
         mockMvc.perform(
-                        delete("/companies/{companyId}/managers/{userId}", companyId, managerUserId)
+                        delete("/companies/{companyId}/representatives/{userId}", companyId, representativeUserId)
                                 .with(authentication(
                                         new UsernamePasswordAuthenticationToken(
                                                 principal,
@@ -216,7 +215,7 @@ class CompanyManagerAssignmentControllerTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.companyId").value(companyId.toString()))
-                .andExpect(jsonPath("$.userId").value(managerUserId.toString()))
+                .andExpect(jsonPath("$.userId").value(representativeUserId.toString()))
                 .andExpect(jsonPath("$.status").value("REVOKED"));
     }
 }

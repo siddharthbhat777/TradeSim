@@ -1,15 +1,15 @@
 package com.siddharth.tradesim_backend.company;
 
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.company.model.dto.AssignCompanyManagerRequest;
+import com.siddharth.tradesim_backend.company.model.dto.AssignCompanyRepresentativeRequest;
 import com.siddharth.tradesim_backend.company.model.dto.ChangeCompanyStatusRequest;
-import com.siddharth.tradesim_backend.company.model.dto.CompanyManagerAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyOnboardingResponse;
+import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyOnboardingRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
-import com.siddharth.tradesim_backend.company.service.CompanyManagerAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
+import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CompanyController {
     private final CompanyService companyService;
-    private final CompanyManagerAssignmentService companyManagerAssignmentService;
+    private final CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
     private final CompanyOnboardingService companyOnboardingService;
 
     @GetMapping
@@ -58,21 +58,21 @@ public class CompanyController {
         return ResponseEntity.ok(companyService.changeStatus(companyId, request.status()));
     }
 
-    @PostMapping("{companyId}/managers")
+    @PostMapping("{companyId}/representatives")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CompanyManagerAssignmentResponse> assignManager(@PathVariable UUID companyId, @Valid @RequestBody AssignCompanyManagerRequest request, @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(companyManagerAssignmentService.assignManager(companyId, request.userId(), principal.getUserId()));
+    public ResponseEntity<CompanyRepresentativeAssignmentResponse> assignRepresentative(@PathVariable UUID companyId, @Valid @RequestBody AssignCompanyRepresentativeRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(companyRepresentativeAssignmentService.assignRepresentative(companyId, request.userId(), principal.getUserId()));
     }
 
-    @GetMapping("{companyId}/managers")
+    @GetMapping("{companyId}/representatives")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<CompanyManagerAssignmentResponse>> getManagers(@PathVariable UUID companyId) {
-        return ResponseEntity.ok(companyManagerAssignmentService.fetchActiveAssignments(companyId));
+    public ResponseEntity<List<CompanyRepresentativeAssignmentResponse>> getRepresentatives(@PathVariable UUID companyId) {
+        return ResponseEntity.ok(companyRepresentativeAssignmentService.fetchActiveAssignments(companyId));
     }
 
-    @DeleteMapping("{companyId}/managers/{userId}")
+    @DeleteMapping("{companyId}/representatives/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CompanyManagerAssignmentResponse> revokeManager(@PathVariable UUID companyId, @PathVariable UUID userId) {
-        return ResponseEntity.ok(companyManagerAssignmentService.revokeManager(companyId, userId));
+    public ResponseEntity<CompanyRepresentativeAssignmentResponse> revokeRepresentative(@PathVariable UUID companyId, @PathVariable UUID userId) {
+        return ResponseEntity.ok(companyRepresentativeAssignmentService.revokeRepresentative(companyId, userId));
     }
 }

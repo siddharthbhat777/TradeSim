@@ -53,12 +53,12 @@ class AuthServiceTest {
     private AuthService authService;
 
     @Test
-    void shouldRegisterCompanyManagerSuccessfully() {
+    void shouldRegisterCompanyRepresentativeSuccessfully() {
         UUID userId = UUID.randomUUID();
         RegisterRequest request = new RegisterRequest(
-                "manager1",
-                "manager1@example.com",
-                "Manager@123"
+                "representative1",
+                "representative1@example.com",
+                "Representative@123"
         );
 
         when(authRepository.existsByEmail(request.email())).thenReturn(false);
@@ -70,11 +70,11 @@ class AuthServiceTest {
             return user;
         });
 
-        RegisterResponse response = authService.registerCompanyManager(request);
+        RegisterResponse response = authService.registerCompanyRepresentative(request);
 
         assertNotNull(response);
         assertEquals(userId, response.id());
-        assertEquals(Role.COMPANY_MANAGER, response.role());
+        assertEquals(Role.COMPANY_REPRESENTATIVE, response.role());
         assertEquals(AccountStatus.ACTIVE, response.accountStatus());
     }
 

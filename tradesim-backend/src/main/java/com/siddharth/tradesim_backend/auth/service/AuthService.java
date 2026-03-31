@@ -36,8 +36,8 @@ public class AuthService {
     }
 
     @Transactional
-    public RegisterResponse registerCompanyManager(RegisterRequest request) {
-        return registerUserWithRole(request, Role.COMPANY_MANAGER);
+    public RegisterResponse registerCompanyRepresentative(RegisterRequest request) {
+        return registerUserWithRole(request, Role.COMPANY_REPRESENTATIVE);
     }
 
     private RegisterResponse registerUserWithRole(RegisterRequest request, Role role) {

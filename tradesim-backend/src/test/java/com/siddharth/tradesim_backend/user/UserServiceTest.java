@@ -5,8 +5,8 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStatus;
-import com.siddharth.tradesim_backend.company.repository.CompanyManagerAssignmentRepository;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
@@ -42,7 +42,7 @@ class UserServiceTest {
     private OrderLifecycleService orderLifecycleService;
 
     @Mock
-    private CompanyManagerAssignmentRepository companyManagerAssignmentRepository;
+    private CompanyRepresentativeAssignmentRepository companyRepresentativeAssignmentRepository;
 
     @InjectMocks
     private UserService userService;
@@ -130,7 +130,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldChangeRoleFromUserToCompanyManager() {
+    void shouldChangeRoleFromUserToCompanyRepresentative() {
         UUID userId = UUID.randomUUID();
 
         User user = User.builder()
@@ -143,9 +143,9 @@ class UserServiceTest {
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        userService.changeRole(userId, Role.COMPANY_MANAGER);
+        userService.changeRole(userId, Role.COMPANY_REPRESENTATIVE);
 
-        assertEquals(Role.COMPANY_MANAGER, user.getRole());
+        assertEquals(Role.COMPANY_REPRESENTATIVE, user.getRole());
         verify(authRepository).save(user);
     }
 
@@ -185,12 +185,12 @@ class UserServiceTest {
 
         User user = User.builder()
                 .id(userId)
-                .role(Role.COMPANY_MANAGER)
+                .role(Role.COMPANY_REPRESENTATIVE)
                 .accountStatus(AccountStatus.ACTIVE)
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(companyManagerAssignmentRepository.existsByUserIdAndStatus(userId, CompanyManagerAssignmentStatus.ACTIVE)).thenReturn(true);
+        when(companyRepresentativeAssignmentRepository.existsByUserIdAndStatus(userId, CompanyRepresentativeAssignmentStatus.ACTIVE)).thenReturn(true);
 
         assertThrows(RoleException.class, () -> userService.changeRole(userId, Role.USER));
     }

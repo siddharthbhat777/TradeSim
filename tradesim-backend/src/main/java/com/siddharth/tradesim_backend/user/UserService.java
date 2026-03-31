@@ -5,8 +5,8 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStatus;
-import com.siddharth.tradesim_backend.company.repository.CompanyManagerAssignmentRepository;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
@@ -29,7 +29,7 @@ public class UserService {
     private final AuthRepository authRepository;
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
-    private final CompanyManagerAssignmentRepository companyManagerAssignmentRepository;
+    private final CompanyRepresentativeAssignmentRepository companyRepresentativeAssignmentRepository;
 
     @Transactional
     public ChangeUserStatusResponse changeStatus(UUID userId, AccountStatus status) {
@@ -76,8 +76,8 @@ public class UserService {
             throw new RoleException("User already has this role");
         }
 
-        if (user.getRole() == Role.COMPANY_MANAGER && role == Role.USER && companyManagerAssignmentRepository.existsByUserIdAndStatus(userId, CompanyManagerAssignmentStatus.ACTIVE)) {
-            throw new RoleException("Revoke active company assignments before changing role");
+        if (user.getRole() == Role.COMPANY_REPRESENTATIVE && role == Role.USER && companyRepresentativeAssignmentRepository.existsByUserIdAndStatus(userId, CompanyRepresentativeAssignmentStatus.ACTIVE)) {
+            throw new RoleException("Revoke active company representative assignments before changing role");
         }
 
         try {

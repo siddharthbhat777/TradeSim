@@ -5,14 +5,14 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
-import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStatus;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
-import com.siddharth.tradesim_backend.company.model.dto.CompanyManagerAssignmentResponse;
+import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyOnboardingResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyOnboardingRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
-import com.siddharth.tradesim_backend.company.service.CompanyManagerAssignmentService;
+import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ class CompanyOnboardingControllerTest {
     private CompanyService companyService;
 
     @MockitoBean
-    private CompanyManagerAssignmentService companyManagerAssignmentService;
+    private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
 
     @MockitoBean
     private CompanyOnboardingService companyOnboardingService;
@@ -59,7 +59,7 @@ class CompanyOnboardingControllerTest {
     void adminShouldOnboardCompany() throws Exception {
         UUID adminId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
-        UUID managerId = UUID.randomUUID();
+        UUID representativeId = UUID.randomUUID();
 
         User admin = User.builder()
                 .id(adminId)
@@ -74,16 +74,16 @@ class CompanyOnboardingControllerTest {
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
                 new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
                 new com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest(
-                        "apple_manager",
-                        "apple_manager@example.com",
-                        "Manager@123"
+                        "apple_representative",
+                        "apple_representative@example.com",
+                        "Representative@123"
                 )
         );
 
         CompanyOnboardingResponse response = new CompanyOnboardingResponse(
                 new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE),
-                new RegisterResponse(managerId, "apple_manager", "apple_manager@example.com", Role.COMPANY_MANAGER, AccountStatus.ACTIVE),
-                new CompanyManagerAssignmentResponse(UUID.randomUUID(), companyId, managerId, adminId, CompanyManagerAssignmentStatus.ACTIVE, null)
+                new RegisterResponse(representativeId, "apple_representative", "apple_representative@example.com", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
+                new CompanyRepresentativeAssignmentResponse(UUID.randomUUID(), companyId, representativeId, adminId, CompanyRepresentativeAssignmentStatus.ACTIVE, null)
         );
 
         when(companyOnboardingService.onboardCompany(eq(request), eq(adminId))).thenReturn(response);
@@ -102,7 +102,7 @@ class CompanyOnboardingControllerTest {
                 )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.company.id").value(companyId.toString()))
-                .andExpect(jsonPath("$.manager.id").value(managerId.toString()))
+                .andExpect(jsonPath("$.representative.id").value(representativeId.toString()))
                 .andExpect(jsonPath("$.assignment.status").value("ACTIVE"));
     }
 
@@ -121,9 +121,9 @@ class CompanyOnboardingControllerTest {
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
                 new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
                 new com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest(
-                        "apple_manager",
-                        "apple_manager@example.com",
-                        "Manager@123"
+                        "apple_representative",
+                        "apple_representative@example.com",
+                        "Representative@123"
                 )
         );
 

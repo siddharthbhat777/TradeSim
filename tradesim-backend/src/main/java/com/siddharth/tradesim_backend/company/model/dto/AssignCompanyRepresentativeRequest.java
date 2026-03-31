@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-public record AssignCompanyManagerRequest(
+public record AssignCompanyRepresentativeRequest(
         @NotNull(message = "User id is required")
         UUID userId
 ) {

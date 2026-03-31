@@ -9,8 +9,8 @@ public record CreateCompanyOnboardingRequest(
         @Valid
         CreateCompanyRequest company,
 
-        @NotNull(message = "Manager details are required")
+        @NotNull(message = "Company representative details are required")
         @Valid
-        RegisterRequest manager
+        RegisterRequest representative
 ) {
 }

@@ -133,17 +133,17 @@ class UserControllerTest {
 
         UserPrincipal principal = new UserPrincipal(admin);
 
-        ChangeUserRoleRequest request = new ChangeUserRoleRequest(Role.COMPANY_MANAGER);
+        ChangeUserRoleRequest request = new ChangeUserRoleRequest(Role.COMPANY_REPRESENTATIVE);
 
         ChangeUserRoleResponse response = new ChangeUserRoleResponse(
                 targetUserId,
                 "normal1",
                 "normal1@example.com",
-                Role.COMPANY_MANAGER,
+                Role.COMPANY_REPRESENTATIVE,
                 AccountStatus.ACTIVE
         );
 
-        when(userService.changeRole(eq(targetUserId), eq(Role.COMPANY_MANAGER))).thenReturn(response);
+        when(userService.changeRole(eq(targetUserId), eq(Role.COMPANY_REPRESENTATIVE))).thenReturn(response);
 
         mockMvc.perform(
                         put("/users/change/{userId}/role", targetUserId)
@@ -158,7 +158,7 @@ class UserControllerTest {
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.role").value("COMPANY_MANAGER"))
+                .andExpect(jsonPath("$.role").value("COMPANY_REPRESENTATIVE"))
                 .andExpect(jsonPath("$.username").value("normal1"));
     }
 
@@ -177,7 +177,7 @@ class UserControllerTest {
 
         UserPrincipal principal = new UserPrincipal(user);
 
-        ChangeUserRoleRequest request = new ChangeUserRoleRequest(Role.COMPANY_MANAGER);
+        ChangeUserRoleRequest request = new ChangeUserRoleRequest(Role.COMPANY_REPRESENTATIVE);
 
         mockMvc.perform(
                         put("/users/change/{userId}/role", targetUserId)
