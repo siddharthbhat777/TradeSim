@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.company.controller;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.service.CompanyManagerAssignmentService;
+import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ class CompanyControllerTest {
 
     @MockitoBean
     private CompanyManagerAssignmentService companyManagerAssignmentService;
+
+    @MockitoBean
+    private CompanyOnboardingService companyOnboardingService;
 
     @Test
     void shouldReturnCompanies() throws Exception {

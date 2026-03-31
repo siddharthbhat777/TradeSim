@@ -8,6 +8,7 @@ import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStat
 import com.siddharth.tradesim_backend.company.model.dto.AssignCompanyManagerRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyManagerAssignmentResponse;
 import com.siddharth.tradesim_backend.company.service.CompanyManagerAssignmentService;
+import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,9 @@ class CompanyManagerAssignmentControllerTest {
 
     @MockitoBean
     private CompanyManagerAssignmentService companyManagerAssignmentService;
+
+    @MockitoBean
+    private CompanyOnboardingService companyOnboardingService;
 
     @Autowired
     private ObjectMapper objectMapper;

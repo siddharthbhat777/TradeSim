@@ -4,9 +4,12 @@ import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.company.model.dto.AssignCompanyManagerRequest;
 import com.siddharth.tradesim_backend.company.model.dto.ChangeCompanyStatusRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyManagerAssignmentResponse;
+import com.siddharth.tradesim_backend.company.model.dto.CompanyOnboardingResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
+import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyOnboardingRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
 import com.siddharth.tradesim_backend.company.service.CompanyManagerAssignmentService;
+import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ import java.util.UUID;
 public class CompanyController {
     private final CompanyService companyService;
     private final CompanyManagerAssignmentService companyManagerAssignmentService;
+    private final CompanyOnboardingService companyOnboardingService;
 
     @GetMapping
     public ResponseEntity<List<CompanyResponse>> getCompanies() {
@@ -40,6 +44,12 @@ public class CompanyController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CompanyResponse> createCompany(@Valid @RequestBody CreateCompanyRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(companyService.createCompany(request));
+    }
+
+    @PostMapping("onboard")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CompanyOnboardingResponse> onboardCompany(@Valid @RequestBody CreateCompanyOnboardingRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(companyOnboardingService.onboardCompany(request, principal.getUserId()));
     }
 
     @PutMapping("{companyId}/status")

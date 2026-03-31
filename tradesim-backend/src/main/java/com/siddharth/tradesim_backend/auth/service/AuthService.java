@@ -32,6 +32,15 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
+        return registerUserWithRole(request, Role.USER);
+    }
+
+    @Transactional
+    public RegisterResponse registerCompanyManager(RegisterRequest request) {
+        return registerUserWithRole(request, Role.COMPANY_MANAGER);
+    }
+
+    private RegisterResponse registerUserWithRole(RegisterRequest request, Role role) {
         if (authRepository.existsByEmail(request.email())) {
             throw new UserRegistrationException("Email already exists");
         }
@@ -44,9 +53,9 @@ public class AuthService {
                     .username(request.username())
                     .email(request.email())
                     .password(passwordEncoder.encode(request.password()))
-                    .role(Role.USER)
+                    .role(role)
                     .balance(BigDecimal.valueOf(10000000))
-                    .lockedBalance(BigDecimal.valueOf(0))
+                    .lockedBalance(BigDecimal.ZERO)
                     .marginLoan(BigDecimal.ZERO)
                     .accountStatus(AccountStatus.ACTIVE)
                     .leverage(5)

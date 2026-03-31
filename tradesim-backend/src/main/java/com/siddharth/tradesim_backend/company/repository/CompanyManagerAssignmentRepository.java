@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface CompanyManagerAssignmentRepository extends JpaRepository<CompanyManagerAssignment, UUID> {
     Optional<CompanyManagerAssignment> findByCompanyIdAndUserId(UUID companyId, UUID userId);
     List<CompanyManagerAssignment> findByCompanyIdAndStatus(UUID companyId, CompanyManagerAssignmentStatus status);
+    boolean existsByUserIdAndStatus(UUID userId, CompanyManagerAssignmentStatus status);
 }

@@ -2,13 +2,18 @@ package com.siddharth.tradesim_backend.user;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
+import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.enums.CompanyManagerAssignmentStatus;
+import com.siddharth.tradesim_backend.company.repository.CompanyManagerAssignmentRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
+import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleResponse;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
+import com.siddharth.tradesim_backend.user.exceptions.RoleException;
 import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +29,7 @@ public class UserService {
     private final AuthRepository authRepository;
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
+    private final CompanyManagerAssignmentRepository companyManagerAssignmentRepository;
 
     @Transactional
     public ChangeUserStatusResponse changeStatus(UUID userId, AccountStatus status) {
@@ -51,6 +57,44 @@ public class UserService {
             throw new StatusException("Invalid status data");
         } catch (Exception e) {
             throw new StatusException("Unable to change status");
+        }
+    }
+
+    @Transactional
+    public ChangeUserRoleResponse changeRole(UUID userId, Role role) {
+        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+
+        if (user.getRole() == Role.ADMIN) {
+            throw new RoleException("Cannot change role of admin user");
+        }
+
+        if (role == Role.ADMIN) {
+            throw new RoleException("Admin role cannot be assigned through this endpoint");
+        }
+
+        if (user.getRole() == role) {
+            throw new RoleException("User already has this role");
+        }
+
+        if (user.getRole() == Role.COMPANY_MANAGER && role == Role.USER && companyManagerAssignmentRepository.existsByUserIdAndStatus(userId, CompanyManagerAssignmentStatus.ACTIVE)) {
+            throw new RoleException("Revoke active company assignments before changing role");
+        }
+
+        try {
+            user.setRole(role);
+            authRepository.save(user);
+
+            return new ChangeUserRoleResponse(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getRole(),
+                    user.getAccountStatus()
+            );
+        } catch (DataIntegrityViolationException e) {
+            throw new RoleException("Invalid role data");
+        } catch (Exception e) {
+            throw new RoleException("Unable to change role");
         }
     }
 }
