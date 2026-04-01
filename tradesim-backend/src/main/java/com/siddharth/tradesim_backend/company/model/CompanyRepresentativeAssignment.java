@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.company.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,7 +23,8 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_company_representative_company", columnList = "company_id"),
                 @Index(name = "idx_company_representative_user", columnList = "user_id"),
-                @Index(name = "idx_company_representative_status", columnList = "status")
+                @Index(name = "idx_company_representative_status", columnList = "status"),
+                @Index(name = "idx_company_representative_assignment_role", columnList = "assignment_role")
         }
 )
 @Getter
@@ -36,19 +38,24 @@ public class CompanyRepresentativeAssignment extends AuditableEntity {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "company_id", nullable = false)
+    @Column(nullable = false)
     private UUID companyId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(nullable = false)
     private UUID userId;
 
-    @Column(name = "assigned_by_admin_id", nullable = false)
-    private UUID assignedByAdminId;
+    @Column(nullable = false)
+    private UUID assignedByUserId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CompanyRepresentativeAssignmentRole assignmentRole;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CompanyRepresentativeAssignmentStatus status;
 
-    @Column(name = "revoked_at")
     private Instant revokedAt;
+
+    private UUID revokedByUserId;
 }

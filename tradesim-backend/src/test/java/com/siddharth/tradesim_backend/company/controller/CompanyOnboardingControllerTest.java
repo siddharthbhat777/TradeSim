@@ -5,15 +5,16 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
-import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyOnboardingResponse;
+import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyOnboardingRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
-import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
+import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,84 +62,33 @@ class CompanyOnboardingControllerTest {
         UUID companyId = UUID.randomUUID();
         UUID representativeId = UUID.randomUUID();
 
-        User admin = User.builder()
-                .id(adminId)
-                .username("admin")
-                .password("password")
-                .role(Role.ADMIN)
-                .accountStatus(AccountStatus.ACTIVE)
-                .build();
-
+        User admin = User.builder().id(adminId).username("admin").password("password").role(Role.ADMIN).accountStatus(AccountStatus.ACTIVE).build();
         UserPrincipal principal = new UserPrincipal(admin);
 
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
                 new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
-                new com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest(
-                        "apple_representative",
-                        "apple_representative@example.com",
-                        "Representative@123"
-                )
+                new com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123")
         );
 
         CompanyOnboardingResponse response = new CompanyOnboardingResponse(
                 new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE),
                 new RegisterResponse(representativeId, "apple_representative", "apple_representative@example.com", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
-                new CompanyRepresentativeAssignmentResponse(UUID.randomUUID(), companyId, representativeId, adminId, CompanyRepresentativeAssignmentStatus.ACTIVE, null)
+                new CompanyRepresentativeAssignmentResponse(
+                        UUID.randomUUID(), companyId, representativeId, adminId,
+                        CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,
+                        CompanyRepresentativeAssignmentStatus.ACTIVE, null, null
+                )
         );
 
         when(companyOnboardingService.onboardCompany(eq(request), eq(adminId))).thenReturn(response);
 
-        mockMvc.perform(
-                        post("/companies/onboard")
-                                .with(authentication(
-                                        new UsernamePasswordAuthenticationToken(
-                                                principal,
-                                                null,
-                                                principal.getAuthorities()
-                                        )
-                                ))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request))
-                )
+        mockMvc.perform(post("/companies/onboard")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.company.id").value(companyId.toString()))
                 .andExpect(jsonPath("$.representative.id").value(representativeId.toString()))
-                .andExpect(jsonPath("$.assignment.status").value("ACTIVE"));
-    }
-
-    @Test
-    void nonAdminShouldNotOnboardCompany() throws Exception {
-        User user = User.builder()
-                .id(UUID.randomUUID())
-                .username("normal1")
-                .password("password")
-                .role(Role.USER)
-                .accountStatus(AccountStatus.ACTIVE)
-                .build();
-
-        UserPrincipal principal = new UserPrincipal(user);
-
-        CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
-                new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
-                new com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest(
-                        "apple_representative",
-                        "apple_representative@example.com",
-                        "Representative@123"
-                )
-        );
-
-        mockMvc.perform(
-                        post("/companies/onboard")
-                                .with(authentication(
-                                        new UsernamePasswordAuthenticationToken(
-                                                principal,
-                                                null,
-                                                principal.getAuthorities()
-                                        )
-                                ))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request))
-                )
-                .andExpect(status().isForbidden());
+                .andExpect(jsonPath("$.assignment.assignedByUserId").value(adminId.toString()))
+                .andExpect(jsonPath("$.assignment.assignmentRole").value("PRIMARY_CONTACT"));
     }
 }

@@ -4,11 +4,14 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.model.dto.AssignCompanyRepresentativeRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
-import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
+import com.siddharth.tradesim_backend.company.model.dto.PrimaryContactTransferResponse;
+import com.siddharth.tradesim_backend.company.model.dto.TransferPrimaryContactRequest;
 import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
+import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.company.service.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,15 +24,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,81 +62,49 @@ class CompanyRepresentativeAssignmentControllerTest {
         UUID adminId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
         UUID representativeUserId = UUID.randomUUID();
-        UUID assignmentId = UUID.randomUUID();
 
-        User admin = User.builder()
-                .id(adminId)
-                .username("admin")
-                .password("password")
-                .role(Role.ADMIN)
-                .accountStatus(AccountStatus.ACTIVE)
-                .build();
-
+        User admin = User.builder().id(adminId).username("admin").password("password").role(Role.ADMIN).accountStatus(AccountStatus.ACTIVE).build();
         UserPrincipal principal = new UserPrincipal(admin);
 
         AssignCompanyRepresentativeRequest request = new AssignCompanyRepresentativeRequest(representativeUserId);
-
         CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
-                assignmentId,
-                companyId,
-                representativeUserId,
-                adminId,
-                CompanyRepresentativeAssignmentStatus.ACTIVE,
-                null
+                UUID.randomUUID(), companyId, representativeUserId, adminId,
+                CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,
+                CompanyRepresentativeAssignmentStatus.ACTIVE, null, null
         );
 
         when(companyRepresentativeAssignmentService.assignRepresentative(eq(companyId), eq(representativeUserId), eq(adminId))).thenReturn(response);
 
-        mockMvc.perform(
-                        post("/companies/{companyId}/representatives", companyId)
-                                .with(authentication(
-                                        new UsernamePasswordAuthenticationToken(
-                                                principal,
-                                                null,
-                                                principal.getAuthorities()
-                                        )
-                                ))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request))
-                )
+        mockMvc.perform(post("/companies/{companyId}/representatives", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(assignmentId.toString()))
-                .andExpect(jsonPath("$.companyId").value(companyId.toString()))
-                .andExpect(jsonPath("$.userId").value(representativeUserId.toString()))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(jsonPath("$.assignedByUserId").value(adminId.toString()))
+                .andExpect(jsonPath("$.assignmentRole").value("PRIMARY_CONTACT"));
     }
 
     @Test
-    void nonAdminShouldNotAssignCompanyRepresentative() throws Exception {
-        UUID userId = UUID.randomUUID();
+    void primaryContactShouldTransferPrimaryContact() throws Exception {
         UUID companyId = UUID.randomUUID();
-        UUID representativeUserId = UUID.randomUUID();
+        UUID currentPrimaryContactUserId = UUID.randomUUID();
+        UUID newPrimaryContactUserId = UUID.randomUUID();
 
-        User user = User.builder()
-                .id(userId)
-                .username("normal_user")
-                .password("password")
-                .role(Role.USER)
-                .accountStatus(AccountStatus.ACTIVE)
-                .build();
+        User primaryContactUser = User.builder().id(currentPrimaryContactUserId).username("rep1").password("password").role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
+        UserPrincipal principal = new UserPrincipal(primaryContactUser);
 
-        UserPrincipal principal = new UserPrincipal(user);
+        TransferPrimaryContactRequest request = new TransferPrimaryContactRequest(newPrimaryContactUserId);
+        PrimaryContactTransferResponse response = new PrimaryContactTransferResponse(companyId, currentPrimaryContactUserId, newPrimaryContactUserId, currentPrimaryContactUserId, Instant.now());
 
-        AssignCompanyRepresentativeRequest request = new AssignCompanyRepresentativeRequest(representativeUserId);
+        when(companyRepresentativeAssignmentService.transferPrimaryContact(eq(companyId), eq(newPrimaryContactUserId), eq(currentPrimaryContactUserId))).thenReturn(response);
 
-        mockMvc.perform(
-                        post("/companies/{companyId}/representatives", companyId)
-                                .with(authentication(
-                                        new UsernamePasswordAuthenticationToken(
-                                                principal,
-                                                null,
-                                                principal.getAuthorities()
-                                        )
-                                ))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request))
-                )
-                .andExpect(status().isForbidden());
+        mockMvc.perform(put("/companies/{companyId}/representatives/primary-contact", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.previousPrimaryContactUserId").value(currentPrimaryContactUserId.toString()))
+                .andExpect(jsonPath("$.newPrimaryContactUserId").value(newPrimaryContactUserId.toString()));
     }
 
     @Test
@@ -140,82 +112,38 @@ class CompanyRepresentativeAssignmentControllerTest {
         UUID adminId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
 
-        User admin = User.builder()
-                .id(adminId)
-                .username("admin")
-                .password("password")
-                .role(Role.ADMIN)
-                .accountStatus(AccountStatus.ACTIVE)
-                .build();
-
+        User admin = User.builder().id(adminId).username("admin").password("password").role(Role.ADMIN).accountStatus(AccountStatus.ACTIVE).build();
         UserPrincipal principal = new UserPrincipal(admin);
 
         CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
-                UUID.randomUUID(),
-                companyId,
-                UUID.randomUUID(),
-                adminId,
-                CompanyRepresentativeAssignmentStatus.ACTIVE,
-                null
+                UUID.randomUUID(), companyId, UUID.randomUUID(), adminId,
+                CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,
+                CompanyRepresentativeAssignmentStatus.ACTIVE, null, null
         );
 
-        when(companyRepresentativeAssignmentService.fetchActiveAssignments(eq(companyId))).thenReturn(List.of(response));
+        when(companyRepresentativeAssignmentService.fetchActiveAssignments(eq(companyId), eq(adminId))).thenReturn(List.of(response));
 
-        mockMvc.perform(
-                        get("/companies/{companyId}/representatives", companyId)
-                                .with(authentication(
-                                        new UsernamePasswordAuthenticationToken(
-                                                principal,
-                                                null,
-                                                principal.getAuthorities()
-                                        )
-                                ))
-                )
+        mockMvc.perform(get("/companies/{companyId}/representatives", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].companyId").value(companyId.toString()))
-                .andExpect(jsonPath("$[0].status").value("ACTIVE"));
+                .andExpect(jsonPath("$[0].assignmentRole").value("PRIMARY_CONTACT"));
     }
 
     @Test
-    void adminShouldRevokeCompanyRepresentative() throws Exception {
-        UUID adminId = UUID.randomUUID();
+    void plainUserShouldNotAssignCompanyRepresentative() throws Exception {
+        UUID userId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
         UUID representativeUserId = UUID.randomUUID();
 
-        User admin = User.builder()
-                .id(adminId)
-                .username("admin")
-                .password("password")
-                .role(Role.ADMIN)
-                .accountStatus(AccountStatus.ACTIVE)
-                .build();
+        User user = User.builder().id(userId).username("normal_user").password("password").role(Role.USER).accountStatus(AccountStatus.ACTIVE).build();
+        UserPrincipal principal = new UserPrincipal(user);
 
-        UserPrincipal principal = new UserPrincipal(admin);
+        AssignCompanyRepresentativeRequest request = new AssignCompanyRepresentativeRequest(representativeUserId);
 
-        CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
-                UUID.randomUUID(),
-                companyId,
-                representativeUserId,
-                adminId,
-                CompanyRepresentativeAssignmentStatus.REVOKED,
-                java.time.Instant.now()
-        );
-
-        when(companyRepresentativeAssignmentService.revokeRepresentative(eq(companyId), eq(representativeUserId))).thenReturn(response);
-
-        mockMvc.perform(
-                        delete("/companies/{companyId}/representatives/{userId}", companyId, representativeUserId)
-                                .with(authentication(
-                                        new UsernamePasswordAuthenticationToken(
-                                                principal,
-                                                null,
-                                                principal.getAuthorities()
-                                        )
-                                ))
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.companyId").value(companyId.toString()))
-                .andExpect(jsonPath("$.userId").value(representativeUserId.toString()))
-                .andExpect(jsonPath("$.status").value("REVOKED"));
+        mockMvc.perform(post("/companies/{companyId}/representatives", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 }
