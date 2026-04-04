@@ -71,6 +71,25 @@ public class CompanyRepresentativeAssignmentService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public void assertActiveRepresentativeAssignment(UUID companyId, UUID actingUserId) {
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> new BusinessException("User not found"));
+
+        if (actingUser.getRole() != Role.COMPANY_REPRESENTATIVE || actingUser.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new BusinessException("Only an active assigned company representative can submit listing requests");
+        }
+
+        boolean hasActiveAssignment = companyRepresentativeAssignmentRepository.existsByCompanyIdAndUserIdAndStatus(
+                companyId,
+                actingUserId,
+                CompanyRepresentativeAssignmentStatus.ACTIVE
+        );
+
+        if (!hasActiveAssignment) {
+            throw new BusinessException("Only an active assigned company representative can submit listing requests");
+        }
+    }
+
     @Transactional
     public CompanyRepresentativeAssignmentResponse revokeRepresentative(UUID companyId, UUID targetUserId, UUID actingUserId) {
         assertCanManageRepresentatives(companyId, actingUserId);

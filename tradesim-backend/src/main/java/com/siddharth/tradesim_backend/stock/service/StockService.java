@@ -10,6 +10,7 @@ import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.exceptions.CreateStockException;
 import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
@@ -51,47 +52,39 @@ public class StockService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsBySymbol(String symbol) {
+        return stockRepository.existsBySymbol(symbol);
+    }
+
     @Transactional
     public StockResponse addStock(CreateStockRequest request) {
-        if (stockRepository.existsBySymbol(request.symbol())) {
-            throw new CreateStockException("Stock with symbol " + request.symbol() + " already exists");
-        }
+        Stock saved = createStock(
+                request.symbol(),
+                request.companyId(),
+                request.exchangeId(),
+                request.initialPrice(),
+                request.sector(),
+                request.priceBandPercent(),
+                StockStatus.ACTIVE
+        );
 
-        Company company = companyRepository.findById(request.companyId()).orElseThrow(() -> new BusinessException("Company not found"));
-        if (company.getStatus() != CompanyStatus.ACTIVE) {
-            throw new BusinessException("Company is not active");
-        }
+        return toResponse(saved);
+    }
 
-        exchangeRepository.findById(request.exchangeId()).orElseThrow(() -> new BusinessException("Exchange not found"));
+    @Transactional
+    public StockResponse createStockFromListingApproval(UUID companyId, UUID exchangeId, String symbol, BigDecimal referencePrice, Sector sector, BigDecimal priceBandPercent) {
+        Stock saved = createStock(
+                symbol,
+                companyId,
+                exchangeId,
+                referencePrice,
+                sector,
+                priceBandPercent,
+                StockStatus.HALTED
+        );
 
-        try {
-            Stock stock = Stock.builder()
-                    .symbol(request.symbol())
-                    .companyName(company.getName())
-                    .companyId(company.getId())
-                    .exchangeId(request.exchangeId())
-                    .lastTradedPrice(request.initialPrice())
-                    .totalVolume(0L)
-                    .sector(request.sector())
-                    .status(StockStatus.ACTIVE)
-                    .priceBandPercent(request.priceBandPercent() != null ? request.priceBandPercent() : BigDecimal.valueOf(10))
-                    .build();
-
-            Stock saved = stockRepository.save(stock);
-
-            return new StockResponse(
-                    saved.getId(),
-                    saved.getSymbol(),
-                    saved.getCompanyName(),
-                    saved.getLastTradedPrice(),
-                    saved.getSector(),
-                    saved.getStatus()
-            );
-        } catch (DataIntegrityViolationException e) {
-            throw new CreateStockException("Invalid stock data");
-        } catch (Exception e) {
-            throw new CreateStockException("Unable to add stock");
-        }
+        return toResponse(saved);
     }
 
     @Transactional
@@ -122,5 +115,45 @@ public class StockService {
         } catch (Exception e) {
             throw new StatusException("Unable to change status of stock");
         }
+    }
+
+    private Stock createStock(String symbol, UUID companyId, UUID exchangeId, BigDecimal initialPrice, Sector sector, BigDecimal priceBandPercent, StockStatus status) {
+        if (stockRepository.existsBySymbol(symbol)) {
+            throw new CreateStockException("Stock with symbol " + symbol + " already exists");
+        }
+
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> new BusinessException("Company not found"));
+        if (company.getStatus() != CompanyStatus.ACTIVE) {
+            throw new BusinessException("Company is not active");
+        }
+
+        exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
+
+        try {
+            return stockRepository.save(Stock.builder()
+                    .symbol(symbol)
+                    .companyName(company.getName())
+                    .companyId(company.getId())
+                    .exchangeId(exchangeId)
+                    .lastTradedPrice(initialPrice)
+                    .totalVolume(0L)
+                    .sector(sector)
+                    .status(status)
+                    .priceBandPercent(priceBandPercent != null ? priceBandPercent : BigDecimal.TEN)
+                    .build());
+        } catch (DataIntegrityViolationException e) {
+            throw new CreateStockException("Invalid stock data");
+        }
+    }
+
+    private StockResponse toResponse(Stock stock) {
+        return new StockResponse(
+                stock.getId(),
+                stock.getSymbol(),
+                stock.getCompanyName(),
+                stock.getLastTradedPrice(),
+                stock.getSector(),
+                stock.getStatus()
+        );
     }
 }

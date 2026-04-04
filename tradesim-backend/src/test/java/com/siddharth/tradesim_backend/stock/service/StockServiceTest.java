@@ -200,4 +200,37 @@ public class StockServiceTest {
         assertThat(exception.getMessage()).isEqualTo("Company is not active");
         verify(stockRepository, never()).save(any());
     }
+
+    @Test
+    void shouldCreateApprovedListingStockInHaltedStatus() {
+        UUID companyId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        Company company = Company.builder()
+                .id(companyId)
+                .name("Apple Inc")
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        when(stockRepository.existsBySymbol("AAPL")).thenReturn(false);
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(Exchange.builder().id(exchangeId).build()));
+        when(stockRepository.save(any(Stock.class))).thenAnswer(invocation -> {
+            Stock stock = invocation.getArgument(0);
+            stock.setId(UUID.randomUUID());
+            return stock;
+        });
+
+        StockResponse response = stockService.createStockFromListingApproval(
+                companyId,
+                exchangeId,
+                "AAPL",
+                BigDecimal.valueOf(150.25),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN
+        );
+
+        assertThat(response.status()).isEqualTo(StockStatus.HALTED);
+        verify(stockRepository).save(any(Stock.class));
+    }
 }
