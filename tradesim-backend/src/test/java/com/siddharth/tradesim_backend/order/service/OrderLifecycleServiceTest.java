@@ -1,7 +1,5 @@
 package com.siddharth.tradesim_backend.order.service;
 
-import com.siddharth.tradesim_backend.auth.AuthRepository;
-import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -10,6 +8,8 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class OrderLifecycleServiceTest {
@@ -28,7 +28,7 @@ class OrderLifecycleServiceTest {
 
     private OrderRepository orderRepository;
     private OrderBookManager orderBookManager;
-    private AuthRepository authRepository;
+    private TradingAccountService tradingAccountService;
     private PositionRepository positionRepository;
 
     private UUID userId;
@@ -38,13 +38,13 @@ class OrderLifecycleServiceTest {
     void setup() {
         orderRepository = mock(OrderRepository.class);
         orderBookManager = mock(OrderBookManager.class);
-        authRepository = mock(AuthRepository.class);
+        tradingAccountService = mock(TradingAccountService.class);
         positionRepository = mock(PositionRepository.class);
 
         service = new OrderLifecycleService(
                 orderRepository,
                 orderBookManager,
-                authRepository,
+                tradingAccountService,
                 positionRepository
         );
 
@@ -77,13 +77,14 @@ class OrderLifecycleServiceTest {
     void shouldCancelBuyLimitOrderAndUnlockFunds() {
         Order order = createOrder(OrderSide.BUY, OrderType.LIMIT, 10, 100);
 
-        User user = mock(User.class);
-        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(user.getLeverage()).thenReturn(5);
+        TradingAccount tradingAccount = mock(TradingAccount.class);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccount.getLeverage()).thenReturn(5);
 
         service.cancelOrder(order);
 
-        verify(user).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
+        verify(tradingAccount).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
+        verify(tradingAccountService).saveTradingAccount(tradingAccount);
         verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
@@ -111,7 +112,7 @@ class OrderLifecycleServiceTest {
 
         service.cancelOrder(order);
 
-        verify(authRepository, never()).findById(any());
+        verify(tradingAccountService, never()).getTradingAccountByUserId(any());
         verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());

@@ -6,6 +6,7 @@ import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
@@ -22,6 +23,8 @@ import com.siddharth.tradesim_backend.risk.service.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,6 +46,7 @@ public class OrderService {
     private final OrderMatchingEngine orderMatchingEngine;
     private final RiskService riskService;
     private final ExchangeService exchangeService;
+    private final TradingAccountService tradingAccountService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -52,6 +56,8 @@ public class OrderService {
             throw new BusinessException("User account is not active");
         }
 
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+
         Stock stock = stockRepository.findById(request.stockId()).orElseThrow(() -> new BusinessException("Stock not found"));
 
         exchangeService.assertTradingAllowed(stock.getExchangeId());
@@ -60,7 +66,11 @@ public class OrderService {
             throw new BusinessException("Stock is not active");
         }
 
-        validateOrder(user, stock, request);
+        validateOrder(userId, tradingAccount, stock, request);
+
+        if (request.side() == OrderSide.BUY && request.orderType() == OrderType.LIMIT) {
+            tradingAccountService.saveTradingAccount(tradingAccount);
+        }
 
         Order order = Order.builder()
                 .userId(userId)
@@ -81,7 +91,7 @@ public class OrderService {
 
         MatchResult result = orderMatchingEngine.match(order);
 
-        riskService.checkLiquidation(user);
+        riskService.checkLiquidation(userId);
 
         return new OrderResponse(
                 order.getId(),
@@ -111,10 +121,10 @@ public class OrderService {
         if (order.getOrderType() == OrderType.LIMIT) {
             switch (order.getSide()) {
                 case BUY -> {
-                    User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
-                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity())).divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
-                    user.unlockFunds(remainingReserved);
-                    authRepository.save(user);
+                    TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity())).divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+                    tradingAccount.unlockFunds(remainingReserved);
+                    tradingAccountService.saveTradingAccount(tradingAccount);
                 }
                 case SELL -> {
                     Position position = positionRepository.findByUserIdAndStockId(userId, order.getStockId()).orElseThrow(() -> new BusinessException("Position not found"));
@@ -135,39 +145,39 @@ public class OrderService {
         }
     }
 
-    private void validateOrder(User user, Stock stock, @Valid OrderRequest request) {
+    private void validateOrder(UUID userId, TradingAccount tradingAccount, Stock stock, @Valid OrderRequest request) {
         switch (request.orderType()) {
-            case MARKET -> validateMarketOrder(user, stock, request);
-            case LIMIT -> validateLimitOrder(user, stock, request);
+            case MARKET -> validateMarketOrder(userId, tradingAccount, stock, request);
+            case LIMIT -> validateLimitOrder(userId, tradingAccount, stock, request);
         }
     }
 
-    private void validateMarketOrder(User user, Stock stock, @Valid OrderRequest request) {
+    private void validateMarketOrder(UUID userId, TradingAccount tradingAccount, Stock stock, @Valid OrderRequest request) {
         switch (request.side()) {
-            case BUY -> validateMarketBuy(user, stock, request);
-            case SELL -> validateUserPosition(user.getId(), stock.getId(), request.quantity());
+            case BUY -> validateMarketBuy(tradingAccount, stock, request);
+            case SELL -> validateUserPosition(userId, stock.getId(), request.quantity());
         }
     }
 
-    private void validateMarketBuy(User user, Stock stock, @Valid OrderRequest request) {
+    private void validateMarketBuy(TradingAccount tradingAccount, Stock stock, @Valid OrderRequest request) {
         BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.quantity());
-        riskService.validateBuyOrder(user, estimatedCost);
+        riskService.validateBuyOrder(tradingAccount, estimatedCost);
     }
 
-    private void validateLimitOrder(User user, Stock stock, @Valid OrderRequest request) {
+    private void validateLimitOrder(UUID userId, TradingAccount tradingAccount, Stock stock, @Valid OrderRequest request) {
         if (request.limitPrice() == null) {
             throw new OrderException("Limit price missing for LIMIT order");
         }
         switch (request.side()) {
-            case BUY -> validateLimitBuy(user, request);
-            case SELL -> validateLimitSell(user.getId(), stock.getId(), request.quantity());
+            case BUY -> validateLimitBuy(tradingAccount, request);
+            case SELL -> validateLimitSell(userId, stock.getId(), request.quantity());
         }
     }
 
-    private void validateLimitBuy(User user, @Valid OrderRequest request) {
+    private void validateLimitBuy(TradingAccount tradingAccount, @Valid OrderRequest request) {
         BigDecimal orderValue = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
-        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
-        user.lockFunds(requiredMargin);
+        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        tradingAccount.lockFunds(requiredMargin);
     }
 
     private void validateLimitSell(UUID userId, UUID stockId, int quantity) {

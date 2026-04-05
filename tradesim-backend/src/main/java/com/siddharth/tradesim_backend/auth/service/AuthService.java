@@ -10,6 +10,7 @@ import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
 @Service
@@ -29,6 +29,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final TradingAccountService tradingAccountService;
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
@@ -54,15 +55,11 @@ public class AuthService {
                     .email(request.email())
                     .password(passwordEncoder.encode(request.password()))
                     .role(role)
-                    .balance(BigDecimal.valueOf(10000000))
-                    .lockedBalance(BigDecimal.ZERO)
-                    .marginLoan(BigDecimal.ZERO)
                     .accountStatus(AccountStatus.ACTIVE)
-                    .leverage(5)
-                    .maintenanceMarginPercent(BigDecimal.valueOf(25))
                     .build();
 
             User saved = authRepository.save(user);
+            tradingAccountService.createTradingAccountForUser(saved.getId());
 
             return new RegisterResponse(
                     saved.getId(),
@@ -88,9 +85,7 @@ public class AuthService {
                     )
             );
 
-            User user = authRepository
-                    .findByUsernameOrEmail(request.usernameOrEmail())
-                    .orElseThrow(() -> new UserLoginException("User not found"));
+            User user = authRepository.findByUsernameOrEmail(request.usernameOrEmail()).orElseThrow(() -> new UserLoginException("User not found"));
 
             if (user.getAccountStatus() == AccountStatus.SUSPENDED || user.getAccountStatus() == AccountStatus.BANNED) {
                 throw new UserLoginException("Cannot login, your account is " + user.getAccountStatus());

@@ -18,6 +18,8 @@ import com.siddharth.tradesim_backend.risk.service.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class OrderServiceTest {
@@ -38,10 +40,13 @@ class OrderServiceTest {
     private PositionRepository positionRepository;
     private OrderBookManager orderBookManager;
     private OrderMatchingEngine orderMatchingEngine;
+    private RiskService riskService;
     private ExchangeService exchangeService;
+    private TradingAccountService tradingAccountService;
 
     private UUID userId;
     private UUID stockId;
+    private UUID exchangeId;
 
     @BeforeEach
     void setup() {
@@ -51,8 +56,9 @@ class OrderServiceTest {
         positionRepository = mock(PositionRepository.class);
         orderBookManager = mock(OrderBookManager.class);
         orderMatchingEngine = mock(OrderMatchingEngine.class);
+        riskService = mock(RiskService.class);
         exchangeService = mock(ExchangeService.class);
-        RiskService riskService = mock(RiskService.class);
+        tradingAccountService = mock(TradingAccountService.class);
 
         orderService = new OrderService(
                 authRepository,
@@ -62,18 +68,19 @@ class OrderServiceTest {
                 orderBookManager,
                 orderMatchingEngine,
                 riskService,
-                exchangeService
+                exchangeService,
+                tradingAccountService
         );
 
         userId = UUID.randomUUID();
         stockId = UUID.randomUUID();
+        exchangeId = UUID.randomUUID();
 
         ReentrantLock lock = new ReentrantLock();
         when(orderBookManager.getLock(any())).thenReturn(lock);
     }
 
     private OrderRequest createLimitBuyRequest() {
-
         return new OrderRequest(
                 stockId,
                 10,
@@ -86,42 +93,49 @@ class OrderServiceTest {
     @Test
     void shouldCreateLimitBuyOrder() {
         User user = mock(User.class);
+        TradingAccount tradingAccount = mock(TradingAccount.class);
         Stock stock = mock(Stock.class);
 
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
-        when(user.getLeverage()).thenReturn(5);
+        when(stock.getExchangeId()).thenReturn(exchangeId);
+        when(tradingAccount.getLeverage()).thenReturn(5);
         when(stock.getId()).thenReturn(stockId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false));
-        doNothing().when(exchangeService).assertTradingAllowed(stockId);
+        doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
 
         OrderRequest request = createLimitBuyRequest();
 
         orderService.createOrder(userId, request);
 
-        verify(user).lockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
+        verify(tradingAccount).lockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
+        verify(tradingAccountService).saveTradingAccount(tradingAccount);
         verify(orderRepository).save(any());
         verify(orderBookManager).addOrder(any());
         verify(orderMatchingEngine).match(any());
+        verify(riskService).checkLiquidation(userId);
     }
 
     @Test
     void shouldCreateLimitSellOrder() {
         User user = mock(User.class);
+        TradingAccount tradingAccount = mock(TradingAccount.class);
         Stock stock = mock(Stock.class);
         Position position = mock(Position.class);
 
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
-        when(user.getId()).thenReturn(userId);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(stock.getExchangeId()).thenReturn(exchangeId);
         when(stock.getId()).thenReturn(stockId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(positionRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(position));
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false));
-        doNothing().when(exchangeService).assertTradingAllowed(stockId);
+        doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
 
         OrderRequest request = new OrderRequest(
                 stockId,
@@ -140,13 +154,16 @@ class OrderServiceTest {
     @Test
     void shouldRejectInactiveStock() {
         User user = mock(User.class);
+        TradingAccount tradingAccount = mock(TradingAccount.class);
         Stock stock = mock(Stock.class);
 
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(stock.getStatus()).thenReturn(StockStatus.HALTED);
+        when(stock.getExchangeId()).thenReturn(exchangeId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-        doNothing().when(exchangeService).assertTradingAllowed(stockId);
+        doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
 
         OrderRequest request = createLimitBuyRequest();
 
@@ -156,14 +173,17 @@ class OrderServiceTest {
     @Test
     void shouldRejectLimitOrderWithoutLimitPrice() {
         User user = mock(User.class);
+        TradingAccount tradingAccount = mock(TradingAccount.class);
         Stock stock = mock(Stock.class);
 
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(stock.getExchangeId()).thenReturn(exchangeId);
         when(stock.getId()).thenReturn(stockId);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
-        doNothing().when(exchangeService).assertTradingAllowed(stockId);
+        doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
 
         OrderRequest request = new OrderRequest(
                 stockId,

@@ -10,6 +10,7 @@ import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,7 +22,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,6 +48,9 @@ class AuthServiceTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
+
+    @Mock
+    private TradingAccountService tradingAccountService;
 
     @InjectMocks
     private AuthService authService;
@@ -76,6 +79,7 @@ class AuthServiceTest {
         assertEquals(userId, response.id());
         assertEquals(Role.COMPANY_REPRESENTATIVE, response.role());
         assertEquals(AccountStatus.ACTIVE, response.accountStatus());
+        verify(tradingAccountService).createTradingAccountForUser(userId);
     }
 
     @Test
@@ -88,7 +92,6 @@ class AuthServiceTest {
                 .email("sid@test.com")
                 .password("encoded")
                 .role(Role.USER)
-                .balance(BigDecimal.valueOf(1000))
                 .accountStatus(AccountStatus.ACTIVE)
                 .build();
 
@@ -128,7 +131,6 @@ class AuthServiceTest {
                 .email("sid@test.com")
                 .password("encoded")
                 .role(Role.USER)
-                .balance(BigDecimal.valueOf(1000))
                 .accountStatus(AccountStatus.SUSPENDED)
                 .build();
 
@@ -151,7 +153,6 @@ class AuthServiceTest {
                 .email("sid@test.com")
                 .password("encoded")
                 .role(Role.USER)
-                .balance(BigDecimal.valueOf(1000))
                 .accountStatus(AccountStatus.BANNED)
                 .build();
 

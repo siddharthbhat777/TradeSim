@@ -11,6 +11,8 @@ import com.siddharth.tradesim_backend.risk.service.LiquidationService;
 import com.siddharth.tradesim_backend.risk.service.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,15 +20,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RiskServiceTest {
@@ -41,16 +47,19 @@ class RiskServiceTest {
     private StockRepository stockRepository;
 
     @Mock
+    private TradingAccountService tradingAccountService;
+
+    @Mock
     private LiquidationService liquidationService;
 
     @InjectMocks
     private RiskService riskService;
 
-    private User user;
+    private TradingAccount tradingAccount;
 
     @BeforeEach
     void setup() {
-        user = User.builder()
+        tradingAccount = TradingAccount.builder()
                 .balance(BigDecimal.valueOf(1000))
                 .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.ZERO)
@@ -63,44 +72,40 @@ class RiskServiceTest {
     void shouldAllowBuyWhenMarginSufficient() {
         BigDecimal orderValue = BigDecimal.valueOf(4000);
 
-        assertDoesNotThrow(() -> riskService.validateBuyOrder(user, orderValue));
+        assertDoesNotThrow(() -> riskService.validateBuyOrder(tradingAccount, orderValue));
     }
 
     @Test
     void shouldRejectBuyWhenMarginInsufficient() {
         BigDecimal orderValue = BigDecimal.valueOf(6000);
 
-        assertThrows(BusinessException.class, () -> riskService.validateBuyOrder(user, orderValue));
+        assertThrows(BusinessException.class, () -> riskService.validateBuyOrder(tradingAccount, orderValue));
     }
 
     @Test
     void shouldAllowExactMarginBoundary() {
         BigDecimal orderValue = BigDecimal.valueOf(5000);
 
-        assertDoesNotThrow(() -> riskService.validateBuyOrder(user, orderValue));
+        assertDoesNotThrow(() -> riskService.validateBuyOrder(tradingAccount, orderValue));
     }
 
     @Test
-    void shouldLockOnlyMarginNotFullAmount() throws NoSuchFieldException, IllegalAccessException {
+    void shouldLockOnlyMarginNotFullAmount() {
         BigDecimal orderValue = BigDecimal.valueOf(5000);
-        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-        user.lockFunds(requiredMargin);
+        tradingAccount.lockFunds(requiredMargin);
 
-        Field field = User.class.getDeclaredField("lockedBalance");
-        field.setAccessible(true);
-
-        BigDecimal lockedBalance = (BigDecimal) field.get(user);
-
-        assertEquals(0, lockedBalance.compareTo(BigDecimal.valueOf(1000)));
+        assertEquals(0, tradingAccount.getLockedBalance().compareTo(BigDecimal.valueOf(1000)));
+        assertEquals(0, tradingAccount.getAvailableBalance().compareTo(BigDecimal.ZERO));
     }
 
     @Test
     void shouldFailWhenMultipleOrdersExceedBalance() {
-        user.lockFunds(BigDecimal.valueOf(600));
-        user.lockFunds(BigDecimal.valueOf(300));
+        tradingAccount.lockFunds(BigDecimal.valueOf(600));
+        tradingAccount.lockFunds(BigDecimal.valueOf(300));
 
-        assertThrows(BusinessException.class, () -> user.lockFunds(BigDecimal.valueOf(200)));
+        assertThrows(BusinessException.class, () -> tradingAccount.lockFunds(BigDecimal.valueOf(200)));
     }
 
     @Test
@@ -109,6 +114,10 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
                 .balance(BigDecimal.valueOf(10000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
@@ -127,6 +136,7 @@ class RiskServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
@@ -142,6 +152,10 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
                 .balance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.valueOf(950))
                 .leverage(5)
@@ -160,12 +174,14 @@ class RiskServiceTest {
                 .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
-        riskService.checkLiquidation(user);
+        riskService.checkLiquidation(userId);
 
-        verify(liquidationService).liquidateUser(user);
+        verify(liquidationService).liquidateUser(userId);
     }
 
     @Test
@@ -174,6 +190,10 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
                 .balance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.valueOf(850))
                 .leverage(5)
@@ -193,6 +213,7 @@ class RiskServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
@@ -207,6 +228,10 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
                 .balance(BigDecimal.valueOf(1000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.ZERO)
@@ -225,6 +250,7 @@ class RiskServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
@@ -239,12 +265,17 @@ class RiskServiceTest {
 
         User user = User.builder()
                 .id(userId)
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
                 .balance(BigDecimal.valueOf(5000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of());
 
         RiskResponse response = riskService.getUserRisk(userId);

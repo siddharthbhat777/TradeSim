@@ -83,7 +83,7 @@ class IssuanceControllerTest {
 
         when(issuanceService.submitIssuanceRequest(eq(companyId), eq(stockId), eq(primaryContactUserId), eq(request))).thenReturn(response);
 
-        mockMvc.perform(post("/companies/{companyId}/stocks/{stockId}/issuance-requests", companyId, stockId)
+        mockMvc.perform(post("/issuance-requests/{companyId}/stocks/{stockId}", companyId, stockId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -229,7 +229,7 @@ class IssuanceControllerTest {
 
         CreateIssuanceRequest request = new CreateIssuanceRequest(1_000_000, 200_000, UUID.randomUUID());
 
-        mockMvc.perform(post("/companies/{companyId}/stocks/{stockId}/issuance-requests", companyId, stockId)
+        mockMvc.perform(post("/issuance-requests/{companyId}/stocks/{stockId}", companyId, stockId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
