@@ -88,10 +88,38 @@ public class StockService {
     }
 
     @Transactional
+    public StockResponse activateStockFromIssuanceApproval(UUID stockId, int totalIssuedShares, int tradableFloatShares) {
+        if (tradableFloatShares > totalIssuedShares) {
+            throw new BusinessException("Tradable float shares cannot exceed total issued shares");
+        }
+
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
+
+        if (stock.getStatus() != StockStatus.HALTED) {
+            throw new BusinessException("Only HALTED stocks can be activated through issuance");
+        }
+
+        if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
+            throw new BusinessException("Initial issuance has already been applied to this stock");
+        }
+
+        stock.setTotalIssuedShares(totalIssuedShares);
+        stock.setTradableFloatShares(tradableFloatShares);
+        stock.setStatus(StockStatus.ACTIVE);
+
+        Stock saved = stockRepository.save(stock);
+        return toResponse(saved);
+    }
+
+    @Transactional
     public StockResponse changeStockStatus(UUID stockId, StockStatus status) {
         Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
         if (stock.getStatus() == status) throw new StockStatusException("Stock already in this status");
-        if (stock.getStatus() == StockStatus.DELISTED) throw new StockStatusException("Cannot change stock status of DELISTED stock");
+        if (stock.getStatus() == StockStatus.DELISTED)
+            throw new StockStatusException("Cannot change stock status of DELISTED stock");
+        if (status == StockStatus.ACTIVE && stock.getStatus() == StockStatus.HALTED && (stock.getTotalIssuedShares() == null || stock.getTradableFloatShares() == null)) {
+            throw new StockStatusException("Cannot activate stock before initial issuance is approved");
+        }
         try {
             if (status == StockStatus.DELISTED) {
                 List<Order> openOrders = orderRepository.findByStockIdAndStatusIn(stockId, List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED));

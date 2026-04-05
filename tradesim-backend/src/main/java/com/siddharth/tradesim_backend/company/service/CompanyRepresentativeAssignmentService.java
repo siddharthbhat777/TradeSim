@@ -90,6 +90,24 @@ public class CompanyRepresentativeAssignmentService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public void assertPrimaryContactAssignment(UUID companyId, UUID actingUserId) {
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> new BusinessException("User not found"));
+
+        if (actingUser.getRole() != Role.COMPANY_REPRESENTATIVE || actingUser.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new BusinessException("Only an active primary contact can submit issuance requests");
+        }
+
+        CompanyRepresentativeAssignment actingAssignment = companyRepresentativeAssignmentRepository
+                .findByCompanyIdAndUserId(companyId, actingUserId)
+                .filter(assignment -> assignment.getStatus() == CompanyRepresentativeAssignmentStatus.ACTIVE)
+                .orElseThrow(() -> new BusinessException("Only an active primary contact can submit issuance requests"));
+
+        if (actingAssignment.getAssignmentRole() != CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT) {
+            throw new BusinessException("Only an active primary contact can submit issuance requests");
+        }
+    }
+
     @Transactional
     public CompanyRepresentativeAssignmentResponse revokeRepresentative(UUID companyId, UUID targetUserId, UUID actingUserId) {
         assertCanManageRepresentatives(companyId, actingUserId);

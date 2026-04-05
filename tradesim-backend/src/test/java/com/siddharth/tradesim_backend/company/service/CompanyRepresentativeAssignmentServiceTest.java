@@ -196,4 +196,54 @@ class CompanyRepresentativeAssignmentServiceTest {
 
         assertThat(exception.getMessage()).isEqualTo("Transfer primary contact before revoking the current primary contact");
     }
+
+    @Test
+    void shouldAllowPrimaryContactWhenIssuanceRequiresPrimaryContact() {
+        UUID companyId = UUID.randomUUID();
+        UUID primaryContactUserId = UUID.randomUUID();
+
+        User primaryContactUser = User.builder()
+                .id(primaryContactUserId)
+                .role(Role.COMPANY_REPRESENTATIVE)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        CompanyRepresentativeAssignment primaryContactAssignment = CompanyRepresentativeAssignment.builder()
+                .companyId(companyId)
+                .userId(primaryContactUserId)
+                .assignmentRole(CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT)
+                .status(CompanyRepresentativeAssignmentStatus.ACTIVE)
+                .build();
+
+        when(authRepository.findById(primaryContactUserId)).thenReturn(Optional.of(primaryContactUser));
+        when(companyRepresentativeAssignmentRepository.findByCompanyIdAndUserId(companyId, primaryContactUserId)).thenReturn(Optional.of(primaryContactAssignment));
+
+        companyRepresentativeAssignmentService.assertPrimaryContactAssignment(companyId, primaryContactUserId);
+    }
+
+    @Test
+    void shouldRejectManagerWhenIssuanceRequiresPrimaryContact() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerUserId = UUID.randomUUID();
+
+        User managerUser = User.builder()
+                .id(managerUserId)
+                .role(Role.COMPANY_REPRESENTATIVE)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        CompanyRepresentativeAssignment managerAssignment = CompanyRepresentativeAssignment.builder()
+                .companyId(companyId)
+                .userId(managerUserId)
+                .assignmentRole(CompanyRepresentativeAssignmentRole.MANAGER)
+                .status(CompanyRepresentativeAssignmentStatus.ACTIVE)
+                .build();
+
+        when(authRepository.findById(managerUserId)).thenReturn(Optional.of(managerUser));
+        when(companyRepresentativeAssignmentRepository.findByCompanyIdAndUserId(companyId, managerUserId)).thenReturn(Optional.of(managerAssignment));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> companyRepresentativeAssignmentService.assertPrimaryContactAssignment(companyId, managerUserId));
+
+        assertThat(exception.getMessage()).isEqualTo("Only an active primary contact can submit issuance requests");
+    }
 }

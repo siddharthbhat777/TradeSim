@@ -62,6 +62,10 @@ public class Stock extends AuditableEntity {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal priceBandPercent;
 
+    private Integer totalIssuedShares;
+
+    private Integer tradableFloatShares;
+
     @Column(precision = 19, scale = 4)
     private BigDecimal dayOpen;
 

@@ -1,14 +1,13 @@
-package com.siddharth.tradesim_backend.listing;
+package com.siddharth.tradesim_backend.issuance;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
-import com.siddharth.tradesim_backend.listing.model.dto.CreateListingRequest;
-import com.siddharth.tradesim_backend.listing.model.dto.ListingRequestResponse;
-import com.siddharth.tradesim_backend.listing.model.dto.RejectListingRequest;
-import com.siddharth.tradesim_backend.stock.enums.Sector;
+import com.siddharth.tradesim_backend.issuance.enums.IssuanceStatus;
+import com.siddharth.tradesim_backend.issuance.model.dto.CreateIssuanceRequest;
+import com.siddharth.tradesim_backend.issuance.model.dto.IssuanceRequestResponse;
+import com.siddharth.tradesim_backend.issuance.model.dto.RejectIssuanceRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +19,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -37,52 +35,45 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ListingControllerTest {
+class IssuanceControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private ListingService listingService;
+    private IssuanceService issuanceService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
-    void companyRepresentativeShouldSubmitListingRequest() throws Exception {
+    void companyRepresentativeShouldSubmitIssuanceRequest() throws Exception {
         UUID companyId = UUID.randomUUID();
-        UUID representativeUserId = UUID.randomUUID();
-        UUID exchangeId = UUID.randomUUID();
-        UUID listingRequestId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+        UUID primaryContactUserId = UUID.randomUUID();
+        UUID liquidityProviderUserId = UUID.randomUUID();
+        UUID issuanceRequestId = UUID.randomUUID();
 
         User representative = User.builder()
-                .id(representativeUserId)
-                .username("issuer_rep")
+                .id(primaryContactUserId)
+                .username("issuer_primary")
                 .password("password")
                 .role(Role.COMPANY_REPRESENTATIVE)
                 .accountStatus(AccountStatus.ACTIVE)
                 .build();
         UserPrincipal principal = new UserPrincipal(representative);
 
-        CreateListingRequest request = new CreateListingRequest(
-                "INFY",
-                exchangeId,
-                BigDecimal.valueOf(1500.25),
-                Sector.TECHNOLOGY,
-                BigDecimal.TEN
-        );
+        CreateIssuanceRequest request = new CreateIssuanceRequest(1_000_000, 200_000, liquidityProviderUserId);
 
-        ListingRequestResponse response = new ListingRequestResponse(
-                listingRequestId,
+        IssuanceRequestResponse response = new IssuanceRequestResponse(
+                issuanceRequestId,
                 companyId,
-                representativeUserId,
-                "INFY",
-                exchangeId,
-                BigDecimal.valueOf(1500.25),
-                Sector.TECHNOLOGY,
-                BigDecimal.TEN,
-                ListingStatus.PENDING,
-                null,
+                stockId,
+                primaryContactUserId,
+                1_000_000,
+                200_000,
+                liquidityProviderUserId,
+                IssuanceStatus.PENDING,
                 null,
                 null,
                 null,
@@ -90,22 +81,20 @@ class ListingControllerTest {
                 Instant.now()
         );
 
-        when(listingService.submitListingRequest(eq(companyId), eq(representativeUserId), eq(request))).thenReturn(response);
+        when(issuanceService.submitIssuanceRequest(eq(companyId), eq(stockId), eq(primaryContactUserId), eq(request))).thenReturn(response);
 
-        mockMvc.perform(post("/listing-requests/{companyId}", companyId)
+        mockMvc.perform(post("/companies/{companyId}/stocks/{stockId}/issuance-requests", companyId, stockId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.symbol").value("INFY"))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.tradableFloatShares").value(200000));
     }
 
     @Test
-    void adminShouldFetchPendingListingRequests() throws Exception {
+    void adminShouldFetchPendingIssuanceRequests() throws Exception {
         UUID adminId = UUID.randomUUID();
-        UUID companyId = UUID.randomUUID();
-        UUID exchangeId = UUID.randomUUID();
 
         User admin = User.builder()
                 .id(adminId)
@@ -116,17 +105,15 @@ class ListingControllerTest {
                 .build();
         UserPrincipal principal = new UserPrincipal(admin);
 
-        ListingRequestResponse response = new ListingRequestResponse(
+        IssuanceRequestResponse response = new IssuanceRequestResponse(
                 UUID.randomUUID(),
-                companyId,
                 UUID.randomUUID(),
-                "INFY",
-                exchangeId,
-                BigDecimal.valueOf(1500.25),
-                Sector.TECHNOLOGY,
-                BigDecimal.TEN,
-                ListingStatus.PENDING,
-                null,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                1_000_000,
+                200_000,
+                UUID.randomUUID(),
+                IssuanceStatus.PENDING,
                 null,
                 null,
                 null,
@@ -134,19 +121,19 @@ class ListingControllerTest {
                 Instant.now()
         );
 
-        when(listingService.fetchPendingListingRequests()).thenReturn(List.of(response));
+        when(issuanceService.fetchPendingIssuanceRequests()).thenReturn(List.of(response));
 
-        mockMvc.perform(get("/listing-requests/pending").with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+        mockMvc.perform(get("/issuance-requests/pending")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].symbol").value("INFY"))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+                .andExpect(jsonPath("$[0].status").value("PENDING"))
+                .andExpect(jsonPath("$[0].totalIssuedShares").value(1000000));
     }
 
     @Test
-    void adminShouldApproveListingRequest() throws Exception {
+    void adminShouldApproveIssuanceRequest() throws Exception {
         UUID adminId = UUID.randomUUID();
-        UUID listingRequestId = UUID.randomUUID();
-        UUID stockId = UUID.randomUUID();
+        UUID issuanceRequestId = UUID.randomUUID();
 
         User admin = User.builder()
                 .id(adminId)
@@ -157,36 +144,35 @@ class ListingControllerTest {
                 .build();
         UserPrincipal principal = new UserPrincipal(admin);
 
-        ListingRequestResponse response = new ListingRequestResponse(
-                listingRequestId,
+        IssuanceRequestResponse response = new IssuanceRequestResponse(
+                issuanceRequestId,
                 UUID.randomUUID(),
                 UUID.randomUUID(),
-                "INFY",
                 UUID.randomUUID(),
-                BigDecimal.valueOf(1500.25),
-                Sector.TECHNOLOGY,
-                BigDecimal.TEN,
-                ListingStatus.APPROVED,
+                1_000_000,
+                200_000,
+                UUID.randomUUID(),
+                IssuanceStatus.APPROVED,
                 adminId,
                 Instant.now(),
-                stockId,
                 null,
                 Instant.now(),
                 Instant.now()
         );
 
-        when(listingService.approveListingRequest(eq(listingRequestId), eq(adminId))).thenReturn(response);
+        when(issuanceService.approveIssuanceRequest(eq(issuanceRequestId), eq(adminId))).thenReturn(response);
 
-        mockMvc.perform(put("/listing-requests/{listingRequestId}/approve", listingRequestId).with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+        mockMvc.perform(put("/issuance-requests/{issuanceRequestId}/approve", issuanceRequestId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"))
-                .andExpect(jsonPath("$.approvedStockId").value(stockId.toString()));
+                .andExpect(jsonPath("$.reviewedByUserId").value(adminId.toString()));
     }
 
     @Test
-    void adminShouldRejectListingRequest() throws Exception {
+    void adminShouldRejectIssuanceRequest() throws Exception {
         UUID adminId = UUID.randomUUID();
-        UUID listingRequestId = UUID.randomUUID();
+        UUID issuanceRequestId = UUID.randomUUID();
 
         User admin = User.builder()
                 .id(adminId)
@@ -197,41 +183,39 @@ class ListingControllerTest {
                 .build();
         UserPrincipal principal = new UserPrincipal(admin);
 
-        RejectListingRequest request = new RejectListingRequest("Incomplete issuer details");
+        RejectIssuanceRequest request = new RejectIssuanceRequest("Issuer capitalization data is incomplete");
 
-        ListingRequestResponse response = new ListingRequestResponse(
-                listingRequestId,
+        IssuanceRequestResponse response = new IssuanceRequestResponse(
+                issuanceRequestId,
                 UUID.randomUUID(),
                 UUID.randomUUID(),
-                "INFY",
                 UUID.randomUUID(),
-                BigDecimal.valueOf(1500.25),
-                Sector.TECHNOLOGY,
-                BigDecimal.TEN,
-                ListingStatus.REJECTED,
+                1_000_000,
+                200_000,
+                UUID.randomUUID(),
+                IssuanceStatus.REJECTED,
                 adminId,
                 Instant.now(),
-                null,
-                "Incomplete issuer details",
+                "Issuer capitalization data is incomplete",
                 Instant.now(),
                 Instant.now()
         );
 
-        when(listingService.rejectListingRequest(eq(listingRequestId), eq("Incomplete issuer details"), eq(adminId))).thenReturn(response);
+        when(issuanceService.rejectIssuanceRequest(eq(issuanceRequestId), eq("Issuer capitalization data is incomplete"), eq(adminId))).thenReturn(response);
 
-        mockMvc.perform(put("/listing-requests/{listingRequestId}/reject", listingRequestId)
+        mockMvc.perform(put("/issuance-requests/{issuanceRequestId}/reject", issuanceRequestId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REJECTED"))
-                .andExpect(jsonPath("$.rejectionReason").value("Incomplete issuer details"));
+                .andExpect(jsonPath("$.rejectionReason").value("Issuer capitalization data is incomplete"));
     }
 
     @Test
-    void plainUserShouldNotSubmitListingRequest() throws Exception {
+    void plainUserShouldNotSubmitIssuanceRequest() throws Exception {
         UUID companyId = UUID.randomUUID();
-        UUID exchangeId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
         User user = User.builder()
@@ -243,15 +227,9 @@ class ListingControllerTest {
                 .build();
         UserPrincipal principal = new UserPrincipal(user);
 
-        CreateListingRequest request = new CreateListingRequest(
-                "INFY",
-                exchangeId,
-                BigDecimal.valueOf(1500.25),
-                Sector.TECHNOLOGY,
-                BigDecimal.TEN
-        );
+        CreateIssuanceRequest request = new CreateIssuanceRequest(1_000_000, 200_000, UUID.randomUUID());
 
-        mockMvc.perform(post("/listing-requests/{companyId}", companyId)
+        mockMvc.perform(post("/companies/{companyId}/stocks/{stockId}/issuance-requests", companyId, stockId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

@@ -233,4 +233,45 @@ public class StockServiceTest {
         assertThat(response.status()).isEqualTo(StockStatus.HALTED);
         verify(stockRepository).save(any(Stock.class));
     }
+
+    @Test
+    void shouldActivateStockFromApprovedIssuanceAndStoreShareMetadata() {
+        UUID stockId = UUID.randomUUID();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .symbol("TS_MOTORS")
+                .companyName("TradeSim Motors Limited")
+                .lastTradedPrice(BigDecimal.valueOf(250.50))
+                .sector(Sector.INDUSTRIALS)
+                .status(StockStatus.HALTED)
+                .build();
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stockRepository.save(any(Stock.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        StockResponse response = stockService.activateStockFromIssuanceApproval(stockId, 1_000_000, 200_000);
+
+        assertThat(response.status()).isEqualTo(StockStatus.ACTIVE);
+        assertThat(stock.getTotalIssuedShares()).isEqualTo(1_000_000);
+        assertThat(stock.getTradableFloatShares()).isEqualTo(200_000);
+        verify(stockRepository).save(stock);
+    }
+
+    @Test
+    void shouldNotAllowManualActivationBeforeInitialIssuance() {
+        UUID stockId = UUID.randomUUID();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .status(StockStatus.HALTED)
+                .build();
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+
+        StockStatusException exception = assertThrows(StockStatusException.class, () -> stockService.changeStockStatus(stockId, StockStatus.ACTIVE));
+
+        assertThat(exception.getMessage()).isEqualTo("Cannot activate stock before initial issuance is approved");
+        verify(stockRepository, never()).save(any());
+    }
 }
