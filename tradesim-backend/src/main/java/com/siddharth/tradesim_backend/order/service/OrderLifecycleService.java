@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.order.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
@@ -29,6 +30,7 @@ public class OrderLifecycleService {
     private final OrderBookManager orderBookManager;
     private final TradingAccountService tradingAccountService;
     private final PositionRepository positionRepository;
+    private final LedgerService ledgerService;
 
     @Transactional
     public void cancelOrder(Order order) {
@@ -63,6 +65,7 @@ public class OrderLifecycleService {
             BigDecimal unlockAmount = order.getLimitPrice().multiply(BigDecimal.valueOf(remainingQty)).divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
             tradingAccount.unlockFunds(unlockAmount);
             tradingAccountService.saveTradingAccount(tradingAccount);
+            ledgerService.recordBuyLimitMarginUnlock(tradingAccount, unlockAmount, order.getStockId(), order.getId());
         } else {
             Position position = positionRepository.findByUserIdAndStockId(order.getUserId(), order.getStockId()).orElseThrow(() -> new BusinessException("Position not found"));
             position.unlockShares(remainingQty);

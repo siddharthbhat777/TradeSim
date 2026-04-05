@@ -217,6 +217,8 @@ public class OrderMatchingEngine {
                 buyOrder.getStockId(),
                 executedQuantity,
                 executionPrice,
+                buyOrder.getId(),
+                sellOrder.getId(),
                 buyOrder.getOrderType(),
                 sellOrder.getOrderType(),
                 buyOrder.getLimitPrice()

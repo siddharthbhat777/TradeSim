@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.portfolio.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.PortfolioSnapshotRepository;
 import com.siddharth.tradesim_backend.portfolio.model.PortfolioSnapshot;
@@ -29,6 +30,7 @@ public class PortfolioService {
     private final AuthRepository authRepository;
     private final PortfolioSnapshotRepository portfolioSnapshotRepository;
     private final TradingAccountService tradingAccountService;
+    private final LedgerService ledgerService;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
         authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
@@ -186,14 +188,32 @@ public class PortfolioService {
             }
             BigDecimal reservedMargin = execution.buyerLimitPrice().multiply(BigDecimal.valueOf(execution.quantity())).divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
             buyerTradingAccount.unlockFunds(reservedMargin);
+            ledgerService.recordBuyLimitMarginUnlock(
+                    buyerTradingAccount,
+                    reservedMargin,
+                    execution.stockId(),
+                    execution.buyOrderId()
+            );
         }
 
         BigDecimal requiredMargin = tradeValue.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
         buyerTradingAccount.debit(requiredMargin);
+        ledgerService.recordTradeMarginDebit(
+                buyerTradingAccount,
+                requiredMargin,
+                execution.stockId(),
+                execution.buyOrderId()
+        );
 
         BigDecimal loanIncrease = tradeValue.subtract(requiredMargin);
         if (loanIncrease.compareTo(BigDecimal.ZERO) > 0) {
             buyerTradingAccount.increaseMarginLoan(loanIncrease);
+            ledgerService.recordMarginLoanIncrease(
+                    buyerTradingAccount,
+                    loanIncrease,
+                    execution.stockId(),
+                    execution.buyOrderId()
+            );
         }
     }
 
@@ -212,10 +232,22 @@ public class PortfolioService {
         BigDecimal loanToRepay = sellerTradingAccount.getMarginLoan().min(remainingProceeds);
         if (loanToRepay.compareTo(BigDecimal.ZERO) > 0) {
             sellerTradingAccount.decreaseMarginLoan(loanToRepay);
+            ledgerService.recordMarginLoanRepayment(
+                    sellerTradingAccount,
+                    loanToRepay,
+                    execution.stockId(),
+                    execution.sellOrderId()
+            );
             remainingProceeds = remainingProceeds.subtract(loanToRepay);
         }
         if (remainingProceeds.compareTo(BigDecimal.ZERO) > 0) {
             sellerTradingAccount.credit(remainingProceeds);
+            ledgerService.recordTradeProceedsCredit(
+                    sellerTradingAccount,
+                    remainingProceeds,
+                    execution.stockId(),
+                    execution.sellOrderId()
+            );
         }
     }
 

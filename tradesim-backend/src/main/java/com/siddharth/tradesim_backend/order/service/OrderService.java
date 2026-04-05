@@ -5,14 +5,15 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.exceptions.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
-import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.orderbook.MatchResult;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
@@ -47,6 +48,7 @@ public class OrderService {
     private final RiskService riskService;
     private final ExchangeService exchangeService;
     private final TradingAccountService tradingAccountService;
+    private final LedgerService ledgerService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -68,10 +70,6 @@ public class OrderService {
 
         validateOrder(userId, tradingAccount, stock, request);
 
-        if (request.side() == OrderSide.BUY && request.orderType() == OrderType.LIMIT) {
-            tradingAccountService.saveTradingAccount(tradingAccount);
-        }
-
         Order order = Order.builder()
                 .userId(userId)
                 .stockId(stock.getId())
@@ -84,6 +82,12 @@ public class OrderService {
                 .build();
 
         orderRepository.save(order);
+
+        if (request.side() == OrderSide.BUY && request.orderType() == OrderType.LIMIT) {
+            BigDecimal lockedMargin = calculateRequiredMargin(request.limitPrice(), request.quantity(), tradingAccount.getLeverage());
+            tradingAccountService.saveTradingAccount(tradingAccount);
+            ledgerService.recordBuyLimitMarginLock(tradingAccount, lockedMargin, stock.getId(), order.getId());
+        }
 
         if (order.getOrderType() == OrderType.LIMIT) {
             orderBookManager.addOrder(order);
@@ -122,9 +126,10 @@ public class OrderService {
             switch (order.getSide()) {
                 case BUY -> {
                     TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
-                    BigDecimal remainingReserved = order.getLimitPrice().multiply(BigDecimal.valueOf(order.getRemainingQuantity())).divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+                    BigDecimal remainingReserved = calculateRequiredMargin(order.getLimitPrice(), order.getRemainingQuantity(), tradingAccount.getLeverage());
                     tradingAccount.unlockFunds(remainingReserved);
                     tradingAccountService.saveTradingAccount(tradingAccount);
+                    ledgerService.recordBuyLimitMarginUnlock(tradingAccount, remainingReserved, order.getStockId(), order.getId());
                 }
                 case SELL -> {
                     Position position = positionRepository.findByUserIdAndStockId(userId, order.getStockId()).orElseThrow(() -> new BusinessException("Position not found"));
@@ -175,8 +180,7 @@ public class OrderService {
     }
 
     private void validateLimitBuy(TradingAccount tradingAccount, @Valid OrderRequest request) {
-        BigDecimal orderValue = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
-        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal requiredMargin = calculateRequiredMargin(request.limitPrice(), request.quantity(), tradingAccount.getLeverage());
         tradingAccount.lockFunds(requiredMargin);
     }
 
@@ -202,5 +206,9 @@ public class OrderService {
         if (position.getAvailableQuantity() < quantity) {
             throw new BusinessException("Insufficient shares to sell");
         }
+    }
+
+    private BigDecimal calculateRequiredMargin(BigDecimal price, int quantity, int leverage) {
+        return price.multiply(BigDecimal.valueOf(quantity)).divide(BigDecimal.valueOf(leverage), 4, RoundingMode.HALF_UP);
     }
 }

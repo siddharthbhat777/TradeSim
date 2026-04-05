@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.trading_account;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.trading_account.model.dto.TradingAccountResponse;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +25,9 @@ class TradingAccountServiceTest {
 
     @Mock
     private TradingAccountRepository tradingAccountRepository;
+
+    @Mock
+    private LedgerService ledgerService;
 
     @InjectMocks
     private TradingAccountService tradingAccountService;
@@ -46,6 +51,8 @@ class TradingAccountServiceTest {
         assertThat(tradingAccount.getMarginLoan()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(tradingAccount.getLeverage()).isEqualTo(5);
         assertThat(tradingAccount.getMaintenanceMarginPercent()).isEqualByComparingTo(BigDecimal.valueOf(25));
+
+        verify(ledgerService).recordInitialCredit(tradingAccount, BigDecimal.valueOf(10000000));
     }
 
     @Test

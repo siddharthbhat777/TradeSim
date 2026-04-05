@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.order.service;
 
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -25,11 +26,11 @@ import static org.mockito.Mockito.*;
 
 class OrderLifecycleServiceTest {
     private OrderLifecycleService service;
-
     private OrderRepository orderRepository;
     private OrderBookManager orderBookManager;
     private TradingAccountService tradingAccountService;
     private PositionRepository positionRepository;
+    private LedgerService ledgerService;
 
     private UUID userId;
     private UUID stockId;
@@ -40,12 +41,14 @@ class OrderLifecycleServiceTest {
         orderBookManager = mock(OrderBookManager.class);
         tradingAccountService = mock(TradingAccountService.class);
         positionRepository = mock(PositionRepository.class);
+        ledgerService = mock(LedgerService.class);
 
         service = new OrderLifecycleService(
                 orderRepository,
                 orderBookManager,
                 tradingAccountService,
-                positionRepository
+                positionRepository,
+                ledgerService
         );
 
         userId = UUID.randomUUID();
@@ -88,6 +91,7 @@ class OrderLifecycleServiceTest {
         verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        verify(ledgerService).recordBuyLimitMarginUnlock(eq(tradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0), eq(stockId), any());
     }
 
     @Test

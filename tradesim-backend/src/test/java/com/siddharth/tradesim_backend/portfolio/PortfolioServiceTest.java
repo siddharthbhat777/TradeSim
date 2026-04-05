@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.portfolio;
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;
 import com.siddharth.tradesim_backend.portfolio.model.dto.TradeExecution;
@@ -41,10 +42,10 @@ class PortfolioServiceTest {
     private AuthRepository authRepository;
 
     @Mock
-    private PortfolioSnapshotRepository portfolioSnapshotRepository;
+    private TradingAccountService tradingAccountService;
 
     @Mock
-    private TradingAccountService tradingAccountService;
+    private LedgerService ledgerService;
 
     @InjectMocks
     private PortfolioService portfolioService;
@@ -120,6 +121,8 @@ class PortfolioServiceTest {
                 stockId,
                 5,
                 BigDecimal.valueOf(100),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 OrderType.MARKET,
                 OrderType.MARKET,
                 null
@@ -146,6 +149,8 @@ class PortfolioServiceTest {
                 stockId,
                 5,
                 BigDecimal.valueOf(100),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 OrderType.MARKET,
                 OrderType.MARKET,
                 null
@@ -171,6 +176,9 @@ class PortfolioServiceTest {
         verify(tradingAccountService).saveTradingAccount(buyerTradingAccount);
         verify(tradingAccountService).saveTradingAccount(sellerTradingAccount);
         verify(authRepository, never()).save(any());
+        verify(ledgerService).recordTradeMarginDebit(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(100)) == 0), eq(stockId), any());
+        verify(ledgerService).recordMarginLoanIncrease(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(400)) == 0), eq(stockId), any());
+        verify(ledgerService).recordTradeProceedsCredit(eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(500)) == 0), eq(stockId), any());
     }
 
     @Test
@@ -191,6 +199,8 @@ class PortfolioServiceTest {
                 stockId,
                 5,
                 BigDecimal.valueOf(90),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 OrderType.LIMIT,
                 OrderType.MARKET,
                 BigDecimal.valueOf(100)
@@ -212,6 +222,9 @@ class PortfolioServiceTest {
         verify(buyerTradingAccount).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(50)) == 0));
         verify(buyerTradingAccount).debit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(45)) == 0));
         verify(buyerTradingAccount).increaseMarginLoan(argThat(amount -> amount.compareTo(BigDecimal.valueOf(405)) == 0));
+        verify(ledgerService).recordBuyLimitMarginUnlock(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(50)) == 0), eq(stockId), any());
+        verify(ledgerService).recordTradeMarginDebit(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(45)) == 0), eq(stockId), any());
+        verify(ledgerService).recordMarginLoanIncrease(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(405)) == 0), eq(stockId), any());
     }
 
     @Test
@@ -232,6 +245,8 @@ class PortfolioServiceTest {
                 stockId,
                 5,
                 BigDecimal.valueOf(100),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 OrderType.MARKET,
                 OrderType.MARKET,
                 null
@@ -285,6 +300,8 @@ class PortfolioServiceTest {
                 stockId,
                 5,
                 BigDecimal.valueOf(100),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 OrderType.MARKET,
                 OrderType.MARKET,
                 null
@@ -335,6 +352,8 @@ class PortfolioServiceTest {
                 stockId,
                 5,
                 BigDecimal.valueOf(100),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 OrderType.MARKET,
                 OrderType.MARKET,
                 null
@@ -351,5 +370,8 @@ class PortfolioServiceTest {
 
         assertThat(sellerTradingAccount.getMarginLoan()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(sellerTradingAccount.getAvailableBalance()).isEqualByComparingTo(BigDecimal.valueOf(200));
+
+        verify(ledgerService).recordMarginLoanRepayment(eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(300)) == 0), eq(stockId), any());
+        verify(ledgerService).recordTradeProceedsCredit(eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0), eq(stockId), any());
     }
 }

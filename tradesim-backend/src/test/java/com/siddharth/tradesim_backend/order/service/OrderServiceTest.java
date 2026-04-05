@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
@@ -43,6 +44,7 @@ class OrderServiceTest {
     private RiskService riskService;
     private ExchangeService exchangeService;
     private TradingAccountService tradingAccountService;
+    private LedgerService ledgerService;
 
     private UUID userId;
     private UUID stockId;
@@ -59,6 +61,7 @@ class OrderServiceTest {
         riskService = mock(RiskService.class);
         exchangeService = mock(ExchangeService.class);
         tradingAccountService = mock(TradingAccountService.class);
+        ledgerService = mock(LedgerService.class);
 
         orderService = new OrderService(
                 authRepository,
@@ -69,7 +72,8 @@ class OrderServiceTest {
                 orderMatchingEngine,
                 riskService,
                 exchangeService,
-                tradingAccountService
+                tradingAccountService,
+                ledgerService
         );
 
         userId = UUID.randomUUID();
@@ -117,6 +121,7 @@ class OrderServiceTest {
         verify(orderBookManager).addOrder(any());
         verify(orderMatchingEngine).match(any());
         verify(riskService).checkLiquidation(userId);
+        verify(ledgerService).recordBuyLimitMarginLock(eq(tradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0), eq(stockId), any());
     }
 
     @Test

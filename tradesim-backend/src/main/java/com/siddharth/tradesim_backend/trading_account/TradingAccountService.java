@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.trading_account;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.trading_account.model.dto.TradingAccountResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class TradingAccountService {
     private static final BigDecimal DEFAULT_MAINTENANCE_MARGIN_PERCENT = BigDecimal.valueOf(25);
 
     private final TradingAccountRepository tradingAccountRepository;
+    private final LedgerService ledgerService;
 
     @Transactional
     public TradingAccount createTradingAccountForUser(UUID userId) {
@@ -34,7 +36,9 @@ public class TradingAccountService {
                 .maintenanceMarginPercent(DEFAULT_MAINTENANCE_MARGIN_PERCENT)
                 .build();
 
-        return tradingAccountRepository.save(tradingAccount);
+        TradingAccount saved = tradingAccountRepository.save(tradingAccount);
+        ledgerService.recordInitialCredit(saved, DEFAULT_INITIAL_BALANCE);
+        return saved;
     }
 
     @Transactional(readOnly = true)

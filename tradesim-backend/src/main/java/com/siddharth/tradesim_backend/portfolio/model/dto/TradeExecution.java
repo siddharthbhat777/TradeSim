@@ -11,6 +11,8 @@ public record TradeExecution(
         UUID stockId,
         int quantity,
         BigDecimal executionPrice,
+        UUID buyOrderId,
+        UUID sellOrderId,
         OrderType buyerOrderType,
         OrderType sellerOrderType,
         BigDecimal buyerLimitPrice
