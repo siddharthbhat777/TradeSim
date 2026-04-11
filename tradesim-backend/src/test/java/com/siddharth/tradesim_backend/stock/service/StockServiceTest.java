@@ -235,7 +235,7 @@ public class StockServiceTest {
     }
 
     @Test
-    void shouldActivateStockFromApprovedIssuanceAndStoreShareMetadata() {
+    void shouldActivateStockFromApprovedIpoAllotmentAndStoreShareMetadata() {
         UUID stockId = UUID.randomUUID();
 
         Stock stock = Stock.builder()
@@ -250,16 +250,16 @@ public class StockServiceTest {
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(stockRepository.save(any(Stock.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StockResponse response = stockService.activateStockFromIssuanceApproval(stockId, 1_000_000, 200_000);
+        StockResponse response = stockService.activateStockFromIpoAllotment(stockId, 500, 500);
 
         assertThat(response.status()).isEqualTo(StockStatus.ACTIVE);
-        assertThat(stock.getTotalIssuedShares()).isEqualTo(1_000_000);
-        assertThat(stock.getTradableFloatShares()).isEqualTo(200_000);
+        assertThat(stock.getTotalIssuedShares()).isEqualTo(500);
+        assertThat(stock.getTradableFloatShares()).isEqualTo(500);
         verify(stockRepository).save(stock);
     }
 
     @Test
-    void shouldNotAllowManualActivationBeforeInitialIssuance() {
+    void shouldNotAllowManualActivationBeforeInitialShareAllocation() {
         UUID stockId = UUID.randomUUID();
 
         Stock stock = Stock.builder()
@@ -271,7 +271,7 @@ public class StockServiceTest {
 
         StockStatusException exception = assertThrows(StockStatusException.class, () -> stockService.changeStockStatus(stockId, StockStatus.ACTIVE));
 
-        assertThat(exception.getMessage()).isEqualTo("Cannot activate stock before initial issuance is approved");
+        assertThat(exception.getMessage()).isEqualTo("Cannot activate stock before initial share allocation is completed");
         verify(stockRepository, never()).save(any());
     }
 }

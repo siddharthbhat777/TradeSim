@@ -41,6 +41,7 @@ class LedgerControllerTest {
     @Test
     void authenticatedUserShouldFetchOwnLedger() throws Exception {
         UUID userId = UUID.randomUUID();
+        UUID ipoOfferId = UUID.randomUUID();
 
         User user = User.builder()
                 .id(userId)
@@ -58,12 +59,13 @@ class LedgerControllerTest {
                 userId,
                 null,
                 null,
-                LedgerEntryType.INITIAL_CREDIT,
-                BigDecimal.valueOf(10000000),
-                BigDecimal.valueOf(10000000),
+                ipoOfferId,
+                LedgerEntryType.IPO_SUBSCRIPTION_LOCK,
+                BigDecimal.valueOf(5000),
+                BigDecimal.valueOf(100000),
+                BigDecimal.valueOf(5000),
                 BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                "Initial trading account funding",
+                "Locked funds for IPO subscription",
                 Instant.now()
         );
 
@@ -72,8 +74,9 @@ class LedgerControllerTest {
         mockMvc.perform(get("/ledger")
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].type").value("INITIAL_CREDIT"))
-                .andExpect(jsonPath("$[0].amount").value(10000000));
+                .andExpect(jsonPath("$[0].type").value("IPO_SUBSCRIPTION_LOCK"))
+                .andExpect(jsonPath("$[0].amount").value(5000))
+                .andExpect(jsonPath("$[0].ipoOfferId").value(ipoOfferId.toString()));
     }
 
     @Test

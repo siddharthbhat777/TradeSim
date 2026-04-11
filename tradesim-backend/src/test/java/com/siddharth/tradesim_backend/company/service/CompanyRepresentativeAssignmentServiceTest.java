@@ -244,6 +244,6 @@ class CompanyRepresentativeAssignmentServiceTest {
 
         BusinessException exception = assertThrows(BusinessException.class, () -> companyRepresentativeAssignmentService.assertPrimaryContactAssignment(companyId, managerUserId));
 
-        assertThat(exception.getMessage()).isEqualTo("Only an active primary contact can submit issuance requests");
+        assertThat(exception.getMessage()).isEqualTo("Only an active primary contact can perform this company action");
     }
 }

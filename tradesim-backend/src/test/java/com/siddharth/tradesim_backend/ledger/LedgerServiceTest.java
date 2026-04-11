@@ -53,23 +53,54 @@ class LedgerServiceTest {
         assertThat(ledgerEntry.getBalanceAfter()).isEqualByComparingTo(BigDecimal.valueOf(10000000));
         assertThat(ledgerEntry.getLockedBalanceAfter()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(ledgerEntry.getMarginLoanAfter()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(ledgerEntry.getIpoOfferId()).isNull();
+    }
+
+    @Test
+    void shouldRecordIpoSubscriptionLockEntry() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .balance(BigDecimal.valueOf(100000))
+                .lockedBalance(BigDecimal.valueOf(5000))
+                .marginLoan(BigDecimal.ZERO)
+                .build();
+
+        when(ledgerEntryRepository.save(any(LedgerEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ledgerService.recordIpoSubscriptionLock(tradingAccount, BigDecimal.valueOf(5000), stockId, ipoOfferId);
+
+        ArgumentCaptor<LedgerEntry> captor = ArgumentCaptor.forClass(LedgerEntry.class);
+        verify(ledgerEntryRepository).save(captor.capture());
+
+        LedgerEntry ledgerEntry = captor.getValue();
+        assertThat(ledgerEntry.getType()).isEqualTo(LedgerEntryType.IPO_SUBSCRIPTION_LOCK);
+        assertThat(ledgerEntry.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        assertThat(ledgerEntry.getStockId()).isEqualTo(stockId);
+        assertThat(ledgerEntry.getIpoOfferId()).isEqualTo(ipoOfferId);
+        assertThat(ledgerEntry.getLockedBalanceAfter()).isEqualByComparingTo(BigDecimal.valueOf(5000));
     }
 
     @Test
     void shouldFetchLedgerEntriesForUser() {
         UUID userId = UUID.randomUUID();
         UUID tradingAccountId = UUID.randomUUID();
+        UUID ipoOfferId = UUID.randomUUID();
 
         LedgerEntry ledgerEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
                 .tradingAccountId(tradingAccountId)
                 .userId(userId)
-                .type(LedgerEntryType.BUY_LIMIT_MARGIN_LOCK)
-                .amount(BigDecimal.valueOf(4800))
-                .balanceAfter(BigDecimal.valueOf(10000000))
-                .lockedBalanceAfter(BigDecimal.valueOf(4800))
+                .ipoOfferId(ipoOfferId)
+                .type(LedgerEntryType.IPO_SUBSCRIPTION_LOCK)
+                .amount(BigDecimal.valueOf(5000))
+                .balanceAfter(BigDecimal.valueOf(100000))
+                .lockedBalanceAfter(BigDecimal.valueOf(5000))
                 .marginLoanAfter(BigDecimal.ZERO)
-                .description("Locked margin for BUY LIMIT order")
+                .description("Locked funds for IPO subscription")
                 .build();
         ledgerEntry.setCreatedAt(Instant.now());
         ledgerEntry.setUpdatedAt(Instant.now());
@@ -79,7 +110,8 @@ class LedgerServiceTest {
         List<LedgerEntryResponse> responses = ledgerService.fetchMyLedger(userId);
 
         assertThat(responses).hasSize(1);
-        assertThat(responses.getFirst().type()).isEqualTo(LedgerEntryType.BUY_LIMIT_MARGIN_LOCK);
-        assertThat(responses.getFirst().amount()).isEqualByComparingTo(BigDecimal.valueOf(4800));
+        assertThat(responses.getFirst().type()).isEqualTo(LedgerEntryType.IPO_SUBSCRIPTION_LOCK);
+        assertThat(responses.getFirst().amount()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        assertThat(responses.getFirst().ipoOfferId()).isEqualTo(ipoOfferId);
     }
 }

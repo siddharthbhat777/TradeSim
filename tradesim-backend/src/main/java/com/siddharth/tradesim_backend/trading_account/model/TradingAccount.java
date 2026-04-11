@@ -150,6 +150,19 @@ public class TradingAccount extends AuditableEntity {
         this.lockedBalance = getLockedBalance().subtract(amount);
     }
 
+    public void debitLockedFunds(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Locked debit amount must be positive");
+        }
+
+        if (getLockedBalance().compareTo(amount) < 0) {
+            throw new BusinessException("Insufficient locked balance");
+        }
+
+        this.lockedBalance = getLockedBalance().subtract(amount);
+        this.balance = getBalance().subtract(amount);
+    }
+
     public BigDecimal calculateEquity(BigDecimal totalPositionValue) {
         if (totalPositionValue == null) {
             throw new IllegalArgumentException("Total position value cannot be null");

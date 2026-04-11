@@ -23,6 +23,7 @@ public class LedgerService {
                 tradingAccount,
                 null,
                 null,
+                null,
                 LedgerEntryType.INITIAL_CREDIT,
                 amount,
                 "Initial trading account funding"
@@ -35,6 +36,7 @@ public class LedgerService {
                 tradingAccount,
                 stockId,
                 orderId,
+                null,
                 LedgerEntryType.BUY_LIMIT_MARGIN_LOCK,
                 amount,
                 "Locked margin for BUY LIMIT order"
@@ -47,6 +49,7 @@ public class LedgerService {
                 tradingAccount,
                 stockId,
                 orderId,
+                null,
                 LedgerEntryType.BUY_LIMIT_MARGIN_UNLOCK,
                 amount,
                 "Unlocked reserved margin for BUY LIMIT order"
@@ -59,6 +62,7 @@ public class LedgerService {
                 tradingAccount,
                 stockId,
                 orderId,
+                null,
                 LedgerEntryType.TRADE_MARGIN_DEBIT,
                 amount,
                 "Debited cash margin during trade settlement"
@@ -71,6 +75,7 @@ public class LedgerService {
                 tradingAccount,
                 stockId,
                 orderId,
+                null,
                 LedgerEntryType.TRADE_PROCEEDS_CREDIT,
                 amount,
                 "Credited trade proceeds after settlement"
@@ -83,6 +88,7 @@ public class LedgerService {
                 tradingAccount,
                 stockId,
                 orderId,
+                null,
                 LedgerEntryType.MARGIN_LOAN_INCREASE,
                 amount,
                 "Increased margin loan during leveraged buy settlement"
@@ -95,9 +101,49 @@ public class LedgerService {
                 tradingAccount,
                 stockId,
                 orderId,
+                null,
                 LedgerEntryType.MARGIN_LOAN_REPAYMENT,
                 amount,
                 "Repaid margin loan from sell proceeds"
+        );
+    }
+
+    @Transactional
+    public void recordIpoSubscriptionLock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID ipoOfferId) {
+        saveEntry(
+                tradingAccount,
+                stockId,
+                null,
+                ipoOfferId,
+                LedgerEntryType.IPO_SUBSCRIPTION_LOCK,
+                amount,
+                "Locked funds for IPO subscription"
+        );
+    }
+
+    @Transactional
+    public void recordIpoSubscriptionUnlock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID ipoOfferId) {
+        saveEntry(
+                tradingAccount,
+                stockId,
+                null,
+                ipoOfferId,
+                LedgerEntryType.IPO_SUBSCRIPTION_UNLOCK,
+                amount,
+                "Unlocked funds for non-allotted IPO subscription"
+        );
+    }
+
+    @Transactional
+    public void recordIpoAllotmentDebit(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID ipoOfferId) {
+        saveEntry(
+                tradingAccount,
+                stockId,
+                null,
+                ipoOfferId,
+                LedgerEntryType.IPO_ALLOTMENT_DEBIT,
+                amount,
+                "Debited locked funds for IPO allotment"
         );
     }
 
@@ -110,6 +156,7 @@ public class LedgerService {
             TradingAccount tradingAccount,
             UUID stockId,
             UUID orderId,
+            UUID ipoOfferId,
             LedgerEntryType type,
             BigDecimal amount,
             String description
@@ -123,6 +170,7 @@ public class LedgerService {
                 .userId(tradingAccount.getUserId())
                 .stockId(stockId)
                 .orderId(orderId)
+                .ipoOfferId(ipoOfferId)
                 .type(type)
                 .amount(amount)
                 .balanceAfter(tradingAccount.getBalance())
@@ -141,6 +189,7 @@ public class LedgerService {
                 ledgerEntry.getUserId(),
                 ledgerEntry.getStockId(),
                 ledgerEntry.getOrderId(),
+                ledgerEntry.getIpoOfferId(),
                 ledgerEntry.getType(),
                 ledgerEntry.getAmount(),
                 ledgerEntry.getBalanceAfter(),

@@ -1,0 +1,388 @@
+package com.siddharth.tradesim_backend.ipo;
+
+import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
+import com.siddharth.tradesim_backend.auth.enums.Role;
+import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
+import com.siddharth.tradesim_backend.company.model.Company;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
+import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
+import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
+import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
+import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
+import com.siddharth.tradesim_backend.ipo.model.IpoSubscription;
+import com.siddharth.tradesim_backend.ipo.model.dto.CreateIpoOfferRequest;
+import com.siddharth.tradesim_backend.ipo.model.dto.IpoOfferResponse;
+import com.siddharth.tradesim_backend.ipo.model.dto.IpoSubscriptionResponse;
+import com.siddharth.tradesim_backend.ipo.repository.IpoOfferRepository;
+import com.siddharth.tradesim_backend.ipo.repository.IpoSubscriptionRepository;
+import com.siddharth.tradesim_backend.ledger.LedgerService;
+import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.Sector;
+import com.siddharth.tradesim_backend.stock.enums.StockStatus;
+import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
+import com.siddharth.tradesim_backend.stock.service.StockService;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class IpoServiceTest {
+
+    @Mock
+    private IpoOfferRepository ipoOfferRepository;
+
+    @Mock
+    private IpoSubscriptionRepository ipoSubscriptionRepository;
+
+    @Mock
+    private CompanyRepository companyRepository;
+
+    @Mock
+    private StockRepository stockRepository;
+
+    @Mock
+    private AuthRepository authRepository;
+
+    @Mock
+    private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
+
+    @Mock
+    private TradingAccountService tradingAccountService;
+
+    @Mock
+    private PositionRepository positionRepository;
+
+    @Mock
+    private StockService stockService;
+
+    @Mock
+    private LedgerService ledgerService;
+
+    @InjectMocks
+    private IpoService ipoService;
+
+    @Test
+    void shouldSubmitIpoOfferWhenPrimaryContactAndStockAreValid() {
+        UUID companyId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+        UUID primaryContactUserId = UUID.randomUUID();
+
+        CreateIpoOfferRequest request = new CreateIpoOfferRequest(
+                BigDecimal.valueOf(125.50),
+                100,
+                5,
+                Instant.now().minusSeconds(60),
+                Instant.now().plusSeconds(600)
+        );
+
+        Company company = Company.builder()
+                .id(companyId)
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .companyId(companyId)
+                .status(StockStatus.HALTED)
+                .build();
+
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(ipoOfferRepository.existsByStockIdAndStatusIn(eq(stockId), any())).thenReturn(false);
+        when(ipoOfferRepository.save(any(IpoOffer.class))).thenAnswer(invocation -> {
+            IpoOffer ipoOffer = invocation.getArgument(0);
+            ipoOffer.setId(UUID.randomUUID());
+            return ipoOffer;
+        });
+
+        IpoOfferResponse response = ipoService.submitIpoOffer(companyId, stockId, primaryContactUserId, request);
+
+        assertThat(response.stockId()).isEqualTo(stockId);
+        assertThat(response.status()).isEqualTo(IpoOfferStatus.PENDING_APPROVAL);
+        assertThat(response.totalSharesOffered()).isEqualTo(500);
+        verify(companyRepresentativeAssignmentService).assertPrimaryContactAssignment(
+                companyId,
+                primaryContactUserId,
+                "Only an active primary contact can submit IPO offers"
+        );
+    }
+
+    @Test
+    void shouldApprovePendingIpoOffer() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+        UUID adminUserId = UUID.randomUUID();
+
+        IpoOffer ipoOffer = IpoOffer.builder()
+                .id(ipoOfferId)
+                .companyId(companyId)
+                .stockId(stockId)
+                .submittedByUserId(UUID.randomUUID())
+                .issuePrice(BigDecimal.valueOf(125.50))
+                .sharesPerAllottee(100)
+                .maxAllottees(5)
+                .subscriptionStartAt(Instant.now().minusSeconds(60))
+                .subscriptionEndAt(Instant.now().plusSeconds(600))
+                .status(IpoOfferStatus.PENDING_APPROVAL)
+                .build();
+
+        Company company = Company.builder()
+                .id(companyId)
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .companyId(companyId)
+                .status(StockStatus.HALTED)
+                .build();
+
+        when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(ipoOfferRepository.save(any(IpoOffer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        IpoOfferResponse response = ipoService.approveIpoOffer(ipoOfferId, adminUserId);
+
+        assertThat(response.status()).isEqualTo(IpoOfferStatus.SUBSCRIPTION_OPEN);
+        assertThat(response.reviewedByUserId()).isEqualTo(adminUserId);
+    }
+
+    @Test
+    void shouldLockFundsWhenUserSubscribesToOpenIpo() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        IpoOffer ipoOffer = IpoOffer.builder()
+                .id(ipoOfferId)
+                .companyId(UUID.randomUUID())
+                .stockId(stockId)
+                .submittedByUserId(UUID.randomUUID())
+                .issuePrice(BigDecimal.valueOf(100))
+                .sharesPerAllottee(50)
+                .maxAllottees(5)
+                .subscriptionStartAt(Instant.now().minusSeconds(60))
+                .subscriptionEndAt(Instant.now().plusSeconds(600))
+                .status(IpoOfferStatus.SUBSCRIPTION_OPEN)
+                .build();
+
+        User user = User.builder()
+                .id(userId)
+                .role(Role.USER)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .balance(BigDecimal.valueOf(100000))
+                .lockedBalance(BigDecimal.ZERO)
+                .marginLoan(BigDecimal.ZERO)
+                .leverage(5)
+                .maintenanceMarginPercent(BigDecimal.valueOf(25))
+                .build();
+
+        when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(ipoSubscriptionRepository.existsByIpoOfferIdAndUserId(ipoOfferId, userId)).thenReturn(false);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(ipoSubscriptionRepository.save(any(IpoSubscription.class))).thenAnswer(invocation -> {
+            IpoSubscription subscription = invocation.getArgument(0);
+            subscription.setId(UUID.randomUUID());
+            return subscription;
+        });
+
+        IpoSubscriptionResponse response = ipoService.subscribeToIpo(ipoOfferId, userId);
+
+        assertThat(response.status()).isEqualTo(IpoSubscriptionStatus.SUBMITTED);
+        assertThat(response.lockedAmount()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        assertThat(tradingAccount.getLockedBalance()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        verify(tradingAccountService).saveTradingAccount(tradingAccount);
+        verify(ledgerService).recordIpoSubscriptionLock(tradingAccount, BigDecimal.valueOf(5000), stockId, ipoOfferId);
+    }
+
+    @Test
+    void shouldFinalizeIpoOfferAndActivateStockWhenEnoughSubscriptionsExist() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+        UUID adminUserId = UUID.randomUUID();
+        UUID userOneId = UUID.randomUUID();
+        UUID userTwoId = UUID.randomUUID();
+
+        IpoOffer ipoOffer = IpoOffer.builder()
+                .id(ipoOfferId)
+                .companyId(companyId)
+                .stockId(stockId)
+                .submittedByUserId(UUID.randomUUID())
+                .issuePrice(BigDecimal.valueOf(100))
+                .sharesPerAllottee(50)
+                .maxAllottees(2)
+                .subscriptionStartAt(Instant.now().minusSeconds(600))
+                .subscriptionEndAt(Instant.now().minusSeconds(60))
+                .status(IpoOfferStatus.SUBSCRIPTION_OPEN)
+                .build();
+
+        Company company = Company.builder()
+                .id(companyId)
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .companyId(companyId)
+                .symbol("TS_MOTORS")
+                .lastTradedPrice(BigDecimal.valueOf(250.50))
+                .sector(Sector.INDUSTRIALS)
+                .status(StockStatus.HALTED)
+                .build();
+
+        IpoSubscription subscriptionOne = IpoSubscription.builder()
+                .id(UUID.randomUUID())
+                .ipoOfferId(ipoOfferId)
+                .userId(userOneId)
+                .lockedAmount(BigDecimal.valueOf(5000))
+                .allottedShares(0)
+                .status(IpoSubscriptionStatus.SUBMITTED)
+                .build();
+
+        IpoSubscription subscriptionTwo = IpoSubscription.builder()
+                .id(UUID.randomUUID())
+                .ipoOfferId(ipoOfferId)
+                .userId(userTwoId)
+                .lockedAmount(BigDecimal.valueOf(5000))
+                .allottedShares(0)
+                .status(IpoSubscriptionStatus.SUBMITTED)
+                .build();
+
+        TradingAccount tradingAccountOne = TradingAccount.builder()
+                .id(UUID.randomUUID())
+                .userId(userOneId)
+                .balance(BigDecimal.valueOf(10000))
+                .lockedBalance(BigDecimal.valueOf(5000))
+                .marginLoan(BigDecimal.ZERO)
+                .leverage(5)
+                .maintenanceMarginPercent(BigDecimal.valueOf(25))
+                .build();
+
+        TradingAccount tradingAccountTwo = TradingAccount.builder()
+                .id(UUID.randomUUID())
+                .userId(userTwoId)
+                .balance(BigDecimal.valueOf(12000))
+                .lockedBalance(BigDecimal.valueOf(5000))
+                .marginLoan(BigDecimal.ZERO)
+                .leverage(5)
+                .maintenanceMarginPercent(BigDecimal.valueOf(25))
+                .build();
+
+        StockResponse activatedStock = new StockResponse(
+                stockId,
+                "TS_MOTORS",
+                "TradeSim Motors Limited",
+                BigDecimal.valueOf(250.50),
+                Sector.INDUSTRIALS,
+                StockStatus.ACTIVE
+        );
+
+        when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(subscriptionOne, subscriptionTwo));
+        when(tradingAccountService.getTradingAccountByUserId(userOneId)).thenReturn(tradingAccountOne);
+        when(tradingAccountService.getTradingAccountByUserId(userTwoId)).thenReturn(tradingAccountTwo);
+        when(positionRepository.findByUserIdAndStockId(userOneId, stockId)).thenReturn(Optional.empty());
+        when(positionRepository.findByUserIdAndStockId(userTwoId, stockId)).thenReturn(Optional.empty());
+        when(stockService.activateStockFromIpoAllotment(stockId, 100, 100)).thenReturn(activatedStock);
+        when(ipoOfferRepository.save(any(IpoOffer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        IpoOfferResponse response = ipoService.finalizeIpoOffer(ipoOfferId, adminUserId);
+
+        assertThat(response.status()).isEqualTo(IpoOfferStatus.ALLOTTED);
+        assertThat(response.finalizedByUserId()).isEqualTo(adminUserId);
+        assertThat(tradingAccountOne.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        assertThat(tradingAccountOne.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(tradingAccountTwo.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(7000));
+        assertThat(tradingAccountTwo.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+
+        ArgumentCaptor<Position> positionCaptor = ArgumentCaptor.forClass(Position.class);
+        verify(positionRepository, times(2)).save(positionCaptor.capture());
+
+        List<Position> savedPositions = positionCaptor.getAllValues();
+        assertThat(savedPositions).hasSize(2);
+        assertThat(savedPositions.get(0).getQuantity()).isEqualTo(50);
+        assertThat(savedPositions.get(1).getQuantity()).isEqualTo(50);
+
+        verify(ledgerService, times(2)).recordIpoAllotmentDebit(any(TradingAccount.class), eq(BigDecimal.valueOf(5000)), eq(stockId), eq(ipoOfferId));
+        verify(stockService).activateStockFromIpoAllotment(stockId, 100, 100);
+        verify(ipoSubscriptionRepository).saveAll(anyList());
+    }
+
+    @Test
+    void shouldRejectFinalizationWhenSubscriptionCountIsLessThanConfiguredMaxAllottees() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+
+        IpoOffer ipoOffer = IpoOffer.builder()
+                .id(ipoOfferId)
+                .companyId(companyId)
+                .stockId(stockId)
+                .submittedByUserId(UUID.randomUUID())
+                .issuePrice(BigDecimal.valueOf(100))
+                .sharesPerAllottee(50)
+                .maxAllottees(3)
+                .subscriptionStartAt(Instant.now().minusSeconds(600))
+                .subscriptionEndAt(Instant.now().minusSeconds(60))
+                .status(IpoOfferStatus.SUBSCRIPTION_OPEN)
+                .build();
+
+        Company company = Company.builder()
+                .id(companyId)
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .companyId(companyId)
+                .status(StockStatus.HALTED)
+                .build();
+
+        when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(
+                IpoSubscription.builder().id(UUID.randomUUID()).ipoOfferId(ipoOfferId).userId(UUID.randomUUID()).lockedAmount(BigDecimal.valueOf(5000)).allottedShares(0).status(IpoSubscriptionStatus.SUBMITTED).build(),
+                IpoSubscription.builder().id(UUID.randomUUID()).ipoOfferId(ipoOfferId).userId(UUID.randomUUID()).lockedAmount(BigDecimal.valueOf(5000)).allottedShares(0).status(IpoSubscriptionStatus.SUBMITTED).build()
+        ));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> ipoService.finalizeIpoOffer(ipoOfferId, UUID.randomUUID()));
+
+        assertThat(exception.getMessage()).isEqualTo("Not enough subscriptions to finalize this IPO offer");
+        verify(stockService, never()).activateStockFromIpoAllotment(any(), anyInt(), anyInt());
+    }
+}

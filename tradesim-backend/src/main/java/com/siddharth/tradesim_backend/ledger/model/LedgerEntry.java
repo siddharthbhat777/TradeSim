@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.ledger.model;
 
-import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import com.siddharth.tradesim_backend.ledger.enums.LedgerEntryType;
+import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -18,6 +18,7 @@ import java.util.UUID;
                 @Index(name = "idx_ledger_user", columnList = "user_id"),
                 @Index(name = "idx_ledger_stock", columnList = "stock_id"),
                 @Index(name = "idx_ledger_order", columnList = "order_id"),
+                @Index(name = "idx_ledger_ipo_offer", columnList = "ipo_offer_id"),
                 @Index(name = "idx_ledger_type", columnList = "type"),
                 @Index(name = "idx_ledger_created", columnList = "created_at")
         }
@@ -42,6 +43,8 @@ public class LedgerEntry extends AuditableEntity {
     private UUID stockId;
 
     private UUID orderId;
+
+    private UUID ipoOfferId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

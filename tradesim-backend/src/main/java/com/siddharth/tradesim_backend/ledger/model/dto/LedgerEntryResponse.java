@@ -12,6 +12,7 @@ public record LedgerEntryResponse(
         UUID userId,
         UUID stockId,
         UUID orderId,
+        UUID ipoOfferId,
         LedgerEntryType type,
         BigDecimal amount,
         BigDecimal balanceAfter,

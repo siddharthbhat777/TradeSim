@@ -1,8 +1,8 @@
 package com.siddharth.tradesim_backend.stock.service;
 
-import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
@@ -89,26 +89,12 @@ public class StockService {
 
     @Transactional
     public StockResponse activateStockFromIssuanceApproval(UUID stockId, int totalIssuedShares, int tradableFloatShares) {
-        if (tradableFloatShares > totalIssuedShares) {
-            throw new BusinessException("Tradable float shares cannot exceed total issued shares");
-        }
+        return activateStockFromPrimaryMarketAllocation(stockId, totalIssuedShares, tradableFloatShares, "issuance approval");
+    }
 
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
-
-        if (stock.getStatus() != StockStatus.HALTED) {
-            throw new BusinessException("Only HALTED stocks can be activated through issuance");
-        }
-
-        if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
-            throw new BusinessException("Initial issuance has already been applied to this stock");
-        }
-
-        stock.setTotalIssuedShares(totalIssuedShares);
-        stock.setTradableFloatShares(tradableFloatShares);
-        stock.setStatus(StockStatus.ACTIVE);
-
-        Stock saved = stockRepository.save(stock);
-        return toResponse(saved);
+    @Transactional
+    public StockResponse activateStockFromIpoAllotment(UUID stockId, int totalIssuedShares, int tradableFloatShares) {
+        return activateStockFromPrimaryMarketAllocation(stockId, totalIssuedShares, tradableFloatShares, "IPO allotment");
     }
 
     @Transactional
@@ -118,7 +104,7 @@ public class StockService {
         if (stock.getStatus() == StockStatus.DELISTED)
             throw new StockStatusException("Cannot change stock status of DELISTED stock");
         if (status == StockStatus.ACTIVE && stock.getStatus() == StockStatus.HALTED && (stock.getTotalIssuedShares() == null || stock.getTradableFloatShares() == null)) {
-            throw new StockStatusException("Cannot activate stock before initial issuance is approved");
+            throw new StockStatusException("Cannot activate stock before initial share allocation is completed");
         }
         try {
             if (status == StockStatus.DELISTED) {
@@ -143,6 +129,29 @@ public class StockService {
         } catch (Exception e) {
             throw new StatusException("Unable to change status of stock");
         }
+    }
+
+    private StockResponse activateStockFromPrimaryMarketAllocation(UUID stockId, int totalIssuedShares, int tradableFloatShares, String activationSource) {
+        if (tradableFloatShares > totalIssuedShares) {
+            throw new BusinessException("Tradable float shares cannot exceed total issued shares");
+        }
+
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
+
+        if (stock.getStatus() != StockStatus.HALTED) {
+            throw new BusinessException("Only HALTED stocks can be activated through " + activationSource);
+        }
+
+        if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
+            throw new BusinessException("Initial share allocation has already been applied to this stock");
+        }
+
+        stock.setTotalIssuedShares(totalIssuedShares);
+        stock.setTradableFloatShares(tradableFloatShares);
+        stock.setStatus(StockStatus.ACTIVE);
+
+        Stock saved = stockRepository.save(stock);
+        return toResponse(saved);
     }
 
     private Stock createStock(String symbol, UUID companyId, UUID exchangeId, BigDecimal initialPrice, Sector sector, BigDecimal priceBandPercent, StockStatus status) {
