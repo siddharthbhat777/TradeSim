@@ -4,15 +4,12 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
-import com.siddharth.tradesim_backend.user.exceptions.RoleException;
-import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -53,7 +50,7 @@ class UserServiceTest {
 
         when(authRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(BusinessException.class, () -> userService.changeStatus(userId, AccountStatus.SUSPENDED));
+        assertThrows(UserException.class, () -> userService.changeStatus(userId, AccountStatus.SUSPENDED));
     }
 
     @Test
@@ -67,7 +64,7 @@ class UserServiceTest {
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        assertThrows(StatusException.class, () -> userService.changeStatus(userId, AccountStatus.ACTIVE));
+        assertThrows(UserException.class, () -> userService.changeStatus(userId, AccountStatus.ACTIVE));
     }
 
     @Test
@@ -81,7 +78,7 @@ class UserServiceTest {
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        assertThrows(StatusException.class, () -> userService.changeStatus(userId, AccountStatus.DEACTIVATED));
+        assertThrows(UserException.class, () -> userService.changeStatus(userId, AccountStatus.DEACTIVATED));
     }
 
     @Test
@@ -161,7 +158,7 @@ class UserServiceTest {
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        assertThrows(RoleException.class, () -> userService.changeRole(userId, Role.ADMIN));
+        assertThrows(UserException.class, () -> userService.changeRole(userId, Role.ADMIN));
     }
 
     @Test
@@ -176,7 +173,7 @@ class UserServiceTest {
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        assertThrows(RoleException.class, () -> userService.changeRole(userId, Role.USER));
+        assertThrows(UserException.class, () -> userService.changeRole(userId, Role.USER));
     }
 
     @Test
@@ -192,6 +189,6 @@ class UserServiceTest {
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(companyRepresentativeAssignmentRepository.existsByUserIdAndStatus(userId, CompanyRepresentativeAssignmentStatus.ACTIVE)).thenReturn(true);
 
-        assertThrows(RoleException.class, () -> userService.changeRole(userId, Role.USER));
+        assertThrows(UserException.class, () -> userService.changeRole(userId, Role.USER));
     }
 }

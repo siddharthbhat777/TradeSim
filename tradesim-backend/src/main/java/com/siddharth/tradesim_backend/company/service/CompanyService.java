@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.company.service;
 
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
@@ -26,18 +26,18 @@ public class CompanyService {
 
     @Transactional(readOnly = true)
     public CompanyResponse fetchCompany(UUID companyId) {
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> CompanyException.notFound("Company not found"));
         return toResponse(company);
     }
 
     @Transactional
     public CompanyResponse createCompany(CreateCompanyRequest request) {
         if (companyRepository.existsByName(request.name())) {
-            throw new BusinessException("Company with this name already exists");
+            throw CompanyException.conflict("Company with this name already exists");
         }
 
         if (companyRepository.existsByCode(request.code())) {
-            throw new BusinessException("Company with this code already exists");
+            throw CompanyException.conflict("Company with this code already exists");
         }
 
         try {
@@ -51,16 +51,16 @@ public class CompanyService {
             Company saved = companyRepository.save(company);
             return toResponse(saved);
         } catch (DataIntegrityViolationException e) {
-            throw new BusinessException("Invalid company data");
+            throw CompanyException.badRequest("Invalid company data");
         }
     }
 
     @Transactional
     public CompanyResponse changeStatus(UUID companyId, CompanyStatus status) {
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> CompanyException.notFound("Company not found"));
 
         if (company.getStatus() == status) {
-            throw new BusinessException("Company already has this status");
+            throw CompanyException.conflict("Company already has this status");
         }
 
         company.setStatus(status);

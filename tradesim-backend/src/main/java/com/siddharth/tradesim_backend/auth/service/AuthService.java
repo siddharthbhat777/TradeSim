@@ -3,8 +3,7 @@ package com.siddharth.tradesim_backend.auth.service;
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
-import com.siddharth.tradesim_backend.auth.exceptions.UserLoginException;
-import com.siddharth.tradesim_backend.auth.exceptions.UserRegistrationException;
+import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
@@ -43,10 +42,10 @@ public class AuthService {
 
     private RegisterResponse registerUserWithRole(RegisterRequest request, Role role) {
         if (authRepository.existsByEmail(request.email())) {
-            throw new UserRegistrationException("Email already exists");
+            throw AuthException.conflict("Email already exists");
         }
         if (authRepository.existsByUsername(request.username())) {
-            throw new UserRegistrationException("Username already exists");
+            throw AuthException.conflict("Username already exists");
         }
 
         try {
@@ -69,9 +68,7 @@ public class AuthService {
                     saved.getAccountStatus()
             );
         } catch (DataIntegrityViolationException e) {
-            throw new UserRegistrationException("Invalid user data");
-        } catch (Exception e) {
-            throw new UserRegistrationException("Unable to register user");
+            throw AuthException.badRequest("Invalid user data");
         }
     }
 
@@ -85,10 +82,10 @@ public class AuthService {
                     )
             );
 
-            User user = authRepository.findByUsernameOrEmail(request.usernameOrEmail()).orElseThrow(() -> new UserLoginException("User not found"));
+            User user = authRepository.findByUsernameOrEmail(request.usernameOrEmail()).orElseThrow(() -> AuthException.unauthorized("User not found"));
 
             if (user.getAccountStatus() == AccountStatus.SUSPENDED || user.getAccountStatus() == AccountStatus.BANNED) {
-                throw new UserLoginException("Cannot login, your account is " + user.getAccountStatus());
+                throw AuthException.forbidden("Cannot login, your account is " + user.getAccountStatus());
             }
 
             user.setLastLogin(Instant.now());
@@ -96,9 +93,7 @@ public class AuthService {
 
             return new LoginResponse(jwtService.generateToken(user), user.getUsername(), user.getRole());
         } catch (BadCredentialsException e) {
-            throw new UserLoginException("Invalid username or password");
-        } catch (Exception e) {
-            throw new UserLoginException("Unable to login");
+            throw AuthException.unauthorized("Invalid username or password");
         }
     }
 }

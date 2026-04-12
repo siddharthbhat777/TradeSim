@@ -78,6 +78,18 @@ class TradingAccountControllerTest {
 
     @Test
     void unauthenticatedRequestShouldBeRejected() throws Exception {
-        mockMvc.perform(get("/trading-account")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/trading-account"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"))
+                .andExpect(jsonPath("$.message").value("Authentication required."));
+    }
+
+    @Test
+    void invalidTokenShouldReturnUnauthorizedJson() throws Exception {
+        mockMvc.perform(get("/trading-account")
+                        .header("Authorization", "Bearer invalid-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"))
+                .andExpect(jsonPath("$.message").value("Authentication required."));
     }
 }

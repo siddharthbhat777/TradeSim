@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.listing;
 
+import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
@@ -114,7 +115,7 @@ class ListingServiceTest {
                 .build();
 
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
-        doThrow(new BusinessException("Only an active assigned company representative can submit listing requests")).when(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, representativeUserId);
+        doThrow(CompanyException.forbidden("Only an active assigned company representative can submit listing requests")).when(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, representativeUserId);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> listingService.submitListingRequest(companyId, representativeUserId, request));
 

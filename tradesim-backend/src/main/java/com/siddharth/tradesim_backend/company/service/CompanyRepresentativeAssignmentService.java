@@ -4,7 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.model.CompanyRepresentativeAssignment;
@@ -12,6 +12,7 @@ import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAss
 import com.siddharth.tradesim_backend.company.model.dto.PrimaryContactTransferResponse;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
+import com.siddharth.tradesim_backend.user.UserException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,10 +32,10 @@ public class CompanyRepresentativeAssignmentService {
     @Transactional
     public CompanyRepresentativeAssignmentResponse assignRepresentative(UUID companyId, UUID targetUserId, UUID actingUserId) {
         if (!companyRepository.existsById(companyId)) {
-            throw new BusinessException("Company not found");
+            throw CompanyException.notFound("Company not found");
         }
 
-        User targetUser = authRepository.findById(targetUserId).orElseThrow(() -> new BusinessException("User not found"));
+        User targetUser = authRepository.findById(targetUserId).orElseThrow(() -> UserException.notFound("User not found"));
 
         assertUserIsAssignableRepresentative(targetUser);
         assertCanManageRepresentatives(companyId, actingUserId);
@@ -59,7 +60,7 @@ public class CompanyRepresentativeAssignmentService {
     @Transactional(readOnly = true)
     public List<CompanyRepresentativeAssignmentResponse> fetchActiveAssignments(UUID companyId, UUID actingUserId) {
         if (!companyRepository.existsById(companyId)) {
-            throw new BusinessException("Company not found");
+            throw CompanyException.notFound("Company not found");
         }
 
         assertCanViewRepresentatives(companyId, actingUserId);
@@ -73,10 +74,10 @@ public class CompanyRepresentativeAssignmentService {
 
     @Transactional(readOnly = true)
     public void assertActiveRepresentativeAssignment(UUID companyId, UUID actingUserId) {
-        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> new BusinessException("User not found"));
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> UserException.notFound("User not found"));
 
         if (actingUser.getRole() != Role.COMPANY_REPRESENTATIVE || actingUser.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException("Only an active assigned company representative can submit listing requests");
+            throw CompanyException.forbidden("Only an active assigned company representative can submit listing requests");
         }
 
         boolean hasActiveAssignment = companyRepresentativeAssignmentRepository.existsByCompanyIdAndUserIdAndStatus(
@@ -86,7 +87,7 @@ public class CompanyRepresentativeAssignmentService {
         );
 
         if (!hasActiveAssignment) {
-            throw new BusinessException("Only an active assigned company representative can submit listing requests");
+            throw CompanyException.forbidden("Only an active assigned company representative can submit listing requests");
         }
     }
 
@@ -97,19 +98,19 @@ public class CompanyRepresentativeAssignmentService {
 
     @Transactional(readOnly = true)
     public void assertPrimaryContactAssignment(UUID companyId, UUID actingUserId, String errorMessage) {
-        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> new BusinessException("User not found"));
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> UserException.notFound("User not found"));
 
         if (actingUser.getRole() != Role.COMPANY_REPRESENTATIVE || actingUser.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException(errorMessage);
+            throw CompanyException.forbidden(errorMessage);
         }
 
         CompanyRepresentativeAssignment actingAssignment = companyRepresentativeAssignmentRepository
                 .findByCompanyIdAndUserId(companyId, actingUserId)
                 .filter(assignment -> assignment.getStatus() == CompanyRepresentativeAssignmentStatus.ACTIVE)
-                .orElseThrow(() -> new BusinessException(errorMessage));
+                .orElseThrow(() -> CompanyException.forbidden(errorMessage));
 
         if (actingAssignment.getAssignmentRole() != CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT) {
-            throw new BusinessException(errorMessage);
+            throw CompanyException.forbidden(errorMessage);
         }
     }
 
@@ -119,14 +120,14 @@ public class CompanyRepresentativeAssignmentService {
 
         CompanyRepresentativeAssignment assignment = companyRepresentativeAssignmentRepository
                 .findByCompanyIdAndUserId(companyId, targetUserId)
-                .orElseThrow(() -> new BusinessException("Company representative assignment not found"));
+                .orElseThrow(() -> CompanyException.notFound("Company representative assignment not found"));
 
         if (assignment.getStatus() == CompanyRepresentativeAssignmentStatus.REVOKED) {
-            throw new BusinessException("Company representative assignment is already revoked");
+            throw CompanyException.conflict("Company representative assignment is already revoked");
         }
 
         if (assignment.getAssignmentRole() == CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT) {
-            throw new BusinessException("Transfer primary contact before revoking the current primary contact");
+            throw CompanyException.conflict("Transfer primary contact before revoking the current primary contact");
         }
 
         assignment.setStatus(CompanyRepresentativeAssignmentStatus.REVOKED);
@@ -147,15 +148,15 @@ public class CompanyRepresentativeAssignmentService {
                         CompanyRepresentativeAssignmentStatus.ACTIVE,
                         CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT
                 )
-                .orElseThrow(() -> new BusinessException("Active primary contact not found"));
+                .orElseThrow(() -> CompanyException.notFound("Active primary contact not found"));
 
         CompanyRepresentativeAssignment newPrimaryContact = companyRepresentativeAssignmentRepository
                 .findByCompanyIdAndUserId(companyId, newPrimaryContactUserId)
                 .filter(assignment -> assignment.getStatus() == CompanyRepresentativeAssignmentStatus.ACTIVE)
-                .orElseThrow(() -> new BusinessException("Target company representative assignment not found"));
+                .orElseThrow(() -> CompanyException.notFound("Target company representative assignment not found"));
 
         if (newPrimaryContact.getAssignmentRole() == CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT) {
-            throw new BusinessException("Target company representative is already the primary contact");
+            throw CompanyException.conflict("Target company representative is already the primary contact");
         }
 
         currentPrimaryContact.setAssignmentRole(CompanyRepresentativeAssignmentRole.MANAGER);
@@ -175,7 +176,7 @@ public class CompanyRepresentativeAssignmentService {
 
     private CompanyRepresentativeAssignment reactivateAssignment(CompanyRepresentativeAssignment existing, UUID actingUserId, CompanyRepresentativeAssignmentRole assignmentRole) {
         if (existing.getStatus() == CompanyRepresentativeAssignmentStatus.ACTIVE) {
-            throw new BusinessException("Company representative is already assigned to this company");
+            throw CompanyException.conflict("Company representative is already assigned to this company");
         }
 
         existing.setStatus(CompanyRepresentativeAssignmentStatus.ACTIVE);
@@ -188,23 +189,23 @@ public class CompanyRepresentativeAssignmentService {
 
     private void assertUserIsAssignableRepresentative(User targetUser) {
         if (targetUser.getRole() != Role.COMPANY_REPRESENTATIVE) {
-            throw new BusinessException("User is not a company representative");
+            throw CompanyException.conflict("User is not a company representative");
         }
 
         if (targetUser.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException("Company representative account must be active");
+            throw CompanyException.conflict("Company representative account must be active");
         }
     }
 
     private void assertCanViewRepresentatives(UUID companyId, UUID actingUserId) {
-        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> new BusinessException("User not found"));
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> UserException.notFound("User not found"));
 
         if (actingUser.getRole() == Role.ADMIN) {
             return;
         }
 
         if (actingUser.getRole() != Role.COMPANY_REPRESENTATIVE || actingUser.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException("Only admin or assigned company representative can view company representatives");
+            throw CompanyException.forbidden("Only admin or assigned company representative can view company representatives");
         }
 
         boolean hasActiveAssignment = companyRepresentativeAssignmentRepository.existsByCompanyIdAndUserIdAndStatus(
@@ -214,28 +215,28 @@ public class CompanyRepresentativeAssignmentService {
         );
 
         if (!hasActiveAssignment) {
-            throw new BusinessException("Only admin or assigned company representative can view company representatives");
+            throw CompanyException.forbidden("Only admin or assigned company representative can view company representatives");
         }
     }
 
     private void assertCanManageRepresentatives(UUID companyId, UUID actingUserId) {
-        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> new BusinessException("User not found"));
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> UserException.notFound("User not found"));
 
         if (actingUser.getRole() == Role.ADMIN) {
             return;
         }
 
         if (actingUser.getRole() != Role.COMPANY_REPRESENTATIVE || actingUser.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException("Only admin or primary contact can manage company representatives");
+            throw CompanyException.forbidden("Only admin or primary contact can manage company representatives");
         }
 
         CompanyRepresentativeAssignment actingAssignment = companyRepresentativeAssignmentRepository
                 .findByCompanyIdAndUserId(companyId, actingUserId)
                 .filter(assignment -> assignment.getStatus() == CompanyRepresentativeAssignmentStatus.ACTIVE)
-                .orElseThrow(() -> new BusinessException("Only admin or primary contact can manage company representatives"));
+                .orElseThrow(() -> CompanyException.forbidden("Only admin or primary contact can manage company representatives"));
 
         if (actingAssignment.getAssignmentRole() != CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT) {
-            throw new BusinessException("Only admin or primary contact can manage company representatives");
+            throw CompanyException.forbidden("Only admin or primary contact can manage company representatives");
         }
     }
 

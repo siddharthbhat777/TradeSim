@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -111,5 +112,31 @@ class ExchangeControllerTest {
                 .andExpect(jsonPath("$.localDate").value("2026-04-13"))
                 .andExpect(jsonPath("$.localTime").value("10:00:00"))
                 .andExpect(jsonPath("$.marketOpenNow").value(true));
+    }
+
+    @Test
+    void invalidExchangeIdShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/exchanges/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_PATH_VARIABLE"))
+                .andExpect(jsonPath("$.fieldErrors.exchangeId").value("Expected UUID format."));
+    }
+
+    @Test
+    void missingExchangeShouldReturnNotFound() throws Exception {
+        UUID exchangeId = UUID.randomUUID();
+        when(exchangeService.fetchExchange(exchangeId)).thenThrow(ExchangeException.notFound("Exchange not found"));
+
+        mockMvc.perform(get("/exchanges/{exchangeId}", exchangeId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("EXCHANGE_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Exchange not found"));
+    }
+
+    @Test
+    void wrongMethodShouldReturnMethodNotAllowed() throws Exception {
+        mockMvc.perform(post("/exchanges/{exchangeId}", UUID.randomUUID()))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.errorCode").value("METHOD_NOT_ALLOWED"));
     }
 }

@@ -1,6 +1,5 @@
 package com.siddharth.tradesim_backend.order;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
@@ -22,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -44,10 +45,11 @@ class OrderControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private OrderService orderService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void shouldCreateOrder() throws Exception {
@@ -120,5 +122,97 @@ class OrderControllerTest {
         mockMvc.perform(delete("/orders/{orderId}/cancel", orderId)
                         .with(SecurityMockMvcRequestPostProcessors.authentication(auth)))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void invalidOrderIdShouldReturnBadRequest() throws Exception {
+        User user = new User();
+        ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(user, "role", Role.USER);
+
+        UserPrincipal principal = new UserPrincipal(user);
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
+        mockMvc.perform(delete("/orders/not-a-uuid/cancel")
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(auth)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_PATH_VARIABLE"))
+                .andExpect(jsonPath("$.fieldErrors.orderId").value("Expected UUID format."));
+    }
+
+    @Test
+    void invalidEnumShouldReturnBadRequest() throws Exception {
+        User user = new User();
+        ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(user, "role", Role.USER);
+
+        UserPrincipal principal = new UserPrincipal(user);
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
+        mockMvc.perform(post("/orders/create")
+                        .contentType(APPLICATION_JSON)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(auth))
+                        .content("""
+                                {
+                                  "stockId": "%s",
+                                  "quantity": 10,
+                                  "side": "BUYING",
+                                  "orderType": "LIMIT",
+                                  "timeInForce": "DAY",
+                                  "limitPrice": 100
+                                }
+                                """.formatted(UUID.randomUUID())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST_BODY"))
+                .andExpect(jsonPath("$.message").value("Invalid value for 'side'. Allowed values are: BUY, SELL."));
+    }
+
+    @Test
+    void invalidQuantityShouldReturnValidationError() throws Exception {
+        User user = new User();
+        ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(user, "role", Role.USER);
+
+        UserPrincipal principal = new UserPrincipal(user);
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
+        mockMvc.perform(post("/orders/create")
+                        .contentType(APPLICATION_JSON)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(auth))
+                        .content("""
+                        {
+                          "stockId": "%s",
+                          "quantity": 0,
+                          "side": "BUY",
+                          "orderType": "LIMIT",
+                          "timeInForce": "DAY",
+                          "limitPrice": 100
+                        }
+                        """.formatted(UUID.randomUUID())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.quantity").exists());
+    }
+
+    @Test
+    void forbiddenCancelShouldReturnForbidden() throws Exception {
+        UUID orderId = UUID.randomUUID();
+
+        User user = new User();
+        ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(user, "role", Role.USER);
+
+        UserPrincipal principal = new UserPrincipal(user);
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
+        doThrow(OrderException.forbidden("You are not allowed to cancel this order"))
+                .when(orderService)
+                .cancelOrder(any(UUID.class), any(UUID.class));
+
+        mockMvc.perform(delete("/orders/{orderId}/cancel", orderId)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(auth)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ORDER_FORBIDDEN"))
+                .andExpect(jsonPath("$.message").value("You are not allowed to cancel this order"));
     }
 }

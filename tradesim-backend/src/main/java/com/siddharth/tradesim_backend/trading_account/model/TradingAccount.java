@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.trading_account.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -65,7 +65,7 @@ public class TradingAccount extends AuditableEntity {
             return BigDecimal.ZERO;
         }
         if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new BusinessException("Balance cannot be negative");
+            throw TradingAccountException.conflict("Balance cannot be negative");
         }
         return balance;
     }
@@ -75,7 +75,7 @@ public class TradingAccount extends AuditableEntity {
             return BigDecimal.ZERO;
         }
         if (lockedBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new BusinessException("Locked balance cannot be negative");
+            throw TradingAccountException.conflict("Locked balance cannot be negative");
         }
         return lockedBalance;
     }
@@ -89,7 +89,7 @@ public class TradingAccount extends AuditableEntity {
             return BigDecimal.ZERO;
         }
         if (marginLoan.compareTo(BigDecimal.ZERO) < 0) {
-            throw new BusinessException("Margin loan cannot be negative");
+            throw TradingAccountException.conflict("Margin loan cannot be negative");
         }
         return marginLoan;
     }
@@ -106,7 +106,7 @@ public class TradingAccount extends AuditableEntity {
             throw new IllegalArgumentException("Margin loan decrease must be positive");
         }
         if (getMarginLoan().compareTo(amount) < 0) {
-            throw new BusinessException("Cannot repay more than margin loan");
+            throw TradingAccountException.conflict("Cannot repay more than margin loan");
         }
         this.marginLoan = getMarginLoan().subtract(amount);
     }
@@ -116,7 +116,7 @@ public class TradingAccount extends AuditableEntity {
             throw new IllegalArgumentException("Debit amount must be positive");
         }
         if (getAvailableBalance().compareTo(amount) < 0) {
-            throw new BusinessException("Insufficient available balance");
+            throw TradingAccountException.conflict("Insufficient available balance");
         }
         this.balance = getBalance().subtract(amount);
     }
@@ -133,7 +133,7 @@ public class TradingAccount extends AuditableEntity {
             throw new IllegalArgumentException("Lock amount must be positive");
         }
         if (getAvailableBalance().compareTo(amount) < 0) {
-            throw new BusinessException("Insufficient available balance");
+            throw TradingAccountException.conflict("Insufficient available balance");
         }
         this.lockedBalance = getLockedBalance().add(amount);
     }
@@ -144,7 +144,7 @@ public class TradingAccount extends AuditableEntity {
         }
 
         if (getLockedBalance().compareTo(amount) < 0) {
-            throw new BusinessException("Cannot unlock more than locked balance");
+            throw TradingAccountException.conflict("Cannot unlock more than locked balance");
         }
 
         this.lockedBalance = getLockedBalance().subtract(amount);
@@ -156,7 +156,7 @@ public class TradingAccount extends AuditableEntity {
         }
 
         if (getLockedBalance().compareTo(amount) < 0) {
-            throw new BusinessException("Insufficient locked balance");
+            throw TradingAccountException.conflict("Insufficient locked balance");
         }
 
         this.lockedBalance = getLockedBalance().subtract(amount);

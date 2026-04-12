@@ -1,18 +1,21 @@
 package com.siddharth.tradesim_backend.portfolio.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.PortfolioSnapshotRepository;
+import com.siddharth.tradesim_backend.portfolio.PortfolioException;
 import com.siddharth.tradesim_backend.portfolio.model.PortfolioSnapshot;
 import com.siddharth.tradesim_backend.portfolio.model.dto.*;
 import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.PositionException;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.user.UserException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +36,7 @@ public class PortfolioService {
     private final LedgerService ledgerService;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
-        authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
 
         List<Position> positions = positionRepository.findByUserId(userId);
@@ -50,7 +53,7 @@ public class PortfolioService {
         for (Position position : positions) {
             Stock stock = stockMap.get(position.getStockId());
             if (stock == null) {
-                throw new BusinessException("Stock not found");
+                throw StockException.notFound("Stock not found");
             }
 
             BigDecimal currentPrice = stock.getLastTradedPrice();
@@ -154,17 +157,17 @@ public class PortfolioService {
     @Transactional
     public void settleTrade(TradeExecution execution) {
         if (execution.buyerId().equals(execution.sellerId())) {
-            throw new BusinessException("Self-trading is not allowed");
+            throw PortfolioException.conflict("Self-trading is not allowed");
         }
         BigDecimal tradeValue = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
 
-        authRepository.findById(execution.buyerId()).orElseThrow(() -> new BusinessException("User not found"));
-        authRepository.findById(execution.sellerId()).orElseThrow(() -> new BusinessException("User not found"));
+        authRepository.findById(execution.buyerId()).orElseThrow(() -> UserException.notFound("User not found"));
+        authRepository.findById(execution.sellerId()).orElseThrow(() -> UserException.notFound("User not found"));
 
         TradingAccount buyerTradingAccount = tradingAccountService.getTradingAccountByUserId(execution.buyerId());
         TradingAccount sellerTradingAccount = tradingAccountService.getTradingAccountByUserId(execution.sellerId());
 
-        Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> new BusinessException("Seller position not found"));
+        Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
 
         settleBuyer(execution, buyerTradingAccount, tradeValue);
         settleSeller(execution, sellerTradingAccount, sellerPosition, tradeValue);
@@ -184,7 +187,7 @@ public class PortfolioService {
     private void settleBuyer(TradeExecution execution, TradingAccount buyerTradingAccount, BigDecimal tradeValue) {
         if (execution.buyerFundsReserved()) {
             if (execution.buyerReservationPrice() == null) {
-                throw new BusinessException("Missing buyer reservation price");
+                throw PortfolioException.conflict("Missing buyer reservation price");
             }
 
             BigDecimal reservedMargin = execution.buyerReservationPrice()

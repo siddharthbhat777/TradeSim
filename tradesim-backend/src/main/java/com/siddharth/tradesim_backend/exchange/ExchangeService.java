@@ -1,6 +1,5 @@
 package com.siddharth.tradesim_backend.exchange;
 
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.exchange.model.dto.CreateExchangeRequest;
@@ -70,11 +69,11 @@ public class ExchangeService {
         ZoneId zoneId = validateRequest(request);
 
         if (exchangeRepository.existsByName(request.name())) {
-            throw new BusinessException("Exchange with this name already exists");
+            throw ExchangeException.conflict("Exchange with this name already exists");
         }
 
         if (exchangeRepository.existsByCode(request.code())) {
-            throw new BusinessException("Exchange with this code already exists");
+            throw ExchangeException.conflict("Exchange with this code already exists");
         }
 
         try {
@@ -92,7 +91,7 @@ public class ExchangeService {
             Exchange saved = exchangeRepository.save(exchange);
             return toResponse(saved);
         } catch (DataIntegrityViolationException e) {
-            throw new BusinessException("Invalid exchange data");
+            throw ExchangeException.badRequest("Invalid exchange data");
         }
     }
 
@@ -101,7 +100,7 @@ public class ExchangeService {
         Exchange exchange = findExchange(exchangeId);
 
         if (exchange.getStatus() == status) {
-            throw new BusinessException("Exchange already has this status");
+            throw ExchangeException.conflict("Exchange already has this status");
         }
 
         exchange.setStatus(status);
@@ -114,21 +113,21 @@ public class ExchangeService {
         Exchange exchange = findExchange(exchangeId);
 
         if (exchange.getStatus() != ExchangeStatus.ACTIVE) {
-            throw new BusinessException("Exchange is not active");
+            throw ExchangeException.conflict("Exchange is not active");
         }
 
         ZoneId zoneId = parseZoneId(exchange.getTimezone());
         ZonedDateTime exchangeNow = nowAt(zoneId);
 
         if (!isTradingDay(exchangeNow.getDayOfWeek())) {
-            throw new BusinessException("Exchange is closed today");
+            throw ExchangeException.conflict("Exchange is closed today");
         }
 
         ZonedDateTime marketOpenAt = marketOpenAt(exchange, exchangeNow.toLocalDate(), zoneId);
         ZonedDateTime marketCloseAt = marketCloseAt(exchange, exchangeNow.toLocalDate(), zoneId);
 
         if (exchangeNow.isBefore(marketOpenAt) || !exchangeNow.isBefore(marketCloseAt)) {
-            throw new BusinessException("Market is currently closed");
+            throw ExchangeException.conflict("Market is currently closed");
         }
     }
 
@@ -142,7 +141,7 @@ public class ExchangeService {
     }
 
     private Exchange findExchange(UUID exchangeId) {
-        return exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
+        return exchangeRepository.findById(exchangeId).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
     }
 
     private ZoneId validateRequest(CreateExchangeRequest request) {
@@ -155,13 +154,13 @@ public class ExchangeService {
         try {
             return ZoneId.of(timezone);
         } catch (ZoneRulesException e) {
-            throw new BusinessException("Invalid timezone");
+            throw ExchangeException.badRequest("Invalid timezone");
         }
     }
 
     private void validateMarketHours(CreateExchangeRequest request) {
         if (!request.marketOpenTime().isBefore(request.marketCloseTime())) {
-            throw new BusinessException("Market open time must be before market close time");
+            throw ExchangeException.badRequest("Market open time must be before market close time");
         }
     }
 

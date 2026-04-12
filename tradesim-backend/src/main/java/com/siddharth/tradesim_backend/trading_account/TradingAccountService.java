@@ -1,6 +1,5 @@
 package com.siddharth.tradesim_backend.trading_account;
 
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.trading_account.model.dto.TradingAccountResponse;
@@ -24,7 +23,7 @@ public class TradingAccountService {
     @Transactional
     public TradingAccount createTradingAccountForUser(UUID userId) {
         if (tradingAccountRepository.existsByUserId(userId)) {
-            throw new BusinessException("Trading account already exists for this user");
+            throw TradingAccountException.conflict("Trading account already exists for this user");
         }
 
         TradingAccount tradingAccount = TradingAccount.builder()
@@ -43,7 +42,7 @@ public class TradingAccountService {
 
     @Transactional(readOnly = true)
     public TradingAccount getTradingAccountByUserId(UUID userId) {
-        return tradingAccountRepository.findByUserId(userId).orElseThrow(() -> new BusinessException("Trading account not found"));
+        return tradingAccountRepository.findByUserId(userId).orElseThrow(() -> TradingAccountException.notFound("Trading account not found"));
     }
 
     @Transactional

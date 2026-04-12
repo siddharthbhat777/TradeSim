@@ -115,7 +115,8 @@ class UserControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
     }
 
     @Test
@@ -191,6 +192,44 @@ class UserControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+    }
+
+    @Test
+    void unknownUserShouldReturnNotFound() throws Exception {
+        UUID adminId = UUID.randomUUID();
+        UUID targetUserId = UUID.randomUUID();
+
+        User admin = User.builder()
+                .id(adminId)
+                .username("admin")
+                .password("password")
+                .role(Role.ADMIN)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        UserPrincipal principal = new UserPrincipal(admin);
+
+        ChangeUserStatusRequest request = new ChangeUserStatusRequest(AccountStatus.SUSPENDED);
+
+        when(userService.changeStatus(eq(targetUserId), eq(AccountStatus.SUSPENDED)))
+                .thenThrow(UserException.notFound("User not found"));
+
+        mockMvc.perform(
+                        put("/users/change/{userId}/status", targetUserId)
+                                .with(authentication(
+                                        new UsernamePasswordAuthenticationToken(
+                                                principal,
+                                                null,
+                                                principal.getAuthorities()
+                                        )
+                                ))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("User not found"));
     }
 }

@@ -70,7 +70,7 @@ public class JwtService {
         try {
             final String userName = extractUserName(token);
             return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
-        } catch (Exception e) {
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
             return false;
         }
     }

@@ -13,7 +13,7 @@ import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
-import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
@@ -85,7 +85,7 @@ public class StockServiceTest {
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
-        assertThrows(StockStatusException.class, () -> stockService.changeStockStatus(stockId, StockStatus.ACTIVE));
+        assertThrows(StockException.class, () -> stockService.changeStockStatus(stockId, StockStatus.ACTIVE));
 
         verify(stockRepository, never()).save(any());
     }
@@ -269,7 +269,7 @@ public class StockServiceTest {
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
 
-        StockStatusException exception = assertThrows(StockStatusException.class, () -> stockService.changeStockStatus(stockId, StockStatus.ACTIVE));
+        StockException exception = assertThrows(StockException.class, () -> stockService.changeStockStatus(stockId, StockStatus.ACTIVE));
 
         assertThat(exception.getMessage()).isEqualTo("Cannot activate stock before initial share allocation is completed");
         verify(stockRepository, never()).save(any());

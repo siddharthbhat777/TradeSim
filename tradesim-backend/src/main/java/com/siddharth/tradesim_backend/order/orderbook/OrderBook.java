@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
-import com.siddharth.tradesim_backend.order.exceptions.OrderException;
+import com.siddharth.tradesim_backend.order.OrderException;
 import lombok.Getter;
 
 import java.math.BigDecimal;

@@ -4,7 +4,7 @@ import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
@@ -23,10 +23,12 @@ import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.service.StockService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.user.UserException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,9 +53,9 @@ public class IpoService {
 
     @Transactional
     public IpoOfferResponse submitIpoOffer(UUID companyId, UUID stockId, UUID actingUserId, CreateIpoOfferRequest request) {
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> CompanyException.notFound("Company not found"));
         if (company.getStatus() != CompanyStatus.ACTIVE) {
-            throw new BusinessException("Company is not active");
+            throw CompanyException.conflict("Company is not active");
         }
 
         companyRepresentativeAssignmentService.assertPrimaryContactAssignment(companyId, actingUserId, "Only an active primary contact can submit IPO offers");
@@ -62,7 +64,7 @@ public class IpoService {
         validateStockForIpo(companyId, stockId);
 
         if (ipoOfferRepository.existsByStockIdAndStatusIn(stockId, List.of(IpoOfferStatus.PENDING_APPROVAL, IpoOfferStatus.SUBSCRIPTION_OPEN, IpoOfferStatus.ALLOTTED))) {
-            throw new BusinessException("An IPO offer already exists for this stock");
+            throw IpoException.conflict("An IPO offer already exists for this stock");
         }
 
         IpoOffer ipoOffer = IpoOffer.builder()
@@ -90,9 +92,9 @@ public class IpoService {
     public IpoOfferResponse approveIpoOffer(UUID ipoOfferId, UUID adminUserId) {
         IpoOffer ipoOffer = findPendingIpoOffer(ipoOfferId);
 
-        Company company = companyRepository.findById(ipoOffer.getCompanyId()).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(ipoOffer.getCompanyId()).orElseThrow(() -> CompanyException.notFound("Company not found"));
         if (company.getStatus() != CompanyStatus.ACTIVE) {
-            throw new BusinessException("Company is not active");
+            throw CompanyException.conflict("Company is not active");
         }
 
         validateOfferWindow(ipoOffer.getSubscriptionStartAt(), ipoOffer.getSubscriptionEndAt());
@@ -133,14 +135,14 @@ public class IpoService {
 
     @Transactional
     public IpoSubscriptionResponse subscribeToIpo(UUID ipoOfferId, UUID userId) {
-        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> new BusinessException("IPO offer not found"));
+        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));
         assertIpoOfferIsOpenForSubscription(ipoOffer);
 
-        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         assertActiveSubscriber(user);
 
         if (ipoSubscriptionRepository.existsByIpoOfferIdAndUserId(ipoOfferId, userId)) {
-            throw new BusinessException("You have already subscribed to this IPO offer");
+            throw IpoException.conflict("You have already subscribed to this IPO offer");
         }
 
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
@@ -175,7 +177,7 @@ public class IpoService {
                 .map(subscription -> {
                     IpoOffer offer = offerMap.get(subscription.getIpoOfferId());
                     if (offer == null) {
-                        throw new BusinessException("IPO offer not found");
+                        throw IpoException.notFound("IPO offer not found");
                     }
                     return toSubscriptionResponse(subscription, offer);
                 })
@@ -184,7 +186,7 @@ public class IpoService {
 
     @Transactional(readOnly = true)
     public List<IpoSubscriptionResponse> fetchSubscriptionsForOffer(UUID ipoOfferId) {
-        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> new BusinessException("IPO offer not found"));
+        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));
 
         return ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)
                 .stream()
@@ -194,26 +196,26 @@ public class IpoService {
 
     @Transactional
     public IpoOfferResponse finalizeIpoOffer(UUID ipoOfferId, UUID adminUserId) {
-        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> new BusinessException("IPO offer not found"));
+        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));
 
         if (ipoOffer.getStatus() != IpoOfferStatus.SUBSCRIPTION_OPEN) {
-            throw new BusinessException("Only open IPO offers can be finalized");
+            throw IpoException.conflict("Only open IPO offers can be finalized");
         }
 
         if (Instant.now().isBefore(ipoOffer.getSubscriptionEndAt())) {
-            throw new BusinessException("IPO subscription window is still open");
+            throw IpoException.conflict("IPO subscription window is still open");
         }
 
-        Company company = companyRepository.findById(ipoOffer.getCompanyId()).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(ipoOffer.getCompanyId()).orElseThrow(() -> CompanyException.notFound("Company not found"));
         if (company.getStatus() != CompanyStatus.ACTIVE) {
-            throw new BusinessException("Company is not active");
+            throw CompanyException.conflict("Company is not active");
         }
 
         Stock stock = validateStockForIpo(ipoOffer.getCompanyId(), ipoOffer.getStockId());
 
         List<IpoSubscription> subscriptions = ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId);
         if (subscriptions.size() < ipoOffer.getMaxAllottees()) {
-            throw new BusinessException("Not enough subscriptions to finalize this IPO offer");
+            throw IpoException.conflict("Not enough subscriptions to finalize this IPO offer");
         }
 
         List<IpoSubscription> shuffledSubscriptions = new ArrayList<>(subscriptions);
@@ -266,46 +268,46 @@ public class IpoService {
 
     private void assertActiveSubscriber(User user) {
         if (user.getRole() != Role.USER || user.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException("Only an active USER account can subscribe to IPO offers");
+            throw IpoException.forbidden("Only an active USER account can subscribe to IPO offers");
         }
     }
 
     private void assertIpoOfferIsOpenForSubscription(IpoOffer ipoOffer) {
         if (ipoOffer.getStatus() != IpoOfferStatus.SUBSCRIPTION_OPEN) {
-            throw new BusinessException("IPO offer is not open for subscription");
+            throw IpoException.conflict("IPO offer is not open for subscription");
         }
 
         Instant now = Instant.now();
         if (now.isBefore(ipoOffer.getSubscriptionStartAt())) {
-            throw new BusinessException("IPO subscription window has not started yet");
+            throw IpoException.conflict("IPO subscription window has not started yet");
         }
         if (!now.isBefore(ipoOffer.getSubscriptionEndAt())) {
-            throw new BusinessException("IPO subscription window has already closed");
+            throw IpoException.conflict("IPO subscription window has already closed");
         }
     }
 
     private void validateOfferWindow(Instant subscriptionStartAt, Instant subscriptionEndAt) {
         if (!subscriptionEndAt.isAfter(subscriptionStartAt)) {
-            throw new BusinessException("Subscription end time must be after subscription start time");
+            throw IpoException.badRequest("Subscription end time must be after subscription start time");
         }
         if (!subscriptionEndAt.isAfter(Instant.now())) {
-            throw new BusinessException("Subscription end time must be in the future");
+            throw IpoException.badRequest("Subscription end time must be in the future");
         }
     }
 
     private Stock validateStockForIpo(UUID companyId, UUID stockId) {
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
 
         if (!stock.getCompanyId().equals(companyId)) {
-            throw new BusinessException("Stock does not belong to this company");
+            throw IpoException.conflict("Stock does not belong to this company");
         }
 
         if (stock.getStatus() != StockStatus.HALTED) {
-            throw new BusinessException("IPO is only allowed for HALTED stocks");
+            throw IpoException.conflict("IPO is only allowed for HALTED stocks");
         }
 
         if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
-            throw new BusinessException("Initial share allocation has already been applied to this stock");
+            throw IpoException.conflict("Initial share allocation has already been applied to this stock");
         }
 
         return stock;
@@ -341,10 +343,10 @@ public class IpoService {
     }
 
     private IpoOffer findPendingIpoOffer(UUID ipoOfferId) {
-        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> new BusinessException("IPO offer not found"));
+        IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));
 
         if (ipoOffer.getStatus() != IpoOfferStatus.PENDING_APPROVAL) {
-            throw new BusinessException("Only pending IPO offers can be reviewed");
+            throw IpoException.conflict("Only pending IPO offers can be reviewed");
         }
 
         return ipoOffer;

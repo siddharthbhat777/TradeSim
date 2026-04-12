@@ -1,11 +1,12 @@
 package com.siddharth.tradesim_backend.listing;
 
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
 import com.siddharth.tradesim_backend.listing.model.dto.CreateListingRequest;
@@ -32,22 +33,22 @@ public class ListingService {
 
     @Transactional
     public ListingRequestResponse submitListingRequest(UUID companyId, UUID actingUserId, CreateListingRequest request) {
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> CompanyException.notFound("Company not found"));
 
         if (company.getStatus() != CompanyStatus.ACTIVE) {
-            throw new BusinessException("Company is not active");
+            throw CompanyException.conflict("Company is not active");
         }
 
         companyRepresentativeAssignmentService.assertActiveRepresentativeAssignment(companyId, actingUserId);
 
-        exchangeRepository.findById(request.exchangeId()).orElseThrow(() -> new BusinessException("Exchange not found"));
+        exchangeRepository.findById(request.exchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
         if (stockService.existsBySymbol(request.symbol())) {
-            throw new BusinessException("Stock with symbol " + request.symbol() + " already exists");
+            throw ListingException.conflict("Stock with symbol " + request.symbol() + " already exists");
         }
 
         if (listingRequestRepository.existsBySymbolAndStatus(request.symbol(), ListingStatus.PENDING)) {
-            throw new BusinessException("A pending listing request already exists for this symbol");
+            throw ListingException.conflict("A pending listing request already exists for this symbol");
         }
 
         ListingRequest listingRequest = ListingRequest.builder()
@@ -77,12 +78,12 @@ public class ListingService {
     public ListingRequestResponse approveListingRequest(UUID listingRequestId, UUID adminUserId) {
         ListingRequest listingRequest = findPendingListingRequest(listingRequestId);
 
-        Company company = companyRepository.findById(listingRequest.getCompanyId()).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(listingRequest.getCompanyId()).orElseThrow(() -> CompanyException.notFound("Company not found"));
         if (company.getStatus() != CompanyStatus.ACTIVE) {
-            throw new BusinessException("Company is not active");
+            throw CompanyException.conflict("Company is not active");
         }
 
-        exchangeRepository.findById(listingRequest.getExchangeId()).orElseThrow(() -> new BusinessException("Exchange not found"));
+        exchangeRepository.findById(listingRequest.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
         StockResponse createdStock = stockService.createStockFromListingApproval(
                 listingRequest.getCompanyId(),
@@ -118,10 +119,10 @@ public class ListingService {
     }
 
     private ListingRequest findPendingListingRequest(UUID listingRequestId) {
-        ListingRequest listingRequest = listingRequestRepository.findById(listingRequestId).orElseThrow(() -> new BusinessException("Listing request not found"));
+        ListingRequest listingRequest = listingRequestRepository.findById(listingRequestId).orElseThrow(() -> ListingException.notFound("Listing request not found"));
 
         if (listingRequest.getStatus() != ListingStatus.PENDING) {
-            throw new BusinessException("Only pending listing requests can be reviewed");
+            throw ListingException.conflict("Only pending listing requests can be reviewed");
         }
 
         return listingRequest;

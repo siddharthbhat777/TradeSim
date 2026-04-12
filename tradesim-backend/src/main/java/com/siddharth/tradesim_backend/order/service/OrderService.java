@@ -3,14 +3,13 @@ package com.siddharth.tradesim_backend.order.service;
 import com.siddharth.tradesim_backend.auth.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
-import com.siddharth.tradesim_backend.order.exceptions.OrderException;
+import com.siddharth.tradesim_backend.order.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
@@ -20,14 +19,17 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.PositionException;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.service.RiskService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.user.UserException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -59,19 +61,19 @@ public class OrderService {
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
-        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
 
         if (user.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException("User account is not active");
+            throw UserException.conflict("User account is not active");
         }
 
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
-        Stock stock = stockRepository.findById(request.stockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+        Stock stock = stockRepository.findById(request.stockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
 
         exchangeService.assertTradingAllowed(stock.getExchangeId());
 
         if (stock.getStatus() != StockStatus.ACTIVE) {
-            throw new BusinessException("Stock is not active");
+            throw StockException.conflict("Stock is not active");
         }
 
         validateOrderShape(request);
@@ -133,14 +135,14 @@ public class OrderService {
 
     @Transactional
     public void cancelOrder(UUID userId, UUID orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderException("Order not found"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> OrderException.notFound("Order not found"));
 
         if (!order.getUserId().equals(userId)) {
-            throw new BusinessException("You are not allowed to cancel this order");
+            throw OrderException.forbidden("You are not allowed to cancel this order");
         }
 
         if (order.getStatus() != OrderStatus.OPEN && order.getStatus() != OrderStatus.PARTIALLY_FILLED) {
-            throw new OrderException("Only open or partially filled orders can be cancelled");
+            throw OrderException.conflict("Only open or partially filled orders can be cancelled");
         }
 
         orderLifecycleService.cancelOrder(order);
@@ -200,7 +202,7 @@ public class OrderService {
     }
 
     private void lockSellPosition(UUID userId, UUID stockId, int quantity) {
-        Position position = positionRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
+        Position position = positionRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> PositionException.conflict("No shares to sell"));
         position.lockShares(quantity);
         positionRepository.save(position);
     }
@@ -217,9 +219,9 @@ public class OrderService {
     }
 
     private void validateUserPosition(UUID userId, UUID stockId, int quantity) {
-        Position position = positionRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> new BusinessException("No shares to sell"));
+        Position position = positionRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> PositionException.conflict("No shares to sell"));
         if (position.getAvailableQuantity() < quantity) {
-            throw new BusinessException("Insufficient shares to sell");
+            throw PositionException.conflict("Insufficient shares to sell");
         }
     }
 

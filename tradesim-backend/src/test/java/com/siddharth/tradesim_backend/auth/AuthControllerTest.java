@@ -75,4 +75,35 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.accountStatus").value("ACTIVE"));
     }
+
+    @Test
+    void malformedJsonShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(
+                        post("/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "username": "sid",
+                                          "email": "sid@test.com",
+                                        """)
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST_BODY"))
+                .andExpect(jsonPath("$.message").value("Malformed JSON request body."));
+    }
+
+    @Test
+    void validationFailureShouldReturnFieldErrors() throws Exception {
+        RegisterRequest request = new RegisterRequest("", "bad-email", "weak");
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.username").value("Username is required"))
+                .andExpect(jsonPath("$.fieldErrors.email").value("Invalid email format"))
+                .andExpect(jsonPath("$.fieldErrors.password").exists());
+    }
 }

@@ -3,8 +3,9 @@ package com.siddharth.tradesim_backend.stock.service;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
@@ -12,12 +13,10 @@ import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
-import com.siddharth.tradesim_backend.stock.exceptions.CreateStockException;
-import com.siddharth.tradesim_backend.stock.exceptions.StockStatusException;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.model.dto.CreateStockRequest;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
-import com.siddharth.tradesim_backend.user.exceptions.StatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -99,12 +98,12 @@ public class StockService {
 
     @Transactional
     public StockResponse changeStockStatus(UUID stockId, StockStatus status) {
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
-        if (stock.getStatus() == status) throw new StockStatusException("Stock already in this status");
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
+        if (stock.getStatus() == status) throw StockException.conflict("Stock already in this status");
         if (stock.getStatus() == StockStatus.DELISTED)
-            throw new StockStatusException("Cannot change stock status of DELISTED stock");
+            throw StockException.conflict("Cannot change stock status of DELISTED stock");
         if (status == StockStatus.ACTIVE && stock.getStatus() == StockStatus.HALTED && (stock.getTotalIssuedShares() == null || stock.getTradableFloatShares() == null)) {
-            throw new StockStatusException("Cannot activate stock before initial share allocation is completed");
+            throw StockException.conflict("Cannot activate stock before initial share allocation is completed");
         }
         try {
             if (status == StockStatus.DELISTED) {
@@ -125,25 +124,23 @@ public class StockService {
                     saved.getStatus()
             );
         } catch (DataIntegrityViolationException e) {
-            throw new StatusException("Invalid status data");
-        } catch (Exception e) {
-            throw new StatusException("Unable to change status of stock");
+            throw StockException.badRequest("Invalid status data");
         }
     }
 
     private StockResponse activateStockFromPrimaryMarketAllocation(UUID stockId, int totalIssuedShares, int tradableFloatShares, String activationSource) {
         if (tradableFloatShares > totalIssuedShares) {
-            throw new BusinessException("Tradable float shares cannot exceed total issued shares");
+            throw StockException.badRequest("Tradable float shares cannot exceed total issued shares");
         }
 
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new BusinessException("Stock not found"));
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
 
         if (stock.getStatus() != StockStatus.HALTED) {
-            throw new BusinessException("Only HALTED stocks can be activated through " + activationSource);
+            throw StockException.conflict("Only HALTED stocks can be activated through " + activationSource);
         }
 
         if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
-            throw new BusinessException("Initial share allocation has already been applied to this stock");
+            throw StockException.conflict("Initial share allocation has already been applied to this stock");
         }
 
         stock.setTotalIssuedShares(totalIssuedShares);
@@ -156,15 +153,15 @@ public class StockService {
 
     private Stock createStock(String symbol, UUID companyId, UUID exchangeId, BigDecimal initialPrice, Sector sector, BigDecimal priceBandPercent, StockStatus status) {
         if (stockRepository.existsBySymbol(symbol)) {
-            throw new CreateStockException("Stock with symbol " + symbol + " already exists");
+            throw StockException.conflict("Stock with symbol " + symbol + " already exists");
         }
 
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new BusinessException("Company not found"));
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> CompanyException.notFound("Company not found"));
         if (company.getStatus() != CompanyStatus.ACTIVE) {
-            throw new BusinessException("Company is not active");
+            throw CompanyException.conflict("Company is not active");
         }
 
-        exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
+        exchangeRepository.findById(exchangeId).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
         try {
             return stockRepository.save(Stock.builder()
@@ -179,7 +176,7 @@ public class StockService {
                     .priceBandPercent(priceBandPercent != null ? priceBandPercent : BigDecimal.TEN)
                     .build());
         } catch (DataIntegrityViolationException e) {
-            throw new CreateStockException("Invalid stock data");
+            throw StockException.badRequest("Invalid stock data");
         }
     }
 

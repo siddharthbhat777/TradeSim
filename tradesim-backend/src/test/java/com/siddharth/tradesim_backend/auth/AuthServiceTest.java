@@ -2,7 +2,6 @@ package com.siddharth.tradesim_backend.auth;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
-import com.siddharth.tradesim_backend.auth.exceptions.UserLoginException;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
@@ -115,7 +114,7 @@ class AuthServiceTest {
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(new BadCredentialsException("Bad credentials"));
 
-        assertThrows(UserLoginException.class, () -> authService.loginUser(request));
+        assertThrows(AuthException.class, () -> authService.loginUser(request));
 
         verify(authRepository, never()).save(any());
         verify(jwtService, never()).generateToken(any());
@@ -137,7 +136,7 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mock(Authentication.class));
         when(authRepository.findByUsernameOrEmail("sid")).thenReturn(Optional.of(user));
 
-        assertThrows(UserLoginException.class, () -> authService.loginUser(request));
+        assertThrows(AuthException.class, () -> authService.loginUser(request));
 
         verify(authRepository, never()).save(any());
         verify(jwtService, never()).generateToken(any());
@@ -159,7 +158,7 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mock(Authentication.class));
         when(authRepository.findByUsernameOrEmail("sid")).thenReturn(Optional.of(user));
 
-        assertThrows(UserLoginException.class, () -> authService.loginUser(request));
+        assertThrows(AuthException.class, () -> authService.loginUser(request));
 
         verify(authRepository, never()).save(any());
         verify(jwtService, never()).generateToken(any());

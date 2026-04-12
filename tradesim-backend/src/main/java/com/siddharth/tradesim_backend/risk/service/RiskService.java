@@ -1,15 +1,17 @@
 package com.siddharth.tradesim_backend.risk.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.dto.RiskResponse;
 import com.siddharth.tradesim_backend.risk.enums.RiskLevel;
+import com.siddharth.tradesim_backend.risk.RiskException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.user.UserException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,12 +33,12 @@ public class RiskService {
         BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
         if (tradingAccount.getAvailableBalance().compareTo(requiredMargin) < 0) {
-            throw new BusinessException("Insufficient margin");
+            throw RiskException.conflict("Insufficient margin");
         }
     }
 
     public void checkLiquidation(UUID userId) {
-        authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
         RiskResponse risk = calculateRisk(userId, tradingAccount);
 
@@ -46,7 +48,7 @@ public class RiskService {
     }
 
     public RiskResponse getUserRisk(UUID userId) {
-        authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+        authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
         return calculateRisk(userId, tradingAccount);
     }
@@ -58,7 +60,7 @@ public class RiskService {
         BigDecimal totalUnrealizedPnl = BigDecimal.ZERO;
 
         for (Position position : positions) {
-            Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+            Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
 
             BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal positionValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
