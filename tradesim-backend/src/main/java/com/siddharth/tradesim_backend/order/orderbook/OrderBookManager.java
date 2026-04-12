@@ -1,9 +1,8 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
-import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
-import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,12 +37,12 @@ public class OrderBookManager {
 
     @PostConstruct
     public void loadPendingOrdersFromDatabase() {
-        List<Order> pendingLimitOrders = orderRepository.findByStatusIn(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED))
+        List<Order> pendingOrders = orderRepository.findByStatusIn(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED))
                 .stream()
-                .filter(order -> order.getOrderType() == OrderType.LIMIT)
+                .filter(order -> order.getBookPrice() != null)
                 .toList();
 
-        for (Order order : pendingLimitOrders) {
+        for (Order order : pendingOrders) {
             addOrderToOrderBook(order);
             registerOrder(order);
         }
@@ -74,7 +73,7 @@ public class OrderBookManager {
         }
 
         return orderRepository.findById(orderId)
-                .filter(order -> order.getOrderType() == OrderType.LIMIT)
+                .filter(order -> order.getBookPrice() != null)
                 .filter(order -> order.getStatus() == OrderStatus.OPEN || order.getStatus() == OrderStatus.PARTIALLY_FILLED)
                 .map(order -> {
                     registerOrder(order);
@@ -84,14 +83,16 @@ public class OrderBookManager {
     }
 
     private void addOrderToOrderBook(Order order) {
-        if (order.getOrderType() == OrderType.MARKET) return;
+        if (order.getBookPrice() == null) {
+            return;
+        }
 
         OrderBookEntry entry = new OrderBookEntry(
                 order.getId(),
                 order.getUserId(),
                 order.getStockId(),
                 order.getSide(),
-                order.getLimitPrice(),
+                order.getBookPrice(),
                 order.getRemainingQuantity(),
                 order.getCreatedAt()
         );

@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.risk.service;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
@@ -91,6 +92,7 @@ public class LiquidationService {
                             .stockId(freshPosition.getStockId())
                             .side(OrderSide.SELL)
                             .orderType(OrderType.MARKET)
+                            .timeInForce(TimeInForce.IOC)
                             .quantity(sellQuantity)
                             .remainingQuantity(sellQuantity)
                             .status(OrderStatus.OPEN)

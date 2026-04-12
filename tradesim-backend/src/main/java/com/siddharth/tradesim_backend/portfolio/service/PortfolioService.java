@@ -182,18 +182,32 @@ public class PortfolioService {
     }
 
     private void settleBuyer(TradeExecution execution, TradingAccount buyerTradingAccount, BigDecimal tradeValue) {
-        if (execution.buyerOrderType() == OrderType.LIMIT) {
-            if (execution.buyerLimitPrice() == null) {
-                throw new BusinessException("Missing buyer limit price");
+        if (execution.buyerFundsReserved()) {
+            if (execution.buyerReservationPrice() == null) {
+                throw new BusinessException("Missing buyer reservation price");
             }
-            BigDecimal reservedMargin = execution.buyerLimitPrice().multiply(BigDecimal.valueOf(execution.quantity())).divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+
+            BigDecimal reservedMargin = execution.buyerReservationPrice()
+                    .multiply(BigDecimal.valueOf(execution.quantity()))
+                    .divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+
             buyerTradingAccount.unlockFunds(reservedMargin);
-            ledgerService.recordBuyLimitMarginUnlock(
-                    buyerTradingAccount,
-                    reservedMargin,
-                    execution.stockId(),
-                    execution.buyOrderId()
-            );
+
+            if (execution.buyerOrderType() == OrderType.LIMIT) {
+                ledgerService.recordBuyLimitMarginUnlock(
+                        buyerTradingAccount,
+                        reservedMargin,
+                        execution.stockId(),
+                        execution.buyOrderId()
+                );
+            } else {
+                ledgerService.recordBuyOrderMarginUnlock(
+                        buyerTradingAccount,
+                        reservedMargin,
+                        execution.stockId(),
+                        execution.buyOrderId()
+                );
+            }
         }
 
         BigDecimal requiredMargin = tradeValue.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
@@ -218,9 +232,10 @@ public class PortfolioService {
     }
 
     private void settleSeller(TradeExecution execution, TradingAccount sellerTradingAccount, Position sellerPosition, BigDecimal tradeValue) {
-        if (execution.sellerOrderType() == OrderType.LIMIT) {
+        if (execution.sellerSharesReserved()) {
             sellerPosition.unlockShares(execution.quantity());
         }
+
         BigDecimal executionPrice = execution.executionPrice();
         BigDecimal averagePrice = sellerPosition.getAverageBuyPrice();
 

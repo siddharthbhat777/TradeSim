@@ -4,11 +4,13 @@ import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -18,7 +20,8 @@ import java.util.UUID;
                 @Index(name = "idx_order_user", columnList = "user_id"),
                 @Index(name = "idx_order_stock", columnList = "stock_id"),
                 @Index(name = "idx_order_status", columnList = "status"),
-                @Index(name = "idx_order_created", columnList = "created_at")
+                @Index(name = "idx_order_created", columnList = "created_at"),
+                @Index(name = "idx_order_expires_at", columnList = "expires_at")
         }
 )
 @EntityListeners(AuditingEntityListener.class)
@@ -40,20 +43,32 @@ public class Order extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderSide side; // BUY / SELL
+    private OrderSide side;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderType orderType; // MARKET / LIMIT
+    private OrderType orderType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TimeInForce timeInForce;
 
     @Column(nullable = false)
     private int quantity;
 
-    @Column(name = "remaining_quantity", nullable = false)
+    @Column(nullable = false)
     private int remainingQuantity;
 
     @Column(precision = 19, scale = 4)
     private BigDecimal limitPrice;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal reservationPrice;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal bookPrice;
+
+    private Instant expiresAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -76,9 +91,17 @@ public class Order extends AuditableEntity {
 
         if (this.remainingQuantity == 0) {
             this.status = OrderStatus.FILLED;
+            this.bookPrice = null;
         } else {
             this.status = OrderStatus.PARTIALLY_FILLED;
         }
+    }
+
+    public void assignBookPrice(BigDecimal price) {
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Book price must be positive");
+        }
+        this.bookPrice = price;
     }
 
     public void cancel() {
@@ -87,5 +110,6 @@ public class Order extends AuditableEntity {
         }
         this.status = OrderStatus.CANCELLED;
         this.remainingQuantity = 0;
+        this.bookPrice = null;
     }
 }

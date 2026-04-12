@@ -10,10 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.zone.ZoneRulesException;
 import java.util.List;
 import java.util.UUID;
@@ -98,6 +95,19 @@ public class ExchangeService {
         if (currentTime.isBefore(exchange.getMarketOpenTime()) || currentTime.isAfter(exchange.getMarketCloseTime())) {
             throw new BusinessException("Market is currently closed");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Instant resolveDayOrderExpiry(UUID exchangeId) {
+        Exchange exchange = exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
+
+        ZoneId zoneId = parseZoneId(exchange.getTimezone());
+        ZonedDateTime exchangeNow = ZonedDateTime.now(zoneId);
+
+        return exchangeNow.toLocalDate()
+                .atTime(exchange.getMarketCloseTime())
+                .atZone(zoneId)
+                .toInstant();
     }
 
     private ZoneId validateRequest(CreateExchangeRequest request) {

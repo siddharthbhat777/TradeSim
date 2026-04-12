@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.order.orderbook;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,20 +14,20 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 
 class OrderBookManagerTest {
     private OrderBookManager orderBookManager;
-
     private UUID stockId;
 
     @BeforeEach
     void setup() {
         OrderRepository orderRepository = mock(OrderRepository.class);
-
         orderBookManager = new OrderBookManager(orderRepository);
-
         stockId = UUID.randomUUID();
     }
 
@@ -37,14 +38,16 @@ class OrderBookManagerTest {
                 .stockId(stockId)
                 .side(side)
                 .orderType(OrderType.LIMIT)
+                .timeInForce(TimeInForce.DAY)
                 .quantity(10)
                 .remainingQuantity(10)
-                .limitPrice(BigDecimal.valueOf((double) 100))
+                .limitPrice(BigDecimal.valueOf(100))
+                .reservationPrice(side == OrderSide.BUY ? BigDecimal.valueOf(100) : null)
+                .bookPrice(BigDecimal.valueOf(100))
                 .status(OrderStatus.OPEN)
                 .build();
 
         ReflectionTestUtils.setField(order, "createdAt", Instant.now());
-
         return order;
     }
 

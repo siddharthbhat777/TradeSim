@@ -15,6 +15,8 @@ public record TradeExecution(
         UUID sellOrderId,
         OrderType buyerOrderType,
         OrderType sellerOrderType,
-        BigDecimal buyerLimitPrice
+        BigDecimal buyerReservationPrice,
+        boolean buyerFundsReserved,
+        boolean sellerSharesReserved
 ) {
 }

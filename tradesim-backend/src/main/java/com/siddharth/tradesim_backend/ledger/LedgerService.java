@@ -57,6 +57,32 @@ public class LedgerService {
     }
 
     @Transactional
+    public void recordBuyOrderMarginLock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
+        saveEntry(
+                tradingAccount,
+                stockId,
+                orderId,
+                null,
+                LedgerEntryType.BUY_ORDER_MARGIN_LOCK,
+                amount,
+                "Locked margin for BUY order"
+        );
+    }
+
+    @Transactional
+    public void recordBuyOrderMarginUnlock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
+        saveEntry(
+                tradingAccount,
+                stockId,
+                orderId,
+                null,
+                LedgerEntryType.BUY_ORDER_MARGIN_UNLOCK,
+                amount,
+                "Unlocked reserved margin for BUY order"
+        );
+    }
+
+    @Transactional
     public void recordTradeMarginDebit(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
         saveEntry(
                 tradingAccount,

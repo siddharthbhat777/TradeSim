@@ -1,7 +1,8 @@
 package com.siddharth.tradesim_backend.order.model.dto;
 
-import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
+import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,9 @@ public record OrderRequest(
 
         @NotNull
         OrderType orderType,
+
+        @NotNull
+        TimeInForce timeInForce,
 
         @DecimalMin("0.01")
         BigDecimal limitPrice
