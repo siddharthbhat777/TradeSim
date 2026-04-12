@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.exchange.model.dto.CreateExchangeRequest;
+import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeMarketClockResponse;
 import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ExchangeService {
     private final ExchangeRepository exchangeRepository;
+    private final Clock clock;
 
     @Transactional(readOnly = true)
     public List<ExchangeResponse> fetchExchanges() {
@@ -27,8 +29,40 @@ public class ExchangeService {
 
     @Transactional(readOnly = true)
     public ExchangeResponse fetchExchange(UUID exchangeId) {
-        Exchange exchange = exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
+        Exchange exchange = findExchange(exchangeId);
         return toResponse(exchange);
+    }
+
+    @Transactional(readOnly = true)
+    public ExchangeMarketClockResponse fetchMarketClock(UUID exchangeId) {
+        Exchange exchange = findExchange(exchangeId);
+        ZoneId zoneId = parseZoneId(exchange.getTimezone());
+        ZonedDateTime exchangeNow = nowAt(zoneId);
+
+        ZonedDateTime marketOpenAt = marketOpenAt(exchange, exchangeNow.toLocalDate(), zoneId);
+        ZonedDateTime marketCloseAt = marketCloseAt(exchange, exchangeNow.toLocalDate(), zoneId);
+
+        boolean tradingDay = isTradingDay(exchangeNow.getDayOfWeek());
+        boolean marketOpenNow = tradingDay
+                && !exchangeNow.isBefore(marketOpenAt)
+                && exchangeNow.isBefore(marketCloseAt);
+
+        return new ExchangeMarketClockResponse(
+                exchange.getId(),
+                exchange.getCode(),
+                exchange.getName(),
+                exchange.getTimezone(),
+                exchangeNow.toLocalDate(),
+                exchangeNow.toLocalTime().withNano(0),
+                exchangeNow.getDayOfWeek(),
+                exchange.getMarketOpenTime(),
+                exchange.getMarketCloseTime(),
+                tradingDay,
+                marketOpenNow,
+                exchangeNow.toInstant(),
+                marketOpenAt.toInstant(),
+                marketCloseAt.toInstant()
+        );
     }
 
     @Transactional
@@ -64,7 +98,7 @@ public class ExchangeService {
 
     @Transactional
     public ExchangeResponse changeStatus(UUID exchangeId, ExchangeStatus status) {
-        Exchange exchange = exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
+        Exchange exchange = findExchange(exchangeId);
 
         if (exchange.getStatus() == status) {
             throw new BusinessException("Exchange already has this status");
@@ -77,37 +111,38 @@ public class ExchangeService {
 
     @Transactional(readOnly = true)
     public void assertTradingAllowed(UUID exchangeId) {
-        Exchange exchange = exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
+        Exchange exchange = findExchange(exchangeId);
 
         if (exchange.getStatus() != ExchangeStatus.ACTIVE) {
             throw new BusinessException("Exchange is not active");
         }
 
-        ZonedDateTime exchangeNow = ZonedDateTime.now(parseZoneId(exchange.getTimezone()));
-        DayOfWeek day = exchangeNow.getDayOfWeek();
+        ZoneId zoneId = parseZoneId(exchange.getTimezone());
+        ZonedDateTime exchangeNow = nowAt(zoneId);
 
-        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
+        if (!isTradingDay(exchangeNow.getDayOfWeek())) {
             throw new BusinessException("Exchange is closed today");
         }
 
-        LocalTime currentTime = exchangeNow.toLocalTime();
+        ZonedDateTime marketOpenAt = marketOpenAt(exchange, exchangeNow.toLocalDate(), zoneId);
+        ZonedDateTime marketCloseAt = marketCloseAt(exchange, exchangeNow.toLocalDate(), zoneId);
 
-        if (currentTime.isBefore(exchange.getMarketOpenTime()) || currentTime.isAfter(exchange.getMarketCloseTime())) {
+        if (exchangeNow.isBefore(marketOpenAt) || !exchangeNow.isBefore(marketCloseAt)) {
             throw new BusinessException("Market is currently closed");
         }
     }
 
     @Transactional(readOnly = true)
     public Instant resolveDayOrderExpiry(UUID exchangeId) {
-        Exchange exchange = exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
-
+        Exchange exchange = findExchange(exchangeId);
         ZoneId zoneId = parseZoneId(exchange.getTimezone());
-        ZonedDateTime exchangeNow = ZonedDateTime.now(zoneId);
+        ZonedDateTime exchangeNow = nowAt(zoneId);
 
-        return exchangeNow.toLocalDate()
-                .atTime(exchange.getMarketCloseTime())
-                .atZone(zoneId)
-                .toInstant();
+        return marketCloseAt(exchange, exchangeNow.toLocalDate(), zoneId).toInstant();
+    }
+
+    private Exchange findExchange(UUID exchangeId) {
+        return exchangeRepository.findById(exchangeId).orElseThrow(() -> new BusinessException("Exchange not found"));
     }
 
     private ZoneId validateRequest(CreateExchangeRequest request) {
@@ -128,6 +163,22 @@ public class ExchangeService {
         if (!request.marketOpenTime().isBefore(request.marketCloseTime())) {
             throw new BusinessException("Market open time must be before market close time");
         }
+    }
+
+    private ZonedDateTime nowAt(ZoneId zoneId) {
+        return ZonedDateTime.ofInstant(clock.instant(), zoneId);
+    }
+
+    private boolean isTradingDay(DayOfWeek dayOfWeek) {
+        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY;
+    }
+
+    private ZonedDateTime marketOpenAt(Exchange exchange, LocalDate date, ZoneId zoneId) {
+        return date.atTime(exchange.getMarketOpenTime()).atZone(zoneId);
+    }
+
+    private ZonedDateTime marketCloseAt(Exchange exchange, LocalDate date, ZoneId zoneId) {
+        return date.atTime(exchange.getMarketCloseTime()).atZone(zoneId);
     }
 
     private ExchangeResponse toResponse(Exchange exchange) {

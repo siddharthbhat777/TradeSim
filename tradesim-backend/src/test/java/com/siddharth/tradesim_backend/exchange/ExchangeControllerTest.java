@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.exchange;
 
 import com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus;
+import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeMarketClockResponse;
 import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
@@ -76,5 +80,36 @@ class ExchangeControllerTest {
                 .andExpect(jsonPath("$.id").value(exchangeId.toString()))
                 .andExpect(jsonPath("$.code").value("TSX"))
                 .andExpect(jsonPath("$.country").value("India"));
+    }
+
+    @Test
+    void shouldReturnMarketClock() throws Exception {
+        UUID exchangeId = UUID.randomUUID();
+        ExchangeMarketClockResponse response = new ExchangeMarketClockResponse(
+                exchangeId,
+                "NYSE",
+                "NYSE Demo",
+                "America/New_York",
+                LocalDate.of(2026, 4, 13),
+                LocalTime.of(10, 0),
+                DayOfWeek.MONDAY,
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                true,
+                true,
+                Instant.parse("2026-04-13T14:00:00Z"),
+                Instant.parse("2026-04-13T13:30:00Z"),
+                Instant.parse("2026-04-13T20:00:00Z")
+        );
+
+        when(exchangeService.fetchMarketClock(exchangeId)).thenReturn(response);
+
+        mockMvc.perform(get("/exchanges/{exchangeId}/market-clock", exchangeId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exchangeId").value(exchangeId.toString()))
+                .andExpect(jsonPath("$.timezone").value("America/New_York"))
+                .andExpect(jsonPath("$.localDate").value("2026-04-13"))
+                .andExpect(jsonPath("$.localTime").value("10:00:00"))
+                .andExpect(jsonPath("$.marketOpenNow").value(true));
     }
 }

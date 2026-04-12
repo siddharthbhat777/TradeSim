@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.exchange;
 
 import com.siddharth.tradesim_backend.exchange.model.dto.ChangeExchangeStatusRequest;
 import com.siddharth.tradesim_backend.exchange.model.dto.CreateExchangeRequest;
+import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeMarketClockResponse;
 import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,11 @@ public class ExchangeController {
     @GetMapping("{exchangeId}")
     public ResponseEntity<ExchangeResponse> getExchange(@PathVariable UUID exchangeId) {
         return ResponseEntity.ok(exchangeService.fetchExchange(exchangeId));
+    }
+
+    @GetMapping("{exchangeId}/market-clock")
+    public ResponseEntity<ExchangeMarketClockResponse> getMarketClock(@PathVariable UUID exchangeId) {
+        return ResponseEntity.ok(exchangeService.fetchMarketClock(exchangeId));
     }
 
     @PostMapping
