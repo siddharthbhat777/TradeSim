@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.order.orderbook;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.FillRepository;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
@@ -13,17 +14,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class OrderMatchingEngineTest {
     private OrderMatchingEngine engine;
     private OrderBookManager orderBookManager;
-
     private FillRepository fillRepository;
     private PortfolioService portfolioService;
     private MarketStateService marketStateService;
@@ -37,36 +44,32 @@ class OrderMatchingEngineTest {
         portfolioService = mock(PortfolioService.class);
         marketStateService = mock(MarketStateService.class);
 
-        orderBookManager = new OrderBookManager(orderRepository);
-
-        engine = new OrderMatchingEngine(
-                orderBookManager,
-                orderRepository,
-                fillRepository,
-                portfolioService,
-                marketStateService
-        );
+        orderBookManager = new OrderBookManager(orderRepository, Clock.fixed(Instant.parse("2026-04-18T10:00:00Z"), ZoneOffset.UTC));
+        engine = new OrderMatchingEngine(orderBookManager, orderRepository, fillRepository, portfolioService, marketStateService);
 
         stockId = UUID.randomUUID();
-
         when(marketStateService.isWithinPriceBand(any(), any())).thenReturn(true);
     }
 
     private Order createOrder(OrderSide side, OrderType type, int quantity, double price) {
+        BigDecimal resolvedPrice = price == 0 ? null : BigDecimal.valueOf(price);
+
         Order order = Order.builder()
                 .id(UUID.randomUUID())
                 .userId(UUID.randomUUID())
                 .stockId(stockId)
                 .side(side)
                 .orderType(type)
+                .timeInForce(type == OrderType.LIMIT ? TimeInForce.DAY : TimeInForce.IOC)
                 .quantity(quantity)
                 .remainingQuantity(quantity)
-                .limitPrice(price == 0 ? null : BigDecimal.valueOf(price))
+                .limitPrice(resolvedPrice)
+                .reservationPrice(side == OrderSide.BUY && resolvedPrice != null ? resolvedPrice : null)
+                .bookPrice(type == OrderType.LIMIT ? resolvedPrice : null)
                 .status(OrderStatus.OPEN)
                 .build();
 
         ReflectionTestUtils.setField(order, "createdAt", Instant.now());
-
         return order;
     }
 
@@ -142,12 +145,13 @@ class OrderMatchingEngineTest {
         orderBookManager.addOrder(sell2);
 
         Order buy = createOrder(OrderSide.BUY, OrderType.MARKET, 8, 0);
-        orderBookManager.addOrder(buy);
-        engine.match(buy);
+        MatchResult result = engine.match(buy);
 
         assertEquals(OrderStatus.FILLED, sell1.getStatus());
         assertEquals(OrderStatus.PARTIALLY_FILLED, sell2.getStatus());
         assertEquals(2, sell2.getRemainingQuantity());
+        assertTrue(result.executedSomething());
+        assertEquals(0, result.lastExecutionPrice().compareTo(BigDecimal.valueOf(101)));
     }
 
     @Test
@@ -160,11 +164,14 @@ class OrderMatchingEngineTest {
                 .stockId(stockId)
                 .side(OrderSide.SELL)
                 .orderType(OrderType.LIMIT)
+                .timeInForce(TimeInForce.DAY)
                 .quantity(10)
                 .remainingQuantity(10)
                 .limitPrice(BigDecimal.valueOf(100))
+                .bookPrice(BigDecimal.valueOf(100))
                 .status(OrderStatus.OPEN)
                 .build();
+        ReflectionTestUtils.setField(sell, "createdAt", Instant.now());
 
         orderBookManager.addOrder(sell);
 
@@ -174,11 +181,15 @@ class OrderMatchingEngineTest {
                 .stockId(stockId)
                 .side(OrderSide.BUY)
                 .orderType(OrderType.LIMIT)
+                .timeInForce(TimeInForce.DAY)
                 .quantity(10)
                 .remainingQuantity(10)
                 .limitPrice(BigDecimal.valueOf(100))
+                .reservationPrice(BigDecimal.valueOf(100))
+                .bookPrice(BigDecimal.valueOf(100))
                 .status(OrderStatus.OPEN)
                 .build();
+        ReflectionTestUtils.setField(buy, "createdAt", Instant.now());
 
         orderBookManager.addOrder(buy);
         engine.match(buy);
@@ -199,5 +210,21 @@ class OrderMatchingEngineTest {
         MatchResult result = engine.match(buy);
 
         assertTrue(result.priceBandHit());
+        assertFalse(result.executedSomething());
+    }
+
+    @Test
+    void shouldLeaveUnfilledFreshMarketOrderForServiceFinalization() {
+        Order sell = createOrder(OrderSide.SELL, OrderType.LIMIT, 5, 100);
+        orderBookManager.addOrder(sell);
+
+        Order buy = createOrder(OrderSide.BUY, OrderType.MARKET, 10, 0);
+        MatchResult result = engine.match(buy);
+
+        assertEquals(OrderStatus.PARTIALLY_FILLED, buy.getStatus());
+        assertEquals(5, buy.getRemainingQuantity());
+        assertTrue(result.executedSomething());
+        assertEquals(0, result.lastExecutionPrice().compareTo(BigDecimal.valueOf(100)));
+        verify(fillRepository, times(1)).save(any());
     }
 }

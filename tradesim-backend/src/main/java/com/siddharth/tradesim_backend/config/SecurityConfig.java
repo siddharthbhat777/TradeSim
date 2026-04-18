@@ -1,9 +1,10 @@
 package com.siddharth.tradesim_backend.config;
 
-import jakarta.servlet.http.HttpServletResponse;
+import com.siddharth.tradesim_backend.common.error.ApiErrorResponseWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -25,6 +26,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final UserDetailsService userDetailsService;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -51,14 +53,24 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("Unauthorized");
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            response.getWriter().write("Forbidden");
-                        })
+                        .authenticationEntryPoint((request, response, authException) ->
+                                apiErrorResponseWriter.write(
+                                        response,
+                                        HttpStatus.UNAUTHORIZED,
+                                        "UNAUTHORIZED",
+                                        "Authentication required.",
+                                        request.getRequestURI()
+                                )
+                        )
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                apiErrorResponseWriter.write(
+                                        response,
+                                        HttpStatus.FORBIDDEN,
+                                        "ACCESS_DENIED",
+                                        "Access denied.",
+                                        request.getRequestURI()
+                                )
+                        )
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

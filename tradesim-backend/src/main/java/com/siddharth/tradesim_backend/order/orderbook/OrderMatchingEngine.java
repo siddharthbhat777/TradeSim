@@ -1,8 +1,8 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
-import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.model.Fill;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.FillRepository;
@@ -34,18 +34,19 @@ public class OrderMatchingEngine {
     @Transactional
     public MatchResult match(Order order) {
         return orderBookManager.withLock(order.getStockId(), orderBook -> {
+            if (order.getOrderType() == OrderType.MARKET && order.getBookPrice() == null) {
+                MatchResult result = switch (order.getSide()) {
+                    case BUY -> matchBuy(order, orderBook);
+                    case SELL -> matchSell(order, orderBook);
+                };
+
+                orderRepository.save(order);
+                return result;
+            }
+
             boolean priceBandHit = false;
             boolean executedSomething = false;
-            if (order.getOrderType() == OrderType.MARKET) {
-                switch (order.getSide()) {
-                    case BUY -> priceBandHit = matchBuy(order, orderBook);
-                    case SELL -> priceBandHit = matchSell(order, orderBook);
-                }
-
-                resolveMarketFinalStatus(order);
-                orderRepository.save(order);
-                return new MatchResult(priceBandHit);
-            }
+            BigDecimal lastExecutionPrice = null;
 
             List<OrderBookEntry> skipped = new ArrayList<>();
             while (!orderBook.getBuyOrders().isEmpty() && !orderBook.getSellOrders().isEmpty()) {
@@ -86,22 +87,23 @@ public class OrderMatchingEngine {
                 }
 
                 executedSomething = true;
+                lastExecutionPrice = executionPrice;
 
                 executeTrade(buyOrder, sellOrder, executedQuantity, executionPrice);
-
-                orderBook.updateOrder(buyEntry, executedQuantity);
-                orderBook.updateOrder(sellEntry, executedQuantity);
+                orderBookManager.syncOrderState(orderBook, buyOrder);
+                orderBookManager.syncOrderState(orderBook, sellOrder);
             }
 
             skipped.forEach(orderBook::addOrder);
             orderRepository.save(order);
-            return new MatchResult(priceBandHit && !executedSomething);
+            return new MatchResult(priceBandHit, executedSomething, lastExecutionPrice);
         });
     }
 
-    private boolean matchBuy(Order order, OrderBook orderBook) {
-        boolean bandEncountered = false;
+    private MatchResult matchBuy(Order order, OrderBook orderBook) {
+        boolean priceBandHit = false;
         boolean executedSomething = false;
+        BigDecimal lastExecutionPrice = null;
 
         List<OrderBookEntry> skipped = new ArrayList<>();
         while (order.getRemainingQuantity() > 0 && !orderBook.getSellOrders().isEmpty()) {
@@ -119,7 +121,7 @@ public class OrderMatchingEngine {
 
             BigDecimal executionPrice = sellEntry.price();
             if (cannotExecute(order.getStockId(), executionPrice)) {
-                bandEncountered = true;
+                priceBandHit = true;
                 skipped.add(orderBook.getSellOrders().poll());
                 continue;
             }
@@ -130,19 +132,21 @@ public class OrderMatchingEngine {
             }
 
             executedSomething = true;
+            lastExecutionPrice = executionPrice;
 
-            executeTrade(order, sellOrder, executedQuantity, sellEntry.price());
-
-            orderBook.updateOrder(sellEntry, executedQuantity);
+            executeTrade(order, sellOrder, executedQuantity, executionPrice);
+            orderBookManager.syncOrderState(orderBook, order);
+            orderBookManager.syncOrderState(orderBook, sellOrder);
         }
 
         skipped.forEach(orderBook::addOrder);
-        return bandEncountered && !executedSomething;
+        return new MatchResult(priceBandHit, executedSomething, lastExecutionPrice);
     }
 
-    private boolean matchSell(Order order, OrderBook orderBook) {
-        boolean bandEncountered = false;
+    private MatchResult matchSell(Order order, OrderBook orderBook) {
+        boolean priceBandHit = false;
         boolean executedSomething = false;
+        BigDecimal lastExecutionPrice = null;
 
         List<OrderBookEntry> skipped = new ArrayList<>();
         while (order.getRemainingQuantity() > 0 && !orderBook.getBuyOrders().isEmpty()) {
@@ -160,7 +164,7 @@ public class OrderMatchingEngine {
 
             BigDecimal executionPrice = buyEntry.price();
             if (cannotExecute(order.getStockId(), executionPrice)) {
-                bandEncountered = true;
+                priceBandHit = true;
                 skipped.add(orderBook.getBuyOrders().poll());
                 continue;
             }
@@ -171,14 +175,15 @@ public class OrderMatchingEngine {
             }
 
             executedSomething = true;
+            lastExecutionPrice = executionPrice;
 
-            executeTrade(buyOrder, order, executedQuantity, buyEntry.price());
-
-            orderBook.updateOrder(buyEntry, executedQuantity);
+            executeTrade(buyOrder, order, executedQuantity, executionPrice);
+            orderBookManager.syncOrderState(orderBook, buyOrder);
+            orderBookManager.syncOrderState(orderBook, order);
         }
 
         skipped.forEach(orderBook::addOrder);
-        return bandEncountered && !executedSomething;
+        return new MatchResult(priceBandHit, executedSomething, lastExecutionPrice);
     }
 
     private void executeTrade(
@@ -193,14 +198,6 @@ public class OrderMatchingEngine {
 
         buyOrder.execute(executedQuantity);
         sellOrder.execute(executedQuantity);
-
-        if (buyOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.removeOrder(buyOrder);
-        }
-
-        if (sellOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.removeOrder(sellOrder);
-        }
 
         Fill fillOrder = Fill.builder()
                 .buyOrderId(buyOrder.getId())
@@ -217,9 +214,13 @@ public class OrderMatchingEngine {
                 buyOrder.getStockId(),
                 executedQuantity,
                 executionPrice,
+                buyOrder.getId(),
+                sellOrder.getId(),
                 buyOrder.getOrderType(),
                 sellOrder.getOrderType(),
-                buyOrder.getLimitPrice()
+                buyOrder.getReservationPrice(),
+                buyOrder.getReservationPrice() != null,
+                sellOrder.getOrderType() == OrderType.LIMIT || sellOrder.getTimeInForce() == TimeInForce.DAY
         );
 
         portfolioService.settleTrade(execution);
@@ -227,12 +228,6 @@ public class OrderMatchingEngine {
         fillRepository.save(fillOrder);
         orderRepository.save(buyOrder);
         orderRepository.save(sellOrder);
-    }
-
-    private void resolveMarketFinalStatus(Order order) {
-        if (order.getRemainingQuantity() > 0) {
-            order.cancel();
-        }
     }
 
     private boolean cannotExecute(UUID stockId, BigDecimal executionPrice) {

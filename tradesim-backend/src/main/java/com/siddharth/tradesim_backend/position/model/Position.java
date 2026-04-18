@@ -1,7 +1,7 @@
 package com.siddharth.tradesim_backend.position.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.position.PositionException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -65,7 +65,7 @@ public class Position extends AuditableEntity {
         }
 
         if (getAvailableQuantity() < quantity) {
-            throw new BusinessException("Insufficient available shares to lock");
+            throw PositionException.conflict("Insufficient available shares to lock");
         }
 
         this.lockedQuantity += quantity;
@@ -77,7 +77,7 @@ public class Position extends AuditableEntity {
         }
 
         if (lockedQuantity < quantity) {
-            throw new BusinessException("Cannot unlock more shares than locked");
+            throw PositionException.conflict("Cannot unlock more shares than locked");
         }
 
         this.lockedQuantity -= quantity;
@@ -96,7 +96,7 @@ public class Position extends AuditableEntity {
         }
 
         if (this.quantity < quantity) {
-            throw new BusinessException("Insufficient shares");
+            throw PositionException.conflict("Insufficient shares");
         }
 
         this.quantity -= quantity;

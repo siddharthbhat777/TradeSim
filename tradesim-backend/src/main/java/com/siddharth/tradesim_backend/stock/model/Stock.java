@@ -17,7 +17,9 @@ import java.util.UUID;
         name = "stocks",
         indexes = {
                 @Index(name = "idx_stock_symbol", columnList = "symbol", unique = true),
-                @Index(name = "idx_stock_sector", columnList = "sector")
+                @Index(name = "idx_stock_sector", columnList = "sector"),
+                @Index(name = "idx_stock_exchange", columnList = "exchange_id"),
+                @Index(name = "idx_stock_company", columnList = "company_id")
         }
 )
 @Getter
@@ -37,6 +39,12 @@ public class Stock extends AuditableEntity {
     @Column(nullable = false)
     private String companyName;
 
+    @Column(nullable = false)
+    private UUID companyId;
+
+    @Column(nullable = false)
+    private UUID exchangeId;
+
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal lastTradedPrice;
 
@@ -53,6 +61,10 @@ public class Stock extends AuditableEntity {
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal priceBandPercent;
+
+    private Integer totalIssuedShares;
+
+    private Integer tradableFloatShares;
 
     @Column(precision = 19, scale = 4)
     private BigDecimal dayOpen;

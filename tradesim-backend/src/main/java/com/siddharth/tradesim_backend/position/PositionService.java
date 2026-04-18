@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.position;
 
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.position.model.dto.PositionResponse;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,9 @@ public class PositionService {
 
         for (Position position : positions) {
             Stock stock = stockMap.get(position.getStockId());
+            if (stock == null) {
+                throw StockException.notFound("Stock not found");
+            }
             BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
 

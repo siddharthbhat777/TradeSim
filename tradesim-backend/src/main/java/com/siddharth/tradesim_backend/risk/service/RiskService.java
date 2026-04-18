@@ -1,14 +1,17 @@
 package com.siddharth.tradesim_backend.risk.service;
 
 import com.siddharth.tradesim_backend.auth.AuthRepository;
-import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.dto.RiskResponse;
 import com.siddharth.tradesim_backend.risk.enums.RiskLevel;
+import com.siddharth.tradesim_backend.risk.RiskException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.user.UserException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,37 +26,41 @@ public class RiskService {
     private final PositionRepository positionRepository;
     private final StockRepository stockRepository;
     private final AuthRepository authRepository;
+    private final TradingAccountService tradingAccountService;
     private final LiquidationService liquidationService;
 
-    public void validateBuyOrder(User user, BigDecimal orderValue) {
-        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
+    public void validateBuyOrder(TradingAccount tradingAccount, BigDecimal orderValue) {
+        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-        if (user.getAvailableBalance().compareTo(requiredMargin) < 0) {
-            throw new BusinessException("Insufficient margin");
+        if (tradingAccount.getAvailableBalance().compareTo(requiredMargin) < 0) {
+            throw RiskException.conflict("Insufficient margin");
         }
     }
 
-    public void checkLiquidation(User user) {
-        RiskResponse risk = calculateRisk(user);
+    public void checkLiquidation(UUID userId) {
+        authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+        RiskResponse risk = calculateRisk(userId, tradingAccount);
 
         if (risk.isUnderLiquidation()) {
-            liquidationService.liquidateUser(user);
+            liquidationService.liquidateUser(userId);
         }
     }
 
     public RiskResponse getUserRisk(UUID userId) {
-        User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
-        return calculateRisk(user);
+        authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+        return calculateRisk(userId, tradingAccount);
     }
 
-    private RiskResponse calculateRisk(User user) {
-        List<Position> positions = positionRepository.findByUserId(user.getId());
+    private RiskResponse calculateRisk(UUID userId, TradingAccount tradingAccount) {
+        List<Position> positions = positionRepository.findByUserId(userId);
 
         BigDecimal totalPositionValue = BigDecimal.ZERO;
         BigDecimal totalUnrealizedPnl = BigDecimal.ZERO;
 
         for (Position position : positions) {
-            Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> new BusinessException("Stock not found"));
+            Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
 
             BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal positionValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
@@ -63,13 +70,13 @@ public class RiskService {
             totalUnrealizedPnl = totalUnrealizedPnl.add(unrealizedPnl);
         }
 
-        BigDecimal equity = user.calculateEquity(totalPositionValue);
+        BigDecimal equity = tradingAccount.calculateEquity(totalPositionValue);
         BigDecimal marginUsed = BigDecimal.ZERO;
         if (totalPositionValue.compareTo(BigDecimal.ZERO) > 0) {
-            marginUsed = totalPositionValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
+            marginUsed = totalPositionValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
         }
 
-        BigDecimal maintenanceMargin = marginUsed.multiply(user.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+        BigDecimal maintenanceMargin = marginUsed.multiply(tradingAccount.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
         BigDecimal marginRatio = BigDecimal.ZERO;
         if (maintenanceMargin.compareTo(BigDecimal.ZERO) > 0) {
             marginRatio = equity.divide(maintenanceMargin, 4, RoundingMode.HALF_UP);

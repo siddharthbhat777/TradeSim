@@ -2,6 +2,8 @@ package com.siddharth.tradesim_backend.stock.service;
 
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.stock.StockException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +22,12 @@ public class MarketStateService {
 
     private final StockRepository stockRepository;
     private final OrderBookManager orderBookManager;
+    private final ExchangeService exchangeService;
 
     @Transactional
     public void recordTrade(UUID stockId, BigDecimal executionPrice, int quantity) {
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
-        LocalDate today = LocalDate.now();
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
+        LocalDate today = exchangeService.currentExchangeDate(stock.getExchangeId());
 
         if (stock.getLastTradingDate() == null || !stock.getLastTradingDate().equals(today)) {
             stock.setDayOpen(executionPrice);
@@ -67,13 +70,13 @@ public class MarketStateService {
                 return bestAsk.price();
             }
 
-            Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
+            Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
             return stock.getLastTradedPrice();
         });
     }
 
     public boolean isWithinPriceBand(UUID stockId, BigDecimal executionPrice) {
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new IllegalStateException("Stock not found"));
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
 
         BigDecimal referencePrice = stock.getLastTradedPrice();
         BigDecimal bandPercent = stock.getPriceBandPercent();

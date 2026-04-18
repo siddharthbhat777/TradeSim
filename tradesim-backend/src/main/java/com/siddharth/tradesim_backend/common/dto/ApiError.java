@@ -1,17 +1,23 @@
 package com.siddharth.tradesim_backend.common.dto;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
 import java.time.Instant;
+import java.util.Map;
 
-@Data
+@Getter
 @Builder
 public class ApiError {
-    private String message;
-    private String errorCode;
-    private String path;
+    private final int status;
+    private final String error;
+    private final String errorCode;
+    private final String message;
+    private final String path;
 
     @Builder.Default
-    private Instant timestamp = Instant.now();
+    private final Instant timestamp = Instant.now();
+
+    @Builder.Default
+    private final Map<String, String> fieldErrors = Map.of();
 }

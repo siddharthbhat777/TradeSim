@@ -24,7 +24,7 @@ public class LiquidationScheduler {
 
         for (User user : users) {
             try {
-                riskService.checkLiquidation(user);
+                riskService.checkLiquidation(user.getId());
             } catch (Exception e) {
                 log.error("Liquidation check failed for user: {}", user.getId(), e);
             }

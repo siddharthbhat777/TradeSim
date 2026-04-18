@@ -2,7 +2,6 @@ package com.siddharth.tradesim_backend.dev_only;
 
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.dev_only.dto.PositionRequest;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +19,9 @@ public class DevOnlyController {
     private final DevOnlyService devOnlyService;
 
     @GetMapping("jwt/generate-key")
+    @SuppressWarnings("deprecation")
     public String generateJwtSecretKey() {
-        byte[] keyBytes = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS512)
-                .getEncoded();
+        byte[] keyBytes = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS512).getEncoded();
         return Base64.getEncoder().encodeToString(keyBytes);
     }
 
@@ -35,10 +34,5 @@ public class DevOnlyController {
     @GetMapping("users")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(devOnlyService.fetchUsers());
-    }
-
-    @PutMapping("seed-holding")
-    public ResponseEntity<String> seedHolding(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody PositionRequest holdingRequest) {
-        return ResponseEntity.ok(devOnlyService.seedPosition(userPrincipal.getUserId(), holdingRequest));
     }
 }

@@ -1,19 +1,22 @@
 package com.siddharth.tradesim_backend.risk.service;
 
-import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
+import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.model.Order;
-import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
+import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.stock.model.Stock;
+import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,19 +32,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LiquidationService {
     private final PositionRepository positionRepository;
     private final StockRepository stockRepository;
+    private final TradingAccountService tradingAccountService;
     private final OrderMatchingEngine orderMatchingEngine;
     private final OrderBookManager orderBookManager;
     private final OrderRepository orderRepository;
+    private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
     private final Set<UUID> liquidatingUsers = ConcurrentHashMap.newKeySet();
 
-    public void liquidateUser(User user) {
-        if (!liquidatingUsers.add(user.getId())) {
+    public void liquidateUser(UUID userId) {
+        if (!liquidatingUsers.add(userId)) {
             return;
         }
 
         try {
-            List<Position> positions = positionRepository.findByUserId(user.getId());
+            List<Position> positions = positionRepository.findByUserId(userId);
 
             if (positions.isEmpty()) return;
 
@@ -61,7 +66,7 @@ public class LiquidationService {
                         break;
                     }
 
-                    if (!shouldLiquidate(user)) {
+                    if (!shouldLiquidate(userId)) {
                         return;
                     }
 
@@ -72,7 +77,7 @@ public class LiquidationService {
                                 if (bestBid == null) {
                                     return false;
                                 }
-                                if (bestBid.userId() != null && bestBid.userId().equals(user.getId())) {
+                                if (bestBid.userId() != null && bestBid.userId().equals(userId)) {
                                     return false;
                                 }
                                 return marketStateService.isWithinPriceBand(freshPosition.getStockId(), bestBid.price());
@@ -85,10 +90,11 @@ public class LiquidationService {
                     int sellQuantity = Math.max(1, freshPosition.getQuantity() / 10);
 
                     Order liquidationOrder = Order.builder()
-                            .userId(user.getId())
+                            .userId(userId)
                             .stockId(freshPosition.getStockId())
                             .side(OrderSide.SELL)
                             .orderType(OrderType.MARKET)
+                            .timeInForce(TimeInForce.IOC)
                             .quantity(sellQuantity)
                             .remainingQuantity(sellQuantity)
                             .status(OrderStatus.OPEN)
@@ -97,13 +103,18 @@ public class LiquidationService {
                     orderRepository.save(liquidationOrder);
                     orderMatchingEngine.match(liquidationOrder);
 
-                    if (liquidationOrder.getStatus() == OrderStatus.CANCELLED) {
+                    int executedQuantity = liquidationOrder.getQuantity() - liquidationOrder.getRemainingQuantity();
+                    if (liquidationOrder.getRemainingQuantity() > 0) {
+                        orderLifecycleService.cancelOrder(liquidationOrder);
+                    }
+
+                    if (executedQuantity == 0) {
                         break;
                     }
                 }
             }
         } finally {
-            liquidatingUsers.remove(user.getId());
+            liquidatingUsers.remove(userId);
         }
     }
 
@@ -116,8 +127,9 @@ public class LiquidationService {
         return unrealizedPnl.min(BigDecimal.ZERO);
     }
 
-    private boolean shouldLiquidate(User user) {
-        List<Position> positions = positionRepository.findByUserId(user.getId());
+    private boolean shouldLiquidate(UUID userId) {
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+        List<Position> positions = positionRepository.findByUserId(userId);
 
         BigDecimal totalPositionValue = BigDecimal.ZERO;
 
@@ -129,9 +141,9 @@ public class LiquidationService {
             totalPositionValue = totalPositionValue.add(positionValue);
         }
 
-        BigDecimal equity = user.calculateEquity(totalPositionValue);
-        BigDecimal marginUsed = totalPositionValue.divide(BigDecimal.valueOf(user.getLeverage()), 4, RoundingMode.HALF_UP);
-        BigDecimal maintenanceMargin = marginUsed.multiply(user.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+        BigDecimal equity = tradingAccount.calculateEquity(totalPositionValue);
+        BigDecimal marginUsed = totalPositionValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal maintenanceMargin = marginUsed.multiply(tradingAccount.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
 
         return equity.compareTo(maintenanceMargin) < 0;
     }
