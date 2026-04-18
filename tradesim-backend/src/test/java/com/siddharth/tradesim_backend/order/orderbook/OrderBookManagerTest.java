@@ -11,7 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,15 +22,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class OrderBookManagerTest {
     private OrderBookManager orderBookManager;
+    private OrderRepository orderRepository;
     private UUID stockId;
 
     @BeforeEach
     void setup() {
-        OrderRepository orderRepository = mock(OrderRepository.class);
-        orderBookManager = new OrderBookManager(orderRepository);
+        orderRepository = mock(OrderRepository.class);
+        Clock clock = Clock.fixed(Instant.parse("2026-04-18T10:00:00Z"), ZoneOffset.UTC);
+        orderBookManager = new OrderBookManager(orderRepository, clock);
         stockId = UUID.randomUUID();
     }
 
@@ -85,5 +91,23 @@ class OrderBookManagerTest {
         OrderBook book2 = orderBookManager.getOrderBook(stockId);
 
         assertSame(book1, book2);
+    }
+
+    @Test
+    void shouldSkipExpiredDayOrdersWhenLoadingPendingOrders() {
+        Order activeOrder = createOrder(OrderSide.BUY);
+        ReflectionTestUtils.setField(activeOrder, "expiresAt", Instant.parse("2026-04-18T10:30:00Z"));
+
+        Order expiredOrder = createOrder(OrderSide.SELL);
+        ReflectionTestUtils.setField(expiredOrder, "expiresAt", Instant.parse("2026-04-18T09:30:00Z"));
+
+        when(orderRepository.findByStatusIn(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED))).thenReturn(List.of(activeOrder, expiredOrder));
+
+        orderBookManager.loadPendingOrdersFromDatabase();
+
+        assertNotNull(orderBookManager.getOrder(activeOrder.getId()));
+        assertNull(orderBookManager.getOrder(expiredOrder.getId()));
+        assertEquals(1, orderBookManager.getOrderBook(stockId).getBuyOrders().size());
+        assertEquals(0, orderBookManager.getOrderBook(stockId).getSellOrders().size());
     }
 }

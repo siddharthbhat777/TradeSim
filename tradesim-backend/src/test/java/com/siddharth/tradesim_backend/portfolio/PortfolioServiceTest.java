@@ -162,8 +162,8 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(tradingAccountService.getTradingAccountByUserId(buyerId)).thenReturn(buyerTradingAccount);
-        when(tradingAccountService.getTradingAccountByUserId(sellerId)).thenReturn(sellerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(5);
@@ -214,8 +214,8 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(tradingAccountService.getTradingAccountByUserId(buyerId)).thenReturn(buyerTradingAccount);
-        when(tradingAccountService.getTradingAccountByUserId(sellerId)).thenReturn(sellerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(buyerTradingAccount.getLeverage()).thenReturn(10);
@@ -262,8 +262,8 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(tradingAccountService.getTradingAccountByUserId(buyerId)).thenReturn(buyerTradingAccount);
-        when(tradingAccountService.getTradingAccountByUserId(sellerId)).thenReturn(sellerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(0);
@@ -319,8 +319,8 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(tradingAccountService.getTradingAccountByUserId(buyerId)).thenReturn(buyerTradingAccount);
-        when(tradingAccountService.getTradingAccountByUserId(sellerId)).thenReturn(sellerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
@@ -373,8 +373,8 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(tradingAccountService.getTradingAccountByUserId(buyerId)).thenReturn(buyerTradingAccount);
-        when(tradingAccountService.getTradingAccountByUserId(sellerId)).thenReturn(sellerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
@@ -416,8 +416,8 @@ class PortfolioServiceTest {
 
         when(authRepository.findById(buyerId)).thenReturn(Optional.of(buyer));
         when(authRepository.findById(sellerId)).thenReturn(Optional.of(seller));
-        when(tradingAccountService.getTradingAccountByUserId(buyerId)).thenReturn(buyerTradingAccount);
-        when(tradingAccountService.getTradingAccountByUserId(sellerId)).thenReturn(sellerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(buyerTradingAccount.getLeverage()).thenReturn(10);

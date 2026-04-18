@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +44,7 @@ class OrderMatchingEngineTest {
         portfolioService = mock(PortfolioService.class);
         marketStateService = mock(MarketStateService.class);
 
-        orderBookManager = new OrderBookManager(orderRepository);
+        orderBookManager = new OrderBookManager(orderRepository, Clock.fixed(Instant.parse("2026-04-18T10:00:00Z"), ZoneOffset.UTC));
         engine = new OrderMatchingEngine(orderBookManager, orderRepository, fillRepository, portfolioService, marketStateService);
 
         stockId = UUID.randomUUID();

@@ -1,7 +1,6 @@
 package com.siddharth.tradesim_backend.order.orderbook;
 
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
-import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.model.Fill;
@@ -91,9 +90,8 @@ public class OrderMatchingEngine {
                 lastExecutionPrice = executionPrice;
 
                 executeTrade(buyOrder, sellOrder, executedQuantity, executionPrice);
-
-                orderBook.updateOrder(buyEntry, executedQuantity);
-                orderBook.updateOrder(sellEntry, executedQuantity);
+                orderBookManager.syncOrderState(orderBook, buyOrder);
+                orderBookManager.syncOrderState(orderBook, sellOrder);
             }
 
             skipped.forEach(orderBook::addOrder);
@@ -137,7 +135,8 @@ public class OrderMatchingEngine {
             lastExecutionPrice = executionPrice;
 
             executeTrade(order, sellOrder, executedQuantity, executionPrice);
-            orderBook.updateOrder(sellEntry, executedQuantity);
+            orderBookManager.syncOrderState(orderBook, order);
+            orderBookManager.syncOrderState(orderBook, sellOrder);
         }
 
         skipped.forEach(orderBook::addOrder);
@@ -179,7 +178,8 @@ public class OrderMatchingEngine {
             lastExecutionPrice = executionPrice;
 
             executeTrade(buyOrder, order, executedQuantity, executionPrice);
-            orderBook.updateOrder(buyEntry, executedQuantity);
+            orderBookManager.syncOrderState(orderBook, buyOrder);
+            orderBookManager.syncOrderState(orderBook, order);
         }
 
         skipped.forEach(orderBook::addOrder);
@@ -198,14 +198,6 @@ public class OrderMatchingEngine {
 
         buyOrder.execute(executedQuantity);
         sellOrder.execute(executedQuantity);
-
-        if (buyOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.removeOrder(buyOrder);
-        }
-
-        if (sellOrder.getStatus() == OrderStatus.FILLED) {
-            orderBookManager.removeOrder(sellOrder);
-        }
 
         Fill fillOrder = Fill.builder()
                 .buyOrderId(buyOrder.getId())

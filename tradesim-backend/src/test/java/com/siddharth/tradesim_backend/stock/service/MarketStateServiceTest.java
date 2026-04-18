@@ -4,6 +4,8 @@ import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,9 @@ class MarketStateServiceTest {
 
     @Mock
     private OrderBookManager orderBookManager;
+
+    @Mock
+    private ExchangeService exchangeService;
 
     @InjectMocks
     private MarketStateService marketStateService;
@@ -109,10 +114,12 @@ class MarketStateServiceTest {
 
         Stock stock = Stock.builder()
                 .id(stockId)
+                .exchangeId(UUID.randomUUID())
                 .totalVolume(0L)
                 .build();
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeService.currentExchangeDate(stock.getExchangeId())).thenReturn(LocalDate.of(2026, 4, 18));
 
         marketStateService.recordTrade(stockId, BigDecimal.valueOf(100), 10);
 
@@ -131,7 +138,8 @@ class MarketStateServiceTest {
 
         Stock stock = Stock.builder()
                 .id(stockId)
-                .lastTradingDate(LocalDate.now())
+                .exchangeId(UUID.randomUUID())
+                .lastTradingDate(LocalDate.of(2026, 4, 18))
                 .dayHigh(BigDecimal.valueOf(100))
                 .dayLow(BigDecimal.valueOf(90))
                 .dayVolume(20L)
@@ -139,6 +147,7 @@ class MarketStateServiceTest {
                 .build();
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeService.currentExchangeDate(stock.getExchangeId())).thenReturn(LocalDate.of(2026, 4, 18));
 
         marketStateService.recordTrade(stockId, BigDecimal.valueOf(110), 5);
 
@@ -193,7 +202,7 @@ class MarketStateServiceTest {
         when(orderBook.getSellOrders()).thenReturn(sellQueue());
         when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalStateException.class, () -> marketStateService.calculateIndicativePrice(stockId));
+        assertThrows(BusinessException.class, () -> marketStateService.calculateIndicativePrice(stockId));
     }
 
     private OrderBookEntry buyEntry(BigDecimal price) {

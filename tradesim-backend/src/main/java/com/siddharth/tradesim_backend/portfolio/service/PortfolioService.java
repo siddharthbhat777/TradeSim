@@ -122,6 +122,9 @@ public class PortfolioService {
 
         for (Position position : positions) {
             Stock stock = stockMap.get(position.getStockId());
+            if (stock == null) {
+                throw StockException.notFound("Stock not found");
+            }
             BigDecimal currentPrice = stock.getLastTradedPrice();
             BigDecimal value = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
 
@@ -135,6 +138,9 @@ public class PortfolioService {
         return positions.stream()
                 .map(position -> {
                     Stock stock = stockMap.get(position.getStockId());
+                    if (stock == null) {
+                        throw StockException.notFound("Stock not found");
+                    }
                     BigDecimal value = positionValues.get(position.getStockId());
                     BigDecimal exposurePercent = BigDecimal.ZERO;
 
@@ -164,8 +170,14 @@ public class PortfolioService {
         authRepository.findById(execution.buyerId()).orElseThrow(() -> UserException.notFound("User not found"));
         authRepository.findById(execution.sellerId()).orElseThrow(() -> UserException.notFound("User not found"));
 
-        TradingAccount buyerTradingAccount = tradingAccountService.getTradingAccountByUserId(execution.buyerId());
-        TradingAccount sellerTradingAccount = tradingAccountService.getTradingAccountByUserId(execution.sellerId());
+        UUID firstLockedUserId = execution.buyerId().compareTo(execution.sellerId()) <= 0 ? execution.buyerId() : execution.sellerId();
+        UUID secondLockedUserId = firstLockedUserId.equals(execution.buyerId()) ? execution.sellerId() : execution.buyerId();
+
+        TradingAccount firstLockedAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(firstLockedUserId);
+        TradingAccount secondLockedAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(secondLockedUserId);
+
+        TradingAccount buyerTradingAccount = execution.buyerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
+        TradingAccount sellerTradingAccount = execution.sellerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
 
         Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
 

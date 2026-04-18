@@ -9,6 +9,8 @@ import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
 import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
 import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
@@ -70,6 +72,9 @@ class IpoServiceTest {
     private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
 
     @Mock
+    private ExchangeService exchangeService;
+
+    @Mock
     private TradingAccountService tradingAccountService;
 
     @Mock
@@ -106,6 +111,7 @@ class IpoServiceTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .companyId(companyId)
+                .exchangeId(UUID.randomUUID())
                 .status(StockStatus.HALTED)
                 .build();
 
@@ -128,6 +134,7 @@ class IpoServiceTest {
                 primaryContactUserId,
                 "Only an active primary contact can submit IPO offers"
         );
+        verify(exchangeService).assertExchangeActive(stock.getExchangeId());
     }
 
     @Test
@@ -158,6 +165,7 @@ class IpoServiceTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .companyId(companyId)
+                .exchangeId(UUID.randomUUID())
                 .status(StockStatus.HALTED)
                 .build();
 
@@ -210,7 +218,7 @@ class IpoServiceTest {
         when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(ipoSubscriptionRepository.existsByIpoOfferIdAndUserId(ipoOfferId, userId)).thenReturn(false);
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(ipoSubscriptionRepository.save(any(IpoSubscription.class))).thenAnswer(invocation -> {
             IpoSubscription subscription = invocation.getArgument(0);
             subscription.setId(UUID.randomUUID());
@@ -256,6 +264,7 @@ class IpoServiceTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .companyId(companyId)
+                .exchangeId(UUID.randomUUID())
                 .symbol("TS_MOTORS")
                 .lastTradedPrice(BigDecimal.valueOf(250.50))
                 .sector(Sector.INDUSTRIALS)
@@ -313,8 +322,8 @@ class IpoServiceTest {
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(subscriptionOne, subscriptionTwo));
-        when(tradingAccountService.getTradingAccountByUserId(userOneId)).thenReturn(tradingAccountOne);
-        when(tradingAccountService.getTradingAccountByUserId(userTwoId)).thenReturn(tradingAccountTwo);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(userOneId)).thenReturn(tradingAccountOne);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(userTwoId)).thenReturn(tradingAccountTwo);
         when(positionRepository.findByUserIdAndStockId(userOneId, stockId)).thenReturn(Optional.empty());
         when(positionRepository.findByUserIdAndStockId(userTwoId, stockId)).thenReturn(Optional.empty());
         when(stockService.activateStockFromIpoAllotment(stockId, 100, 100)).thenReturn(activatedStock);
@@ -369,6 +378,7 @@ class IpoServiceTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .companyId(companyId)
+                .exchangeId(UUID.randomUUID())
                 .status(StockStatus.HALTED)
                 .build();
 
@@ -384,5 +394,41 @@ class IpoServiceTest {
 
         assertThat(exception.getMessage()).isEqualTo("Not enough subscriptions to finalize this IPO offer");
         verify(stockService, never()).activateStockFromIpoAllotment(any(), anyInt(), anyInt());
+    }
+
+    @Test
+    void shouldRejectIpoSubmissionWhenExchangeIsInactive() {
+        UUID companyId = UUID.randomUUID();
+        UUID stockId = UUID.randomUUID();
+        UUID primaryContactUserId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        CreateIpoOfferRequest request = new CreateIpoOfferRequest(
+                BigDecimal.valueOf(125.50),
+                100,
+                5,
+                Instant.now().minusSeconds(60),
+                Instant.now().plusSeconds(600)
+        );
+
+        Company company = Company.builder()
+                .id(companyId)
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .companyId(companyId)
+                .exchangeId(exchangeId)
+                .status(StockStatus.HALTED)
+                .build();
+
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        doThrow(ExchangeException.conflict("Exchange is not active")).when(exchangeService).assertExchangeActive(exchangeId);
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> ipoService.submitIpoOffer(companyId, stockId, primaryContactUserId, request));
+
+        assertThat(exception.getMessage()).isEqualTo("Exchange is not active");
     }
 }

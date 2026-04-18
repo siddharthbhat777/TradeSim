@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
 import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
 import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
@@ -46,6 +47,7 @@ public class IpoService {
     private final StockRepository stockRepository;
     private final AuthRepository authRepository;
     private final CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
+    private final ExchangeService exchangeService;
     private final TradingAccountService tradingAccountService;
     private final PositionRepository positionRepository;
     private final StockService stockService;
@@ -145,7 +147,7 @@ public class IpoService {
             throw IpoException.conflict("You have already subscribed to this IPO offer");
         }
 
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
         BigDecimal subscriptionAmount = calculateSubscriptionAmount(ipoOffer);
 
         tradingAccount.lockFunds(subscriptionAmount);
@@ -225,9 +227,10 @@ public class IpoService {
         List<IpoSubscription> losingSubscriptions = shuffledSubscriptions.subList(ipoOffer.getMaxAllottees(), shuffledSubscriptions.size());
 
         BigDecimal subscriptionAmount = calculateSubscriptionAmount(ipoOffer);
+        Map<UUID, TradingAccount> lockedAccounts = lockTradingAccounts(shuffledSubscriptions.stream().map(IpoSubscription::getUserId).toList());
 
         for (IpoSubscription winningSubscription : winningSubscriptions) {
-            TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(winningSubscription.getUserId());
+            TradingAccount tradingAccount = lockedAccounts.get(winningSubscription.getUserId());
             tradingAccount.debitLockedFunds(subscriptionAmount);
             tradingAccountService.saveTradingAccount(tradingAccount);
             ledgerService.recordIpoAllotmentDebit(tradingAccount, subscriptionAmount, stock.getId(), ipoOffer.getId());
@@ -244,7 +247,7 @@ public class IpoService {
         }
 
         for (IpoSubscription losingSubscription : losingSubscriptions) {
-            TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(losingSubscription.getUserId());
+            TradingAccount tradingAccount = lockedAccounts.get(losingSubscription.getUserId());
             tradingAccount.unlockFunds(losingSubscription.getLockedAmount());
             tradingAccountService.saveTradingAccount(tradingAccount);
             ledgerService.recordIpoSubscriptionUnlock(tradingAccount, losingSubscription.getLockedAmount(), stock.getId(), ipoOffer.getId());
@@ -306,6 +309,8 @@ public class IpoService {
             throw IpoException.conflict("IPO is only allowed for HALTED stocks");
         }
 
+        exchangeService.assertExchangeActive(stock.getExchangeId());
+
         if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
             throw IpoException.conflict("Initial share allocation has already been applied to this stock");
         }
@@ -319,6 +324,17 @@ public class IpoService {
 
     private int calculateTotalSharesOffered(IpoOffer ipoOffer) {
         return ipoOffer.getSharesPerAllottee() * ipoOffer.getMaxAllottees();
+    }
+
+    private Map<UUID, TradingAccount> lockTradingAccounts(List<UUID> userIds) {
+        Map<UUID, TradingAccount> lockedAccounts = new HashMap<>();
+
+        userIds.stream()
+                .distinct()
+                .sorted(UUID::compareTo)
+                .forEach(userId -> lockedAccounts.put(userId, tradingAccountService.getTradingAccountByUserIdForUpdate(userId)));
+
+        return lockedAccounts;
     }
 
     private void shuffleSubscriptions(List<IpoSubscription> subscriptions, UUID ipoOfferId) {

@@ -5,8 +5,7 @@ import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
-import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
-import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
 import com.siddharth.tradesim_backend.listing.model.dto.CreateListingRequest;
@@ -27,7 +26,7 @@ import java.util.UUID;
 public class ListingService {
     private final ListingRequestRepository listingRequestRepository;
     private final CompanyRepository companyRepository;
-    private final ExchangeRepository exchangeRepository;
+    private final ExchangeService exchangeService;
     private final CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
     private final StockService stockService;
 
@@ -41,7 +40,7 @@ public class ListingService {
 
         companyRepresentativeAssignmentService.assertActiveRepresentativeAssignment(companyId, actingUserId);
 
-        exchangeRepository.findById(request.exchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+        exchangeService.assertExchangeActive(request.exchangeId());
 
         if (stockService.existsBySymbol(request.symbol())) {
             throw ListingException.conflict("Stock with symbol " + request.symbol() + " already exists");
@@ -83,7 +82,7 @@ public class ListingService {
             throw CompanyException.conflict("Company is not active");
         }
 
-        exchangeRepository.findById(listingRequest.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+        exchangeService.assertExchangeActive(listingRequest.getExchangeId());
 
         StockResponse createdStock = stockService.createStockFromListingApproval(
                 listingRequest.getCompanyId(),

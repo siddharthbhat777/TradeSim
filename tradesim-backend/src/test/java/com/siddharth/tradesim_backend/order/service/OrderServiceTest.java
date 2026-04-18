@@ -107,7 +107,7 @@ class OrderServiceTest {
         User user = mock(User.class);
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
         when(stock.getExchangeId()).thenReturn(exchangeId);

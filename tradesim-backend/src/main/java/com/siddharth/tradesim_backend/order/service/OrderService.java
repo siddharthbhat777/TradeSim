@@ -67,7 +67,6 @@ public class OrderService {
             throw UserException.conflict("User account is not active");
         }
 
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
         Stock stock = stockRepository.findById(request.stockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
 
         exchangeService.assertTradingAllowed(stock.getExchangeId());
@@ -78,41 +77,50 @@ public class OrderService {
 
         validateOrderShape(request);
 
-        BigDecimal reservationPrice = null;
-        if (request.side() == OrderSide.BUY) {
-            reservationPrice = prepareBuyReservation(tradingAccount, stock, request);
-        } else {
-            prepareSellReservation(userId, stock.getId(), request);
-        }
-
         Instant expiresAt = request.timeInForce() == TimeInForce.DAY ? exchangeService.resolveDayOrderExpiry(stock.getExchangeId()) : null;
+        ReentrantLock orderBookLock = orderBookManager.getLock(stock.getId());
+        orderBookLock.lock();
+        TradingAccount tradingAccount = null;
+        Order order;
+        MatchResult result;
+        try {
+            BigDecimal reservationPrice = null;
+            if (request.side() == OrderSide.BUY) {
+                tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
+                reservationPrice = prepareBuyReservation(tradingAccount, stock, request);
+            } else {
+                prepareSellReservation(userId, stock.getId(), request);
+            }
 
-        BigDecimal initialBookPrice = request.orderType() == OrderType.LIMIT ? request.limitPrice() : null;
+            BigDecimal initialBookPrice = request.orderType() == OrderType.LIMIT ? request.limitPrice() : null;
 
-        Order order = Order.builder()
-                .userId(userId)
-                .stockId(stock.getId())
-                .side(request.side())
-                .orderType(request.orderType())
-                .timeInForce(request.timeInForce())
-                .quantity(request.quantity())
-                .remainingQuantity(request.quantity())
-                .limitPrice(request.limitPrice())
-                .reservationPrice(reservationPrice)
-                .bookPrice(initialBookPrice)
-                .expiresAt(expiresAt)
-                .status(OrderStatus.OPEN)
-                .build();
+            order = Order.builder()
+                    .userId(userId)
+                    .stockId(stock.getId())
+                    .side(request.side())
+                    .orderType(request.orderType())
+                    .timeInForce(request.timeInForce())
+                    .quantity(request.quantity())
+                    .remainingQuantity(request.quantity())
+                    .limitPrice(request.limitPrice())
+                    .reservationPrice(reservationPrice)
+                    .bookPrice(initialBookPrice)
+                    .expiresAt(expiresAt)
+                    .status(OrderStatus.OPEN)
+                    .build();
 
-        orderRepository.save(order);
-        recordLockLedgerIfRequired(order, tradingAccount);
+            orderRepository.save(order);
+            recordLockLedgerIfRequired(order, tradingAccount);
 
-        if (order.getBookPrice() != null) {
-            orderBookManager.addOrder(order);
+            if (order.getBookPrice() != null) {
+                orderBookManager.addOrder(order);
+            }
+
+            result = orderMatchingEngine.match(order);
+            finalizeRemainder(order, stock, result);
+        } finally {
+            orderBookLock.unlock();
         }
-
-        MatchResult result = orderMatchingEngine.match(order);
-        finalizeRemainder(order, stock, result);
 
         riskService.checkLiquidation(userId);
         orderRepository.save(order);

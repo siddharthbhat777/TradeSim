@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
@@ -35,6 +36,7 @@ public class LiquidationService {
     private final OrderMatchingEngine orderMatchingEngine;
     private final OrderBookManager orderBookManager;
     private final OrderRepository orderRepository;
+    private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
     private final Set<UUID> liquidatingUsers = ConcurrentHashMap.newKeySet();
 
@@ -101,7 +103,12 @@ public class LiquidationService {
                     orderRepository.save(liquidationOrder);
                     orderMatchingEngine.match(liquidationOrder);
 
-                    if (liquidationOrder.getStatus() == OrderStatus.CANCELLED) {
+                    int executedQuantity = liquidationOrder.getQuantity() - liquidationOrder.getRemainingQuantity();
+                    if (liquidationOrder.getRemainingQuantity() > 0) {
+                        orderLifecycleService.cancelOrder(liquidationOrder);
+                    }
+
+                    if (executedQuantity == 0) {
                         break;
                     }
                 }

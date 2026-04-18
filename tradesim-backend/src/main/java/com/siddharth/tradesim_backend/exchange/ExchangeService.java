@@ -111,10 +111,7 @@ public class ExchangeService {
     @Transactional(readOnly = true)
     public void assertTradingAllowed(UUID exchangeId) {
         Exchange exchange = findExchange(exchangeId);
-
-        if (exchange.getStatus() != ExchangeStatus.ACTIVE) {
-            throw ExchangeException.conflict("Exchange is not active");
-        }
+        assertExchangeActive(exchange);
 
         ZoneId zoneId = parseZoneId(exchange.getTimezone());
         ZonedDateTime exchangeNow = nowAt(zoneId);
@@ -140,8 +137,26 @@ public class ExchangeService {
         return marketCloseAt(exchange, exchangeNow.toLocalDate(), zoneId).toInstant();
     }
 
+    @Transactional(readOnly = true)
+    public void assertExchangeActive(UUID exchangeId) {
+        assertExchangeActive(findExchange(exchangeId));
+    }
+
+    @Transactional(readOnly = true)
+    public LocalDate currentExchangeDate(UUID exchangeId) {
+        Exchange exchange = findExchange(exchangeId);
+        ZoneId zoneId = parseZoneId(exchange.getTimezone());
+        return nowAt(zoneId).toLocalDate();
+    }
+
     private Exchange findExchange(UUID exchangeId) {
         return exchangeRepository.findById(exchangeId).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+    }
+
+    private void assertExchangeActive(Exchange exchange) {
+        if (exchange.getStatus() != ExchangeStatus.ACTIVE) {
+            throw ExchangeException.conflict("Exchange is not active");
+        }
     }
 
     private ZoneId validateRequest(CreateExchangeRequest request) {

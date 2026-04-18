@@ -90,7 +90,7 @@ class OrderLifecycleServiceTest {
         Order order = createOrder(OrderSide.BUY, OrderType.LIMIT, TimeInForce.DAY, 10, BigDecimal.valueOf(100), BigDecimal.valueOf(100));
 
         TradingAccount tradingAccount = mock(TradingAccount.class);
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getLeverage()).thenReturn(5);
 
         service.cancelOrder(order);
@@ -108,7 +108,7 @@ class OrderLifecycleServiceTest {
         Order order = createOrder(OrderSide.BUY, OrderType.MARKET, TimeInForce.DAY, 10, null, BigDecimal.valueOf(110));
 
         TradingAccount tradingAccount = mock(TradingAccount.class);
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getLeverage()).thenReturn(5);
 
         service.cancelOrder(order);
@@ -151,7 +151,7 @@ class OrderLifecycleServiceTest {
 
         service.cancelOrder(order);
 
-        verify(tradingAccountService, never()).getTradingAccountByUserId(any());
+        verify(tradingAccountService, never()).getTradingAccountByUserIdForUpdate(any());
         verify(orderBookManager).removeOrder(order);
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());

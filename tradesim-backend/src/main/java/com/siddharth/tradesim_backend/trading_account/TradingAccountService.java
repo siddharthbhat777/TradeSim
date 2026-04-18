@@ -46,6 +46,11 @@ public class TradingAccountService {
     }
 
     @Transactional
+    public TradingAccount getTradingAccountByUserIdForUpdate(UUID userId) {
+        return tradingAccountRepository.findByUserIdForUpdate(userId).orElseThrow(() -> TradingAccountException.notFound("Trading account not found"));
+    }
+
+    @Transactional
     public void saveTradingAccount(TradingAccount tradingAccount) {
         tradingAccountRepository.save(tradingAccount);
     }

@@ -69,7 +69,7 @@ public class OrderLifecycleService {
             return;
         }
 
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(order.getUserId());
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(order.getUserId());
         BigDecimal unlockAmount = order.getReservationPrice()
                 .multiply(BigDecimal.valueOf(remainingQty))
                 .divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);

@@ -6,8 +6,8 @@ import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
-import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
-import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
 import com.siddharth.tradesim_backend.listing.model.dto.CreateListingRequest;
@@ -45,7 +45,7 @@ class ListingServiceTest {
     private CompanyRepository companyRepository;
 
     @Mock
-    private ExchangeRepository exchangeRepository;
+    private ExchangeService exchangeService;
 
     @Mock
     private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
@@ -77,7 +77,6 @@ class ListingServiceTest {
                 .build();
 
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
-        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(Exchange.builder().id(exchangeId).build()));
         when(stockService.existsBySymbol("INFY")).thenReturn(false);
         when(listingRequestRepository.existsBySymbolAndStatus("INFY", ListingStatus.PENDING)).thenReturn(false);
         when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> {
@@ -92,6 +91,7 @@ class ListingServiceTest {
         assertThat(response.status()).isEqualTo(ListingStatus.PENDING);
         assertThat(response.priceBandPercent()).isEqualByComparingTo(BigDecimal.TEN);
         verify(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, representativeUserId);
+        verify(exchangeService).assertExchangeActive(exchangeId);
     }
 
     @Test
@@ -161,7 +161,6 @@ class ListingServiceTest {
 
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
-        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(Exchange.builder().id(exchangeId).build()));
         when(stockService.createStockFromListingApproval(
                 eq(companyId),
                 eq(exchangeId),
@@ -185,6 +184,7 @@ class ListingServiceTest {
                 eq(Sector.TECHNOLOGY),
                 eq(BigDecimal.TEN)
         );
+        verify(exchangeService).assertExchangeActive(exchangeId);
     }
 
     @Test
@@ -233,5 +233,34 @@ class ListingServiceTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> listingService.approveListingRequest(listingRequestId, UUID.randomUUID()));
 
         assertThat(exception.getMessage()).isEqualTo("Only pending listing requests can be reviewed");
+    }
+
+    @Test
+    void shouldRejectListingSubmissionWhenExchangeIsInactive() {
+        UUID companyId = UUID.randomUUID();
+        UUID representativeUserId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        CreateListingRequest request = new CreateListingRequest(
+                "INFY",
+                exchangeId,
+                BigDecimal.valueOf(1500.25),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN
+        );
+
+        Company company = Company.builder()
+                .id(companyId)
+                .name("Infosys")
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        doThrow(ExchangeException.conflict("Exchange is not active")).when(exchangeService).assertExchangeActive(exchangeId);
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> listingService.submitListingRequest(companyId, representativeUserId, request));
+
+        assertThat(exception.getMessage()).isEqualTo("Exchange is not active");
+        verify(listingRequestRepository, never()).save(any());
     }
 }

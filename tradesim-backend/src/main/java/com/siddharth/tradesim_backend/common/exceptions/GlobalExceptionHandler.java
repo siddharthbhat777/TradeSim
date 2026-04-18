@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
+@SuppressWarnings("unused")
 public class GlobalExceptionHandler {
     private final ApiErrorResponseWriter apiErrorResponseWriter;
 
