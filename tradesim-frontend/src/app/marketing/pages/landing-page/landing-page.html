@@ -1,0 +1,11 @@
+<p>landing-page works!</p>
+@if(!isLoggedIn()) {
+<section>
+    <button>Login</button>
+    <button>Signup</button>
+</section>
+} @else {
+<section>Username</section>
+}
+<br>
+<button [routerLink]="isLoggedIn() ? 'app' : ''">Go to app</button>
