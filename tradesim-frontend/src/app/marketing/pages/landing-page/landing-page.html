@@ -1,11 +1,15 @@
 <p>landing-page works!</p>
 @if(!isLoggedIn()) {
 <section>
-    <button>Login</button>
-    <button>Signup</button>
+    <button (click)="showAuthDialog(authStatus.Login)">Login</button>
+    <button (click)="showAuthDialog(authStatus.Register)">Signup</button>
 </section>
 } @else {
 <section>Username</section>
 }
 <br>
+
+@if(showAuth()) {
+<app-auth (showAuth)="closeAuth()" />
+}
 <button [routerLink]="isLoggedIn() ? 'app' : ''">Go to app</button>
