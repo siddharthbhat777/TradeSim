@@ -9,9 +9,6 @@ import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +21,6 @@ public class AuthService {
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
     private final TradingAccountService tradingAccountService;
     private final RefreshTokenService refreshTokenService;
 
@@ -72,30 +68,21 @@ public class AuthService {
 
     @Transactional
     public AuthTokenResult loginUser(LoginRequest request) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.usernameOrEmail(),
-                            request.password()
-                    )
-            );
+        User user = authRepository.findByUsernameOrEmail(request.usernameOrEmail()).orElseThrow(() -> AuthException.unauthorized("Invalid username/email or password"));
 
-            User user = authRepository.findByUsernameOrEmail(request.usernameOrEmail()).orElseThrow(() -> AuthException.unauthorized("User not found"));
-
-            if (user.getAccountStatus() == AccountStatus.SUSPENDED || user.getAccountStatus() == AccountStatus.BANNED) {
-                throw AuthException.forbidden("Cannot login, your account is " + user.getAccountStatus());
-            }
-
-            user.setLastLogin(Instant.now());
-            authRepository.save(user);
-
-            String accessToken = jwtService.generateToken(user);
-            String refreshToken = refreshTokenService.createRefreshToken(user);
-
-            return new AuthTokenResult(accessToken, refreshToken, user.getUsername(), user.getRole());
-        } catch (BadCredentialsException e) {
-            throw AuthException.unauthorized("Invalid username or password");
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw AuthException.unauthorized("Invalid username/email or password");
         }
+
+        assertCanLogin(user);
+
+        user.setLastLogin(Instant.now());
+        authRepository.save(user);
+
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new AuthTokenResult(accessToken, refreshToken, user.getUsername(), user.getRole());
     }
 
     @Transactional
@@ -114,5 +101,16 @@ public class AuthService {
     @Transactional
     public void logout(String rawRefreshToken) {
         refreshTokenService.revoke(rawRefreshToken);
+    }
+
+    private void assertCanLogin(User user) {
+        switch (user.getAccountStatus()) {
+            case ACTIVE -> {
+            }
+            case SUSPENDED -> throw AuthException.accountSuspended("Your account is suspended.");
+            case BANNED -> throw AuthException.accountBanned("Your account is banned.");
+            case DEACTIVATED ->
+                    throw AuthException.accountDeactivated("Your account is deactivated. Reactivation required.");
+        }
     }
 }

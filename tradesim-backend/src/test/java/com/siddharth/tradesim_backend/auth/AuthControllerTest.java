@@ -2,10 +2,7 @@ package com.siddharth.tradesim_backend.auth;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
+import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +40,7 @@ class AuthControllerTest {
     void shouldLoginSuccessfully() throws Exception {
         LoginRequest request = new LoginRequest("sid", "password");
 
-        LoginResponse response = new LoginResponse("mock-jwt-accessToken", "sid", Role.USER);
+        AuthTokenResult response = new AuthTokenResult("mock-jwt-accessToken", "mock-refresh-token", "sid", Role.USER);
 
         when(authService.loginUser(any(LoginRequest.class))).thenReturn(response);
 
