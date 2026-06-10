@@ -5,11 +5,14 @@
     <button (click)="showAuthDialog(authStatus.Register)">Signup</button>
 </section>
 } @else {
-<section>Username</section>
+<section>
+    <h1>Hello {{ userDetails()?.username }}</h1>
+    <button (click)="logoutUser()">Logout</button>
+</section>
 }
 <br>
 
 @if(showAuth()) {
 <app-auth (showAuth)="closeAuth()" />
 }
-<button [routerLink]="isLoggedIn() ? 'app' : ''">Go to app</button>
+<button routerLink="app">Go to app</button>

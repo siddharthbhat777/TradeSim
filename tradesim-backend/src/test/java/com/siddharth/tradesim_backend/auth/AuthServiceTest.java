@@ -7,6 +7,7 @@ import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
@@ -96,12 +97,12 @@ class AuthServiceTest {
 
         when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
         when(authRepository.findByUsernameOrEmail("sid")).thenReturn(Optional.of(user));
-        when(jwtService.generateToken(user)).thenReturn("jwt-token");
+        when(jwtService.generateToken(user)).thenReturn("jwt-accessToken");
 
         LoginResponse response = authService.loginUser(request);
 
         assertNotNull(response);
-        assertEquals("jwt-token", response.token());
+        assertEquals("jwt-accessToken", response.accessToken());
         assertEquals("sid", response.username());
         assertEquals(Role.USER, response.role());
 

@@ -1,14 +1,11 @@
 package com.siddharth.tradesim_backend.auth.service;
 
-import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.model.dto.*;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,6 +26,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final TradingAccountService tradingAccountService;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
@@ -73,7 +71,7 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse loginUser(LoginRequest request) {
+    public AuthTokenResult loginUser(LoginRequest request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -91,9 +89,30 @@ public class AuthService {
             user.setLastLogin(Instant.now());
             authRepository.save(user);
 
-            return new LoginResponse(jwtService.generateToken(user), user.getUsername(), user.getRole());
+            String accessToken = jwtService.generateToken(user);
+            String refreshToken = refreshTokenService.createRefreshToken(user);
+
+            return new AuthTokenResult(accessToken, refreshToken, user.getUsername(), user.getRole());
         } catch (BadCredentialsException e) {
             throw AuthException.unauthorized("Invalid username or password");
         }
+    }
+
+    @Transactional
+    public AuthTokenResult refreshAccessToken(String rawRefreshToken) {
+        RefreshTokenRotation rotation = refreshTokenService.rotate(rawRefreshToken);
+        User user = rotation.user();
+
+        return new AuthTokenResult(
+                jwtService.generateToken(user),
+                rotation.refreshToken(),
+                user.getUsername(),
+                user.getRole()
+        );
+    }
+
+    @Transactional
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
     }
 }

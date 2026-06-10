@@ -5,6 +5,6 @@ import { RouterOutlet } from "../../../node_modules/@angular/router/types/_route
   selector: 'app-workspace',
   imports: [RouterOutlet],
   templateUrl: './workspace.html',
-  styleUrl: './workspace.scss',
+  styleUrl: './workspace.scss'
 })
 export class Workspace { }

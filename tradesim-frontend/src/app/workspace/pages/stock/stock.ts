@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-stock',
   imports: [],
   templateUrl: './stock.html',
-  styleUrl: './stock.scss',
+  styleUrl: './stock.scss'
 })
-export class Stock {}
+export class Stock { }

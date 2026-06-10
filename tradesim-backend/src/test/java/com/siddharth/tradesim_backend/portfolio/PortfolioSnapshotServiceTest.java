@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.portfolio;
 
-import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.portfolio.model.PortfolioSnapshot;
 import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;

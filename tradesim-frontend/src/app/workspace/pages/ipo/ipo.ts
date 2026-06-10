@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-ipo',
   imports: [],
   templateUrl: './ipo.html',
-  styleUrl: './ipo.scss',
+  styleUrl: './ipo.scss'
 })
-export class Ipo {}
+export class Ipo { }

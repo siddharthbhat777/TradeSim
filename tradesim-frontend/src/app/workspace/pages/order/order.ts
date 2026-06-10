@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-order',
   imports: [],
   templateUrl: './order.html',
-  styleUrl: './order.scss',
+  styleUrl: './order.scss'
 })
-export class Order {}
+export class Order { }

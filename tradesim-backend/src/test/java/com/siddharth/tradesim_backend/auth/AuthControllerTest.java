@@ -43,13 +43,13 @@ class AuthControllerTest {
     void shouldLoginSuccessfully() throws Exception {
         LoginRequest request = new LoginRequest("sid", "password");
 
-        LoginResponse response = new LoginResponse("mock-jwt-token", "sid", Role.USER);
+        LoginResponse response = new LoginResponse("mock-jwt-accessToken", "sid", Role.USER);
 
         when(authService.loginUser(any(LoginRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-jwt-token"))
+                .andExpect(jsonPath("$.accessToken").value("mock-jwt-accessToken"))
                 .andExpect(jsonPath("$.username").value("sid"))
                 .andExpect(jsonPath("$.role").value("USER"));
     }

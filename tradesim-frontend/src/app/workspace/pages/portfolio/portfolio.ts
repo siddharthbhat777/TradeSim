@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-portfolio',
   imports: [],
   templateUrl: './portfolio.html',
-  styleUrl: './portfolio.scss',
+  styleUrl: './portfolio.scss'
 })
-export class Portfolio {}
+export class Portfolio { }

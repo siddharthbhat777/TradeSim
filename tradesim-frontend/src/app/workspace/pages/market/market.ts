@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-market',
   imports: [],
   templateUrl: './market.html',
-  styleUrl: './market.scss',
+  styleUrl: './market.scss'
 })
-export class Market {}
+export class Market { }
