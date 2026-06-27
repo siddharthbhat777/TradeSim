@@ -14,6 +14,10 @@ export const routes: Routes = [
         loadChildren: () => import('./workspace/workspace.routes').then((module) => module.workspaceRoutes)
     },
     {
+        path: 'playground',
+        loadComponent: () => import('./testing-playground/testing-playground').then((module) => module.TestingPlayground)
+    },
+    {
         path: '**',
         redirectTo: ''
     }
