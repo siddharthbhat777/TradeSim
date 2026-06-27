@@ -18,6 +18,8 @@ import java.time.Instant;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private static final String INVALID_CREDENTIALS_MESSAGE = "Invalid username/email or password";
+
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -32,6 +34,44 @@ public class AuthService {
     @Transactional
     public RegisterResponse registerCompanyRepresentative(RegisterRequest request) {
         return registerUserWithRole(request, Role.COMPANY_REPRESENTATIVE);
+    }
+
+    @Transactional
+    public AuthTokenResult loginUser(LoginRequest request) {
+        User user = authenticateCredentials(request.usernameOrEmail(), request.password());
+
+        assertCanLogin(user);
+
+        return issueTokens(user);
+    }
+
+    @Transactional
+    public AuthTokenResult reactivateAccount(ReactivateRequest request) {
+        User user = authenticateCredentials(request.usernameOrEmail(), request.password());
+
+        assertCanReactivate(user);
+
+        user.setAccountStatus(AccountStatus.ACTIVE);
+
+        return issueTokens(user);
+    }
+
+    @Transactional
+    public AuthTokenResult refreshAccessToken(String rawRefreshToken) {
+        RefreshTokenRotation rotation = refreshTokenService.rotate(rawRefreshToken);
+        User user = rotation.user();
+
+        return new AuthTokenResult(
+                jwtService.generateToken(user),
+                rotation.refreshToken(),
+                user.getUsername(),
+                user.getRole()
+        );
+    }
+
+    @Transactional
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
     }
 
     private RegisterResponse registerUserWithRole(RegisterRequest request, Role role) {
@@ -66,16 +106,29 @@ public class AuthService {
         }
     }
 
-    @Transactional
-    public AuthTokenResult loginUser(LoginRequest request) {
-        User user = authRepository.findByUsernameOrEmail(request.usernameOrEmail()).orElseThrow(() -> AuthException.unauthorized("Invalid username/email or password"));
+    private void assertCanLogin(User user) {
+        switch (user.getAccountStatus()) {
+            case ACTIVE -> {
+            }
+            case SUSPENDED -> throw AuthException.accountSuspended("Your account is suspended.");
+            case BANNED -> throw AuthException.accountBanned("Your account is banned.");
+            case DEACTIVATED ->
+                    throw AuthException.accountDeactivated("Your account is deactivated. Reactivation required.");
+        }
+    }
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw AuthException.unauthorized("Invalid username/email or password");
+    private User authenticateCredentials(String usernameOrEmail, String password) {
+        User user = authRepository.findByUsernameOrEmail(usernameOrEmail)
+                .orElseThrow(() -> AuthException.unauthorized(INVALID_CREDENTIALS_MESSAGE));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw AuthException.unauthorized(INVALID_CREDENTIALS_MESSAGE);
         }
 
-        assertCanLogin(user);
+        return user;
+    }
 
+    private AuthTokenResult issueTokens(User user) {
         user.setLastLogin(Instant.now());
         authRepository.save(user);
 
@@ -85,32 +138,13 @@ public class AuthService {
         return new AuthTokenResult(accessToken, refreshToken, user.getUsername(), user.getRole());
     }
 
-    @Transactional
-    public AuthTokenResult refreshAccessToken(String rawRefreshToken) {
-        RefreshTokenRotation rotation = refreshTokenService.rotate(rawRefreshToken);
-        User user = rotation.user();
-
-        return new AuthTokenResult(
-                jwtService.generateToken(user),
-                rotation.refreshToken(),
-                user.getUsername(),
-                user.getRole()
-        );
-    }
-
-    @Transactional
-    public void logout(String rawRefreshToken) {
-        refreshTokenService.revoke(rawRefreshToken);
-    }
-
-    private void assertCanLogin(User user) {
+    private void assertCanReactivate(User user) {
         switch (user.getAccountStatus()) {
-            case ACTIVE -> {
+            case DEACTIVATED -> {
             }
+            case ACTIVE -> throw AuthException.conflict("Account is already active.");
             case SUSPENDED -> throw AuthException.accountSuspended("Your account is suspended.");
             case BANNED -> throw AuthException.accountBanned("Your account is banned.");
-            case DEACTIVATED ->
-                    throw AuthException.accountDeactivated("Your account is deactivated. Reactivation required.");
         }
     }
 }

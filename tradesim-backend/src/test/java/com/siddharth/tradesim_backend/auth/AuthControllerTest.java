@@ -103,4 +103,26 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.fieldErrors.email").value("Invalid email format"))
                 .andExpect(jsonPath("$.fieldErrors.password").exists());
     }
+
+    @Test
+    void shouldReactivateSuccessfully() throws Exception {
+        ReactivateRequest request = new ReactivateRequest("sid", "password");
+
+        AuthTokenResult response = new AuthTokenResult(
+                "mock-jwt-accessToken",
+                "mock-refresh-token",
+                "sid",
+                Role.USER
+        );
+
+        when(authService.reactivateAccount(any(ReactivateRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/auth/reactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("mock-jwt-accessToken"))
+                .andExpect(jsonPath("$.username").value("sid"))
+                .andExpect(jsonPath("$.role").value("USER"));
+    }
 }

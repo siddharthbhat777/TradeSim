@@ -62,10 +62,24 @@ public class RefreshTokenService {
         }
 
         User user = current.getUser();
-        if (user.getAccountStatus() == AccountStatus.SUSPENDED || user.getAccountStatus() == AccountStatus.BANNED) {
-            current.setRevokedAt(now);
-            refreshTokenRepository.save(current);
-            throw AuthException.forbidden("Cannot refresh token, your account is " + user.getAccountStatus());
+        switch (user.getAccountStatus()) {
+            case ACTIVE -> {
+            }
+            case SUSPENDED -> {
+                current.setRevokedAt(now);
+                refreshTokenRepository.save(current);
+                throw AuthException.accountSuspended("Your account is suspended.");
+            }
+            case BANNED -> {
+                current.setRevokedAt(now);
+                refreshTokenRepository.save(current);
+                throw AuthException.accountBanned("Your account is banned.");
+            }
+            case DEACTIVATED -> {
+                current.setRevokedAt(now);
+                refreshTokenRepository.save(current);
+                throw AuthException.accountDeactivated("Your account is deactivated. Reactivation required.");
+            }
         }
 
         String newRawToken = generateRawToken();

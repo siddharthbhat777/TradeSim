@@ -60,6 +60,11 @@ public class AuthController {
                 .build();
     }
 
+    @PostMapping("reactivate")
+    public ResponseEntity<LoginResponse> reactivate(@Valid @RequestBody ReactivateRequest request) {
+        return buildAuthResponse(authService.reactivateAccount(request));
+    }
+
     private ResponseEntity<LoginResponse> buildAuthResponse(AuthTokenResult result) {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshTokenCookie(result.refreshToken()).toString())

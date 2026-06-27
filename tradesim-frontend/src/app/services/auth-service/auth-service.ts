@@ -58,6 +58,14 @@ export class AuthService {
     );
   }
 
+  reactivateAccount(formData: LoginRequest) {
+    return this.http.post<LoginResponse>(`${this.authUrl}/reactivate`, formData, {
+      withCredentials: true
+    }).pipe(
+      tap((response) => this.setSession(response))
+    );
+  }
+
   getAccessToken() {
     return this.accessToken();
   }

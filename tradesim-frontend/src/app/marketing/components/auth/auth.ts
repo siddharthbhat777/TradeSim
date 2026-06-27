@@ -5,6 +5,7 @@ import { RegisterRequest } from '../../../models/register-request';
 import { AuthService } from '../../../services/auth-service/auth-service';
 import { AuthStatus } from '../../../constants/auth';
 import { LoginRequest } from '../../../models/login-request';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-auth',
@@ -36,6 +37,30 @@ export class Auth {
     const formData: LoginRequest = this.loginForm.getRawValue();
 
     this.authService.loginUser(formData).subscribe({
+      next: () => {
+        this.loginForm.reset();
+        this.showAuth.emit();
+      },
+      error: (error) => {
+        if (
+          error instanceof HttpErrorResponse &&
+          error.error?.errorCode === 'AUTH_ACCOUNT_DEACTIVATED'
+        ) {
+          this.currentAuthStatus.set(AuthStatus.Reactivate);
+          return;
+        }
+      }
+    });
+  }
+
+  reactivateSubmit() {
+    if (this.loginForm.invalid) {
+      return;
+    }
+
+    const formData: LoginRequest = this.loginForm.getRawValue();
+
+    this.authService.reactivateAccount(formData).subscribe({
       next: () => {
         this.loginForm.reset();
         this.showAuth.emit();

@@ -14,9 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -26,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -201,5 +197,33 @@ class AuthServiceTest {
         verify(authRepository, never()).save(any());
         verify(jwtService, never()).generateToken(any());
         verify(refreshTokenService, never()).createRefreshToken(any());
+    }
+
+    @Test
+    void shouldReactivateDeactivatedAccountSuccessfully() {
+        ReactivateRequest request = new ReactivateRequest("sid", "password");
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .username("sid")
+                .email("sid@test.com")
+                .password("encoded")
+                .role(Role.USER)
+                .accountStatus(AccountStatus.DEACTIVATED)
+                .build();
+
+        when(authRepository.findByUsernameOrEmail("sid")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "encoded")).thenReturn(true);
+        when(jwtService.generateToken(user)).thenReturn("jwt-accessToken");
+        when(refreshTokenService.createRefreshToken(user)).thenReturn("refresh-token");
+
+        AuthTokenResult response = authService.reactivateAccount(request);
+
+        assertEquals(AccountStatus.ACTIVE, user.getAccountStatus());
+        assertEquals("jwt-accessToken", response.accessToken());
+        assertEquals("refresh-token", response.refreshToken());
+        assertEquals("sid", response.username());
+
+        verify(authRepository).save(user);
     }
 }

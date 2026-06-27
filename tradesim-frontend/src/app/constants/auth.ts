@@ -1,6 +1,7 @@
 export enum AuthStatus {
     Login = "LOGIN",
-    Register = "REGISTER"
+    Register = "REGISTER",
+    Reactivate = "REACTIVATE"
 }
 
 export enum Role {
