@@ -23,4 +23,16 @@ public class AuthException extends BusinessException {
     public static AuthException forbidden(String message) {
         return new AuthException(HttpStatus.FORBIDDEN, "AUTH_FORBIDDEN", message);
     }
+
+    public static AuthException accountSuspended(String message) {
+        return new AuthException(HttpStatus.FORBIDDEN, "AUTH_ACCOUNT_SUSPENDED", message);
+    }
+
+    public static AuthException accountBanned(String message) {
+        return new AuthException(HttpStatus.FORBIDDEN, "AUTH_ACCOUNT_BANNED", message);
+    }
+
+    public static AuthException accountDeactivated(String message) {
+        return new AuthException(HttpStatus.FORBIDDEN, "AUTH_ACCOUNT_DEACTIVATED", message);
+    }
 }

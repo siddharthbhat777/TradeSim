@@ -1,20 +1,14 @@
 package com.siddharth.tradesim_backend.auth.service;
 
-import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.model.dto.*;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,11 +18,13 @@ import java.time.Instant;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private static final String INVALID_CREDENTIALS_MESSAGE = "Invalid username/email or password";
+
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
     private final TradingAccountService tradingAccountService;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
@@ -38,6 +34,44 @@ public class AuthService {
     @Transactional
     public RegisterResponse registerCompanyRepresentative(RegisterRequest request) {
         return registerUserWithRole(request, Role.COMPANY_REPRESENTATIVE);
+    }
+
+    @Transactional
+    public AuthTokenResult loginUser(LoginRequest request) {
+        User user = authenticateCredentials(request.usernameOrEmail(), request.password());
+
+        assertCanLogin(user);
+
+        return issueTokens(user);
+    }
+
+    @Transactional
+    public AuthTokenResult reactivateAccount(ReactivateRequest request) {
+        User user = authenticateCredentials(request.usernameOrEmail(), request.password());
+
+        assertCanReactivate(user);
+
+        user.setAccountStatus(AccountStatus.ACTIVE);
+
+        return issueTokens(user);
+    }
+
+    @Transactional
+    public AuthTokenResult refreshAccessToken(String rawRefreshToken) {
+        RefreshTokenRotation rotation = refreshTokenService.rotate(rawRefreshToken);
+        User user = rotation.user();
+
+        return new AuthTokenResult(
+                jwtService.generateToken(user),
+                rotation.refreshToken(),
+                user.getUsername(),
+                user.getRole()
+        );
+    }
+
+    @Transactional
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
     }
 
     private RegisterResponse registerUserWithRole(RegisterRequest request, Role role) {
@@ -72,28 +106,45 @@ public class AuthService {
         }
     }
 
-    @Transactional
-    public LoginResponse loginUser(LoginRequest request) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.usernameOrEmail(),
-                            request.password()
-                    )
-            );
-
-            User user = authRepository.findByUsernameOrEmail(request.usernameOrEmail()).orElseThrow(() -> AuthException.unauthorized("User not found"));
-
-            if (user.getAccountStatus() == AccountStatus.SUSPENDED || user.getAccountStatus() == AccountStatus.BANNED) {
-                throw AuthException.forbidden("Cannot login, your account is " + user.getAccountStatus());
+    private void assertCanLogin(User user) {
+        switch (user.getAccountStatus()) {
+            case ACTIVE -> {
             }
+            case SUSPENDED -> throw AuthException.accountSuspended("Your account is suspended.");
+            case BANNED -> throw AuthException.accountBanned("Your account is banned.");
+            case DEACTIVATED ->
+                    throw AuthException.accountDeactivated("Your account is deactivated. Reactivation required.");
+        }
+    }
 
-            user.setLastLogin(Instant.now());
-            authRepository.save(user);
+    private User authenticateCredentials(String usernameOrEmail, String password) {
+        User user = authRepository.findByUsernameOrEmail(usernameOrEmail)
+                .orElseThrow(() -> AuthException.unauthorized(INVALID_CREDENTIALS_MESSAGE));
 
-            return new LoginResponse(jwtService.generateToken(user), user.getUsername(), user.getRole());
-        } catch (BadCredentialsException e) {
-            throw AuthException.unauthorized("Invalid username or password");
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw AuthException.unauthorized(INVALID_CREDENTIALS_MESSAGE);
+        }
+
+        return user;
+    }
+
+    private AuthTokenResult issueTokens(User user) {
+        user.setLastLogin(Instant.now());
+        authRepository.save(user);
+
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new AuthTokenResult(accessToken, refreshToken, user.getUsername(), user.getRole());
+    }
+
+    private void assertCanReactivate(User user) {
+        switch (user.getAccountStatus()) {
+            case DEACTIVATED -> {
+            }
+            case ACTIVE -> throw AuthException.conflict("Account is already active.");
+            case SUSPENDED -> throw AuthException.accountSuspended("Your account is suspended.");
+            case BANNED -> throw AuthException.accountBanned("Your account is banned.");
         }
     }
 }

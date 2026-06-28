@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.risk.service;
 
-import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.dto.RiskResponse;

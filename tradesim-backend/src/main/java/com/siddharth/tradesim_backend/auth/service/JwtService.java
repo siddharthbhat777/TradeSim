@@ -69,7 +69,12 @@ public class JwtService {
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
             final String userName = extractUserName(token);
-            return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+            return userName.equals(userDetails.getUsername())
+                    && userDetails.isEnabled()
+                    && userDetails.isAccountNonExpired()
+                    && userDetails.isAccountNonLocked()
+                    && userDetails.isCredentialsNonExpired()
+                    && !isTokenExpired(token);
         } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
             return false;
         }

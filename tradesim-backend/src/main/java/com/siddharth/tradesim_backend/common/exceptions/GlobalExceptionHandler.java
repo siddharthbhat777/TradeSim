@@ -295,7 +295,7 @@ public class GlobalExceptionHandler {
                 .body(apiErrorResponseWriter.build(
                         HttpStatus.UNAUTHORIZED,
                         "JWT_ERROR",
-                        "Invalid or expired token.",
+                        "Invalid or expired accessToken.",
                         request.getRequestURI()
                 ));
     }

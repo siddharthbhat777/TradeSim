@@ -87,7 +87,7 @@ class TradingAccountControllerTest {
     @Test
     void invalidTokenShouldReturnUnauthorizedJson() throws Exception {
         mockMvc.perform(get("/trading-account")
-                        .header("Authorization", "Bearer invalid-token"))
+                        .header("Authorization", "Bearer invalid-accessToken"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"))
                 .andExpect(jsonPath("$.message").value("Authentication required."));

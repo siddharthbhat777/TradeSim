@@ -1,6 +1,6 @@
 package com.siddharth.tradesim_backend.scheduler;
 
-import com.siddharth.tradesim_backend.auth.AuthRepository;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.risk.service.RiskService;

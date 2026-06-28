@@ -2,10 +2,7 @@ package com.siddharth.tradesim_backend.auth;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.LoginResponse;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
-import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
+import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +40,13 @@ class AuthControllerTest {
     void shouldLoginSuccessfully() throws Exception {
         LoginRequest request = new LoginRequest("sid", "password");
 
-        LoginResponse response = new LoginResponse("mock-jwt-token", "sid", Role.USER);
+        AuthTokenResult response = new AuthTokenResult("mock-jwt-accessToken", "mock-refresh-token", "sid", Role.USER);
 
         when(authService.loginUser(any(LoginRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-jwt-token"))
+                .andExpect(jsonPath("$.accessToken").value("mock-jwt-accessToken"))
                 .andExpect(jsonPath("$.username").value("sid"))
                 .andExpect(jsonPath("$.role").value("USER"));
     }
@@ -105,5 +102,27 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.fieldErrors.username").value("Username is required"))
                 .andExpect(jsonPath("$.fieldErrors.email").value("Invalid email format"))
                 .andExpect(jsonPath("$.fieldErrors.password").exists());
+    }
+
+    @Test
+    void shouldReactivateSuccessfully() throws Exception {
+        ReactivateRequest request = new ReactivateRequest("sid", "password");
+
+        AuthTokenResult response = new AuthTokenResult(
+                "mock-jwt-accessToken",
+                "mock-refresh-token",
+                "sid",
+                Role.USER
+        );
+
+        when(authService.reactivateAccount(any(ReactivateRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/auth/reactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("mock-jwt-accessToken"))
+                .andExpect(jsonPath("$.username").value("sid"))
+                .andExpect(jsonPath("$.role").value("USER"));
     }
 }

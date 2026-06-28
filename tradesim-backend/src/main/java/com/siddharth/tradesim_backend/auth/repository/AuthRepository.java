@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.auth;
+package com.siddharth.tradesim_backend.auth.repository;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
