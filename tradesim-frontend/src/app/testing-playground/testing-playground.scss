@@ -138,33 +138,6 @@
   flex-wrap: wrap;
 }
 
-.status-badge {
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.status-open {
-  background: rgba(37, 99, 235, 0.15);
-  color: var(--primary);
-}
-
-.status-filled {
-  background: rgba(22, 163, 74, 0.15);
-  color: var(--success);
-}
-
-.status-cancelled {
-  background: rgba(220, 38, 38, 0.15);
-  color: var(--danger);
-}
-
-.status-pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--warning);
-}
-
 .demo-table {
   width: 100%;
   border-collapse: collapse;
