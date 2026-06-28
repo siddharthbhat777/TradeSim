@@ -40,6 +40,12 @@ body {
   --secondary: #334155;
   --secondary-hover: #475569;
 
+  --outline-bg: transparent;
+  --outline-bg-hover: #f1f5f9;
+  --outline-border: #cbd5e1;
+  --outline-border-hover: #94a3b8;
+  --outline-text: #334155;
+
   --accent: #06b6d4;
   --accent-hover: #0891b2;
 
@@ -76,6 +82,12 @@ body {
 
   --secondary: #475569;
   --secondary-hover: #64748b;
+
+  --outline-bg: transparent;
+  --outline-bg-hover: #334155;
+  --outline-border: #475569;
+  --outline-border-hover: #64748b;
+  --outline-text: #f8fafc;
 
   --accent: #22d3ee;
   --accent-hover: #67e8f9;
@@ -178,6 +190,22 @@ body {
 
 .button-secondary:hover {
   background: var(--secondary-hover);
+}
+
+.button-outline {
+  border: 1px solid var(--outline-border);
+  border-radius: 12px;
+  padding: 12px 24px;
+  background: var(--outline-bg);
+  color: var(--outline-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.button-outline:hover {
+  background: var(--outline-bg-hover);
+  border-color: var(--outline-border-hover);
 }
 
 .badge-profit {
