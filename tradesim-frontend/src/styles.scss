@@ -160,54 +160,6 @@ body {
   box-shadow: var(--shadow);
 }
 
-.button-primary {
-  border: none;
-  border-radius: 12px;
-  background: var(--primary);
-  color: white;
-  padding: 12px 24px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.button-primary:hover {
-  background: var(--primary-hover);
-}
-
-.button-secondary {
-  border: none;
-  border-radius: 12px;
-  background: var(--secondary);
-  color: white;
-  padding: 12px 24px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.button-secondary:hover {
-  background: var(--secondary-hover);
-}
-
-.button-outline {
-  border: 1px solid var(--outline-border);
-  border-radius: 12px;
-  padding: 12px 24px;
-  background: var(--outline-bg);
-  color: var(--outline-text);
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.button-outline:hover {
-  background: var(--outline-bg-hover);
-  border-color: var(--outline-border-hover);
-}
-
 .badge-profit {
   color: var(--success);
   font-weight: 700;

@@ -1,0 +1,13 @@
+<button class="button" [class.button-primary]="variant() === 'primary'"
+    [class.button-secondary]="variant() === 'secondary'" [class.button-success]="variant() === 'success'"
+    [class.button-danger]="variant() === 'danger'" [class.button-warning]="variant() === 'warning'"
+    [class.button-outline]="variant() === 'outline'" [class.button-icon-right]="iconPosition() === 'right'"
+    [type]="type()" [disabled]="disabled()" [attr.aria-label]="ariaLabel() || null" (click)="onClick($event)">
+    <span class="button-icon" aria-hidden="true">
+        <ng-content select="[button-icon]" />
+    </span>
+
+    <span class="button-text">
+        {{ text() }}
+    </span>
+</button>
