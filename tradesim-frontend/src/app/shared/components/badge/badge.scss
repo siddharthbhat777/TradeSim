@@ -1,3 +1,8 @@
+@mixin badge-variant($color, $opacity: 15%) {
+  background: color-mix(in srgb, $color $opacity, transparent);
+  color: $color;
+}
+
 :host {
   display: inline-block;
 }
@@ -13,34 +18,28 @@
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
-}
 
-.badge-primary {
-  background: color-mix(in srgb, var(--primary) 15%, transparent);
-  color: var(--primary);
-}
+  &--primary {
+    @include badge-variant(var(--primary));
+  }
 
-.badge-secondary {
-  background: color-mix(in srgb, var(--secondary) 15%, transparent);
-  color: var(--secondary);
-}
+  &--secondary {
+    @include badge-variant(var(--secondary));
+  }
 
-.badge-accent {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
-}
+  &--accent {
+    @include badge-variant(var(--accent));
+  }
 
-.badge-success {
-  background: color-mix(in srgb, var(--success) 15%, transparent);
-  color: var(--success);
-}
+  &--success {
+    @include badge-variant(var(--success));
+  }
 
-.badge-danger {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-  color: var(--danger);
-}
+  &--danger {
+    @include badge-variant(var(--danger));
+  }
 
-.badge-warning {
-  background: color-mix(in srgb, var(--warning) 18%, transparent);
-  color: var(--warning);
+  &--warning {
+    @include badge-variant(var(--warning), 18%);
+  }
 }

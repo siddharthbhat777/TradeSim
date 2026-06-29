@@ -1,5 +1,31 @@
+$icon-size: 18px;
+
+@mixin darken-on-hover {
+  &:hover:not(:disabled) {
+    filter: brightness(0.94);
+  }
+}
+
 :host {
   display: inline-block;
+
+  ::ng-deep [button-icon] {
+    width: $icon-size;
+    height: $icon-size;
+    max-width: $icon-size;
+    max-height: $icon-size;
+    display: block;
+    object-fit: contain;
+    color: currentColor;
+
+    img,
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+  }
 }
 
 .button {
@@ -24,99 +50,81 @@
     color 0.2s ease,
     opacity 0.2s ease;
   white-space: nowrap;
-}
 
-.button-primary {
-  background: var(--primary);
-  color: white;
-}
+  &--primary {
+    background: var(--primary);
+    color: white;
 
-.button-primary:hover:not(:disabled) {
-  background: var(--primary-hover);
-}
+    &:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+  }
 
-.button-secondary {
-  background: var(--secondary);
-  color: white;
-}
+  &--secondary {
+    background: var(--secondary);
+    color: white;
 
-.button-secondary:hover:not(:disabled) {
-  background: var(--secondary-hover);
-}
+    &:hover:not(:disabled) {
+      background: var(--secondary-hover);
+    }
+  }
 
-.button-success {
-  background: var(--success);
-  color: white;
-}
+  &--success {
+    background: var(--success);
+    color: white;
 
-.button-danger {
-  background: var(--danger);
-  color: white;
-}
+    @include darken-on-hover;
+  }
 
-.button-warning {
-  background: var(--warning);
-  color: #0f172a;
-}
+  &--danger {
+    background: var(--danger);
+    color: white;
 
-.button-success:hover:not(:disabled),
-.button-danger:hover:not(:disabled),
-.button-warning:hover:not(:disabled) {
-  filter: brightness(0.94);
-}
+    @include darken-on-hover;
+  }
 
-.button-outline {
-  background: var(--outline-bg);
-  border-color: var(--outline-border);
-  color: var(--outline-text);
-}
+  &--warning {
+    background: var(--warning);
+    color: #0f172a;
 
-.button-outline:hover:not(:disabled) {
-  background: var(--outline-bg-hover);
-  border-color: var(--outline-border-hover);
-}
+    @include darken-on-hover;
+  }
 
-.button-icon-right {
-  flex-direction: row-reverse;
-}
+  &--outline {
+    background: var(--outline-bg);
+    border-color: var(--outline-border);
+    color: var(--outline-text);
 
-.button-icon:empty {
-  display: none;
-}
+    &:hover:not(:disabled) {
+      background: var(--outline-bg-hover);
+      border-color: var(--outline-border-hover);
+    }
+  }
 
-.button-icon {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
+  &--icon-right {
+    flex-direction: row-reverse;
+  }
 
-:host ::ng-deep [button-icon] {
-  width: 18px;
-  height: 18px;
-  max-width: 18px;
-  max-height: 18px;
-  display: block;
-  object-fit: contain;
-  color: currentColor;
-}
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
-:host ::ng-deep [button-icon] img,
-:host ::ng-deep [button-icon] svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;
-}
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
 
-.button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+  &__icon {
+    width: $icon-size;
+    height: $icon-size;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 
-.button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+    &:empty {
+      display: none;
+    }
+  }
 }

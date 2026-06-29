@@ -96,40 +96,10 @@
   flex-wrap: wrap;
 }
 
-.button-success {
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  background: var(--success);
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.button-danger {
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  background: var(--danger);
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.input-demo {
-  width: 100%;
-  max-width: 400px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary);
-  font-size: 1rem;
-  outline: none;
-}
-
-.input-demo:focus {
-  border-color: var(--primary);
+.input-group {
+  display: grid;
+  gap: 16px;
+  max-width: 600px;
 }
 
 .badge-group {

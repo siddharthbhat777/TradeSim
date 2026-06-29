@@ -178,7 +178,24 @@
             Input Showcase
         </h3>
 
-        <input type="text" class="input-demo" placeholder="Enter quantity">
+        <form class="input-group" [formGroup]="inputDemoForm" novalidate>
+            <app-input label="Email">
+                <input appInput required type="email" placeholder="Email address" formControlName="email">
+            </app-input>
+
+            <app-input [reserveMessageSpace]="false">
+                <input appInput type="text" placeholder="Search">
+            </app-input>
+
+            <app-input [reserveMessageSpace]="true">
+                <input appInput type="text" placeholder="Optional field">
+            </app-input>
+
+            <app-input label="Order Notes" fullWidth>
+                <textarea appInput appInputFullWidth required rows="4" formControlName="notes"
+                    placeholder="Write order notes"></textarea>
+            </app-input>
+        </form>
 
     </div>
 

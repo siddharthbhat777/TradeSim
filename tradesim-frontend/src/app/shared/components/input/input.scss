@@ -1,0 +1,111 @@
+.app-form-field {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  max-width: 400px;
+
+  &--full-width {
+    max-width: none;
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  &__required {
+    color: var(--danger);
+    font-weight: 800;
+  }
+
+  &__message {
+    min-height: 1.1rem;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.35;
+
+    &--error {
+      color: var(--danger);
+    }
+  }
+
+  .app-input {
+    display: block;
+    width: 100%;
+    max-width: none;
+    min-height: 46px;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.4;
+    outline: none;
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 1px 2px rgba(15, 23, 42, 0.04);
+    transition:
+      box-shadow 0.2s ease,
+      background-color 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .app-input:focus {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--primary) 75%, transparent),
+      0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .app-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .app-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .app-input[readonly] {
+    background: var(--surface-secondary);
+  }
+
+  .app-input--invalid {
+    box-shadow:
+      0 0 0 1px var(--danger),
+      0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .app-input--invalid:focus {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--danger) 75%, transparent),
+      0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .app-input--small {
+    min-height: 38px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .app-input--large {
+    min-height: 52px;
+    padding: 16px 18px;
+    font-size: 1.05rem;
+  }
+
+  textarea.app-input,
+  .app-input--textarea {
+    min-height: 120px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+}
