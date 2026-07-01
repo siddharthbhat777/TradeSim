@@ -1,0 +1,6 @@
+<div class="card" [class]="combinedClasses()" [class.card--hoverable]="hoverable()"
+    [class.card--clickable]="!!onCardClick()" [attr.role]="onCardClick() ? 'button' : null"
+    [attr.tabindex]="onCardClick() ? 0 : null" (click)="handleClick()" (keydown.enter)="handleClick()"
+    (keydown.space)="handleClick($event)">
+    <ng-content />
+</div>

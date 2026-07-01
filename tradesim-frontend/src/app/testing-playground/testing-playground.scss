@@ -195,3 +195,22 @@
   border-radius: 50%;
   background: var(--accent);
 }
+
+.card-test {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+}

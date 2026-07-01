@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomInput } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
+import { CardBorder, CardComponent, CardVariant } from '../shared/components/card/card';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -25,4 +26,29 @@ export class TestingPlayground {
       validators: [Validators.required, Validators.minLength(10)]
     })
   });
+
+  protected readonly variants: CardVariant[] = [
+    'default',
+    'surface',
+    'outline',
+    'accent',
+    'success',
+    'danger',
+    'warning',
+  ];
+
+  protected readonly borders: CardBorder[] = [
+    'primary',
+    'secondary',
+    'accent',
+    'success',
+    'danger',
+    'warning',
+  ];
+
+  protected readonly clickCount = signal(0);
+
+  protected readonly handleCardClick = () => {
+    this.clickCount.update((count) => count + 1);
+  };
 }

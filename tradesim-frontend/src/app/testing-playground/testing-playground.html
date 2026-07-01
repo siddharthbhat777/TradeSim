@@ -29,7 +29,7 @@
 
     <div class="demo-section">
 
-        <div class="card">
+        <app-card>
 
             <h3 class="heading-md">
                 Portfolio Overview
@@ -54,7 +54,7 @@
                 </span>
             </p>
 
-        </div>
+        </app-card>
 
     </div>
 
@@ -343,5 +343,89 @@
 
         </div>
 
+    </div>
+
+    <div class="card-test">
+        <h2 class="heading-lg">Card Playground</h2>
+
+        <!-- 1. All variants, plain -->
+        <section class="card-test__section">
+            <h2 class="heading-md">Variants</h2>
+            <div class="card-test__grid">
+                @for (v of variants; track v) {
+                <app-card [variant]="v">
+                    <p class="text-body">variant: {{ v }}</p>
+                </app-card>
+                <br>
+                }
+            </div>
+        </section>
+
+        <!-- 2. All border colors, on default variant -->
+        <section class="card-test__section">
+            <h2 class="heading-md">Borders (default variant)</h2>
+            <div class="card-test__grid">
+                @for (b of borders; track b) {
+                <app-card [border]="b">
+                    <p class="text-body">border: {{ b }}</p>
+                </app-card>
+                <br>
+                }
+            </div>
+        </section>
+
+        <!-- 3. Misuse case: border on a non-default variant.
+       Should render with NO border applied, and log a console warning
+       (visible in dev tools) confirming the guard works. -->
+        <section class="card-test__section">
+            <h2 class="heading-md">Misuse check: border + non-default variant</h2>
+            <div class="card-test__grid">
+                <app-card variant="success" border="danger">
+                    <p class="text-body">
+                        variant="success" + border="danger" — border should be dropped,
+                        check console for warning
+                    </p>
+                </app-card>
+            </div>
+        </section>
+
+        <!-- 4. Hoverable vs not -->
+        <section class="card-test__section">
+            <h2 class="heading-md">Hoverable</h2>
+            <div class="card-test__grid">
+                <app-card [hoverable]="false">
+                    <p class="text-body">hoverable: false</p>
+                </app-card>
+                <br>
+                <app-card [hoverable]="true">
+                    <p class="text-body">hoverable: true — hover over me</p>
+                </app-card>
+            </div>
+        </section>
+
+        <!-- 5. Clickable vs not, and click + hover together -->
+        <section class="card-test__section">
+            <h2 class="heading-md">Clickable</h2>
+            <div class="card-test__grid">
+                <app-card>
+                    <p class="text-body">no onCardClick — should not look clickable, no focus ring</p>
+                </app-card>
+                <br>
+
+                <app-card [onCardClick]="handleCardClick">
+                    <p class="text-body">onCardClick only — cursor pointer, focusable, no lift on hover</p>
+                </app-card>
+                <br>
+
+                <app-card [hoverable]="true" [onCardClick]="handleCardClick">
+                    <p class="text-body">onCardClick + hoverable — both effects together</p>
+                </app-card>
+                <br>
+            </div>
+            <p class="text-muted">Clicks registered: {{ clickCount() }}</p>
+            <p class="text-muted">
+                Tab to a clickable card and press Enter or Space to confirm keyboard activation works too.
+            </p>
+        </section>
     </div>
 </div>

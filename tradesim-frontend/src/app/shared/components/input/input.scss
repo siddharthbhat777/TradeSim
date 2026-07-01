@@ -59,9 +59,10 @@
       opacity 0.2s ease;
   }
 
-  .app-input:focus {
+  .app-input:focus-visible {
+    outline: none;
     box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--primary) 75%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--accent) 75%, transparent),
       0 1px 2px rgba(15, 23, 42, 0.04);
   }
 
@@ -84,7 +85,7 @@
       0 1px 2px rgba(15, 23, 42, 0.04);
   }
 
-  .app-input--invalid:focus {
+  .app-input--invalid:focus-visible {
     box-shadow:
       0 0 0 2px color-mix(in srgb, var(--danger) 75%, transparent),
       0 1px 2px rgba(15, 23, 42, 0.04);
