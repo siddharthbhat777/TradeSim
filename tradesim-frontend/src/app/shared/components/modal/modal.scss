@@ -8,9 +8,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 1000;
 
   .modal-content {
+    position: relative;
     display: flex;
     flex-direction: column;
     background-color: var(--surface);
@@ -18,9 +19,15 @@
     border-radius: 0.5rem;
     min-width: 30%;
     max-width: 37.5rem;
-    box-shadow: 0 0.25rem 0.5rem #0000001a;
+    box-shadow: var(--shadow);
     text-align: left;
     overflow-y: auto;
     max-height: 90vh;
+    outline: none;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
   }
 }
