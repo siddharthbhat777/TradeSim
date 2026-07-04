@@ -29,11 +29,13 @@ export class Modal {
   private readonly modalContentRef = viewChild<ElementRef<HTMLElement>>('modalContent');
   private readonly destroyRef = inject(DestroyRef);
   private previouslyFocusedElement: HTMLElement | null = null;
+  private originalBodyOverflow = '';
+  private originalBodyPaddingRight = '';
 
   constructor() {
     afterNextRender(() => {
       this.previouslyFocusedElement = document.activeElement as HTMLElement;
-      document.body.style.overflow = 'hidden';
+      this.lockScroll();
       const content = this.modalContentRef()?.nativeElement;
       if (content) {
         const focusable = this.getFocusableElements(content);
@@ -42,9 +44,28 @@ export class Modal {
     });
 
     this.destroyRef.onDestroy(() => {
-      document.body.style.overflow = '';
+      this.unlockScroll();
       this.previouslyFocusedElement?.focus();
     });
+  }
+
+  private lockScroll(): void {
+    const body = document.body;
+    this.originalBodyOverflow = body.style.overflow;
+    this.originalBodyPaddingRight = body.style.paddingRight;
+
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const currentPaddingRight = parseFloat(getComputedStyle(body).paddingRight) || 0;
+
+    body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${currentPaddingRight + scrollbarWidth}px`;
+    }
+  }
+
+  private unlockScroll(): void {
+    document.body.style.overflow = this.originalBodyOverflow;
+    document.body.style.paddingRight = this.originalBodyPaddingRight;
   }
 
   protected handleBackdropClick(event: MouseEvent): void {

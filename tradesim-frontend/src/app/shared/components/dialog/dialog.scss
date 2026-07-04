@@ -1,0 +1,66 @@
+.dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .dialog-close {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 999px;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+
+    &:hover {
+      background: var(--surface-secondary);
+      color: var(--text-primary);
+    }
+  }
+
+  .dialog-header:empty,
+  .dialog-body:empty,
+  .dialog-footer:empty {
+    display: none;
+  }
+
+  .dialog-header {
+    padding-right: 1.5rem;
+  }
+
+  .dialog-footer:not(:empty) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  .dialog-divider {
+    display: none;
+    height: 1px;
+    border: none;
+    background: var(--border);
+  }
+
+  .dialog-header:not(:empty) + .dialog-divider:has(+ .dialog-body:not(:empty)) {
+    display: block;
+  }
+
+  &.has-close-button {
+    .dialog-header:empty + .dialog-divider + .dialog-body:not(:empty) {
+      padding-right: 1.5rem;
+    }
+  }
+}

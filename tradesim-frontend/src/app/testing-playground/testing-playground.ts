@@ -5,10 +5,11 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CustomInput } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
 import { CardBorder, CardComponent, CardVariant } from '../shared/components/card/card';
+import { Dialog } from '../shared/components/dialog/dialog';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -51,4 +52,10 @@ export class TestingPlayground {
   protected readonly handleCardClick = () => {
     this.clickCount.update((count) => count + 1);
   };
+
+  protected readonly isBasicDialogOpen = signal(false);
+  protected readonly isBodyOnlyDialogOpen = signal(false);
+  protected readonly isHeaderOnlyDialogOpen = signal(false);
+  protected readonly isForcedDialogOpen = signal(false);
+  protected readonly isCustomContentDialogOpen = signal(false);
 }

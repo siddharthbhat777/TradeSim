@@ -1,0 +1,24 @@
+<app-modal [closeOnBackdropClick]="closeOnBackdropClick()" [closeOnEscape]="closeOnEscape()" [ariaLabel]="ariaLabel()"
+    [titleId]="titleId()" (closed)="closed.emit()">
+    <div class="dialog" [class.has-close-button]="showCloseButton()">
+        @if (showCloseButton()) {
+        <button type="button" class="dialog-close" (click)="closed.emit()" aria-label="Close dialog">
+            &times;
+        </button>
+        }
+
+        <div class="dialog-header">
+            <ng-content select="[dialog-header]" />
+        </div>
+
+        <div class="dialog-divider"></div>
+
+        <div class="dialog-body">
+            <ng-content select="[dialog-body]" />
+        </div>
+
+        <div class="dialog-footer">
+            <ng-content select="[dialog-footer]" />
+        </div>
+    </div>
+</app-modal>

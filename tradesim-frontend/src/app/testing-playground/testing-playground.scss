@@ -196,6 +196,12 @@
   background: var(--accent);
 }
 
+.dialog-custom-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .card-test {
   margin-bottom: 32px;
   display: flex;

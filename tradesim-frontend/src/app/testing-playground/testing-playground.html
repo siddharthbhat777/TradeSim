@@ -345,6 +345,86 @@
 
     </div>
 
+    <!-- =========================
+         DIALOG SHOWCASE
+    ========================= -->
+
+    <div class="demo-section">
+
+        <h3 class="heading-md">
+            Dialog Showcase
+        </h3>
+
+        <div class="button-group">
+            <app-button variant="primary" text="Header + Body + Footer" (click)="isBasicDialogOpen.set(true)" />
+            <app-button variant="secondary" text="Body only" (click)="isBodyOnlyDialogOpen.set(true)" />
+            <app-button variant="secondary" text="Header only" (click)="isHeaderOnlyDialogOpen.set(true)" />
+            <app-button variant="danger" text="Forced acknowledgment" (click)="isForcedDialogOpen.set(true)" />
+            <app-button variant="outline" text="Fully custom content" (click)="isCustomContentDialogOpen.set(true)" />
+        </div>
+
+    </div>
+
+    <!-- 1. Header + body + footer — divider SHOULD appear -->
+    @if (isBasicDialogOpen()) {
+    <app-dialog ariaLabel="Confirm Order" (closed)="isBasicDialogOpen.set(false)">
+        <h3 class="heading-md" dialog-header>Confirm Order</h3>
+        <p class="text-body" dialog-body>
+            Are you sure you want to sell 50 shares of RELIANCE at market price?
+            Both header and body are used here, so the divider between them should be visible.
+        </p>
+        <div dialog-footer>
+            <app-button variant="outline" text="Cancel" (click)="isBasicDialogOpen.set(false)" /> &nbsp;
+            <app-button variant="danger" text="Confirm Sell" (click)="isBasicDialogOpen.set(false)" />
+        </div>
+    </app-dialog>
+    }
+
+    <!-- 2. Body only — no divider, no header -->
+    @if (isBodyOnlyDialogOpen()) {
+    <app-dialog ariaLabel="Notice" (closed)="isBodyOnlyDialogOpen.set(false)">
+        <p class="text-body" dialog-body>
+            No header used here — the divider should NOT appear, just this text and the close button.
+        </p>
+    </app-dialog>
+    }
+
+    <!-- 3. Header only — no divider, no body -->
+    @if (isHeaderOnlyDialogOpen()) {
+    <app-dialog ariaLabel="Heads up" (closed)="isHeaderOnlyDialogOpen.set(false)">
+        <h3 class="heading-md" dialog-header>Market is closed right now so come back later buddies chill</h3>
+    </app-dialog>
+    }
+
+    <!-- 4. Forced acknowledgment — no close button, no backdrop-click,
+         no Escape. Only the footer button can close it. -->
+    @if (isForcedDialogOpen()) {
+    <app-dialog ariaLabel="Session expired" [showCloseButton]="false" [closeOnBackdropClick]="false"
+        [closeOnEscape]="false" (closed)="isForcedDialogOpen.set(false)">
+        <h3 class="heading-md" dialog-header>Session Expired</h3>
+        <p class="text-body" dialog-body>
+            No close button, no backdrop-click, no Escape — the only way out is the button below.
+        </p>
+        <div dialog-footer>
+            <app-button variant="primary" text="Log back in" (click)="isForcedDialogOpen.set(false)" />
+        </div>
+    </app-dialog>
+    }
+
+    <!-- 5. Fully custom content — no dialog-header/body/footer used at
+         all, same flexibility as using Modal directly (e.g. an auth form). -->
+    @if (isCustomContentDialogOpen()) {
+    <app-dialog ariaLabel="Custom content" [showCloseButton]="false" (closed)="isCustomContentDialogOpen.set(false)">
+        <div class="dialog-custom-content">
+            <p class="text-body">
+                No dialog-header, dialog-body, or dialog-footer attributes used here at all —
+                just raw projected content, same as using Modal directly.
+            </p>
+            <app-button variant="secondary" text="Close" (click)="isCustomContentDialogOpen.set(false)" />
+        </div>
+    </app-dialog>
+    }
+
     <div class="card-test">
         <h2 class="heading-lg">Card Playground</h2>
 
