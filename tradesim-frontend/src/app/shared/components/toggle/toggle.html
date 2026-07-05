@@ -1,0 +1,16 @@
+<div class="toggle-wrapper" [class.toggle-wrapper--disabled]="disabled()">
+    <button type="button" role="switch" [class]="classes()" aria-checked="false" [attr.aria-checked]="checked()"
+        [attr.aria-labelledby]="label() ? labelId : null" [disabled]="disabled()" (click)="toggle()">
+        <span class="toggle__icon toggle__icon--on">
+            <ng-content select="[toggleOnIcon]"></ng-content>
+        </span>
+        <span class="toggle__icon toggle__icon--off">
+            <ng-content select="[toggleOffIcon]"></ng-content>
+        </span>
+        <span class="toggle__thumb"></span>
+    </button>
+
+    @if (label()) {
+    <span class="toggle__label" [id]="labelId">{{ label() }}</span>
+    }
+</div>

@@ -446,6 +446,120 @@
     </div>
 
     <div class="demo-section">
+        <h3 class="heading-md">Toggle button Showcase</h3>
+
+        <!-- 1. Standalone toggle — plain FormControl, no <form> or FormGroup needed -->
+        <!-- Both icons are always projected; the thumb slides to cover whichever one doesn't match the state -->
+        <div class="demo-row">
+            <p class="text-muted">1. Standalone — [formControl], dark/light mode with both icons</p>
+            <app-toggle [formControl]="darkModeControl" label="Dark mode" variant="accent" offVariant="warning">
+                <svg toggleOnIcon viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <svg toggleOffIcon viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="4" />
+                    <path
+                        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </app-toggle>
+        </div>
+
+        <!-- 2. Inside a real reactive form — formControlName, grouped settings -->
+        <div class="demo-row">
+            <p class="text-muted">2. Inside a FormGroup — formControlName</p>
+            <form [formGroup]="settingsForm" class="demo-form">
+                <app-toggle formControlName="emailAlerts" label="Email alerts" variant="primary"></app-toggle>
+                <app-toggle formControlName="smsAlerts" label="SMS alerts" variant="primary"></app-toggle>
+                <app-toggle formControlName="autoInvest" label="Auto-invest round-ups" variant="success"></app-toggle>
+            </form>
+            <p class="text-muted">{{ settingsSummary }}</p>
+        </div>
+
+        <!-- 3. No label, no icons — bare toggle for inline contexts like a table row -->
+        <div class="demo-row">
+            <p class="text-muted">3. No label, no icons</p>
+            <app-toggle [formControl]="darkModeControl" variant="accent"></app-toggle>
+        </div>
+
+        <!-- 4. Disabled — pre-set from the form model -->
+        <div class="demo-row">
+            <p class="text-muted">4. Disabled, checked — plan-gated feature</p>
+            <app-toggle [formControl]="lockedFeatureControl" label="Premium analytics" variant="secondary"></app-toggle>
+        </div>
+
+        <!-- 5. Disabled toggled at runtime -->
+        <div class="demo-row">
+            <p class="text-muted">5. Disabled toggled at runtime</p>
+            <app-toggle [formControl]="riskModeControl" label="High-risk trading mode" variant="danger"></app-toggle>
+            <button type="button" (click)="toggleLock()">
+                {{ riskModeLocked ? 'Unlock control' : 'Lock control' }}
+            </button>
+        </div>
+
+        <!-- 6. Sizes, side by side -->
+        <div class="demo-row">
+            <p class="text-muted">6. Sizes</p>
+            <div class="demo-inline">
+                <app-toggle [formControl]="darkModeControl" size="small" label="Small" variant="primary"></app-toggle>
+                <app-toggle [formControl]="darkModeControl" size="medium" label="Medium" variant="primary"></app-toggle>
+                <app-toggle [formControl]="darkModeControl" size="large" label="Large" variant="primary"></app-toggle>
+            </div>
+        </div>
+
+        <!-- 7. All ON-state variants, side by side -->
+        <div class="demo-row">
+            <p class="text-muted">7. ON-state variants</p>
+            <div class="demo-inline">
+                <app-toggle [formControl]="darkModeControl" variant="primary" label="Primary"></app-toggle>
+                <app-toggle [formControl]="darkModeControl" variant="secondary" label="Secondary"></app-toggle>
+                <app-toggle [formControl]="darkModeControl" variant="accent" label="Accent"></app-toggle>
+                <app-toggle [formControl]="darkModeControl" variant="success" label="Success"></app-toggle>
+                <app-toggle [formControl]="darkModeControl" variant="danger" label="Danger"></app-toggle>
+                <app-toggle [formControl]="darkModeControl" variant="warning" label="Warning"></app-toggle>
+            </div>
+        </div>
+
+        <!-- 8. OFF-state colors — riskModeControl starts unchecked, so these render in their off color immediately -->
+        <div class="demo-row">
+            <p class="text-muted">8. OFF-state variants (explicit offVariant, not the default gray)</p>
+            <div class="demo-inline">
+                <app-toggle [formControl]="riskModeControl" variant="primary" offVariant="secondary"
+                    label="Off = secondary"></app-toggle>
+                <app-toggle [formControl]="riskModeControl" variant="primary" offVariant="danger"
+                    label="Off = danger"></app-toggle>
+                <app-toggle [formControl]="riskModeControl" variant="primary" offVariant="warning"
+                    label="Off = warning"></app-toggle>
+            </div>
+        </div>
+
+        <!-- 9. Default neutral OFF color — no offVariant set, falls back to gray regardless of variant -->
+        <div class="demo-row">
+            <p class="text-muted">9. Default OFF color (no offVariant — always neutral gray)</p>
+            <app-toggle [formControl]="riskModeControl" variant="success" label="Autopilot"></app-toggle>
+        </div>
+
+        <!-- 10. Projected <img> icons on both sides, to confirm the slots accept either SVG or img -->
+        <div class="demo-row">
+            <p class="text-muted">10. Projected &lt;img&gt; icons on both sides</p>
+            <app-toggle [formControl]="darkModeControl" label="Notifications" variant="accent">
+                <img toggleOnIcon src="https://api.iconify.design/lucide:bell.svg" alt="" />
+                <img toggleOffIcon src="https://api.iconify.design/lucide:bell-off.svg" alt="" />
+            </app-toggle>
+        </div>
+
+        <!-- 11. Only one side's icon provided — confirms the other slot stays empty without breaking layout -->
+        <div class="demo-row">
+            <p class="text-muted">11. Only the ON icon provided</p>
+            <app-toggle [formControl]="darkModeControl" label="Beta features" variant="accent">
+                <svg toggleOnIcon viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l2.4 7.2H22l-6 4.4 2.4 7.2-6.4-4.6L5.6 20.8 8 13.6l-6-4.4h7.6z" />
+                </svg>
+            </app-toggle>
+        </div>
+    </div>
+
+    <div class="demo-section">
         <h3 class="heading-md">
             Price Indicator Showcase
         </h3>

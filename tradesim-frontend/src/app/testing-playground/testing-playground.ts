@@ -9,10 +9,11 @@ import { Dialog } from '../shared/components/dialog/dialog';
 import { PriceIndicator } from '../shared/components/price-indicator/price-indicator';
 import { EmptyState } from '../shared/components/empty-state/empty-state';
 import { Router } from '@angular/router';
+import { Toggle } from '../shared/components/toggle/toggle';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -63,4 +64,32 @@ export class TestingPlayground {
   protected readonly isHeaderOnlyDialogOpen = signal(false);
   protected readonly isForcedDialogOpen = signal(false);
   protected readonly isCustomContentDialogOpen = signal(false);
+
+
+  readonly darkModeControl = new FormControl(false, { nonNullable: true });
+
+  readonly settingsForm = new FormGroup({
+    emailAlerts: new FormControl(true, { nonNullable: true }),
+    smsAlerts: new FormControl(false, { nonNullable: true }),
+    autoInvest: new FormControl(false, { nonNullable: true }),
+  });
+
+  readonly lockedFeatureControl = new FormControl({ value: true, disabled: true });
+
+  readonly riskModeControl = new FormControl(false, { nonNullable: true });
+  riskModeLocked = false;
+
+  toggleLock(): void {
+    this.riskModeLocked = !this.riskModeLocked;
+    if (this.riskModeLocked) {
+      this.riskModeControl.disable();
+    } else {
+      this.riskModeControl.enable();
+    }
+  }
+
+  get settingsSummary(): string {
+    const v = this.settingsForm.value;
+    return `emailAlerts: ${v.emailAlerts}, smsAlerts: ${v.smsAlerts}, autoInvest: ${v.autoInvest}`;
+  }
 }
