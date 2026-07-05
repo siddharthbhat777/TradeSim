@@ -24,6 +24,7 @@ export class Toggle implements ControlValueAccessor {
   readonly size = input<ToggleSize>('medium');
   readonly variant = input<ToggleVariant>('primary');
   readonly offVariant = input<ToggleVariant>();
+  readonly labelPosition = input<'left' | 'right'>('left');
 
   protected readonly checked = signal(false);
   protected readonly disabled = signal(false);

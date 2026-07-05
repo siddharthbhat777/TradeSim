@@ -6,6 +6,10 @@
   &--disabled {
     opacity: 0.6;
   }
+
+  &--label-right {
+    flex-direction: row-reverse;
+  }
 }
 
 .toggle {
