@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -7,14 +7,18 @@ import { InputDirective } from '../shared/directives/input';
 import { CardBorder, CardComponent, CardVariant } from '../shared/components/card/card';
 import { Dialog } from '../shared/components/dialog/dialog';
 import { PriceIndicator } from '../shared/components/price-indicator/price-indicator';
+import { EmptyState } from '../shared/components/empty-state/empty-state';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
 export class TestingPlayground {
+  readonly router = inject(Router);
+
   readonly inputDemoForm = new FormGroup({
     email: new FormControl('', {
       nonNullable: true,

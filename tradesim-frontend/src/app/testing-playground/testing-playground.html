@@ -427,6 +427,26 @@
 
     <div class="demo-section">
         <h3 class="heading-md">
+            Empty state
+        </h3>
+        <app-empty-state text="No open positions yet" subtext="Your positions will show up here once you place a trade."
+            actionLabel="Go to Login" (actionClick)="router.navigate(['/'])">
+            <span icon>📈</span>
+        </app-empty-state>
+        <app-empty-state text="No open positions yet"
+            subtext="Your positions will show up here once you place a trade.">
+            <span icon>📈</span>
+        </app-empty-state>
+        <app-empty-state text="No open positions yet"
+            subtext="Your positions will show up here once you place a trade.">
+        </app-empty-state>
+        <app-empty-state text="No open positions yet">
+            <span icon>📈</span>
+        </app-empty-state>
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">
             Price Indicator Showcase
         </h3>
 
