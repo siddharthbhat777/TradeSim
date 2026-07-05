@@ -6,10 +6,11 @@ import { CustomInput } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
 import { CardBorder, CardComponent, CardVariant } from '../shared/components/card/card';
 import { Dialog } from '../shared/components/dialog/dialog';
+import { PriceIndicator } from '../shared/components/price-indicator/price-indicator';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })

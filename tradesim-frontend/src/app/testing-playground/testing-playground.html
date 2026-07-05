@@ -425,6 +425,67 @@
     </app-dialog>
     }
 
+    <div class="demo-section">
+        <h3 class="heading-md">
+            Price Indicator Showcase
+        </h3>
+
+        <!-- 1. Basic sign cases -->
+        <p class="text-muted">Positive</p>
+        <app-price-indicator [value]="12450" [percentage]="1.12" /> <br>
+
+        <p class="text-muted">Negative</p>
+        <app-price-indicator [value]="-4200" [percentage]="-2.34" /> <br>
+
+        <p class="text-muted">Zero (neutral, no arrow)</p>
+        <app-price-indicator [value]="0" /> <br>
+
+        <p class="text-muted">Zero with percentage still passed — should stay neutral, no arrow, percentage still shown
+        </p>
+        <app-price-indicator [value]="0" [percentage]="0" /> <br>
+
+        <!-- 2. Percentage handling -->
+        <p class="text-muted">No percentage passed at all — no bracket, even though showPercentage defaults true</p>
+        <app-price-indicator [value]="12450" /> <br>
+
+        <p class="text-muted">Percentage passed but showPercentage false — bracket hidden</p>
+        <app-price-indicator [value]="12450" [percentage]="1.12" [showPercentage]="false" /> <br>
+
+        <!-- 3. Arrow handling -->
+        <p class="text-muted">Positive, arrow hidden</p>
+        <app-price-indicator [value]="12450" [percentage]="1.12" [showArrow]="false" /> <br>
+
+        <p class="text-muted">Negative, arrow hidden</p>
+        <app-price-indicator [value]="-4200" [percentage]="-2.34" [showArrow]="false" /> <br>
+
+        <!-- 4. Currency -->
+        <p class="text-muted">USD instead of default INR</p>
+        <app-price-indicator [value]="3206546544.50" [percentage]="0.85" currency="USD" locale="en-US" /> <br>
+
+        <p class="text-muted">Negative USD</p>
+        <app-price-indicator [value]="-18.25" [percentage]="-1.4" currency="USD" locale="en-US" /> <br>
+
+        <!-- 5. Decimal precision -->
+        <p class="text-muted">2 decimal places on value (e.g. cents), 0 on percentage</p>
+        <app-price-indicator [value]="245.75" [percentage]="3" [valueDecimals]="2" [percentageDecimals]="0" /> <br>
+
+        <p class="text-muted">Small value near zero, with decimals — confirms sign logic still works</p>
+        <app-price-indicator [value]="-0.05" [percentage]="-0.02" [valueDecimals]="2" /> <br>
+
+        <!-- 6. Large number — confirms Indian lakh/crore grouping -->
+        <p class="text-muted">Large value (lakh grouping)</p>
+        <app-price-indicator [value]="1250000" [percentage]="4.2" /> <br>
+
+        <!-- 7. Dense table-style usage — arrow off, color-only, as you'd use in a real table column -->
+        <p class="text-muted">Table-style: arrow off, compact rows</p>
+        <div class="price-indicator-table-demo">
+            <app-price-indicator [value]="12500" [percentage]="5.1" [showArrow]="false" />
+            <app-price-indicator [value]="-4200" [percentage]="-1.8" [showArrow]="false" />
+            <app-price-indicator [value]="875" [percentage]="0.3" [showArrow]="false" />
+            <app-price-indicator [value]="0" [percentage]="0" [showArrow]="false" />
+        </div>
+    </div>
+
     <div class="card-test">
         <h2 class="heading-lg">Card Playground</h2>
 
