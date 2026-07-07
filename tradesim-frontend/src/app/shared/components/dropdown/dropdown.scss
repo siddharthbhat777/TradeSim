@@ -123,9 +123,13 @@
   }
 }
 
+@position-try --dropdown-panel-flip {
+  top: auto;
+  bottom: calc(anchor(top) + 6px);
+}
+
 .dropdown__panel {
   margin: 0;
-  margin-top: 6px;
   padding: 6px;
   list-style: none;
   width: anchor-size(width);
@@ -138,7 +142,7 @@
 
   top: calc(anchor(bottom) + 6px);
   left: anchor(left);
-  position-try-fallbacks: flip-block;
+  position-try-fallbacks: --dropdown-panel-flip;
 
   opacity: 0;
   transform: translateY(-4px);

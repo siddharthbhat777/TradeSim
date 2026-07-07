@@ -3,6 +3,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
+  DOCUMENT,
   effect,
   ElementRef,
   inject,
@@ -92,10 +94,17 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   private typeAheadBuffer = '';
   private typeAheadTimeout?: ReturnType<typeof setTimeout>;
 
+  private readonly window = inject(DOCUMENT).defaultView;
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor() {
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
     }
+
+    this.destroyRef.onDestroy(() => {
+      this.window?.removeEventListener('scroll', this.onWindowScroll, { capture: true });
+    });
 
     effect(() => {
       const opts = this.options();
@@ -150,6 +159,12 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     panel.hidePopover?.();
   }
 
+  private onWindowScroll = (): void => {
+    if (this.isOpen()) {
+      this.closePanel();
+    }
+  };
+
   protected onPanelToggle(event: Event): void {
     const toggleEvent = event as Event & { newState: 'open' | 'closed' };
     const open = toggleEvent.newState === 'open';
@@ -157,8 +172,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
 
     if (open) {
       this.activeIndex.set(this.computeInitialActiveIndex());
+      this.window?.addEventListener('scroll', this.onWindowScroll, { capture: true, passive: true });
     } else {
       this.onTouched();
+      this.window?.removeEventListener('scroll', this.onWindowScroll, { capture: true });
     }
   }
 

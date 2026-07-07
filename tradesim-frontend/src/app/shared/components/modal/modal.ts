@@ -9,6 +9,7 @@ import {
   afterNextRender,
   inject,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-modal',
@@ -28,13 +29,15 @@ export class Modal {
 
   private readonly modalContentRef = viewChild<ElementRef<HTMLElement>>('modalContent');
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
+  private readonly window = this.document.defaultView;
   private previouslyFocusedElement: HTMLElement | null = null;
   private originalBodyOverflow = '';
   private originalBodyPaddingRight = '';
 
   constructor() {
     afterNextRender(() => {
-      this.previouslyFocusedElement = document.activeElement as HTMLElement;
+      this.previouslyFocusedElement = this.document.activeElement as HTMLElement;
       this.lockScroll();
       const content = this.modalContentRef()?.nativeElement;
       if (content) {
@@ -50,12 +53,16 @@ export class Modal {
   }
 
   private lockScroll(): void {
-    const body = document.body;
+    if (!this.window) {
+      return;
+    }
+
+    const body = this.document.body;
     this.originalBodyOverflow = body.style.overflow;
     this.originalBodyPaddingRight = body.style.paddingRight;
 
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    const currentPaddingRight = parseFloat(getComputedStyle(body).paddingRight) || 0;
+    const scrollbarWidth = this.window.innerWidth - this.document.documentElement.clientWidth;
+    const currentPaddingRight = parseFloat(this.window.getComputedStyle(body).paddingRight) || 0;
 
     body.style.overflow = 'hidden';
     if (scrollbarWidth > 0) {
@@ -64,8 +71,8 @@ export class Modal {
   }
 
   private unlockScroll(): void {
-    document.body.style.overflow = this.originalBodyOverflow;
-    document.body.style.paddingRight = this.originalBodyPaddingRight;
+    this.document.body.style.overflow = this.originalBodyOverflow;
+    this.document.body.style.paddingRight = this.originalBodyPaddingRight;
   }
 
   protected handleBackdropClick(event: MouseEvent): void {
@@ -99,7 +106,7 @@ export class Modal {
 
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
-    const active = document.activeElement;
+    const active = this.document.activeElement;
 
     if (keyboardEvent.shiftKey && active === first) {
       keyboardEvent.preventDefault();
