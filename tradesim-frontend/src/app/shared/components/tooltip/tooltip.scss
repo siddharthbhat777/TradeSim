@@ -1,0 +1,65 @@
+.tooltip__trigger {
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+}
+
+.tooltip__panel {
+  margin: 0;
+  padding: 8px 12px;
+  max-width: 260px;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  box-shadow: var(--shadow);
+
+  opacity: 0;
+  transform: scale(0.95);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    overlay 0.12s allow-discrete,
+    display 0.12s allow-discrete;
+
+  &:popover-open {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @starting-style {
+    &:popover-open {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+
+  &--top {
+    position-area: top;
+    position-try-fallbacks: flip-block;
+    margin-bottom: 8px;
+  }
+
+  &--bottom {
+    position-area: bottom;
+    position-try-fallbacks: flip-block;
+    margin-top: 8px;
+  }
+
+  &--left {
+    position-area: left;
+    position-try-fallbacks: flip-inline;
+    margin-right: 8px;
+  }
+
+  &--right {
+    position-area: right;
+    position-try-fallbacks: flip-inline;
+    margin-left: 8px;
+  }
+}
+
+.tooltip__text {
+  margin: 0;
+}

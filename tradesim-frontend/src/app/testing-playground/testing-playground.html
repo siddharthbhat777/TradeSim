@@ -696,6 +696,81 @@
         </div>
     </div>
 
+    <div class="demo-section">
+        <h3 class="heading-md">Tooltip Showcase</h3>
+
+        <!-- 1. Plain text shorthand, default position (top), icon trigger -->
+        <div class="demo-row">
+            <p class="text-muted">1. Text shorthand, icon trigger, default position (top)</p>
+            <app-tooltip text="Total value of all your open positions">
+                <span>ⓘ</span>
+            </app-tooltip>
+        </div>
+
+        <!-- 2. Rich content — header, paragraph, image, all block-level, inside the panel div -->
+        <div class="demo-row">
+            <p class="text-muted">2. Rich content — header + paragraph + image via tooltipContent</p>
+            <app-tooltip position="right">
+                <span>ⓘ</span>
+                <div tooltipContent>
+                    <h4>Margin Requirement</h4>
+                    <p>Minimum capital needed to open and hold this position.</p>
+                    <img src="tradesim_logo_light_mode.png" alt="" width="60" />
+                </div>
+            </app-tooltip>
+        </div>
+
+        <!-- 3. All four positions side by side -->
+        <div class="demo-row">
+            <p class="text-muted">3. All four positions</p>
+            <div class="demo-inline">
+                <app-tooltip text="Appears above" position="top"><span>Top</span></app-tooltip>
+                <app-tooltip text="Appears to the right" position="right"><span>Right</span></app-tooltip>
+                <app-tooltip text="Appears below" position="bottom"><span>Bottom</span></app-tooltip>
+                <app-tooltip text="Appears to the left" position="left"><span>Left</span></app-tooltip>
+            </div>
+        </div>
+
+        <!-- 4. Near the right viewport edge — position="right" has no room, should auto-flip to left -->
+        <div class="demo-row">
+            <p class="text-muted">4. Edge-of-viewport flip check — resize window narrow, or check on mobile width</p>
+            <div class="demo-edge-push">
+                <app-tooltip text="This should flip to the left if there's no room on the right" position="right">
+                    <span>ⓘ Near edge</span>
+                </app-tooltip>
+            </div>
+        </div>
+
+        <!-- 5. Trigger wrapping plain text, not just an icon -->
+        <div class="demo-row">
+            <p class="text-muted">5. Trigger wrapping a plain word, not an icon</p>
+            <p class="text-body">
+                Your <app-tooltip
+                    text="Realized + unrealized profit and loss, before fees"><span>P&amp;L</span></app-tooltip> updates
+                every few seconds.
+            </p>
+        </div>
+
+        <!-- 6. Correct link pattern — tooltip on an adjacent icon, not on the link itself -->
+        <div class="demo-row">
+            <p class="text-muted">6. Link pattern — tooltip on the adjacent icon, link stays untouched</p>
+            <p class="text-body">
+                <app-tooltip text="Opens in the same tab, no confirmation needed">
+                    <span><a href="#" class="accent-link-demo">View margin policy</a></span>
+                </app-tooltip>
+            </p>
+        </div>
+
+        <!-- 7. Manual checks — nothing here to click, just instructions -->
+        <div class="demo-row">
+            <p class="text-muted">
+                7. Manual checks: (a) Tab to any ⓘ above — tooltip should appear immediately, no delay,
+                and disappear immediately on tab-away. (b) Hover any ⓘ and press Escape — it should close.
+                (c) Click/tap any ⓘ — it should toggle open, then tap again to close.
+            </p>
+        </div>
+    </div>
+
     <div class="card-test">
         <h2 class="heading-lg">Card Playground</h2>
 

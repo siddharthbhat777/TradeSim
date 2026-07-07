@@ -1,0 +1,15 @@
+<span #trigger class="tooltip__trigger" tabindex="0" [style.anchor-name]="anchorName"
+    [attr.aria-describedby]="tooltipId" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()"
+    (focusin)="onFocusIn()" (focusout)="onFocusOut()" (click)="onClick()" (keydown)="onKeydown($event)">
+    <ng-content></ng-content>
+</span>
+
+<div #panel [id]="tooltipId" popover="manual" role="tooltip" class="tooltip__panel"
+    [class.tooltip__panel--top]="position() === 'top'" [class.tooltip__panel--right]="position() === 'right'"
+    [class.tooltip__panel--bottom]="position() === 'bottom'" [class.tooltip__panel--left]="position() === 'left'"
+    [style.position-anchor]="anchorName">
+    @if (text()) {
+    <p class="tooltip__text">{{ text() }}</p>
+    }
+    <ng-content select="[tooltipContent]"></ng-content>
+</div>

@@ -11,10 +11,11 @@ import { EmptyState } from '../shared/components/empty-state/empty-state';
 import { Router } from '@angular/router';
 import { Toggle } from '../shared/components/toggle/toggle';
 import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown';
+import { Tooltip } from '../shared/components/tooltip/tooltip';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
