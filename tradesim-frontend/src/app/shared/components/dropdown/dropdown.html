@@ -1,0 +1,63 @@
+<div class="dropdown" [class.dropdown--disabled]="disabledState()" [class.dropdown--full-width]="fullWidth()"
+    [class.dropdown--reserve-message]="shouldReserveMessageSpace()">
+    @if (label()) {
+    <label class="dropdown__label" [id]="labelId" [attr.for]="triggerId">
+        {{ label() }}
+        @if (required()) {
+        <span class="dropdown__required" aria-hidden="true">*</span>
+        }
+    </label>
+    }
+
+    <button #trigger type="button" [id]="triggerId" class="dropdown__trigger"
+        [class.dropdown__trigger--invalid]="shouldShowError()" [style.anchor-name]="anchorName"
+        [attr.popovertarget]="panelId" [attr.aria-haspopup]="'listbox'" [attr.aria-expanded]="isOpen()"
+        [attr.aria-activedescendant]="activeOptionId()" aria-label="Select an option"
+        [attr.aria-labelledby]="label() ? labelId : null" [attr.aria-invalid]="shouldShowError() ? 'true' : null"
+        [attr.aria-required]="required() ? 'true' : null" [disabled]="disabledState()"
+        (keydown)="onTriggerKeydown($event)">
+        <span class="dropdown__trigger-content">
+            @if (selected(); as option) {
+            @if (option.icon) {
+            <span class="dropdown__option-icon" [innerHTML]="option.icon"></span>
+            }
+            <span class="dropdown__trigger-label">{{ option.label }}</span>
+            } @else {
+            <span class="dropdown__trigger-label dropdown__trigger-label--placeholder">
+                {{ placeholder() || 'Select an option' }}
+            </span>
+            }
+        </span>
+
+        <svg class="dropdown__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6" />
+        </svg>
+    </button>
+
+    <ul #panel [id]="panelId" popover role="listbox" class="dropdown__panel" [style.position-anchor]="anchorName"
+        aria-label="Options" [attr.aria-labelledby]="label() ? labelId : null" (toggle)="onPanelToggle($event)">
+        @for (option of options(); track option.value; let i = $index) {
+        <li [id]="optionId(i)" role="option" class="dropdown__option"
+            [class.dropdown__option--active]="i === activeIndex()"
+            [class.dropdown__option--selected]="option === selected()"
+            [class.dropdown__option--disabled]="option.disabled" [attr.aria-selected]="option === selected()"
+            [attr.aria-disabled]="option.disabled ? 'true' : null" (click)="selectOption(option)"
+            (mouseenter)="activeIndex.set(i)">
+            @if (option.icon) {
+            <span class="dropdown__option-icon" [innerHTML]="option.icon"></span>
+            }
+            <span class="dropdown__option-label">{{ option.label }}</span>
+        </li>
+        }
+    </ul>
+
+    @if (shouldReserveMessageSpace()) {
+    <p class="dropdown__message" [class.dropdown__message--error]="shouldShowError()">
+        @if (shouldShowError()) {
+        {{ getErrorMessage() }}
+        } @else if (helperText()) {
+        {{ helperText() }}
+        }
+    </p>
+    }
+</div>

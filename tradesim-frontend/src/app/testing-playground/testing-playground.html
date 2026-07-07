@@ -49,9 +49,7 @@
 
             <p>
                 Today's P&L:
-                <span class="badge-profit">
-                    +₹12,450 (+1.12%)
-                </span>
+                <app-price-indicator [value]="12450" [percentage]="1.12" [showArrow]="false" />
             </p>
 
         </app-card>
@@ -623,6 +621,78 @@
             <app-price-indicator [value]="-4200" [percentage]="-1.8" [showArrow]="false" />
             <app-price-indicator [value]="875" [percentage]="0.3" [showArrow]="false" />
             <app-price-indicator [value]="0" [percentage]="0" [showArrow]="false" />
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">Dropdown Showcase</h3>
+
+        <!-- 1. Standalone, no placeholder — auto-selects the first enabled option (Market) on init -->
+        <div class="demo-row">
+            <p class="text-muted">1. Standalone, no placeholder — auto-selects first enabled option</p>
+            <app-dropdown label="Order type" [formControl]="orderTypeControl"
+                [options]="orderTypeOptions"></app-dropdown>
+            <p class="text-muted">Value: {{ orderTypeControl.value }}</p>
+        </div>
+
+        <!-- 2. Standalone with placeholder — starts genuinely empty, nothing auto-selected -->
+        <div class="demo-row">
+            <p class="text-muted">2. Placeholder mode — starts empty until user picks</p>
+            <app-dropdown label="Sort by" placeholder="Choose a sort order" [formControl]="sortByControl"
+                [options]="sortByOptions"></app-dropdown>
+            <p class="text-muted">Value: {{ sortByControl.value ?? 'null' }}</p>
+        </div>
+
+        <!-- 3. Inside a FormGroup, required, with a submit button to reveal the error state -->
+        <div class="demo-row">
+            <p class="text-muted">3. Required, inside a FormGroup — submit to trigger the error</p>
+            <form [formGroup]="tradePrefsForm" class="demo-form">
+                <app-dropdown label="Exchange" [required]="true" formControlName="exchange"
+                    placeholder="Select an exchange" [options]="exchangeOptions"></app-dropdown>
+            </form>
+            <button type="button" (click)="submitTradePrefs()">Submit</button>
+        </div>
+
+        <!-- 4. Options with icons — icon stays visible in the closed trigger too -->
+        <div class="demo-row">
+            <p class="text-muted">4. Options with icons (visible in trigger once selected)</p>
+            <app-dropdown label="Currency" placeholder="Select a currency" [formControl]="currencyControl"
+                [options]="currencyOptions"></app-dropdown>
+        </div>
+
+        <!-- 5. Pre-disabled with a value already set -->
+        <div class="demo-row">
+            <p class="text-muted">5. Disabled, pre-set from the form model</p>
+            <app-dropdown label="Primary exchange" [formControl]="lockedExchangeControl"
+                [options]="exchangeOptions"></app-dropdown>
+        </div>
+
+        <!-- 6. Disabled toggled at runtime -->
+        <div class="demo-row">
+            <p class="text-muted">6. Disabled toggled at runtime</p>
+            <app-dropdown label="Watchlist sort" placeholder="Pick a sort" [formControl]="runtimeLockControl"
+                [options]="sortByOptions"></app-dropdown>
+            <button type="button" (click)="toggleDropdownLock()">
+                {{ runtimeLockControlLocked ? 'Unlock control' : 'Lock control' }}
+            </button>
+        </div>
+
+        <!-- 7. fullWidth -->
+        <div class="demo-row">
+            <p class="text-muted">7. fullWidth</p>
+            <app-dropdown label="Watchlist category" [required]="true" fullWidth placeholder="Select a category"
+                [formControl]="watchlistCategoryControl" [options]="watchlistCategoryOptions"></app-dropdown>
+        </div>
+
+        <!-- 8. Keyboard + disabled-option check — try Arrow keys, Home/End, typing a letter, and
+             confirm "Stop" (disabled) can't be landed on or selected -->
+        <div class="demo-row">
+            <p class="text-muted">
+                8. Keyboard nav check — focus this, then try Arrow Up/Down, Home, End, and typing "L" or "S".
+                "Stop" is disabled and should be skipped entirely.
+            </p>
+            <app-dropdown label="Order type (keyboard test)" [formControl]="orderTypeControl"
+                [options]="orderTypeOptions"></app-dropdown>
         </div>
     </div>
 
