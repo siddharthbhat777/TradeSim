@@ -162,6 +162,34 @@
                 </svg>
             </app-button>
 
+            <!-- Sizes -->
+            <app-button variant="primary" size="small" text="Small" />
+            <app-button variant="primary" size="medium" text="Medium (default)" />
+            <app-button variant="primary" size="large" text="Large" />
+
+            <!-- Sizes with icon, to confirm the icon scales alongside the button -->
+            <app-button variant="secondary" size="small" text="Small + icon">
+                <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+                </svg>
+            </app-button>
+            <app-button variant="secondary" size="large" text="Large + icon">
+                <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+                </svg>
+            </app-button>
+
+            <!-- width/height — fully custom fixed dimensions, independent of the size scale -->
+            <app-button variant="outline" text="Fixed 220x60" width="220px" height="60px" />
+
+            <!-- ariaLabel — for icon-only-style buttons where visible text isn't the full story -->
+            <app-button variant="danger" text="✕" ariaLabel="Cancel order" width="44px" height="44px" />
+
+            <!-- disabled -->
+            <app-button variant="primary" text="Disabled" [disabled]="true" />
+
         </div>
 
     </div>
@@ -193,7 +221,57 @@
                 <textarea appInput appInputFullWidth required rows="4" formControlName="notes"
                     placeholder="Write order notes"></textarea>
             </app-input>
+
+            <!-- errorMessages — custom per-validator overrides, including a function-based one -->
+            <app-input label="Username" [errorMessages]="usernameErrorMessages">
+                <input appInput required type="text" placeholder="Choose a username" formControlName="username">
+            </app-input>
         </form>
+
+        <button type="button" (click)="submitInputDemo()">Submit (reveal touched-mode errors above)</button>
+
+        <!-- appInputValidationMode="always" — shows its error immediately, no touch/submit needed -->
+        <app-input label="Always-validate mode"
+            helperText="This one shows its error immediately, unlike the fields above">
+            <input appInput appInputValidationMode="always" required type="text" placeholder="Try leaving this empty"
+                [formControl]="alwaysValidateControl">
+        </app-input>
+
+        <!-- appInputInvalid — forced invalid regardless of the control's real validity -->
+        <app-input label="Force-invalid override"
+            errorText="Forced invalid via appInputInvalid, ignoring the real value">
+            <input appInput appInputInvalid type="text" value="This value is actually fine">
+        </app-input>
+
+        <!-- showErrors=false — control is genuinely invalid, but display is suppressed -->
+        <app-input label="Errors suppressed" [showErrors]="false"
+            helperText="Invalid underneath, but showErrors is false so nothing red ever shows">
+            <input appInput appInputValidationMode="always" required type="text"
+                placeholder="Also try leaving this empty">
+        </app-input>
+
+        <!-- disabled -->
+        <app-input label="Disabled">
+            <input appInput type="text" value="Can't edit this" disabled>
+        </app-input>
+
+        <!-- readonly -->
+        <app-input label="Read-only">
+            <input appInput type="text" value="REF-2026-04471" readonly>
+        </app-input>
+
+        <!-- Sizes -->
+        <app-input label="Small">
+            <input appInput appInputSize="small" type="text" placeholder="Small input">
+        </app-input>
+
+        <app-input label="Medium (default)">
+            <input appInput appInputSize="medium" type="text" placeholder="Medium input">
+        </app-input>
+
+        <app-input label="Large">
+            <input appInput appInputSize="large" type="text" placeholder="Large input">
+        </app-input>
 
     </div>
 
@@ -694,6 +772,20 @@
             <app-dropdown label="Order type (keyboard test)" [formControl]="orderTypeControl"
                 [options]="orderTypeOptions"></app-dropdown>
         </div>
+
+        <!-- 9. Sizes — small/medium/large, side by side. Large (default) matches the original
+             unscoped trigger exactly, so every dropdown elsewhere in the app is unaffected. -->
+        <div class="demo-row">
+            <p class="text-muted">9. Sizes — small is meant for tight spots like pagination controls</p>
+            <div class="demo-inline">
+                <app-dropdown size="small" label="Small" [formControl]="pageSizeControl"
+                    [options]="pageSizeOptions"></app-dropdown>
+                <app-dropdown size="medium" label="Medium" [formControl]="pageSizeControl"
+                    [options]="pageSizeOptions"></app-dropdown>
+                <app-dropdown size="large" label="Large (default)" [formControl]="pageSizeControl"
+                    [options]="pageSizeOptions"></app-dropdown>
+            </div>
+        </div>
     </div>
 
     <div class="demo-section">
@@ -829,10 +921,67 @@
                 its timer. (c) fire a danger toast with a screen reader running — it should interrupt
                 immediately, while success/info/warning should wait their turn.
             </p>
+            <app-toast />
         </div>
     </div>
 
-    <app-toast />
+    <div class="demo-section">
+        <h3 class="heading-md">Pagination — Basic usage</h3>
+        <p class="text-muted">145 items, default page sizes. Test Prev/Next, typing a page number, Enter, blur, and the
+            page-size dropdown.</p>
+        <app-pagination [totalItems]="demoBasicTotalItems()" [(currentPage)]="demoBasicCurrentPage"
+            [(pageSize)]="demoBasicPageSize">
+        </app-pagination>
+        <p class="text-muted">currentPage: {{ demoBasicCurrentPage() }} · pageSize: {{ demoBasicPageSize() }}</p>
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">Pagination — Single page (fully disabled)</h3>
+        <p class="text-muted">8 items with a page size of 10 → only 1 total page. Component should render fully but with
+            both buttons and input disabled, not hidden.</p>
+        <app-pagination [totalItems]="demoSinglePageTotalItems()" [(currentPage)]="demoSinglePageCurrentPage"
+            [(pageSize)]="demoSinglePageSize">
+        </app-pagination>
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">Pagination — Custom page-size options</h3>
+        <p class="text-muted">Passing a custom [5, 20, 40] array instead of the default sizes.</p>
+        <app-pagination [totalItems]="demoCustomTotalItems()" [pageSizeOptions]="[5, 20, 40]"
+            [(currentPage)]="demoCustomCurrentPage" [(pageSize)]="demoCustomPageSize">
+        </app-pagination>
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">Pagination — Large page count (multi-digit typing)</h3>
+        <p class="text-muted">999 items, page size 10 → 100 pages. Try typing "100", then try typing "1000" — the extra
+            "0" keystroke should be rejected with a shake.</p>
+        <app-pagination [totalItems]="demoLargeTotalItems()" [(currentPage)]="demoLargeCurrentPage"
+            [(pageSize)]="demoLargePageSize">
+        </app-pagination>
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">Pagination — sizes</h3>
+        <app-pagination [totalItems]="145" size="small" /> <br>
+        <app-pagination [totalItems]="145" /> <br> <!-- defaults to medium -->
+        <app-pagination [totalItems]="145" size="large" />
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">Pagination — Out-of-bounds recovery</h3>
+        <p class="text-muted">Sit on a high page, then shrink the dataset (simulating a filter/search) and confirm the
+            current page auto-clamps to the new last page instead of breaking.</p>
+        <app-pagination [totalItems]="demoRecoveryTotalItems()" [(currentPage)]="demoRecoveryCurrentPage"
+            [(pageSize)]="demoRecoveryPageSize">
+        </app-pagination>
+        <div class="demo-actions">
+            <button type="button" (click)="goToHighRecoveryPage()">Jump to page 9</button>
+            <button type="button" (click)="shrinkRecoveryData()">Shrink to 12 items (simulate filter)</button>
+            <button type="button" (click)="resetRecoveryData()">Reset to 97 items</button>
+        </div>
+        <p class="text-muted">currentPage: {{ demoRecoveryCurrentPage() }} of {{ demoRecoveryTotalItems() }} items</p>
+    </div>
 
     <div class="card-test">
         <h2 class="heading-lg">Card Playground</h2>

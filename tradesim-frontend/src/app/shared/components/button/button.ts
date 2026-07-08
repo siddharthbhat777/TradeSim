@@ -10,6 +10,7 @@ export type ButtonVariant =
 
 export type ButtonType = 'button' | 'submit' | 'reset';
 export type ButtonIconPosition = 'left' | 'right';
+export type ButtonSize = 'small' | 'medium' | 'large';
 
 @Component({
   selector: 'app-button',
@@ -27,6 +28,7 @@ export class Button {
   variant = input<ButtonVariant>('primary');
   type = input<ButtonType>('button');
   iconPosition = input<ButtonIconPosition>('left');
+  size = input<ButtonSize>('medium');
   width = input('');
   height = input('');
   ariaLabel = input('');

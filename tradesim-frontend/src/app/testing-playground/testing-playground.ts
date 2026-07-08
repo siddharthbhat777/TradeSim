@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CustomInput } from '../shared/components/input/input';
+import { CustomInput, InputErrorMessages } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
 import { CardBorder, CardComponent, CardVariant } from '../shared/components/card/card';
 import { Dialog } from '../shared/components/dialog/dialog';
@@ -14,10 +14,11 @@ import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown
 import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { ToastService } from '../shared/components/toast/toast.service';
 import { Toast } from '../shared/components/toast/toast';
+import { Pagination } from '../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -35,8 +36,29 @@ export class TestingPlayground {
     notes: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(10)]
+    }),
+    username: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(5)]
     })
   });
+
+  protected readonly usernameErrorMessages: InputErrorMessages = {
+    required: 'Pick a username first',
+    minlength: (error) => {
+      const err = error as { requiredLength: number; actualLength: number };
+      return `Needs ${err.requiredLength - err.actualLength} more character(s)`;
+    }
+  };
+
+  readonly alwaysValidateControl = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required]
+  });
+
+  protected submitInputDemo(): void {
+    this.inputDemoForm.markAllAsTouched();
+  }
 
   protected readonly variants: CardVariant[] = [
     'default',
@@ -148,6 +170,14 @@ export class TestingPlayground {
     { label: 'Pharma', value: 'pharma' },
   ];
 
+  readonly pageSizeControl = new FormControl<string | null>(null);
+  readonly pageSizeOptions: DropdownOption<string>[] = [
+    { label: '10 / page', value: '10' },
+    { label: '25 / page', value: '25' },
+    { label: '50 / page', value: '50' },
+    { label: '100 / page', value: '100' },
+  ];
+
   readonly toastService = inject(ToastService);
 
   protected fireStackTest(): void {
@@ -184,5 +214,42 @@ export class TestingPlayground {
     this.toastService.info('Toast position bottom', {
       position: 'bottom-center'
     });
+  }
+
+  // --- Pagination: basic usage ---
+  protected demoBasicTotalItems = signal(145);
+  protected demoBasicCurrentPage = signal(1);
+  protected demoBasicPageSize = signal(10);
+
+  // --- Pagination: single page / fully disabled ---
+  protected demoSinglePageTotalItems = signal(8);
+  protected demoSinglePageCurrentPage = signal(1);
+  protected demoSinglePageSize = signal(10);
+
+  // --- Pagination: custom page-size options ---
+  protected demoCustomTotalItems = signal(63);
+  protected demoCustomCurrentPage = signal(1);
+  protected demoCustomPageSize = signal(5);
+
+  // --- Pagination: large page count ---
+  protected demoLargeTotalItems = signal(999);
+  protected demoLargeCurrentPage = signal(1);
+  protected demoLargePageSize = signal(10);
+
+  // --- Pagination: out-of-bounds recovery ---
+  protected demoRecoveryTotalItems = signal(97);
+  protected demoRecoveryCurrentPage = signal(1);
+  protected demoRecoveryPageSize = signal(10);
+
+  protected goToHighRecoveryPage(): void {
+    this.demoRecoveryCurrentPage.set(9);
+  }
+
+  protected shrinkRecoveryData(): void {
+    this.demoRecoveryTotalItems.set(12);
+  }
+
+  protected resetRecoveryData(): void {
+    this.demoRecoveryTotalItems.set(97);
   }
 }

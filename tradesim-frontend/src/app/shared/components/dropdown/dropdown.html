@@ -10,9 +10,10 @@
     }
 
     <button #trigger type="button" [id]="triggerId" class="dropdown__trigger"
-        [class.dropdown__trigger--invalid]="shouldShowError()" [style.anchor-name]="anchorName"
-        [attr.popovertarget]="panelId" [attr.aria-haspopup]="'listbox'" [attr.aria-expanded]="isOpen()"
-        [attr.aria-activedescendant]="activeOptionId()" aria-label="Select an option"
+        [class.dropdown__trigger--small]="size() === 'small'" [class.dropdown__trigger--medium]="size() === 'medium'"
+        [class.dropdown__trigger--large]="size() === 'large'" [class.dropdown__trigger--invalid]="shouldShowError()"
+        [style.anchor-name]="anchorName" [attr.popovertarget]="panelId" [attr.aria-haspopup]="'listbox'"
+        [attr.aria-expanded]="isOpen()" [attr.aria-activedescendant]="activeOptionId()" aria-label="Select an option"
         [attr.aria-labelledby]="label() ? labelId : null" [attr.aria-invalid]="shouldShowError() ? 'true' : null"
         [attr.aria-required]="required() ? 'true' : null" [disabled]="disabledState()"
         (keydown)="onTriggerKeydown($event)">

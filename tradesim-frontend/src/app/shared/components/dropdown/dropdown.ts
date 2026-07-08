@@ -22,6 +22,8 @@ export interface DropdownOption<T = unknown> {
   disabled?: boolean;
 }
 
+export type DropdownSize = 'small' | 'medium' | 'large';
+
 const booleanAttributeOrNull = (value: unknown): boolean | null => {
   if (value === null || value === undefined) {
     return null;
@@ -55,6 +57,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   readonly placeholder = input('');
   readonly helperText = input('');
   readonly errorText = input('');
+  readonly size = input<DropdownSize>('large');
   readonly required = input(false, { transform: booleanAttribute });
   readonly fullWidth = input(false, { transform: booleanAttribute });
   readonly showErrors = input(true, { transform: booleanAttribute });

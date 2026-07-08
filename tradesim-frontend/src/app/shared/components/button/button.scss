@@ -1,5 +1,3 @@
-$icon-size: 18px;
-
 @mixin darken-on-hover {
   &:hover:not(:disabled) {
     filter: brightness(0.94);
@@ -8,12 +6,13 @@ $icon-size: 18px;
 
 :host {
   display: inline-block;
+  --button-icon-size: 18px;
 
   ::ng-deep [button-icon] {
-    width: $icon-size;
-    height: $icon-size;
-    max-width: $icon-size;
-    max-height: $icon-size;
+    width: var(--button-icon-size);
+    height: var(--button-icon-size);
+    max-width: var(--button-icon-size);
+    max-height: var(--button-icon-size);
     display: block;
     object-fit: contain;
     color: currentColor;
@@ -31,16 +30,13 @@ $icon-size: 18px;
 .button {
   width: 100%;
   height: 100%;
-  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   border: 1px solid transparent;
   border-radius: 12px;
-  padding: 12px 24px;
   font: inherit;
-  font-size: 0.95rem;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -51,6 +47,27 @@ $icon-size: 18px;
     color 0.2s ease,
     opacity 0.2s ease;
   white-space: nowrap;
+
+  &--small {
+    min-height: 38px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    --button-icon-size: 15px;
+  }
+
+  &--medium {
+    min-height: 42px;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    --button-icon-size: 18px;
+  }
+
+  &--large {
+    min-height: 46px;
+    padding: 16px 32px;
+    font-size: 1.05rem;
+    --button-icon-size: 22px;
+  }
 
   &--primary {
     background: var(--primary);
@@ -112,8 +129,8 @@ $icon-size: 18px;
   }
 
   &__icon {
-    width: $icon-size;
-    height: $icon-size;
+    width: var(--button-icon-size);
+    height: var(--button-icon-size);
     display: inline-flex;
     align-items: center;
     justify-content: center;

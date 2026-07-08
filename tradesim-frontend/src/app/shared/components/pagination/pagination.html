@@ -1,0 +1,43 @@
+<div class="pagination" [class.pagination--disabled]="totalPages() <= 1">
+    <div class="pagination__nav">
+        <app-button class="pagination__nav-btn" variant="outline" [size]="size()" text="" ariaLabel="Previous page"
+            [width]="navBtnDimension()" [height]="navBtnDimension()" [disabled]="isFirstPage()"
+            (buttonClick)="goToPrevious()">
+            <svg button-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+            </svg>
+        </app-button>
+
+        <app-input class="pagination__page-input" [class.pagination__page-input--small]="size() === 'small'"
+            [class.pagination__page-input--medium]="size() === 'medium'"
+            [class.pagination__page-input--large]="size() === 'large'" [reserveMessageSpace]="false">
+            <input appInput [appInputSize]="size()" type="text" inputmode="numeric" autocomplete="off"
+                class="pagination__input" [class.pagination__input--shake]="isShaking()" [value]="pageInputValue()"
+                (input)="onInput($event)" (keydown.enter)="onEnter()" (blur)="onBlur()" aria-label="Go to page"
+                [attr.aria-valuemin]="1" [attr.aria-valuemax]="totalPages()" [attr.aria-valuenow]="currentPage()" />
+        </app-input>
+
+        <app-button class="pagination__nav-btn" variant="outline" [size]="size()" text="" ariaLabel="Next page"
+            [width]="navBtnDimension()" [height]="navBtnDimension()" [disabled]="isLastPage()"
+            (buttonClick)="goToNext()">
+            <svg button-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6" />
+            </svg>
+        </app-button>
+    </div>
+
+    <div class="pagination__meta">
+        <app-dropdown class="pagination__page-size" [class.pagination__page-size--small]="size() === 'small'"
+            [class.pagination__page-size--medium]="size() === 'medium'"
+            [class.pagination__page-size--large]="size() === 'large'" [size]="size()"
+            [options]="pageSizeDropdownOptions()" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)" />
+
+        <span class="pagination__range" [class.pagination__range--small]="size() === 'small'"
+            [class.pagination__range--medium]="size() === 'medium'"
+            [class.pagination__range--large]="size() === 'large'">
+            {{ rangeStart() }}&ndash;{{ rangeEnd() }} of {{ totalItems() }}
+        </span>
+    </div>
+</div>

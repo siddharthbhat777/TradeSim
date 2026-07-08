@@ -12,6 +12,7 @@ let nextInputId = 0;
     class: 'app-input',
     '[attr.id]': 'inputId',
     '[class.app-input--small]': "size() === 'small'",
+    '[class.app-input--medium]': "size() === 'medium'",
     '[class.app-input--large]': "size() === 'large'",
     '[class.app-input--full-width]': 'fullWidth()',
     '[class.app-input--invalid]': 'isInvalid()',
