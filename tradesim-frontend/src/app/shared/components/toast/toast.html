@@ -1,0 +1,30 @@
+@for (group of toastService.groups(); track group.position) {
+<div class="toast-container" [attr.data-position]="group.position">
+    @for (entry of group.entries; track entry.id) {
+    <div class="toast toast--{{ entry.variant }}" role="status"
+        [attr.aria-live]="entry.variant === 'danger' ? 'assertive' : 'polite'" animate.enter="toast-enter"
+        animate.leave="toast-leave" (mouseenter)="toastService.pause(entry.id)"
+        (mouseleave)="toastService.resume(entry.id)">
+        <div class="toast__body">
+            <p class="toast__message">{{ entry.message }}</p>
+
+            @if (entry.action) {
+            <button type="button" class="toast__action" (click)="handleAction(entry)">
+                {{ entry.action.label }}
+            </button>
+            }
+
+            <button type="button" class="toast__close" aria-label="Dismiss notification"
+                (click)="toastService.dismiss(entry.id)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+            </button>
+        </div>
+
+        <span class="toast__progress" [style.animation-duration.ms]="entry.duration"
+            [style.animation-play-state]="entry.paused ? 'paused' : 'running'"></span>
+    </div>
+    }
+</div>
+}

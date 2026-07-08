@@ -12,10 +12,12 @@ import { Router } from '@angular/router';
 import { Toggle } from '../shared/components/toggle/toggle';
 import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown';
 import { Tooltip } from '../shared/components/tooltip/tooltip';
+import { ToastService } from '../shared/components/toast/toast.service';
+import { Toast } from '../shared/components/toast/toast';
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -145,4 +147,42 @@ export class TestingPlayground {
     { label: 'Energy', value: 'energy' },
     { label: 'Pharma', value: 'pharma' },
   ];
+
+  readonly toastService = inject(ToastService);
+
+  protected fireStackTest(): void {
+    for (let i = 1; i <= 6; i++) {
+      this.toastService.info(`Queued toast #${i}`);
+    }
+  }
+
+  protected fireUndoDemo(): void {
+    this.toastService.danger('Manager access revoked', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          console.log('Re-adding manager to the managers table...');
+          this.toastService.success('Manager access restored');
+        },
+      },
+    });
+  }
+
+  protected fireReorderDemo(): void {
+    this.toastService.info('Order cancelled', {
+      action: {
+        label: 'Reorder',
+        onClick: () => {
+          console.log('Opening prefilled order form for the cancelled order...');
+          this.toastService.success('Reorder form opened');
+        },
+      }
+    });
+  }
+
+  protected fireToastPosition(): void {
+    this.toastService.info('Toast position bottom', {
+      position: 'bottom-center'
+    });
+  }
 }

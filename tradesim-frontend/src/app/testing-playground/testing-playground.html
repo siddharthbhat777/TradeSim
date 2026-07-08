@@ -771,6 +771,69 @@
         </div>
     </div>
 
+    <div class="demo-section">
+        <h3 class="heading-md">Toast Showcase</h3>
+
+        <!-- 1. Four variants, default durations (success/info 4s, warning 5s, danger 6s) -->
+        <div class="demo-row">
+            <p class="text-muted">1. Variants — each uses its own default duration</p>
+            <div class="button-group">
+                <app-button variant="success" text="Success"
+                    (click)="toastService.success('Order placed successfully')" />
+                <app-button variant="danger" text="Danger"
+                    (click)="toastService.danger('Order failed — insufficient shares')" />
+                <app-button variant="warning" text="Warning"
+                    (click)="toastService.warning('Price moved 5% since you loaded this page')" />
+                <app-button variant="secondary" text="Info"
+                    (click)="toastService.info('Market closes in 15 minutes')" />
+            </div>
+        </div>
+
+        <!-- 2. Custom duration override -->
+        <div class="demo-row">
+            <p class="text-muted">2. Custom duration override — 10 seconds instead of the default</p>
+            <app-button variant="outline" text="10s toast"
+                (click)="toastService.info('This one sticks around for 10 seconds', { duration: 10000 })" />
+        </div>
+
+        <!-- 3. Action slot — revoke-manager style: real action already happened, Undo genuinely reverses it -->
+        <div class="demo-row">
+            <p class="text-muted">3. Action slot — Undo (genuine reversal, check console)</p>
+            <app-button variant="danger" text="Revoke manager" (click)="fireUndoDemo()" />
+        </div>
+
+        <!-- 4. Action slot — cancel-order style: real cancel already happened, action opens a prefilled reorder flow -->
+        <div class="demo-row">
+            <p class="text-muted">4. Action slot — Reorder (new order, not a true undo, check console)</p>
+            <app-button variant="secondary" text="Cancel order" (click)="fireReorderDemo()" />
+        </div>
+
+        <!-- 5. Stacking + queue — fires 6 toasts at once, only 4 should be visible at a time -->
+        <div class="demo-row">
+            <p class="text-muted">5. Stacking cap — fires 6 at once, only 4 visible, rest queue in behind</p>
+            <app-button variant="outline" text="Fire 6 toasts" (click)="fireStackTest()" />
+        </div>
+
+        <!-- 6. Toast position -->
+        <div class="demo-row">
+            <p class="text-muted">6. Toast position</p>
+            <app-button variant="secondary" text="Toast position" (click)="fireToastPosition()" />
+        </div>
+
+        <!-- 7. Manual checks — nothing to click, just what to verify -->
+        <div class="demo-row">
+            <p class="text-muted">
+                7. Manual checks: (a) hover any toast before it disappears — the progress bar and
+                countdown should freeze exactly where they are, then resume from that same point on
+                mouse-out. (b) click the × on any toast — should dismiss immediately regardless of
+                its timer. (c) fire a danger toast with a screen reader running — it should interrupt
+                immediately, while success/info/warning should wait their turn.
+            </p>
+        </div>
+    </div>
+
+    <app-toast />
+
     <div class="card-test">
         <h2 class="heading-lg">Card Playground</h2>
 
