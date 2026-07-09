@@ -1,0 +1,29 @@
+@if (label(); as labelText) {
+<span class="segmented__label" [id]="labelId">{{ labelText }}</span>
+}
+
+<div class="segmented__track" role="radiogroup" [class.segmented__track--error]="showError()"
+    [attr.aria-labelledby]="label() ? labelId : null" [attr.aria-label]="!label() ? ariaLabel() : null"
+    [attr.aria-required]="required() ? 'true' : null" [attr.aria-invalid]="showError() ? 'true' : null"
+    [attr.aria-describedby]="showError() ? errorId : null" (keydown)="onKeydown($event)" (focusout)="markTouched()">
+
+    @if (selectedIndex() !== -1) {
+    <span class="segmented__indicator" [class.segmented__indicator--pop]="justSelected()" aria-hidden="true"></span>
+    }
+
+    @for (option of options(); track option.value; let index = $index) {
+    <button #segmentButton type="button" role="radio" class="segmented__segment" aria-checked="false"
+        [attr.aria-checked]="index === selectedIndex() ? 'true' : 'false'" [tabindex]="index === focusIndex() ? 0 : -1"
+        [disabled]="disabledState() || option.disabled" (click)="selectIndex(index)">
+        {{ option.label }}
+    </button>
+    }
+</div>
+
+@if (shouldReserveMessageSpace()) {
+<span class="segmented__error" [id]="errorId" [class.segmented__error--visible]="showError()" role="alert">
+    @if (showError()) {
+    {{ errorMessage() }}
+    }
+</span>
+}

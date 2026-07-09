@@ -296,6 +296,33 @@
     </div>
 
     <!-- =========================
+         SEGMENTED CONTROLS
+    ========================= -->
+
+    <div class="demo-section">
+        <h3 class="heading-md">Segmented Control</h3>
+
+        <div class="badge-group" style="flex-direction: column; align-items: flex-start; gap: 24px;">
+
+            <!-- Optional, starts empty — click-to-deselect works, shows error if left empty on submit -->
+            <app-segmented-control #planComponent [options]="planOptions" label="Billing cycle" size="small"
+                [required]="true" errorMessage="Please choose a billing cycle." [formControl]="planControl" />
+            <pre>selected: {{ plan() }}</pre>
+
+            <!-- Mandatory, starts pre-selected — can only switch, never clear -->
+            <app-segmented-control size="large" [options]="viewOptions" label="View (has a default, can't be cleared)"
+                [formControl]="viewControl" />
+            <pre>selected: {{ view() }}</pre>
+
+            <button type="button" (click)="onSubmit()">Submit</button>
+            @if (submitted) {
+            <p>Submitted — if billing cycle is empty above, you'll see the error now.</p>
+            }
+
+        </div>
+    </div>
+
+    <!-- =========================
          TABLE SHOWCASE
     ========================= -->
 

@@ -1,7 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, viewChild } from '@angular/core';
 import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomInput, InputErrorMessages } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
 import { CardBorder, CardComponent, CardVariant } from '../shared/components/card/card';
@@ -17,6 +17,8 @@ import { Toast } from '../shared/components/toast/toast';
 import { Pagination } from '../shared/components/pagination/pagination';
 import { Table, TableColumn } from '../shared/components/table/table';
 import { DecimalPipe } from '@angular/common';
+import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 interface PortfolioRow {
   id: number;
@@ -28,7 +30,7 @@ interface PortfolioRow {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination, Table, DecimalPipe],
+  imports: [Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination, Table, DecimalPipe, SegmentedControl],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -279,4 +281,38 @@ export class TestingPlayground {
   ];
 
   protected readonly portfolioRowKey = (row: PortfolioRow): number => row.id;
+
+  protected readonly planOptions: SegmentOption<string>[] = [
+    { label: 'Monthly', value: 'monthly' },
+    { label: 'Yearly', value: 'yearly' },
+  ];
+
+  protected readonly viewOptions: SegmentOption<string>[] = [
+    { label: 'List', value: 'list' },
+    { label: 'Board', value: 'board' },
+    { label: 'Timeline', value: 'timeline', disabled: true },
+  ];
+
+  // Optional field — starts empty, so the user CAN click-to-deselect.
+  protected readonly planControl = new FormControl<string | null>(null);
+  protected readonly plan = toSignal(this.planControl.valueChanges, {
+    initialValue: this.planControl.value,
+  });
+
+  // Mandatory field — starts pre-selected, so clicking the active option
+  // does nothing; only switching to a different one works.
+  protected readonly viewControl = new FormControl<string>('list', { nonNullable: true });
+  protected readonly view = toSignal(this.viewControl.valueChanges, {
+    initialValue: this.viewControl.value,
+  });
+
+  // Lets us force the error to show on submit, even without prior interaction.
+  private readonly planComponent = viewChild<SegmentedControl<string>>('planComponent');
+
+  protected submitted = false;
+
+  protected onSubmit(): void {
+    this.submitted = true;
+    this.planComponent()?.markAsTouched();
+  }
 }
