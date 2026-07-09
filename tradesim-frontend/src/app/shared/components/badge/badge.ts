@@ -12,7 +12,7 @@ export type BadgeColor =
   selector: 'app-badge',
   imports: [],
   templateUrl: './badge.html',
-  styleUrl: './badge.scss',
+  styleUrl: './badge.scss'
 })
 export class Badge {
   text = input.required<string>();

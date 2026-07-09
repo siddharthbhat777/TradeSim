@@ -1,0 +1,46 @@
+<div class="table-wrapper" [class.table--small]="size() === 'small'" [class.table--medium]="size() === 'medium'"
+    [class.table--large]="size() === 'large'">
+
+    @if (data().length === 0) {
+    <app-empty-state [text]="emptyText()" [subtext]="emptySubtext()"></app-empty-state>
+    } @else {
+    <table class="table">
+        <thead>
+            <tr>
+                @for (column of columns(); track column.key) {
+                <th [style.width]="column.width"
+                    [class.table__cell--left]="column.align !== 'center' && column.align !== 'right'"
+                    [class.table__cell--center]="column.align === 'center'"
+                    [class.table__cell--right]="column.align === 'right'">
+                    {{ column.header }}
+                </th>
+                }
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (row of pagedData(); track trackRow($index, row)) {
+            <tr>
+                @for (column of columns(); track column.key) {
+                <td [class.table__cell--left]="column.align !== 'center' && column.align !== 'right'"
+                    [class.table__cell--center]="column.align === 'center'"
+                    [class.table__cell--right]="column.align === 'right'">
+                    @if (templateMap().get(column.key); as template) {
+                    <ng-container
+                        *ngTemplateOutlet="template; context: { $implicit: getValue(row, column), row: row }"></ng-container>
+                    } @else {
+                    {{ getValue(row, column) }}
+                    }
+                </td>
+                }
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (paginated()) {
+    <app-pagination class="table__pagination" [totalItems]="data().length" [pageSizeOptions]="pageSizeOptions()"
+        [size]="size()" [(currentPage)]="currentPage" [(pageSize)]="pageSize"></app-pagination>
+    }
+    }
+</div>

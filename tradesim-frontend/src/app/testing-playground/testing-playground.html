@@ -162,35 +162,35 @@
                 </svg>
             </app-button>
 
-            <!-- Sizes -->
-            <app-button variant="primary" size="small" text="Small" />
-            <app-button variant="primary" size="medium" text="Medium (default)" />
-            <app-button variant="primary" size="large" text="Large" />
-
-            <!-- Sizes with icon, to confirm the icon scales alongside the button -->
-            <app-button variant="secondary" size="small" text="Small + icon">
-                <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
-                </svg>
-            </app-button>
-            <app-button variant="secondary" size="large" text="Large + icon">
-                <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
-                </svg>
-            </app-button>
-
-            <!-- width/height — fully custom fixed dimensions, independent of the size scale -->
-            <app-button variant="outline" text="Fixed 220x60" width="220px" height="60px" />
-
-            <!-- ariaLabel — for icon-only-style buttons where visible text isn't the full story -->
-            <app-button variant="danger" text="✕" ariaLabel="Cancel order" width="44px" height="44px" />
-
-            <!-- disabled -->
-            <app-button variant="primary" text="Disabled" [disabled]="true" />
 
         </div>
+        <!-- Sizes -->
+        <app-button variant="primary" size="small" text="Small" /> &nbsp;
+        <app-button variant="primary" size="medium" text="Medium (default)" /> &nbsp;
+        <app-button variant="primary" size="large" text="Large" /> &nbsp;
+
+        <!-- Sizes with icon, to confirm the icon scales alongside the button -->
+        <app-button variant="secondary" size="small" text="Small + icon">
+            <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+            </svg>
+        </app-button> &nbsp;
+        <app-button variant="secondary" size="large" text="Large + icon">
+            <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+            </svg>
+        </app-button> &nbsp;
+
+        <!-- width/height — fully custom fixed dimensions, independent of the size scale -->
+        <app-button variant="outline" text="Fixed 220x60" width="220px" height="60px" /> &nbsp;
+
+        <!-- ariaLabel — for icon-only-style buttons where visible text isn't the full story -->
+        <app-button variant="danger" text="✕" ariaLabel="Cancel order" width="44px" height="44px" /> &nbsp;
+
+        <!-- disabled -->
+        <app-button variant="primary" text="Disabled" [disabled]="true" />
 
     </div>
 
@@ -340,6 +340,52 @@
 
         </table>
 
+    </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">Table Showcase</h3>
+
+        <div class="demo-row">
+            <p class="text-muted">1. Custom cell template (P&amp;L) + pagination</p>
+            <app-table [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey"
+                [pageSizeOptions]="[2, 5, 10]" [pageSize]="2">
+                <ng-template tableCell="pnl" let-value let-row="row">
+                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
+                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
+                    </span>
+                </ng-template>
+            </app-table>
+        </div>
+
+        <div class="demo-row">
+            <p class="text-muted">2. Pagination disabled</p>
+            <app-table [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey"
+                [paginated]="false">
+                <ng-template tableCell="pnl" let-value>
+                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
+                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
+                    </span>
+                </ng-template>
+            </app-table>
+        </div>
+
+        <div class="demo-row">
+            <p class="text-muted">3. Empty data — falls back to app-empty-state</p>
+            <app-table [columns]="portfolioColumns" [data]="[]" emptyText="No positions yet"
+                emptySubtext="Place a trade to see it here."></app-table>
+        </div>
+
+        <div class="demo-row">
+            <p class="text-muted">4. Sizes — small/medium/large row density, pagination always small</p>
+            <app-table size="small" [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey"
+                [pageSize]="2">
+                <ng-template tableCell="pnl" let-value>
+                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
+                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
+                    </span>
+                </ng-template>
+            </app-table>
+        </div>
     </div>
 
     <!-- =========================

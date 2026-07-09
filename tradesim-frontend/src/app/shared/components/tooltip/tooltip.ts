@@ -11,7 +11,7 @@ let nextTooltipId = 0;
   selector: 'app-tooltip',
   templateUrl: './tooltip.html',
   styleUrl: './tooltip.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Tooltip {
   private readonly panelRef = viewChild.required<ElementRef<HTMLDivElement>>('panel');

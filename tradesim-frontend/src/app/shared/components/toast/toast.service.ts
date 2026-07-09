@@ -47,7 +47,7 @@ const DEFAULT_DURATIONS: Record<ToastVariant, number> = {
     success: 4000,
     info: 4000,
     warning: 5000,
-    danger: 6000,
+    danger: 6000
 };
 
 const DEFAULT_POSITION: ToastPosition = 'bottom-right';
@@ -71,7 +71,7 @@ export class ToastService {
 
         return Array.from(byPosition, ([position, list]) => ({
             position,
-            entries: list.slice(0, MAX_VISIBLE),
+            entries: list.slice(0, MAX_VISIBLE)
         }));
     });
 
@@ -88,7 +88,7 @@ export class ToastService {
             remaining: duration,
             paused: false,
             action: options.action,
-            startedAt: 0,
+            startedAt: 0
         };
 
         this.entries.set([...this.entries(), entry]);

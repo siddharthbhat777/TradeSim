@@ -3,10 +3,10 @@ import { Modal } from '../modal/modal';
 
 @Component({
   selector: 'app-dialog',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Modal],
   templateUrl: './dialog.html',
-  styleUrl: './dialog.scss'
+  styleUrl: './dialog.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Dialog {
   readonly closeOnBackdropClick = input<boolean>(true);

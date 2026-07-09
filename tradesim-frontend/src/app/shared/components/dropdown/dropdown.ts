@@ -38,7 +38,7 @@ let nextDropdownId = 0;
   selector: 'app-dropdown',
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Dropdown<T = unknown> implements ControlValueAccessor {
   private readonly ngControl = inject(NgControl, { optional: true, self: true });

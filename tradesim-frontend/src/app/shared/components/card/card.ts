@@ -13,10 +13,10 @@ export type CardBorder = 'primary' | 'secondary' | 'accent' | 'success' | 'dange
 
 @Component({
   selector: 'app-card',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
   templateUrl: './card.html',
-  styleUrl: './card.scss'
+  styleUrl: './card.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CardComponent {
   readonly variant = input<CardVariant>('default');
@@ -26,7 +26,7 @@ export class CardComponent {
   readonly hoverable = input<boolean>(false);
 
   readonly onCardClick = input<((event: MouseEvent | KeyboardEvent) => void) | undefined>(
-    undefined,
+    undefined
   );
 
   protected readonly resolvedBorder = computed(() => {
@@ -41,7 +41,7 @@ export class CardComponent {
       if (typeof ngDevMode === 'undefined' || ngDevMode) {
         console.warn(
           `[CardComponent] "border" is only applied when variant is "default". ` +
-          `Received variant="${variant}" with border="${border}" — the border was ignored.`,
+          `Received variant="${variant}" with border="${border}" — the border was ignored.`
         );
       }
       return undefined;

@@ -15,10 +15,20 @@ import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { ToastService } from '../shared/components/toast/toast.service';
 import { Toast } from '../shared/components/toast/toast';
 import { Pagination } from '../shared/components/pagination/pagination';
+import { Table, TableColumn } from '../shared/components/table/table';
+import { DecimalPipe } from '@angular/common';
+
+interface PortfolioRow {
+  id: number;
+  stock: string;
+  quantity: number;
+  avgPrice: number;
+  pnl: number;
+}
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination],
+  imports: [Button, Badge, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination, Table, DecimalPipe],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -67,7 +77,7 @@ export class TestingPlayground {
     'accent',
     'success',
     'danger',
-    'warning',
+    'warning'
   ];
 
   protected readonly borders: CardBorder[] = [
@@ -76,7 +86,7 @@ export class TestingPlayground {
     'accent',
     'success',
     'danger',
-    'warning',
+    'warning'
   ];
 
   protected readonly clickCount = signal(0);
@@ -97,7 +107,7 @@ export class TestingPlayground {
   readonly settingsForm = new FormGroup({
     emailAlerts: new FormControl(true, { nonNullable: true }),
     smsAlerts: new FormControl(false, { nonNullable: true }),
-    autoInvest: new FormControl(false, { nonNullable: true }),
+    autoInvest: new FormControl(false, { nonNullable: true })
   });
 
   readonly lockedFeatureControl = new FormControl({ value: true, disabled: true });
@@ -123,14 +133,14 @@ export class TestingPlayground {
   readonly orderTypeOptions: DropdownOption<string>[] = [
     { label: 'Market', value: 'market' },
     { label: 'Limit', value: 'limit' },
-    { label: 'Stop', value: 'stop', disabled: true },
+    { label: 'Stop', value: 'stop', disabled: true }
   ];
 
   readonly sortByControl = new FormControl<string | null>(null);
   readonly sortByOptions: DropdownOption<string>[] = [
     { label: 'Price', value: 'price' },
     { label: 'Name', value: 'name' },
-    { label: 'Change %', value: 'change' },
+    { label: 'Change %', value: 'change' }
   ];
 
   readonly tradePrefsForm = new FormGroup({
@@ -139,7 +149,7 @@ export class TestingPlayground {
   readonly exchangeOptions: DropdownOption<string>[] = [
     { label: 'NSE', value: 'nse' },
     { label: 'BSE', value: 'bse' },
-    { label: 'NASDAQ', value: 'nasdaq' },
+    { label: 'NASDAQ', value: 'nasdaq' }
   ];
 
   protected submitTradePrefs(): void {
@@ -150,7 +160,7 @@ export class TestingPlayground {
   readonly currencyOptions: DropdownOption<string>[] = [
     { label: 'Indian Rupee', value: 'inr', icon: '🇮🇳' },
     { label: 'US Dollar', value: 'usd', icon: '🇺🇸' },
-    { label: 'Euro', value: 'eur', icon: '🇪🇺' },
+    { label: 'Euro', value: 'eur', icon: '🇪🇺' }
   ];
 
   readonly lockedExchangeControl = new FormControl<string | null>({ value: 'nse', disabled: true });
@@ -167,7 +177,7 @@ export class TestingPlayground {
     { label: 'Technology', value: 'tech' },
     { label: 'Banking', value: 'banking' },
     { label: 'Energy', value: 'energy' },
-    { label: 'Pharma', value: 'pharma' },
+    { label: 'Pharma', value: 'pharma' }
   ];
 
   readonly pageSizeControl = new FormControl<string | null>(null);
@@ -175,7 +185,7 @@ export class TestingPlayground {
     { label: '10 / page', value: '10' },
     { label: '25 / page', value: '25' },
     { label: '50 / page', value: '50' },
-    { label: '100 / page', value: '100' },
+    { label: '100 / page', value: '100' }
   ];
 
   readonly toastService = inject(ToastService);
@@ -193,8 +203,8 @@ export class TestingPlayground {
         onClick: () => {
           console.log('Re-adding manager to the managers table...');
           this.toastService.success('Manager access restored');
-        },
-      },
+        }
+      }
     });
   }
 
@@ -205,7 +215,7 @@ export class TestingPlayground {
         onClick: () => {
           console.log('Opening prefilled order form for the cancelled order...');
           this.toastService.success('Reorder form opened');
-        },
+        }
       }
     });
   }
@@ -252,4 +262,21 @@ export class TestingPlayground {
   protected resetRecoveryData(): void {
     this.demoRecoveryTotalItems.set(97);
   }
+
+  protected readonly portfolioColumns: TableColumn<PortfolioRow>[] = [
+    { key: 'stock', header: 'Stock' },
+    { key: 'quantity', header: 'Quantity', align: 'right' },
+    { key: 'avgPrice', header: 'Avg Price', align: 'right', accessor: (row) => `₹${row.avgPrice.toLocaleString()}` },
+    { key: 'pnl', header: 'P&L', align: 'right' }
+  ];
+
+  protected readonly portfolioData: PortfolioRow[] = [
+    { id: 1, stock: 'RELIANCE', quantity: 150, avgPrice: 2500, pnl: 12500 },
+    { id: 2, stock: 'TCS', quantity: 75, avgPrice: 3850, pnl: -4200 },
+    { id: 3, stock: 'INFY', quantity: 40, avgPrice: 1500, pnl: 800 },
+    { id: 4, stock: 'HDFC', quantity: 20, avgPrice: 1650, pnl: -300 },
+    { id: 5, stock: 'WIPRO', quantity: 100, avgPrice: 450, pnl: 2100 },
+  ];
+
+  protected readonly portfolioRowKey = (row: PortfolioRow): number => row.id;
 }

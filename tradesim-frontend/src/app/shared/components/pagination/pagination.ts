@@ -18,10 +18,10 @@ export type PaginationSize = 'small' | 'medium' | 'large';
 
 @Component({
   selector: 'app-pagination',
+  imports: [FormsModule, Dropdown, CustomInput, InputDirective, Button],
   templateUrl: './pagination.html',
   styleUrl: './pagination.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Dropdown, CustomInput, InputDirective, Button],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Pagination {
   totalItems = input.required<number>();
@@ -32,14 +32,14 @@ export class Pagination {
   pageSize = model<number>(10);
 
   protected totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.totalItems() / this.pageSize())),
+    Math.max(1, Math.ceil(this.totalItems() / this.pageSize()))
   );
 
   protected isFirstPage = computed(() => this.currentPage() <= 1);
   protected isLastPage = computed(() => this.currentPage() >= this.totalPages());
 
   protected rangeStart = computed(() =>
-    this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1,
+    this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1
   );
 
   protected rangeEnd = computed(() =>

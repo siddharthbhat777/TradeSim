@@ -13,9 +13,9 @@ export type ToggleVariant = 'primary' | 'secondary' | 'accent' | 'success' | 'da
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => Toggle),
-      multi: true,
-    },
-  ],
+      multi: true
+    }
+  ]
 })
 export class Toggle implements ControlValueAccessor {
   private static nextId = 0;

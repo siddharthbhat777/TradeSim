@@ -13,12 +13,12 @@ import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-modal',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '(document:keydown.escape)': 'handleEscape()',
+    '(document:keydown.escape)': 'handleEscape()'
   },
   templateUrl: './modal.html',
   styleUrl: './modal.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Modal {
   readonly closeOnBackdropClick = input<boolean>(true);

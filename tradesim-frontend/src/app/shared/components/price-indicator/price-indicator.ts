@@ -4,9 +4,9 @@ export type PriceIndicatorSign = 'positive' | 'negative' | 'neutral';
 
 @Component({
   selector: 'app-price-indicator',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './price-indicator.html',
-  styleUrl: './price-indicator.scss'
+  styleUrl: './price-indicator.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PriceIndicator {
   readonly value = input.required<number>();
