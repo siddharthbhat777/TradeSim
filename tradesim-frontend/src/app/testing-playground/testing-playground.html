@@ -859,6 +859,16 @@
                     [options]="pageSizeOptions"></app-dropdown>
             </div>
         </div>
+
+        <div class="demo-row">
+            <p class="text-muted">
+                10. Searchable — type to filter, or just scroll/arrow-key through the full list.
+                Try opening it and pressing an arrow key without typing anything first.
+            </p>
+            <app-dropdown label="Stock" searchable searchPlaceholder="Search stocks..." [formControl]="stockControl"
+                [options]="stockOptions"></app-dropdown>
+            <p class="text-muted">Value: {{ stockControl.value ?? 'null' }}</p>
+        </div>
     </div>
 
     <div class="demo-section">

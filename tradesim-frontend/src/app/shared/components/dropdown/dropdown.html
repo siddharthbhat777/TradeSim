@@ -12,11 +12,10 @@
     <button #trigger type="button" [id]="triggerId" class="dropdown__trigger"
         [class.dropdown__trigger--small]="size() === 'small'" [class.dropdown__trigger--medium]="size() === 'medium'"
         [class.dropdown__trigger--large]="size() === 'large'" [class.dropdown__trigger--invalid]="shouldShowError()"
-        [style.anchor-name]="anchorName" [attr.popovertarget]="panelId" [attr.aria-haspopup]="'listbox'"
-        [attr.aria-expanded]="isOpen()" [attr.aria-activedescendant]="activeOptionId()" aria-label="Select an option"
-        [attr.aria-labelledby]="label() ? labelId : null" [attr.aria-invalid]="shouldShowError() ? 'true' : null"
-        [attr.aria-required]="required() ? 'true' : null" [disabled]="disabledState()"
-        (keydown)="onTriggerKeydown($event)">
+        [attr.aria-haspopup]="'listbox'" [attr.aria-expanded]="isOpen()" [attr.aria-activedescendant]="activeOptionId()"
+        aria-label="Select an option" [attr.aria-labelledby]="label() ? labelId : null"
+        [attr.aria-invalid]="shouldShowError() ? 'true' : null" [attr.aria-required]="required() ? 'true' : null"
+        [disabled]="disabledState()" (click)="togglePanel()" (keydown)="onTriggerKeydown($event)">
         <span class="dropdown__trigger-content">
             @if (selected(); as option) {
             @if (option.icon) {
@@ -35,22 +34,38 @@
         </svg>
     </button>
 
-    <ul #panel [id]="panelId" popover role="listbox" class="dropdown__panel" [style.position-anchor]="anchorName"
-        aria-label="Options" [attr.aria-labelledby]="label() ? labelId : null" (toggle)="onPanelToggle($event)">
-        @for (option of options(); track option.value; let i = $index) {
-        <li [id]="optionId(i)" role="option" class="dropdown__option"
-            [class.dropdown__option--active]="i === activeIndex()"
-            [class.dropdown__option--selected]="option === selected()"
-            [class.dropdown__option--disabled]="option.disabled" [attr.aria-selected]="option === selected()"
-            [attr.aria-disabled]="option.disabled ? 'true' : null" (click)="selectOption(option)"
-            (mouseenter)="activeIndex.set(i)">
-            @if (option.icon) {
-            <span class="dropdown__option-icon" [innerHTML]="option.icon"></span>
-            }
-            <span class="dropdown__option-label">{{ option.label }}</span>
-        </li>
+    @if (isOpen()) {
+    <div class="dropdown__panel" [class.dropdown__panel--up]="openUpwards()">
+        @if (searchable()) {
+        <app-input class="dropdown__search" [reserveMessageSpace]="false">
+            <input #searchInput appInput [appInputSize]="size()" type="text" autocomplete="off"
+                [placeholder]="searchPlaceholder()" [value]="searchQuery()" aria-label="Search options"
+                (input)="onSearchInput($event)" (keydown)="onSearchKeydown($event)" />
+        </app-input>
         }
-    </ul>
+
+        <ul role="listbox" class="dropdown__options" aria-label="Options"
+            [attr.aria-labelledby]="label() ? labelId : null">
+            @for (option of filteredOptions(); track option.value; let i = $index) {
+            <li [id]="optionId(i)" role="option" class="dropdown__option"
+                [class.dropdown__option--active]="i === activeIndex()"
+                [class.dropdown__option--selected]="option === selected()"
+                [class.dropdown__option--disabled]="option.disabled" [attr.aria-selected]="option === selected()"
+                [attr.aria-disabled]="option.disabled ? 'true' : null" (click)="selectOption(option)"
+                (mouseenter)="activeIndex.set(i)">
+                @if (option.icon) {
+                <span class="dropdown__option-icon" [innerHTML]="option.icon"></span>
+                }
+                <span class="dropdown__option-label">{{ option.label }}</span>
+            </li>
+            }
+
+            @if (searchable() && filteredOptions().length === 0) {
+            <li class="dropdown__no-results">No matches found</li>
+            }
+        </ul>
+    </div>
+    }
 
     @if (shouldReserveMessageSpace()) {
     <p class="dropdown__message" [class.dropdown__message--error]="shouldShowError()">

@@ -190,6 +190,25 @@ export class TestingPlayground {
     { label: '100 / page', value: '100' }
   ];
 
+  readonly stockControl = new FormControl<string | null>(null);
+  readonly stockOptions: DropdownOption<string>[] = [
+    { label: 'Reliance Industries', value: 'reliance' },
+    { label: 'Tata Consultancy Services', value: 'tcs' },
+    { label: 'HDFC Bank', value: 'hdfcbank' },
+    { label: 'Infosys', value: 'infy' },
+    { label: 'ICICI Bank', value: 'icicibank' },
+    { label: 'Hindustan Unilever', value: 'hul' },
+    { label: 'ITC', value: 'itc' },
+    { label: 'State Bank of India', value: 'sbin' },
+    { label: 'Bharti Airtel', value: 'bhartiartl' },
+    { label: 'Bajaj Finance', value: 'bajfinance' },
+    { label: 'Kotak Mahindra Bank', value: 'kotakbank' },
+    { label: 'Larsen & Toubro', value: 'lt' },
+    { label: 'Axis Bank', value: 'axisbank' },
+    { label: 'Maruti Suzuki', value: 'maruti' },
+    { label: 'Wipro', value: 'wipro' },
+  ];
+
   readonly toastService = inject(ToastService);
 
   protected fireStackTest(): void {
