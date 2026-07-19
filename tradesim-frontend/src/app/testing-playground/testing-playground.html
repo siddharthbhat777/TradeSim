@@ -27,6 +27,45 @@
 
     </div>
 
+    <!-- =========================
+         ALERT SHOWCASE
+    ========================= -->
+
+    <div class="demo-section">
+        <h3 class="heading-md">Alert Showcase</h3>
+
+        <div class="alert-grid">
+            <app-alert variant="info" title="Market Open">
+                The stock market is currently open for trading. Execution is live.
+            </app-alert>
+
+            <app-alert variant="success" title="Deposit Successful">
+                ₹50,000 has been successfully added to your trading account balance.
+            </app-alert>
+
+            <app-alert variant="warning" title="High Volatility Warning">
+                Several of your held assets are experiencing higher than normal market volatility today.
+            </app-alert>
+
+            <app-alert variant="danger" title="Margin Call">
+                Your account equity has dropped below the maintenance margin requirement. Add funds to avoid
+                liquidation.
+            </app-alert>
+        </div>
+
+        <h4 class="heading-md" style="margin-top: 24px;">Alert Options</h4>
+
+        <div class="alert-grid">
+            <app-alert variant="info">
+                This is a simple alert without a title. Just a straightforward message to the user.
+            </app-alert>
+
+            <app-alert variant="success" title="Icon Disabled" [showIcon]="false">
+                This alert hides the predefined icon while keeping the semantic variant styling intact.
+            </app-alert>
+        </div>
+    </div>
+
     <div class="demo-section">
 
         <app-card>
@@ -85,10 +124,6 @@
 
     </div>
 
-    <!-- =========================
-         SURFACE PREVIEW
-    ========================= -->
-
     <div class="demo-section">
 
         <h3 class="heading-md">
@@ -109,10 +144,6 @@
 
     </div>
 
-    <!-- =========================
-         BORDER PREVIEW
-    ========================= -->
-
     <div class="demo-section">
 
         <h3 class="heading-md">
@@ -124,10 +155,6 @@
         </div>
 
     </div>
-
-    <!-- =========================
-         BUTTON SHOWCASE
-    ========================= -->
 
     <div class="demo-section">
 
@@ -164,12 +191,10 @@
 
 
         </div>
-        <!-- Sizes -->
         <app-button variant="primary" size="small" text="Small" /> &nbsp;
         <app-button variant="primary" size="medium" text="Medium (default)" /> &nbsp;
         <app-button variant="primary" size="large" text="Large" /> &nbsp;
 
-        <!-- Sizes with icon, to confirm the icon scales alongside the button -->
         <app-button variant="secondary" size="small" text="Small + icon">
             <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
                 <path fill-rule="evenodd"
@@ -183,20 +208,13 @@
             </svg>
         </app-button> &nbsp;
 
-        <!-- width/height — fully custom fixed dimensions, independent of the size scale -->
         <app-button variant="outline" text="Fixed 220x60" width="220px" height="60px" /> &nbsp;
 
-        <!-- ariaLabel — for icon-only-style buttons where visible text isn't the full story -->
         <app-button variant="danger" text="✕" ariaLabel="Cancel order" width="44px" height="44px" /> &nbsp;
 
-        <!-- disabled -->
         <app-button variant="primary" text="Disabled" [disabled]="true" />
 
     </div>
-
-    <!-- =========================
-         INPUT SHOWCASE
-    ========================= -->
 
     <div class="demo-section">
 
@@ -222,7 +240,6 @@
                     placeholder="Write order notes"></textarea>
             </app-input>
 
-            <!-- errorMessages — custom per-validator overrides, including a function-based one -->
             <app-input label="Username" [errorMessages]="usernameErrorMessages">
                 <input appInput required type="text" placeholder="Choose a username" formControlName="username">
             </app-input>
@@ -230,37 +247,31 @@
 
         <button type="button" (click)="submitInputDemo()">Submit (reveal touched-mode errors above)</button>
 
-        <!-- appInputValidationMode="always" — shows its error immediately, no touch/submit needed -->
         <app-input label="Always-validate mode"
             helperText="This one shows its error immediately, unlike the fields above">
             <input appInput appInputValidationMode="always" required type="text" placeholder="Try leaving this empty"
                 [formControl]="alwaysValidateControl">
         </app-input>
 
-        <!-- appInputInvalid — forced invalid regardless of the control's real validity -->
         <app-input label="Force-invalid override"
             errorText="Forced invalid via appInputInvalid, ignoring the real value">
             <input appInput appInputInvalid type="text" value="This value is actually fine">
         </app-input>
 
-        <!-- showErrors=false — control is genuinely invalid, but display is suppressed -->
         <app-input label="Errors suppressed" [showErrors]="false"
             helperText="Invalid underneath, but showErrors is false so nothing red ever shows">
             <input appInput appInputValidationMode="always" required type="text"
                 placeholder="Also try leaving this empty">
         </app-input>
 
-        <!-- disabled -->
         <app-input label="Disabled">
             <input appInput type="text" value="Can't edit this" disabled>
         </app-input>
 
-        <!-- readonly -->
         <app-input label="Read-only">
             <input appInput type="text" value="REF-2026-04471" readonly>
         </app-input>
 
-        <!-- Sizes -->
         <app-input label="Small">
             <input appInput appInputSize="small" type="text" placeholder="Small input">
         </app-input>
@@ -274,10 +285,6 @@
         </app-input>
 
     </div>
-
-    <!-- =========================
-         STATUS BADGES
-    ========================= -->
 
     <div class="demo-section">
 
@@ -295,21 +302,15 @@
 
     </div>
 
-    <!-- =========================
-         SEGMENTED CONTROLS
-    ========================= -->
-
     <div class="demo-section">
         <h3 class="heading-md">Segmented Control</h3>
 
         <div class="badge-group" style="flex-direction: column; align-items: flex-start; gap: 24px;">
 
-            <!-- Optional, starts empty — click-to-deselect works, shows error if left empty on submit -->
             <app-segmented-control #planComponent [options]="planOptions" label="Billing cycle" size="small"
                 [required]="true" errorMessage="Please choose a billing cycle." [formControl]="planControl" />
             <pre>selected: {{ plan() }}</pre>
 
-            <!-- Mandatory, starts pre-selected — can only switch, never clear -->
             <app-segmented-control size="large" [options]="viewOptions" label="View (has a default, can't be cleared)"
                 [formControl]="viewControl" />
             <pre>selected: {{ view() }}</pre>
@@ -321,10 +322,6 @@
 
         </div>
     </div>
-
-    <!-- =========================
-         TABLE SHOWCASE
-    ========================= -->
 
     <div class="demo-section">
 
@@ -415,10 +412,6 @@
         </div>
     </div>
 
-    <!-- =========================
-         SHADOW SHOWCASE
-    ========================= -->
-
     <div class="demo-section">
 
         <h3 class="heading-md">
@@ -438,10 +431,6 @@
         </div>
 
     </div>
-
-    <!-- =========================
-     ACCENT SHOWCASE
-========================= -->
 
     <div class="demo-section">
 
@@ -494,10 +483,6 @@
 
     </div>
 
-    <!-- =========================
-         DIALOG SHOWCASE
-    ========================= -->
-
     <div class="demo-section">
 
         <h3 class="heading-md">
@@ -514,7 +499,6 @@
 
     </div>
 
-    <!-- 1. Header + body + footer — divider SHOULD appear -->
     @if (isBasicDialogOpen()) {
     <app-dialog ariaLabel="Confirm Order" (closed)="isBasicDialogOpen.set(false)">
         <h3 class="heading-md" dialog-header>Confirm Order</h3>
@@ -529,7 +513,6 @@
     </app-dialog>
     }
 
-    <!-- 2. Body only — no divider, no header -->
     @if (isBodyOnlyDialogOpen()) {
     <app-dialog ariaLabel="Notice" (closed)="isBodyOnlyDialogOpen.set(false)">
         <p class="text-body" dialog-body>
@@ -538,15 +521,12 @@
     </app-dialog>
     }
 
-    <!-- 3. Header only — no divider, no body -->
     @if (isHeaderOnlyDialogOpen()) {
     <app-dialog ariaLabel="Heads up" (closed)="isHeaderOnlyDialogOpen.set(false)">
         <h3 class="heading-md" dialog-header>Market is closed right now so come back later buddies chill</h3>
     </app-dialog>
     }
 
-    <!-- 4. Forced acknowledgment — no close button, no backdrop-click,
-         no Escape. Only the footer button can close it. -->
     @if (isForcedDialogOpen()) {
     <app-dialog ariaLabel="Session expired" [showCloseButton]="false" [closeOnBackdropClick]="false"
         [closeOnEscape]="false" (closed)="isForcedDialogOpen.set(false)">
@@ -560,8 +540,6 @@
     </app-dialog>
     }
 
-    <!-- 5. Fully custom content — no dialog-header/body/footer used at
-         all, same flexibility as using Modal directly (e.g. an auth form). -->
     @if (isCustomContentDialogOpen()) {
     <app-dialog ariaLabel="Custom content" [showCloseButton]="false" (closed)="isCustomContentDialogOpen.set(false)">
         <div class="dialog-custom-content">
@@ -597,8 +575,6 @@
     <div class="demo-section">
         <h3 class="heading-md">Toggle button Showcase</h3>
 
-        <!-- 1. Standalone toggle — plain FormControl, no <form> or FormGroup needed -->
-        <!-- Both icons are always projected; the thumb slides to cover whichever one doesn't match the state -->
         <div class="demo-row">
             <p class="text-muted">1. Standalone — [formControl], dark/light mode with both icons</p>
             <app-toggle [formControl]="darkModeControl" label="Dark mode" variant="accent" offVariant="warning">
@@ -614,7 +590,6 @@
             </app-toggle>
         </div>
 
-        <!-- 2. Inside a real reactive form — formControlName, grouped settings -->
         <div class="demo-row">
             <p class="text-muted">2. Inside a FormGroup — formControlName</p>
             <form [formGroup]="settingsForm" class="demo-form">
@@ -625,19 +600,16 @@
             <p class="text-muted">{{ settingsSummary }}</p>
         </div>
 
-        <!-- 3. No label, no icons — bare toggle for inline contexts like a table row -->
         <div class="demo-row">
             <p class="text-muted">3. No label, no icons</p>
             <app-toggle [formControl]="darkModeControl" variant="accent"></app-toggle>
         </div>
 
-        <!-- 4. Disabled — pre-set from the form model -->
         <div class="demo-row">
             <p class="text-muted">4. Disabled, checked — plan-gated feature</p>
             <app-toggle [formControl]="lockedFeatureControl" label="Premium analytics" variant="secondary"></app-toggle>
         </div>
 
-        <!-- 5. Disabled toggled at runtime -->
         <div class="demo-row">
             <p class="text-muted">5. Disabled toggled at runtime</p>
             <app-toggle [formControl]="riskModeControl" label="High-risk trading mode" variant="danger"></app-toggle>
@@ -646,7 +618,6 @@
             </button>
         </div>
 
-        <!-- 6. Sizes, side by side -->
         <div class="demo-row">
             <p class="text-muted">6. Sizes</p>
             <div class="demo-inline">
@@ -656,7 +627,6 @@
             </div>
         </div>
 
-        <!-- 7. All ON-state variants, side by side -->
         <div class="demo-row">
             <p class="text-muted">7. ON-state variants</p>
             <div class="demo-inline">
@@ -669,7 +639,6 @@
             </div>
         </div>
 
-        <!-- 8. OFF-state colors — riskModeControl starts unchecked, so these render in their off color immediately -->
         <div class="demo-row">
             <p class="text-muted">8. OFF-state variants (explicit offVariant, not the default gray)</p>
             <div class="demo-inline">
@@ -682,13 +651,11 @@
             </div>
         </div>
 
-        <!-- 9. Default neutral OFF color — no offVariant set, falls back to gray regardless of variant -->
         <div class="demo-row">
             <p class="text-muted">9. Default OFF color (no offVariant — always neutral gray)</p>
             <app-toggle [formControl]="riskModeControl" variant="success" label="Autopilot"></app-toggle>
         </div>
 
-        <!-- 10. Projected <img> icons on both sides, to confirm the slots accept either SVG or img -->
         <div class="demo-row">
             <p class="text-muted">10. Projected &lt;img&gt; icons on both sides</p>
             <app-toggle [formControl]="darkModeControl" label="Notifications" variant="accent">
@@ -697,7 +664,6 @@
             </app-toggle>
         </div>
 
-        <!-- 11. Only one side's icon provided — confirms the other slot stays empty without breaking layout -->
         <div class="demo-row">
             <p class="text-muted">11. Only the ON icon provided</p>
             <app-toggle [formControl]="darkModeControl" label="Beta features" variant="accent">
@@ -707,7 +673,6 @@
             </app-toggle>
         </div>
 
-        <!-- 12. Default neutral OFF color — no offVariant set, falls back to gray regardless of variant -->
         <div class="demo-row">
             <p class="text-muted">12. Text alignment</p>
             <app-toggle [formControl]="darkModeControl" label="Checking alignment" labelPosition="right"></app-toggle>
@@ -719,7 +684,6 @@
             Price Indicator Showcase
         </h3>
 
-        <!-- 1. Basic sign cases -->
         <p class="text-muted">Positive</p>
         <app-price-indicator [value]="12450" [percentage]="1.12" /> <br>
 
@@ -733,39 +697,33 @@
         </p>
         <app-price-indicator [value]="0" [percentage]="0" /> <br>
 
-        <!-- 2. Percentage handling -->
         <p class="text-muted">No percentage passed at all — no bracket, even though showPercentage defaults true</p>
         <app-price-indicator [value]="12450" /> <br>
 
         <p class="text-muted">Percentage passed but showPercentage false — bracket hidden</p>
         <app-price-indicator [value]="12450" [percentage]="1.12" [showPercentage]="false" /> <br>
 
-        <!-- 3. Arrow handling -->
         <p class="text-muted">Positive, arrow hidden</p>
         <app-price-indicator [value]="12450" [percentage]="1.12" [showArrow]="false" /> <br>
 
         <p class="text-muted">Negative, arrow hidden</p>
         <app-price-indicator [value]="-4200" [percentage]="-2.34" [showArrow]="false" /> <br>
 
-        <!-- 4. Currency -->
         <p class="text-muted">USD instead of default INR</p>
         <app-price-indicator [value]="3206546544.50" [percentage]="0.85" currency="USD" locale="en-US" /> <br>
 
         <p class="text-muted">Negative USD</p>
         <app-price-indicator [value]="-18.25" [percentage]="-1.4" currency="USD" locale="en-US" /> <br>
 
-        <!-- 5. Decimal precision -->
         <p class="text-muted">2 decimal places on value (e.g. cents), 0 on percentage</p>
         <app-price-indicator [value]="245.75" [percentage]="3" [valueDecimals]="2" [percentageDecimals]="0" /> <br>
 
         <p class="text-muted">Small value near zero, with decimals — confirms sign logic still works</p>
         <app-price-indicator [value]="-0.05" [percentage]="-0.02" [valueDecimals]="2" /> <br>
 
-        <!-- 6. Large number — confirms Indian lakh/crore grouping -->
         <p class="text-muted">Large value (lakh grouping)</p>
         <app-price-indicator [value]="1250000" [percentage]="4.2" /> <br>
 
-        <!-- 7. Dense table-style usage — arrow off, color-only, as you'd use in a real table column -->
         <p class="text-muted">Table-style: arrow off, compact rows</p>
         <div class="price-indicator-table-demo">
             <app-price-indicator [value]="12500" [percentage]="5.1" [showArrow]="false" />
@@ -778,7 +736,6 @@
     <div class="demo-section">
         <h3 class="heading-md">Dropdown Showcase</h3>
 
-        <!-- 1. Standalone, no placeholder — auto-selects the first enabled option (Market) on init -->
         <div class="demo-row">
             <p class="text-muted">1. Standalone, no placeholder — auto-selects first enabled option</p>
             <app-dropdown label="Order type" [formControl]="orderTypeControl"
@@ -786,7 +743,6 @@
             <p class="text-muted">Value: {{ orderTypeControl.value }}</p>
         </div>
 
-        <!-- 2. Standalone with placeholder — starts genuinely empty, nothing auto-selected -->
         <div class="demo-row">
             <p class="text-muted">2. Placeholder mode — starts empty until user picks</p>
             <app-dropdown label="Sort by" placeholder="Choose a sort order" [formControl]="sortByControl"
@@ -794,7 +750,6 @@
             <p class="text-muted">Value: {{ sortByControl.value ?? 'null' }}</p>
         </div>
 
-        <!-- 3. Inside a FormGroup, required, with a submit button to reveal the error state -->
         <div class="demo-row">
             <p class="text-muted">3. Required, inside a FormGroup — submit to trigger the error</p>
             <form [formGroup]="tradePrefsForm" class="demo-form">
@@ -804,21 +759,18 @@
             <button type="button" (click)="submitTradePrefs()">Submit</button>
         </div>
 
-        <!-- 4. Options with icons — icon stays visible in the closed trigger too -->
         <div class="demo-row">
             <p class="text-muted">4. Options with icons (visible in trigger once selected)</p>
             <app-dropdown label="Currency" placeholder="Select a currency" [formControl]="currencyControl"
                 [options]="currencyOptions"></app-dropdown>
         </div>
 
-        <!-- 5. Pre-disabled with a value already set -->
         <div class="demo-row">
             <p class="text-muted">5. Disabled, pre-set from the form model</p>
             <app-dropdown label="Primary exchange" [formControl]="lockedExchangeControl"
                 [options]="exchangeOptions"></app-dropdown>
         </div>
 
-        <!-- 6. Disabled toggled at runtime -->
         <div class="demo-row">
             <p class="text-muted">6. Disabled toggled at runtime</p>
             <app-dropdown label="Watchlist sort" placeholder="Pick a sort" [formControl]="runtimeLockControl"
@@ -828,15 +780,12 @@
             </button>
         </div>
 
-        <!-- 7. fullWidth -->
         <div class="demo-row">
             <p class="text-muted">7. fullWidth</p>
             <app-dropdown label="Watchlist category" [required]="true" fullWidth placeholder="Select a category"
                 [formControl]="watchlistCategoryControl" [options]="watchlistCategoryOptions"></app-dropdown>
         </div>
 
-        <!-- 8. Keyboard + disabled-option check — try Arrow keys, Home/End, typing a letter, and
-             confirm "Stop" (disabled) can't be landed on or selected -->
         <div class="demo-row">
             <p class="text-muted">
                 8. Keyboard nav check — focus this, then try Arrow Up/Down, Home, End, and typing "L" or "S".
@@ -846,8 +795,6 @@
                 [options]="orderTypeOptions"></app-dropdown>
         </div>
 
-        <!-- 9. Sizes — small/medium/large, side by side. Large (default) matches the original
-             unscoped trigger exactly, so every dropdown elsewhere in the app is unaffected. -->
         <div class="demo-row">
             <p class="text-muted">9. Sizes — small is meant for tight spots like pagination controls</p>
             <div class="demo-inline">
@@ -874,7 +821,6 @@
     <div class="demo-section">
         <h3 class="heading-md">Tooltip Showcase</h3>
 
-        <!-- 1. Plain text shorthand, default position (top), icon trigger -->
         <div class="demo-row">
             <p class="text-muted">1. Text shorthand, icon trigger, default position (top)</p>
             <app-tooltip text="Total value of all your open positions">
@@ -882,7 +828,6 @@
             </app-tooltip>
         </div>
 
-        <!-- 2. Rich content — header, paragraph, image, all block-level, inside the panel div -->
         <div class="demo-row">
             <p class="text-muted">2. Rich content — header + paragraph + image via tooltipContent</p>
             <app-tooltip position="right">
@@ -895,7 +840,6 @@
             </app-tooltip>
         </div>
 
-        <!-- 3. All four positions side by side -->
         <div class="demo-row">
             <p class="text-muted">3. All four positions</p>
             <div class="demo-inline">
@@ -906,7 +850,6 @@
             </div>
         </div>
 
-        <!-- 4. Near the right viewport edge — position="right" has no room, should auto-flip to left -->
         <div class="demo-row">
             <p class="text-muted">4. Edge-of-viewport flip check — resize window narrow, or check on mobile width</p>
             <div class="demo-edge-push">
@@ -916,7 +859,6 @@
             </div>
         </div>
 
-        <!-- 5. Trigger wrapping plain text, not just an icon -->
         <div class="demo-row">
             <p class="text-muted">5. Trigger wrapping a plain word, not an icon</p>
             <p class="text-body">
@@ -926,7 +868,6 @@
             </p>
         </div>
 
-        <!-- 6. Correct link pattern — tooltip on an adjacent icon, not on the link itself -->
         <div class="demo-row">
             <p class="text-muted">6. Link pattern — tooltip on the adjacent icon, link stays untouched</p>
             <p class="text-body">
@@ -936,7 +877,6 @@
             </p>
         </div>
 
-        <!-- 7. Manual checks — nothing here to click, just instructions -->
         <div class="demo-row">
             <p class="text-muted">
                 7. Manual checks: (a) Tab to any ⓘ above — tooltip should appear immediately, no delay,
@@ -949,7 +889,6 @@
     <div class="demo-section">
         <h3 class="heading-md">Toast Showcase</h3>
 
-        <!-- 1. Four variants, default durations (success/info 4s, warning 5s, danger 6s) -->
         <div class="demo-row">
             <p class="text-muted">1. Variants — each uses its own default duration</p>
             <div class="button-group">
@@ -964,38 +903,32 @@
             </div>
         </div>
 
-        <!-- 2. Custom duration override -->
         <div class="demo-row">
             <p class="text-muted">2. Custom duration override — 10 seconds instead of the default</p>
             <app-button variant="outline" text="10s toast"
                 (click)="toastService.info('This one sticks around for 10 seconds', { duration: 10000 })" />
         </div>
 
-        <!-- 3. Action slot — revoke-manager style: real action already happened, Undo genuinely reverses it -->
         <div class="demo-row">
             <p class="text-muted">3. Action slot — Undo (genuine reversal, check console)</p>
             <app-button variant="danger" text="Revoke manager" (click)="fireUndoDemo()" />
         </div>
 
-        <!-- 4. Action slot — cancel-order style: real cancel already happened, action opens a prefilled reorder flow -->
         <div class="demo-row">
             <p class="text-muted">4. Action slot — Reorder (new order, not a true undo, check console)</p>
             <app-button variant="secondary" text="Cancel order" (click)="fireReorderDemo()" />
         </div>
 
-        <!-- 5. Stacking + queue — fires 6 toasts at once, only 4 should be visible at a time -->
         <div class="demo-row">
             <p class="text-muted">5. Stacking cap — fires 6 at once, only 4 visible, rest queue in behind</p>
             <app-button variant="outline" text="Fire 6 toasts" (click)="fireStackTest()" />
         </div>
 
-        <!-- 6. Toast position -->
         <div class="demo-row">
             <p class="text-muted">6. Toast position</p>
             <app-button variant="secondary" text="Toast position" (click)="fireToastPosition()" />
         </div>
 
-        <!-- 7. Manual checks — nothing to click, just what to verify -->
         <div class="demo-row">
             <p class="text-muted">
                 7. Manual checks: (a) hover any toast before it disappears — the progress bar and
@@ -1047,7 +980,7 @@
     <div class="demo-section">
         <h3 class="heading-md">Pagination — sizes</h3>
         <app-pagination [totalItems]="145" size="small" /> <br>
-        <app-pagination [totalItems]="145" /> <br> <!-- defaults to medium -->
+        <app-pagination [totalItems]="145" /> <br>
         <app-pagination [totalItems]="145" size="large" />
     </div>
 
@@ -1069,7 +1002,6 @@
     <div class="card-test">
         <h2 class="heading-lg">Card Playground</h2>
 
-        <!-- 1. All variants, plain -->
         <section class="card-test__section">
             <h2 class="heading-md">Variants</h2>
             <div class="card-test__grid">
@@ -1082,7 +1014,6 @@
             </div>
         </section>
 
-        <!-- 2. All border colors, on default variant -->
         <section class="card-test__section">
             <h2 class="heading-md">Borders (default variant)</h2>
             <div class="card-test__grid">
@@ -1095,9 +1026,6 @@
             </div>
         </section>
 
-        <!-- 3. Misuse case: border on a non-default variant.
-       Should render with NO border applied, and log a console warning
-       (visible in dev tools) confirming the guard works. -->
         <section class="card-test__section">
             <h2 class="heading-md">Misuse check: border + non-default variant</h2>
             <div class="card-test__grid">
@@ -1110,7 +1038,6 @@
             </div>
         </section>
 
-        <!-- 4. Hoverable vs not -->
         <section class="card-test__section">
             <h2 class="heading-md">Hoverable</h2>
             <div class="card-test__grid">
@@ -1124,7 +1051,6 @@
             </div>
         </section>
 
-        <!-- 5. Clickable vs not, and click + hover together -->
         <section class="card-test__section">
             <h2 class="heading-md">Clickable</h2>
             <div class="card-test__grid">

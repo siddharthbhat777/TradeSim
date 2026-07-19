@@ -18,6 +18,7 @@ import { Pagination } from '../shared/components/pagination/pagination';
 import { Table, TableColumn } from '../shared/components/table/table';
 import { DecimalPipe } from '@angular/common';
 import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
+import { Alert } from '../shared/components/alert/alert';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 interface PortfolioRow {
@@ -30,7 +31,7 @@ interface PortfolioRow {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination, Table, DecimalPipe, SegmentedControl],
+  imports: [Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination, Table, DecimalPipe, SegmentedControl, Alert],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -247,27 +248,22 @@ export class TestingPlayground {
     });
   }
 
-  // --- Pagination: basic usage ---
   protected demoBasicTotalItems = signal(145);
   protected demoBasicCurrentPage = signal(1);
   protected demoBasicPageSize = signal(10);
 
-  // --- Pagination: single page / fully disabled ---
   protected demoSinglePageTotalItems = signal(8);
   protected demoSinglePageCurrentPage = signal(1);
   protected demoSinglePageSize = signal(10);
 
-  // --- Pagination: custom page-size options ---
   protected demoCustomTotalItems = signal(63);
   protected demoCustomCurrentPage = signal(1);
   protected demoCustomPageSize = signal(5);
 
-  // --- Pagination: large page count ---
   protected demoLargeTotalItems = signal(999);
   protected demoLargeCurrentPage = signal(1);
   protected demoLargePageSize = signal(10);
 
-  // --- Pagination: out-of-bounds recovery ---
   protected demoRecoveryTotalItems = signal(97);
   protected demoRecoveryCurrentPage = signal(1);
   protected demoRecoveryPageSize = signal(10);
@@ -312,20 +308,16 @@ export class TestingPlayground {
     { label: 'Timeline', value: 'timeline', disabled: true },
   ];
 
-  // Optional field — starts empty, so the user CAN click-to-deselect.
   protected readonly planControl = new FormControl<string | null>(null);
   protected readonly plan = toSignal(this.planControl.valueChanges, {
     initialValue: this.planControl.value,
   });
 
-  // Mandatory field — starts pre-selected, so clicking the active option
-  // does nothing; only switching to a different one works.
   protected readonly viewControl = new FormControl<string>('list', { nonNullable: true });
   protected readonly view = toSignal(this.viewControl.valueChanges, {
     initialValue: this.viewControl.value,
   });
 
-  // Lets us force the error to show on submit, even without prior interaction.
   private readonly planComponent = viewChild<SegmentedControl<string>>('planComponent');
 
   protected submitted = false;
