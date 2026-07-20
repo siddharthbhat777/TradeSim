@@ -231,3 +231,32 @@
   flex-direction: column;
   gap: 16px;
 }
+
+.stepper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.val-display {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface-secondary);
+  padding: 4px 12px;
+  border-radius: 99px;
+}
+
+.stepper-header {
+  margin-top: 32px;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}

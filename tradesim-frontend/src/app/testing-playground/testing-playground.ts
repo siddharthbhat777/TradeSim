@@ -23,6 +23,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { PieChartContainer } from '../shared/components/charts/pie-chart-container/pie-chart-container';
 import { PieChart, PieChartData } from '../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
 import { Legend } from '../shared/components/charts/legend/legend';
+import { NumberStepper } from '../shared/components/number-stepper/number-stepper';
 
 interface PortfolioRow {
   id: number;
@@ -34,10 +35,12 @@ interface PortfolioRow {
 
 @Component({
   selector: 'app-testing-playground',
+  standalone: true,
   imports: [
     Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
     CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
-    Toast, Pagination, Table, DecimalPipe, SegmentedControl, Alert, PieChartContainer, PieChart, Legend
+    Toast, Pagination, Table, DecimalPipe, SegmentedControl, Alert, PieChartContainer,
+    PieChart, Legend, NumberStepper
   ],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
@@ -346,4 +349,18 @@ export class TestingPlayground {
     { id: '3', label: 'Gold (SGB)', value: 150000, color: '#d97706' },
     { id: '4', label: 'Cash Balance', value: 100000, color: '#475569' }
   ];
+
+  protected readonly stepperSmall = signal(0);
+  protected readonly stepperMedium = signal(10);
+  protected readonly stepperLarge = signal(100);
+
+  protected readonly stepperPrimary = signal(1);
+  protected readonly stepperSecondary = signal(2);
+  protected readonly stepperSuccess = signal(3);
+  protected readonly stepperDanger = signal(4);
+  protected readonly stepperWarning = signal(5);
+  protected readonly stepperOutline = signal(6);
+
+  protected readonly stepperMinMax = signal(5);
+  protected readonly stepperMixed = signal(0);
 }

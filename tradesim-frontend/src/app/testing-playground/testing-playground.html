@@ -155,6 +155,71 @@
         </div>
     </div>
 
+    <!-- =========================
+         NUMBER STEPPER SHOWCASE
+    ========================= -->
+
+    <div class="demo-section">
+        <h2>Number Stepper</h2>
+
+        <h3 class="stepper-header">Sizes</h3>
+        <div class="stepper-grid">
+            <div class="stepper-row">
+                <app-number-stepper size="small" [(value)]="stepperSmall"></app-number-stepper>
+                <span class="val-display">Value: {{ stepperSmall() }}</span>
+            </div>
+            <div class="stepper-row">
+                <app-number-stepper size="medium" [(value)]="stepperMedium"></app-number-stepper>
+                <span class="val-display">Value: {{ stepperMedium() }}</span>
+            </div>
+            <div class="stepper-row">
+                <app-number-stepper size="large" [(value)]="stepperLarge"></app-number-stepper>
+                <span class="val-display">Value: {{ stepperLarge() }}</span>
+            </div>
+        </div>
+
+        <h3 class="stepper-header">Variants</h3>
+        <div class="stepper-grid">
+            <div class="stepper-row">
+                <app-number-stepper variant="primary" [(value)]="stepperPrimary"></app-number-stepper>
+                <span class="val-display">Primary: {{ stepperPrimary() }}</span>
+            </div>
+            <div class="stepper-row">
+                <app-number-stepper variant="secondary" [(value)]="stepperSecondary"></app-number-stepper>
+                <span class="val-display">Secondary: {{ stepperSecondary() }}</span>
+            </div>
+            <div class="stepper-row">
+                <app-number-stepper variant="success" [(value)]="stepperSuccess"></app-number-stepper>
+                <span class="val-display">Success: {{ stepperSuccess() }}</span>
+            </div>
+            <div class="stepper-row">
+                <app-number-stepper variant="danger" [(value)]="stepperDanger"></app-number-stepper>
+                <span class="val-display">Danger: {{ stepperDanger() }}</span>
+            </div>
+            <div class="stepper-row">
+                <app-number-stepper variant="warning" [(value)]="stepperWarning"></app-number-stepper>
+                <span class="val-display">Warning: {{ stepperWarning() }}</span>
+            </div>
+            <div class="stepper-row">
+                <app-number-stepper variant="outline" [(value)]="stepperOutline"></app-number-stepper>
+                <span class="val-display">Outline: {{ stepperOutline() }}</span>
+            </div>
+        </div>
+
+        <h3 class="stepper-header">Min/Max Bounds (-3 to 5)</h3>
+        <div class="stepper-row">
+            <app-number-stepper variant="danger" [min]="-3" [max]="5" [(value)]="stepperMinMax"></app-number-stepper>
+            <span class="val-display">Value: {{ stepperMinMax() }} (Try going below -3 or above 5)</span>
+        </div>
+
+        <h3 class="stepper-header">Mixed Variants</h3>
+        <div class="stepper-row">
+            <app-number-stepper variant="outline" secondaryVariant="primary"
+                [(value)]="stepperMixed"></app-number-stepper>
+            <span class="val-display">Left: Outline, Right: Primary</span>
+        </div>
+    </div>
+
     <div class="demo-section">
         <app-button variant="primary" text="Place Order" /> &nbsp;
         <app-button variant="secondary" text="Cancel Order" /> &nbsp;
