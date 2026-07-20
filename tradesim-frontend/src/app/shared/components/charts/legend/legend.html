@@ -1,0 +1,20 @@
+<div class="legend-list" role="list">
+    @for (item of calculatedData(); track item.id) {
+    <div class="legend-item" role="listitem" [class.is-active]="activeId() === item.id"
+        [class.is-dimmed]="activeId() !== null && activeId() !== item.id" (mouseenter)="onMouseEnter(item.id)"
+        (mouseleave)="onMouseLeave()">
+
+        <div class="legend-indicator" [style.background-color]="item.color"></div>
+
+        <div class="legend-details">
+            <span class="legend-label">{{ item.label }}</span>
+            <div class="legend-metrics">
+                <span class="legend-value">{{ item.value | number }}</span>
+                @if (showPercentage()) {
+                <span class="legend-percentage">({{ item.percentage | number:'1.0-1' }}%)</span>
+                }
+            </div>
+        </div>
+    </div>
+    }
+</div>

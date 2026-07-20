@@ -1,0 +1,43 @@
+.container-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+
+  &.wrap {
+    flex-wrap: wrap;
+  }
+
+  &.nowrap {
+    flex-wrap: nowrap;
+  }
+
+  &.pos-right {
+    flex-direction: row;
+  }
+
+  &.pos-left {
+    flex-direction: row-reverse;
+  }
+
+  &.pos-bottom {
+    flex-direction: column;
+  }
+
+  &.pos-top {
+    flex-direction: column-reverse;
+  }
+}
+
+.chart-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.legend-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 150px;
+}

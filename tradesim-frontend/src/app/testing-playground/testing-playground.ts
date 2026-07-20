@@ -20,6 +20,9 @@ import { DecimalPipe } from '@angular/common';
 import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
 import { Alert } from '../shared/components/alert/alert';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { PieChartContainer } from '../shared/components/charts/pie-chart-container/pie-chart-container';
+import { PieChart, PieChartData } from '../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
+import { Legend } from '../shared/components/charts/legend/legend';
 
 interface PortfolioRow {
   id: number;
@@ -31,7 +34,11 @@ interface PortfolioRow {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput, CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip, Toast, Pagination, Table, DecimalPipe, SegmentedControl, Alert],
+  imports: [
+    Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
+    CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
+    Toast, Pagination, Table, DecimalPipe, SegmentedControl, Alert, PieChartContainer, PieChart, Legend
+  ],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
@@ -103,7 +110,6 @@ export class TestingPlayground {
   protected readonly isHeaderOnlyDialogOpen = signal(false);
   protected readonly isForcedDialogOpen = signal(false);
   protected readonly isCustomContentDialogOpen = signal(false);
-
 
   readonly darkModeControl = new FormControl(false, { nonNullable: true });
 
@@ -198,7 +204,7 @@ export class TestingPlayground {
     { label: 'HDFC Bank', value: 'hdfcbank' },
     { label: 'Infosys', value: 'infy' },
     { label: 'ICICI Bank', value: 'icicibank' },
-    { label: 'Hindustan Unilever', value: 'hul' },
+    { label: 'H हिंदुस्तान Unilever', value: 'hul' },
     { label: 'ITC', value: 'itc' },
     { label: 'State Bank of India', value: 'sbin' },
     { label: 'Bharti Airtel', value: 'bhartiartl' },
@@ -326,4 +332,18 @@ export class TestingPlayground {
     this.submitted = true;
     this.planComponent()?.markAsTouched();
   }
+
+  protected readonly pieChartSampleData: PieChartData[] = [
+    { id: '1', label: 'Smartphones', value: 850, color: '#2563eb' },
+    { id: '2', label: 'Laptops', value: 420, color: '#16a34a' },
+    { id: '3', label: 'Tablets', value: 210, color: '#ea580c' },
+    { id: '4', label: 'Wearables', value: 120, color: '#9333ea' }
+  ];
+
+  protected readonly pieChartPortfolioData: PieChartData[] = [
+    { id: '1', label: 'Equities', value: 650000, color: '#059669' },
+    { id: '2', label: 'Mutual Funds', value: 350000, color: '#0284c7' },
+    { id: '3', label: 'Gold (SGB)', value: 150000, color: '#d97706' },
+    { id: '4', label: 'Cash Balance', value: 100000, color: '#475569' }
+  ];
 }

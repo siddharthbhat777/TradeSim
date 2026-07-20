@@ -95,6 +95,66 @@
 
     </div>
 
+    <!-- =========================
+         PIE CHART SHOWCASE
+    ========================= -->
+
+    <div class="demo-section">
+        <h3 class="heading-md">Pie Chart Showcase</h3>
+        <p class="text-muted" style="margin-bottom: 24px;">
+            Hover over slices to see the custom tracking tooltip. Try hovering/clicking the legend items below each
+            chart to see if the slices highlight!
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px;">
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">1. Full + Solid (Legend Right)</p>
+                <app-pie-chart-container [data]="pieChartSampleData" shape="full" chartStyle="solid" [size]="200"
+                    legendPosition="right" [wrap]="false">
+                </app-pie-chart-container>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">2. Full + Donut (Legend Bottom)</p>
+                <app-pie-chart-container [data]="pieChartSampleData" shape="full" chartStyle="donut" [size]="280"
+                    legendPosition="bottom" [wrap]="true">
+                </app-pie-chart-container>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">3. Half + Solid (Legend Left)</p>
+                <app-pie-chart-container [data]="pieChartPortfolioData" shape="half" chartStyle="solid" [size]="200"
+                    legendPosition="left" [wrap]="false">
+                </app-pie-chart-container>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">4. Half + Donut (Legend Top)</p>
+                <app-pie-chart-container [data]="pieChartPortfolioData" shape="half" chartStyle="donut" [size]="280"
+                    legendPosition="top" [wrap]="true">
+                </app-pie-chart-container>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">5. Standalone Pie Chart (No Legend)
+                </p>
+                <div style="display: flex; justify-content: center; padding: 24px 0;">
+                    <app-pie-chart [data]="pieChartSampleData" shape="full" chartStyle="donut"
+                        [size]="240"></app-pie-chart>
+                </div>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">6. Standalone Legend</p>
+                <div style="display: flex; justify-content: center; padding: 24px 0;">
+                    <app-legend [data]="pieChartSampleData"></app-legend>
+                </div>
+            </app-card>
+
+        </div>
+    </div>
+
     <div class="demo-section">
         <app-button variant="primary" text="Place Order" /> &nbsp;
         <app-button variant="secondary" text="Cancel Order" /> &nbsp;
