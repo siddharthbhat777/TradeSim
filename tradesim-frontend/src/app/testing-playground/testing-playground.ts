@@ -16,7 +16,7 @@ import { ToastService } from '../shared/components/toast/toast.service';
 import { Toast } from '../shared/components/toast/toast';
 import { Pagination } from '../shared/components/pagination/pagination';
 import { Table, TableColumn } from '../shared/components/table/table';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, JsonPipe, CommonModule } from '@angular/common';
 import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
 import { Alert } from '../shared/components/alert/alert';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -24,6 +24,8 @@ import { PieChartContainer } from '../shared/components/charts/pie-chart-contain
 import { PieChart, PieChartData } from '../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
 import { Legend } from '../shared/components/charts/legend/legend';
 import { NumberStepper } from '../shared/components/number-stepper/number-stepper';
+import { Checkbox } from '../shared/components/checkbox/checkbox';
+import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
 
 interface PortfolioRow {
   id: number;
@@ -37,10 +39,10 @@ interface PortfolioRow {
   selector: 'app-testing-playground',
   standalone: true,
   imports: [
-    Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
+    CommonModule, Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
     CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
-    Toast, Pagination, Table, DecimalPipe, SegmentedControl, Alert, PieChartContainer,
-    PieChart, Legend, NumberStepper
+    Toast, Pagination, Table, DecimalPipe, JsonPipe, SegmentedControl, Alert, PieChartContainer,
+    PieChart, Legend, NumberStepper, Checkbox, CheckboxGroup
   ],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
@@ -84,22 +86,11 @@ export class TestingPlayground {
   }
 
   protected readonly variants: CardVariant[] = [
-    'default',
-    'surface',
-    'outline',
-    'accent',
-    'success',
-    'danger',
-    'warning'
+    'default', 'surface', 'outline', 'accent', 'success', 'danger', 'warning'
   ];
 
   protected readonly borders: CardBorder[] = [
-    'primary',
-    'secondary',
-    'accent',
-    'success',
-    'danger',
-    'warning'
+    'primary', 'secondary', 'accent', 'success', 'danger', 'warning'
   ];
 
   protected readonly clickCount = signal(0);
@@ -363,4 +354,30 @@ export class TestingPlayground {
 
   protected readonly stepperMinMax = signal(5);
   protected readonly stepperMixed = signal(0);
+
+  protected standaloneBasic = signal(false);
+  protected standaloneLeft = signal(false);
+
+  protected standaloneRequiredChecked = signal(false);
+  protected standaloneNoLabel = signal(false);
+  private readonly reqCheckbox = viewChild<Checkbox>('reqCheckbox');
+
+  protected submitCheckboxForm(): void {
+    this.reqCheckbox()?.markAsTouched();
+  }
+
+  protected readonly simpleGroupOptions = [
+    { value: 'aapl', label: 'Apple Inc.' },
+    { value: 'msft', label: 'Microsoft Corp.' },
+    { value: 'googl', label: 'Alphabet Inc.' }
+  ];
+  protected selectedSimpleGroup = signal(['aapl']);
+
+  protected readonly sectorGroupOptions = [
+    { id: 'tech', name: 'Technology', count: 145, color: '#2563eb', icon: '💻' },
+    { id: 'fin', name: 'Finance', count: 89, color: '#16a34a', icon: '🏦' },
+    { id: 'health', name: 'Healthcare', count: 112, color: '#ea580c', icon: '🏥' },
+    { id: 'energy', name: 'Energy', count: 45, color: '#9333ea', icon: '⚡' }
+  ];
+  protected selectedSectorGroup = signal(['tech', 'fin']);
 }

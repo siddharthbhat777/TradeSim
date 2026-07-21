@@ -156,6 +156,104 @@
     </div>
 
     <!-- =========================
+         CHECKBOX & GROUP SHOWCASE
+    ========================= -->
+
+    <div class="demo-section">
+        <h3 class="heading-md">Checkbox & Checkbox Group</h3>
+        <p class="text-muted" style="margin-bottom: 24px;">
+            Testing standalone states, validation, HTML projections, and smart indeterminate groups.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px;">
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">1. Standalone States</p>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <app-checkbox [(checked)]="standaloneBasic">Default Checkbox</app-checkbox>
+                    <app-checkbox [indeterminate]="true">Forced Indeterminate</app-checkbox>
+                    <app-checkbox [checked]="true" [disabled]="true">Disabled Checked</app-checkbox>
+                    <app-checkbox [checked]="false" [disabled]="true">Disabled Unchecked</app-checkbox>
+                </div>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">2. Config & Projections</p>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <app-checkbox [(checked)]="standaloneLeft" labelPosition="left">Label on Left Side</app-checkbox>
+                    <app-checkbox>
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 4px;">
+                            <span style="font-size: 1.5rem;">🔥</span>
+                            <div style="display: flex; flex-direction: column;">
+                                <strong style="color: var(--text-primary); line-height: 1.2;">Custom HTML Label</strong>
+                                <span class="text-muted" style="font-size: 0.8rem;">Multline support via
+                                    ng-content</span>
+                            </div>
+                        </div>
+                    </app-checkbox>
+                </div>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">3. Validation & Submit Scenario</p>
+                <div style="display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
+                    <app-checkbox #reqCheckbox [(checked)]="standaloneRequiredChecked" [required]="true">
+                        I accept the terms and conditions
+                    </app-checkbox>
+                    <button (click)="submitCheckboxForm()"
+                        style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-secondary); color: var(--text-primary); cursor: pointer; font-weight: 600;">
+                        Submit to Validate
+                    </button>
+                </div>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">4. Only Checkbox (No Label)</p>
+                <div style="display: flex; align-items: center; justify-content: center; padding: 24px;">
+                    <app-checkbox [(checked)]="standaloneNoLabel"></app-checkbox>
+                </div>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">5. Basic Checkbox Group</p>
+                <app-checkbox-group [options]="simpleGroupOptions" [(selectedValues)]="selectedSimpleGroup"
+                    [showSelectAll]="true" selectAllText="Select All Stocks">
+                </app-checkbox-group>
+                <div style="margin-top: 24px; padding: 12px; background: var(--surface-secondary); border-radius: 8px;">
+                    <span class="text-muted" style="font-size: 0.85rem;">Bound Output:</span>
+                    <pre
+                        style="margin: 4px 0 0; font-size: 0.85rem; color: var(--primary);">{{ selectedSimpleGroup() | json }}</pre>
+                </div>
+            </app-card>
+
+            <app-card style="grid-column: 1 / -1;">
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">6. Checkbox Group (Row Layout &
+                    Custom Templates)</p>
+
+                <app-checkbox-group [options]="sectorGroupOptions" [(selectedValues)]="selectedSectorGroup"
+                    displayKey="name" valueKey="id" [showSelectAll]="true" layout="row">
+
+                    <div header-content style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.2rem;">🌍</span>
+                        <strong style="color: var(--primary);">Global Market Sectors</strong>
+                    </div>
+
+                    <ng-template #optionTemplate let-sector>
+                        <div
+                            style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--surface-secondary); border-radius: 8px; border: 1px solid var(--border);">
+                            <span>{{ sector.icon }}</span>
+                            <strong style="color: var(--text-primary);">{{ sector.name }}</strong>
+                            <span class="text-muted" style="font-size: 0.85rem;">({{ sector.count }})</span>
+                        </div>
+                    </ng-template>
+
+                </app-checkbox-group>
+            </app-card>
+
+        </div>
+    </div>
+
+    <!-- =========================
          NUMBER STEPPER SHOWCASE
     ========================= -->
 
