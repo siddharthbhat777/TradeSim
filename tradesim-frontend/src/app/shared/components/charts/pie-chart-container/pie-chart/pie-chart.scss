@@ -11,8 +11,8 @@
 }
 
 .pie-slice {
-  fill: color-mix(in srgb, var(--slice-base-color) 40%, #1e293b);
-  stroke: color-mix(in srgb, var(--slice-base-color) 80%, white);
+  fill: color-mix(in srgb, var(--slice-base-color) 70%, white);
+  stroke: color-mix(in srgb, var(--slice-base-color) 80%, black);
   stroke-width: 2px;
   stroke-linejoin: round;
   cursor: pointer;
@@ -21,19 +21,32 @@
     transform 0.2s ease,
     stroke-width 0.2s ease;
   transform-origin: center;
+}
 
-  &:hover,
-  &.is-hovered {
-    fill: color-mix(in srgb, var(--slice-base-color) 70%, #1e293b);
-    stroke-width: 4px;
-    transform: scale(1.02);
-    z-index: 10;
-  }
+.pie-slice:hover,
+.pie-slice.is-hovered {
+  fill: color-mix(in srgb, var(--slice-base-color) 30%, white);
+  stroke-width: 4px;
+  transform: scale(1.02);
+  z-index: 10;
+}
 
-  &.is-dimmed {
-    opacity: 0.7;
-    transform: scale(0.98);
-  }
+.pie-slice.is-dimmed {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+:host-context(.dark-theme) .pie-slice,
+.dark-theme .pie-slice {
+  fill: color-mix(in srgb, var(--slice-base-color) 40%, #1e293b);
+  stroke: color-mix(in srgb, var(--slice-base-color) 80%, white);
+}
+
+:host-context(.dark-theme) .pie-slice:hover,
+:host-context(.dark-theme) .pie-slice.is-hovered,
+.dark-theme .pie-slice:hover,
+.dark-theme .pie-slice.is-hovered {
+  fill: color-mix(in srgb, var(--slice-base-color) 70%, #1e293b);
 }
 
 .chart-center-content {
@@ -47,17 +60,17 @@
   justify-content: center;
   text-align: center;
   pointer-events: none;
+}
 
-  &.is-half {
-    top: 100%;
-    transform: translate(-50%, -100%);
-    padding-bottom: 20px;
-  }
+.chart-center-content.is-half {
+  top: 100%;
+  transform: translate(-50%, -100%);
+  padding-bottom: 20px;
 }
 
 .mouse-tooltip {
   position: fixed;
-  z-index: 9999;
+  z-index: 900;
   pointer-events: none;
   background: var(--surface);
   color: var(--text-primary);
@@ -67,39 +80,39 @@
   border: 1px solid var(--border);
   min-width: 150px;
   animation: tooltipFadeIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-  .tooltip-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-secondary);
+.mouse-tooltip .tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
 
-    .legend-icon {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-    }
-  }
+.mouse-tooltip .tooltip-header .legend-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
 
-  .tooltip-body {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
+.mouse-tooltip .tooltip-body {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
 
-    .tooltip-value {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
+.mouse-tooltip .tooltip-body .tooltip-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
 
-    .tooltip-percentage {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-    }
-  }
+.mouse-tooltip .tooltip-body .tooltip-percentage {
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 @keyframes tooltipFadeIn {
