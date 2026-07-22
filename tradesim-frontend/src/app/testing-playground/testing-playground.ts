@@ -1,4 +1,4 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { Component, inject, OnInit, Renderer2, signal, viewChild } from '@angular/core';
 import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -48,7 +48,27 @@ interface PortfolioRow {
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
 })
-export class TestingPlayground {
+export class TestingPlayground implements OnInit {
+
+  private renderer = inject(Renderer2);
+
+  isDarkMode = signal(false);
+
+  ngOnInit() {
+    const isDark = document.body.classList.contains('dark-theme');
+    this.isDarkMode.set(isDark);
+  }
+
+  toggleTheme() {
+    this.isDarkMode.update(v => !v);
+
+    if (this.isDarkMode()) {
+      this.renderer.addClass(document.body, 'dark-theme');
+    } else {
+      this.renderer.removeClass(document.body, 'dark-theme');
+    }
+  }
+
   readonly router = inject(Router);
 
   readonly inputDemoForm = new FormGroup({

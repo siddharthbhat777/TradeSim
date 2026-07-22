@@ -1,6 +1,13 @@
 <div class="demo-container">
 
-    <img src="tradesim_logo_light_mode.png" alt="TradeSim Logo" class="logo">
+    <div class="header-controls">
+        <img [src]="isDarkMode() ? 'tradesim_logo_dark_mode.png' : 'tradesim_logo_light_mode.png'" alt="TradeSim Logo"
+            class="logo">
+
+        <button class="theme-toggle-btn" (click)="toggleTheme()">
+            {{ isDarkMode() ? '☀️ Light Mode' : '🌙 Dark Mode' }}
+        </button>
+    </div>
 
     <div class="demo-section">
 
