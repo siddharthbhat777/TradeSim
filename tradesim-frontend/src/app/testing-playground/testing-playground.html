@@ -254,6 +254,105 @@
     </div>
 
     <!-- =========================
+         SKELETON LOADER SHOWCASE
+    ========================= -->
+
+    <div class="demo-section">
+        <h3 class="heading-md">Skeleton Loaders</h3>
+        <p class="text-muted" style="margin-bottom: 24px;">
+            Testing shimmer effects, standard shapes (text, rect, circle), and custom configurations.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px;">
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">1. Standard Shapes</p>
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div>
+                        <span class="text-muted" style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Text
+                            (Default)</span>
+                        <app-skeleton shape="text"></app-skeleton>
+                        <app-skeleton shape="text" width="80%"></app-skeleton>
+                        <app-skeleton shape="text" width="60%"></app-skeleton>
+                    </div>
+                    <div>
+                        <span class="text-muted"
+                            style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Circle</span>
+                        <app-skeleton shape="circle"></app-skeleton>
+                    </div>
+                    <div>
+                        <span class="text-muted"
+                            style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Rectangle (Soft
+                            Edges)</span>
+                        <app-skeleton shape="rect" height="100px"></app-skeleton>
+                    </div>
+                </div>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">2. Custom Sizing & Rounding</p>
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div style="display: flex; gap: 16px;">
+                        <app-skeleton shape="circle" width="80px" height="80px"></app-skeleton>
+                        <app-skeleton shape="circle" width="32px" height="32px"></app-skeleton>
+                    </div>
+                    <div>
+                        <span class="text-muted" style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Sharp
+                            Rectangle (rounded="0")</span>
+                        <app-skeleton shape="rect" height="60px" rounded="0"></app-skeleton>
+                    </div>
+                    <div>
+                        <span class="text-muted" style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Pill
+                            Rectangle (rounded="40px")</span>
+                        <app-skeleton shape="rect" height="40px" rounded="40px"></app-skeleton>
+                    </div>
+                </div>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">3. Mock Layout (Profile View)</p>
+                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px;">
+                    <app-skeleton shape="circle" width="64px" height="64px"></app-skeleton>
+                    <div style="flex: 1;">
+                        <app-skeleton shape="text" width="40%" height="24px"></app-skeleton>
+                        <app-skeleton shape="text" width="25%"></app-skeleton>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                    <div style="flex: 1;">
+                        <app-skeleton shape="rect" height="36px" rounded="8px"></app-skeleton>
+                    </div>
+                    <div style="flex: 1;">
+                        <app-skeleton shape="rect" height="36px" rounded="8px"></app-skeleton>
+                    </div>
+                </div>
+                <app-skeleton shape="text"></app-skeleton>
+                <app-skeleton shape="text"></app-skeleton>
+                <app-skeleton shape="text" width="80%"></app-skeleton>
+            </app-card>
+
+            <app-card>
+                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">4. Mock Layout (Dashboard Card)</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <app-skeleton shape="text" width="120px"></app-skeleton>
+                    <app-skeleton shape="rect" width="32px" height="32px" rounded="8px"></app-skeleton>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <app-skeleton shape="text" width="60%" height="40px"></app-skeleton>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 24px;">
+                    <app-skeleton shape="circle" width="16px" height="16px"></app-skeleton>
+                    <div style="flex: 1; padding-top: 4px;">
+                        <app-skeleton shape="text" width="100px" height="12px"></app-skeleton>
+                    </div>
+                </div>
+                <app-skeleton shape="rect" height="80px"></app-skeleton>
+            </app-card>
+
+        </div>
+    </div>
+
+    <!-- =========================
          NUMBER STEPPER SHOWCASE
     ========================= -->
 

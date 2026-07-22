@@ -26,6 +26,7 @@ import { Legend } from '../shared/components/charts/legend/legend';
 import { NumberStepper } from '../shared/components/number-stepper/number-stepper';
 import { Checkbox } from '../shared/components/checkbox/checkbox';
 import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
+import { Skeleton } from '../shared/components/loaders/skeleton/skeleton';
 
 interface PortfolioRow {
   id: number;
@@ -42,7 +43,7 @@ interface PortfolioRow {
     CommonModule, Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
     CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
     Toast, Pagination, Table, DecimalPipe, JsonPipe, SegmentedControl, Alert, PieChartContainer,
-    PieChart, Legend, NumberStepper, Checkbox, CheckboxGroup
+    PieChart, Legend, NumberStepper, Checkbox, CheckboxGroup, Skeleton
   ],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'
