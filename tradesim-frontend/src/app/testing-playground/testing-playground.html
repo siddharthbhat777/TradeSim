@@ -110,6 +110,91 @@
         </div>
     </div>
 
+    <!-- =========================
+     INLINE LOADER SHOWCASE
+ ========================= -->
+
+    <div class="demo-section">
+        <h3 class="heading-md">Inline Loader Showcase</h3>
+
+        <!-- SIZES -->
+        <h4 class="heading-md" style="margin-top: 24px;">Sizes</h4>
+        <div class="alert-grid" style="display: flex; gap: 40px; align-items: flex-end; padding-top: 16px;">
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Small</p>
+                <app-inline-loader size="small" variant="primary"></app-inline-loader>
+            </div>
+
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Medium</p>
+                <app-inline-loader size="medium" variant="primary"></app-inline-loader>
+            </div>
+
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Large</p>
+                <app-inline-loader size="large" variant="primary"></app-inline-loader>
+            </div>
+        </div>
+
+        <!-- VARIANTS -->
+        <h4 class="heading-md" style="margin-top: 32px;">Color Variants (Medium)</h4>
+        <div class="alert-grid" style="display: flex; gap: 32px; flex-wrap: wrap; padding-top: 16px;">
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Primary</p>
+                <app-inline-loader size="medium" variant="primary"></app-inline-loader>
+            </div>
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Secondary</p>
+                <app-inline-loader size="medium" variant="secondary"></app-inline-loader>
+            </div>
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Accent</p>
+                <app-inline-loader size="medium" variant="accent"></app-inline-loader>
+            </div>
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Success</p>
+                <app-inline-loader size="medium" variant="success"></app-inline-loader>
+            </div>
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Warning</p>
+                <app-inline-loader size="medium" variant="warning"></app-inline-loader>
+            </div>
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Danger</p>
+                <app-inline-loader size="medium" variant="danger"></app-inline-loader>
+            </div>
+            <div style="text-align: center;">
+                <p class="text-muted" style="margin-bottom: 16px;">Muted</p>
+                <app-inline-loader size="medium" variant="muted"></app-inline-loader>
+            </div>
+        </div>
+
+        <!-- PRACTICAL SCENARIOS -->
+        <h4 class="heading-md" style="margin-top: 32px;">Practical Scenarios</h4>
+        <div class="alert-grid"
+            style="display: flex; gap: 40px; align-items: center; padding-top: 16px; flex-wrap: wrap;">
+
+            <div style="padding: 24px; border: 1px dashed var(--outline-border); border-radius: 8px;">
+                <p class="text-body" style="margin-bottom: 16px;"><strong>Inside a Button:</strong></p>
+                <button
+                    style="display: inline-flex; align-items: center; gap: 12px; padding: 12px 24px; background: var(--surface-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: not-allowed; font-family: inherit; font-size: 1rem;">
+                    <app-inline-loader size="small" variant="muted"></app-inline-loader>
+                    Processing Order...
+                </button>
+            </div>
+
+            <div style="padding: 24px; border: 1px dashed var(--outline-border); border-radius: 8px;">
+                <p class="text-body" style="margin-bottom: 16px;"><strong>Inline with Text:</strong></p>
+                <div
+                    style="display: inline-flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+                    <span class="text-body">Syncing live market data</span>
+                    <app-inline-loader size="small" variant="accent"></app-inline-loader>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <div class="demo-section">
 
         <app-card>
