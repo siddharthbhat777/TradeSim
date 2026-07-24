@@ -3,11 +3,18 @@
     [class.button--danger]="variant() === 'danger'" [class.button--warning]="variant() === 'warning'"
     [class.button--outline]="variant() === 'outline'" [class.button--icon-right]="iconPosition() === 'right'"
     [class.button--small]="size() === 'small'" [class.button--medium]="size() === 'medium'"
-    [class.button--large]="size() === 'large'" [type]="type()" [disabled]="disabled()"
-    [attr.aria-label]="ariaLabel() || null" (click)="onClick($event)">
+    [class.button--large]="size() === 'large'" [class.button--loading]="isLoading()" [type]="type()"
+    [disabled]="disabled() || isLoading()" [attr.aria-label]="ariaLabel() || null" (click)="onClick($event)">
+
+    @if (isLoading()) {
+    <span class="button__loader">
+        <app-inline-loader [size]="size() === 'large' ? 'medium' : 'small'"></app-inline-loader>
+    </span>
+    } @else {
     <span class="button__icon" aria-hidden="true">
         <ng-content select="[button-icon]" />
     </span>
+    }
 
     <span class="button__text">
         {{ text() }}

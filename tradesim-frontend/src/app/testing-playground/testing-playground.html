@@ -642,6 +642,9 @@
 
 
         </div>
+
+        <br>
+
         <app-button variant="primary" size="small" text="Small" /> &nbsp;
         <app-button variant="primary" size="medium" text="Medium (default)" /> &nbsp;
         <app-button variant="primary" size="large" text="Large" /> &nbsp;
@@ -664,6 +667,28 @@
         <app-button variant="danger" text="✕" ariaLabel="Cancel order" width="44px" height="44px" /> &nbsp;
 
         <app-button variant="primary" text="Disabled" [disabled]="true" />
+
+        <!-- =========================
+             LOADING STATES SHOWCASE
+         ========================= -->
+        <h4 class="heading-md" style="margin-top: 32px; margin-bottom: 16px;">Loading States</h4>
+
+        <div class="button-group">
+            <app-button variant="primary" text="Placing Order..." [isLoading]="true" />
+            <app-button variant="secondary" text="Syncing Data..." [isLoading]="true" />
+            <app-button variant="success" text="Processing..." [isLoading]="true" />
+            <app-button variant="outline" text="Connecting..." [isLoading]="true" />
+        </div>
+
+        <br>
+
+        <app-button variant="primary" size="small" text="Small Loading" [isLoading]="true" /> &nbsp;
+        <app-button variant="primary" size="medium" text="Medium Loading" [isLoading]="true" /> &nbsp;
+        <app-button variant="primary" size="large" text="Large Loading" [isLoading]="true" /> &nbsp;
+
+        <br><br>
+
+        <app-button variant="danger" text="Disabled & Loading" [disabled]="true" [isLoading]="true" />
 
     </div>
 

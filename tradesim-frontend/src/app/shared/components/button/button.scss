@@ -126,6 +126,11 @@
   &:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+
+    &.button--loading {
+      cursor: wait;
+      opacity: 0.7;
+    }
   }
 
   &__icon {
@@ -138,6 +143,19 @@
 
     &:empty {
       display: none;
+    }
+  }
+
+  &__loader {
+    width: var(--button-icon-size);
+    height: var(--button-icon-size);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    ::ng-deep .spinner-wrapper {
+      color: currentColor !important;
     }
   }
 }

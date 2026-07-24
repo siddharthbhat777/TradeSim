@@ -1,4 +1,5 @@
 import { booleanAttribute, Component, input, output } from '@angular/core';
+import { InlineLoader } from '../loaders/inline-loader/inline-loader';
 
 export type ButtonVariant =
   | 'primary'
@@ -14,7 +15,7 @@ export type ButtonSize = 'small' | 'medium' | 'large';
 
 @Component({
   selector: 'app-button',
-  imports: [],
+  imports: [InlineLoader],
   templateUrl: './button.html',
   styleUrl: './button.scss',
   host: {
@@ -34,11 +35,12 @@ export class Button {
   ariaLabel = input('');
 
   disabled = input(false, { transform: booleanAttribute });
+  isLoading = input(false, { transform: booleanAttribute });
 
   buttonClick = output<MouseEvent>();
 
   onClick(event: MouseEvent): void {
-    if (this.disabled()) {
+    if (this.disabled() || this.isLoading()) {
       event.preventDefault();
       event.stopPropagation();
       return;
