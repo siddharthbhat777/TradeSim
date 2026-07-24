@@ -37,10 +37,10 @@ const booleanAttributeOrNull = (value: unknown): boolean | null => {
 
 @Component({
   selector: 'app-dropdown',
+  imports: [CustomInput, InputDirective, InlineLoader],
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CustomInput, InputDirective, InlineLoader]
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Dropdown<T = unknown> implements ControlValueAccessor {
   private static nextId = 0;
@@ -65,6 +65,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   readonly showErrors = input(true, { transform: booleanAttribute });
   readonly searchable = input(false, { transform: booleanAttribute });
   readonly searchPlaceholder = input('Search...');
+  readonly emptyText = input('No options available');
   readonly loading = input(false, { transform: booleanAttribute });
   readonly panelLoading = input(false, { transform: booleanAttribute });
   readonly reserveMessageSpace = input<boolean | null>(null, {

@@ -58,6 +58,10 @@
                 <app-inline-loader size="medium" variant="muted"></app-inline-loader>
                 <span>Fetching options...</span>
             </li>
+            } @else if (options().length === 0) {
+            <li class="dropdown__empty-state">{{ emptyText() }}</li>
+            } @else if (filteredOptions().length === 0) {
+            <li class="dropdown__no-results">No matches found</li>
             } @else {
             @for (option of filteredOptions(); track option.value; let i = $index) {
             <li [id]="optionId(i)" role="option" class="dropdown__option"
@@ -71,10 +75,6 @@
                 }
                 <span class="dropdown__option-label">{{ option.label }}</span>
             </li>
-            }
-
-            @if (searchable() && filteredOptions().length === 0) {
-            <li class="dropdown__no-results">No matches found</li>
             }
             }
         </ul>

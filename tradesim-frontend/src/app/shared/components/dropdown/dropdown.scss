@@ -259,11 +259,13 @@
   }
 }
 
-.dropdown__no-results {
-  padding: 10px 12px;
+.dropdown__no-results,
+.dropdown__empty-state {
+  padding: 16px 12px;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   text-align: center;
+  user-select: none;
 }
 
 .dropdown__message {
