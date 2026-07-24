@@ -23,6 +23,50 @@
     font-weight: 800;
   }
 
+  &__control-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__prefix,
+  &__suffix {
+    position: absolute;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__prefix {
+    left: 14px;
+    &:not(:has([prefix])) {
+      display: none;
+    }
+  }
+
+  &__suffix {
+    right: 14px;
+    &:not(:has([suffix])) {
+      display: none;
+    }
+  }
+
+  &__control-wrapper:has(.app-input--small) &__prefix {
+    left: 10px;
+  }
+
+  &__control-wrapper:has(.app-input--small) &__suffix {
+    right: 10px;
+  }
+
   &__message {
     min-height: 1.1rem;
     margin: 0;
@@ -114,5 +158,51 @@
     min-height: 120px;
     line-height: 1.6;
     resize: vertical;
+  }
+
+  .app-form-field__control-wrapper:has([prefix]) {
+    .app-input {
+      padding-left: 42px;
+    }
+
+    .app-input--small {
+      padding-left: 36px;
+    }
+
+    .app-input--medium {
+      padding-left: 42px;
+    }
+
+    .app-input--large {
+      padding-left: 46px;
+    }
+
+    textarea.app-input,
+    .app-input--textarea {
+      padding-left: 16px;
+    }
+  }
+
+  .app-form-field__control-wrapper:has([suffix]) {
+    .app-input {
+      padding-right: 42px;
+    }
+
+    .app-input--small {
+      padding-right: 36px;
+    }
+
+    .app-input--medium {
+      padding-right: 42px;
+    }
+
+    .app-input--large {
+      padding-right: 46px;
+    }
+
+    textarea.app-input,
+    .app-input--textarea {
+      padding-right: 16px;
+    }
   }
 }

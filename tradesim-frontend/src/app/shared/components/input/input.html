@@ -11,7 +11,17 @@
     </label>
     }
 
-    <ng-content />
+    <div class="app-form-field__control-wrapper">
+        <span class="app-form-field__prefix">
+            <ng-content select="[prefix]"></ng-content>
+        </span>
+
+        <ng-content></ng-content>
+
+        <span class="app-form-field__suffix">
+            <ng-content select="[suffix]"></ng-content>
+        </span>
+    </div>
 
     @if (shouldReserveMessageSpace()) {
     <p class="app-form-field__message" [class.app-form-field__message--error]="shouldShowError()">
