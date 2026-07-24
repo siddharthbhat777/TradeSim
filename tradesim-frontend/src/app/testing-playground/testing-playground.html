@@ -1292,6 +1292,32 @@
                 [options]="stockOptions"></app-dropdown>
             <p class="text-muted">Value: {{ stockControl.value ?? 'null' }}</p>
         </div>
+
+        <div class="demo-row">
+            <p class="text-muted">11. Loading state (Static) — useful when initial data is being fetched and you want to
+                block interaction</p>
+            <app-dropdown label="Bank account (Loading)" [loading]="true" placeholder="Select an account"
+                [formControl]="loadingStaticControl" [options]="[]"></app-dropdown>
+        </div>
+
+        <div class="demo-row">
+            <p class="text-muted">12. Loading state (Dynamic) — click the button to simulate an API fetch</p>
+            <app-dropdown label="Server Region" [loading]="isDynamicLoading()" placeholder="Select a region"
+                [formControl]="dynamicServerControl" [options]="dynamicServerOptions()"></app-dropdown>
+            <button type="button" (click)="fetchServers()" [disabled]="isDynamicLoading()">
+                {{ isDynamicLoading() ? 'Fetching...' : 'Fetch Servers' }}
+            </button>
+            <p class="text-muted">Value: {{ dynamicServerControl.value ?? 'null' }}</p>
+        </div>
+
+        <div class="demo-row">
+            <p class="text-muted">13. Lazy Panel Fetch — loads data inside the panel exactly when you click to open it
+            </p>
+            <app-dropdown label="Department (Lazy Load)" placeholder="Open me to fetch" [formControl]="lazyFetchControl"
+                [options]="lazyFetchOptions()" [panelLoading]="isLazyPanelLoading()"
+                (opened)="fetchLazyOptions()"></app-dropdown>
+            <p class="text-muted">Value: {{ lazyFetchControl.value ?? 'null' }}</p>
+        </div>
     </div>
 
     <div class="demo-section">

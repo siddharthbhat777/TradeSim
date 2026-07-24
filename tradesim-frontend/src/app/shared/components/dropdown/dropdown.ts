@@ -9,6 +9,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -16,6 +17,7 @@ import type { ControlValueAccessor } from '@angular/forms';
 import { NgControl } from '@angular/forms';
 import { CustomInput } from '../input/input';
 import { InputDirective } from '../../directives/input';
+import { InlineLoader } from '../loaders/inline-loader/inline-loader';
 
 export interface DropdownOption<T = unknown> {
   label: string;
@@ -30,7 +32,6 @@ const booleanAttributeOrNull = (value: unknown): boolean | null => {
   if (value === null || value === undefined) {
     return null;
   }
-
   return booleanAttribute(value);
 };
 
@@ -39,7 +40,7 @@ const booleanAttributeOrNull = (value: unknown): boolean | null => {
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CustomInput, InputDirective]
+  imports: [CustomInput, InputDirective, InlineLoader]
 })
 export class Dropdown<T = unknown> implements ControlValueAccessor {
   private static nextId = 0;
@@ -64,9 +65,13 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   readonly showErrors = input(true, { transform: booleanAttribute });
   readonly searchable = input(false, { transform: booleanAttribute });
   readonly searchPlaceholder = input('Search...');
+  readonly loading = input(false, { transform: booleanAttribute });
+  readonly panelLoading = input(false, { transform: booleanAttribute });
   readonly reserveMessageSpace = input<boolean | null>(null, {
     transform: booleanAttributeOrNull,
   });
+
+  readonly opened = output<void>();
 
   protected readonly selected = signal<DropdownOption<T> | null>(null);
   protected readonly isOpen = signal(false);
@@ -79,13 +84,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (!this.searchable()) {
       return this.options();
     }
-
     const query = this.searchQuery().trim().toLowerCase();
-
     if (!query) {
       return this.options();
     }
-
     return this.options().filter((option) => option.label.toLowerCase().includes(query));
   });
 
@@ -98,9 +100,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (this.reserveMessageSpace() !== null) {
       return this.reserveMessageSpace();
     }
-
     const control = this.ngControl?.control;
-
     return !!(
       this.errorText() ||
       this.helperText() ||
@@ -132,7 +132,6 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
 
     effect(() => {
       const opts = this.options();
-
       if (!this.placeholder() && this.selected() === null && opts.length > 0) {
         const first = opts.find((option) => !option.disabled) ?? opts[0];
         this.selected.set(first);
@@ -162,13 +161,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (!this.showErrors()) {
       return false;
     }
-
     const control = this.ngControl?.control;
-
     if (!control || control.disabled || !control.invalid) {
       return false;
     }
-
     return control.touched || control.dirty;
   }
 
@@ -176,13 +172,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (this.errorText()) {
       return this.errorText();
     }
-
     const errors = this.ngControl?.control?.errors;
-
     if (errors?.['required']) {
       return 'This field is required';
     }
-
     return 'Invalid selection';
   }
 
@@ -190,11 +183,9 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (!this.isOpen()) {
       return;
     }
-
     const rect = this.hostRef.nativeElement.getBoundingClientRect();
     const viewportHeight = this.window?.innerHeight || 0;
     const spaceBelow = viewportHeight - rect.bottom;
-
     this.openUpwards.set(spaceBelow < 320 && rect.top > spaceBelow);
   };
 
@@ -207,17 +198,16 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   };
 
   protected togglePanel(): void {
-    if (this.disabledState()) {
+    if (this.disabledState() || this.loading()) {
       return;
     }
-
     const willOpen = !this.isOpen();
     this.isOpen.set(willOpen);
 
     if (willOpen) {
       this.searchQuery.set('');
       this.activeIndex.set(this.computeInitialActiveIndex());
-
+      this.opened.emit();
       if (this.searchable()) {
         queueMicrotask(() => this.searchInputRef()?.nativeElement.focus());
       }
@@ -230,7 +220,6 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (option.disabled || this.disabledState()) {
       return;
     }
-
     if (this.placeholder() && this.selected() === option) {
       this.selected.set(null);
       this.onChange(null);
@@ -238,7 +227,6 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
       this.selected.set(option);
       this.onChange(option.value);
     }
-
     this.onTouched();
     this.isOpen.set(false);
   }
@@ -275,10 +263,9 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   }
 
   protected onTriggerKeydown(event: KeyboardEvent): void {
-    if (this.disabledState()) {
+    if (this.disabledState() || this.loading()) {
       return;
     }
-
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
@@ -332,11 +319,9 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
 
   private moveActive(delta: number): void {
     const indices = this.enabledIndices();
-
     if (!indices.length) {
       return;
     }
-
     const currentPos = indices.indexOf(this.activeIndex());
     const nextPos = Math.min(Math.max(currentPos + delta, 0), indices.length - 1);
     this.activeIndex.set(indices[nextPos === -1 ? 0 : nextPos]);
@@ -344,20 +329,17 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
 
   private computeInitialActiveIndex(): number {
     const current = this.selected();
-
     if (current) {
       const index = this.filteredOptions().indexOf(current);
       if (index !== -1) {
         return index;
       }
     }
-
     return this.firstEnabledIndex();
   }
 
   private commitActive(): void {
     const option = this.filteredOptions()[this.activeIndex()];
-
     if (option && !option.disabled) {
       this.selectOption(option);
     }
@@ -366,18 +348,15 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   private handleTypeAhead(char: string): void {
     clearTimeout(this.typeAheadTimeout);
     this.typeAheadBuffer += char.toLowerCase();
-
     const options = this.filteredOptions();
     const startFrom = this.activeIndex() + 1;
     const ordered = [...options.slice(startFrom), ...options.slice(0, startFrom)];
     const match = ordered.find(
       (option) => !option.disabled && option.label.toLowerCase().startsWith(this.typeAheadBuffer),
     );
-
     if (match) {
       this.activeIndex.set(options.indexOf(match));
     }
-
     this.typeAheadTimeout = setTimeout(() => {
       this.typeAheadBuffer = '';
     }, 600);
@@ -388,7 +367,6 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
       this.selected.set(null);
       return;
     }
-
     this.selected.set(this.options().find((option) => option.value === value) ?? null);
   }
 

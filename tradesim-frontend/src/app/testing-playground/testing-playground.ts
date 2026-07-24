@@ -233,6 +233,59 @@ export class TestingPlayground implements OnInit {
     { label: 'Wipro', value: 'wipro' },
   ];
 
+  // Scenario 11: Static Loading
+  readonly loadingStaticControl = new FormControl<string | null>(null);
+
+  // Scenario 12: Dynamic Loading (Simulated API Fetch)
+  readonly dynamicServerControl = new FormControl<string | null>(null);
+  readonly isDynamicLoading = signal(false);
+  readonly dynamicServerOptions = signal<DropdownOption<string>[]>([]);
+
+  protected fetchServers(): void {
+    // 1. Set loading state to true and clear previous data
+    this.isDynamicLoading.set(true);
+    this.dynamicServerControl.reset();
+    this.dynamicServerOptions.set([]);
+
+    // 2. Simulate a 2-second network request
+    setTimeout(() => {
+      this.dynamicServerOptions.set([
+        { label: 'Asia Pacific (Mumbai)', value: 'ap-south-1' },
+        { label: 'US East (N. Virginia)', value: 'us-east-1' },
+        { label: 'Europe (Frankfurt)', value: 'eu-central-1' },
+        { label: 'Europe (London)', value: 'eu-west-2' }
+      ]);
+
+      // 3. Turn off loading state
+      this.isDynamicLoading.set(false);
+
+      // Optional: Auto-select the first option once data arrives
+      // this.dynamicServerControl.setValue('ap-south-1');
+    }, 2000);
+  }
+
+  // Scenario 13: Lazy Fetch on Open
+  readonly lazyFetchControl = new FormControl<string | null>(null);
+  readonly isLazyPanelLoading = signal(false);
+  readonly lazyFetchOptions = signal<DropdownOption<string>[]>([]);
+
+  protected fetchLazyOptions(): void {
+    // If we already have data, don't fetch again
+    if (this.lazyFetchOptions().length > 0) return;
+
+    this.isLazyPanelLoading.set(true);
+
+    setTimeout(() => {
+      this.lazyFetchOptions.set([
+        { label: 'Engineering', value: 'eng' },
+        { label: 'Human Resources', value: 'hr' },
+        { label: 'Marketing', value: 'mkt' },
+        { label: 'Sales', value: 'sales' }
+      ]);
+      this.isLazyPanelLoading.set(false);
+    }, 1500); // 1.5s simulated delay to see the loader
+  }
+
   readonly toastService = inject(ToastService);
 
   protected fireStackTest(): void {

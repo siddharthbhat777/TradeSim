@@ -15,9 +15,15 @@
         [attr.aria-haspopup]="'listbox'" [attr.aria-expanded]="isOpen()" [attr.aria-activedescendant]="activeOptionId()"
         aria-label="Select an option" [attr.aria-labelledby]="label() ? labelId : null"
         [attr.aria-invalid]="shouldShowError() ? 'true' : null" [attr.aria-required]="required() ? 'true' : null"
-        [disabled]="disabledState()" (click)="togglePanel()" (keydown)="onTriggerKeydown($event)">
+        [disabled]="disabledState() || loading()" (click)="togglePanel()" (keydown)="onTriggerKeydown($event)">
+
         <span class="dropdown__trigger-content">
-            @if (selected(); as option) {
+            @if (loading()) {
+            <app-inline-loader size="small" variant="muted"></app-inline-loader>
+            <span class="dropdown__trigger-label dropdown__trigger-label--placeholder">
+                Loading...
+            </span>
+            } @else if (selected(); as option) {
             @if (option.icon) {
             <span class="dropdown__option-icon" [innerHTML]="option.icon"></span>
             }
@@ -46,6 +52,13 @@
 
         <ul role="listbox" class="dropdown__options" aria-label="Options"
             [attr.aria-labelledby]="label() ? labelId : null">
+
+            @if (panelLoading()) {
+            <li class="dropdown__panel-loader">
+                <app-inline-loader size="medium" variant="muted"></app-inline-loader>
+                <span>Fetching options...</span>
+            </li>
+            } @else {
             @for (option of filteredOptions(); track option.value; let i = $index) {
             <li [id]="optionId(i)" role="option" class="dropdown__option"
                 [class.dropdown__option--active]="i === activeIndex()"
@@ -62,6 +75,7 @@
 
             @if (searchable() && filteredOptions().length === 0) {
             <li class="dropdown__no-results">No matches found</li>
+            }
             }
         </ul>
     </div>
