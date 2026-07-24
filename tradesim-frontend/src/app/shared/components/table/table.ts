@@ -12,6 +12,7 @@ import { Directive, inject } from '@angular/core';
 
 import { Pagination, type PaginationSize } from '../pagination/pagination';
 import { EmptyState } from '../empty-state/empty-state';
+import { InlineLoader } from '../loaders/inline-loader/inline-loader';
 
 export interface TableColumn<T> {
   key: string;
@@ -36,7 +37,7 @@ export class TableCellDirective<T = unknown> {
 
 @Component({
   selector: 'app-table',
-  imports: [Pagination, EmptyState, NgTemplateOutlet],
+  imports: [Pagination, EmptyState, NgTemplateOutlet, InlineLoader],
   templateUrl: './table.html',
   styleUrl: './table.scss'
 })
@@ -46,6 +47,7 @@ export class Table<T = unknown> {
   readonly rowKey = input<(row: T) => unknown>();
 
   readonly paginated = input(true, { transform: booleanAttribute });
+  readonly isLoading = input(false, { transform: booleanAttribute });
   readonly pageSizeOptions = input<number[]>([10, 25, 50, 100]);
   readonly size = input<PaginationSize>('medium');
 

@@ -886,6 +886,27 @@
                 </ng-template>
             </app-table>
         </div>
+
+        <!-- =========================
+         NEW LOADER SCENARIOS 
+    ========================= -->
+        <div class="demo-row">
+            <p class="text-muted">5. Loading state (Overlay with existing data)</p>
+            <app-table [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey" [isLoading]="true"
+                [paginated]="false">
+                <ng-template tableCell="pnl" let-value>
+                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
+                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
+                    </span>
+                </ng-template>
+            </app-table>
+        </div>
+
+        <div class="demo-row">
+            <p class="text-muted">6. Loading state (Empty data during initial fetch)</p>
+            <app-table [columns]="portfolioColumns" [data]="[]" [isLoading]="true" emptyText="No positions yet"
+                emptySubtext="Place a trade to see it here."></app-table>
+        </div>
     </div>
 
     <div class="demo-section">
