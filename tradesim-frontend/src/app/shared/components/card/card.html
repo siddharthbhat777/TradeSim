@@ -1,6 +1,13 @@
-<div class="card" [class]="combinedClasses()" [class.card--hoverable]="hoverable()"
-    [class.card--clickable]="!!onCardClick()" [attr.role]="onCardClick() ? 'button' : null"
-    [attr.tabindex]="onCardClick() ? 0 : null" (click)="handleClick()" (keydown.enter)="handleClick()"
-    (keydown.space)="handleClick($event)">
+<div class="card" [class]="combinedClasses()" [class.card--loading]="isLoading()"
+    [class.card--hoverable]="hoverable() && !isLoading()" [class.card--clickable]="!!onCardClick() && !isLoading()"
+    [attr.role]="onCardClick() ? 'button' : null" [attr.tabindex]="onCardClick() && !isLoading() ? 0 : null"
+    (click)="handleClick()" (keydown.enter)="handleClick()" (keydown.space)="handleClick($event)">
+
+    @if (isLoading()) {
+    <div class="card__loader-overlay">
+        <app-inline-loader size="medium" variant="primary" />
+    </div>
+    }
+
     <ng-content />
 </div>

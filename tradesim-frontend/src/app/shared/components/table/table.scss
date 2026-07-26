@@ -22,6 +22,7 @@
   align-items: center;
   justify-content: center;
   z-index: 10;
+  cursor: wait;
 
   &::before {
     content: '';
@@ -39,6 +40,7 @@
   align-items: center;
   justify-content: center;
   padding: 4rem;
+  cursor: wait;
 }
 
 .table {

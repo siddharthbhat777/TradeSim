@@ -1,4 +1,5 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { InlineLoader } from '../loaders/inline-loader/inline-loader';
 
 export type CardVariant =
   | 'default'
@@ -13,17 +14,16 @@ export type CardBorder = 'primary' | 'secondary' | 'accent' | 'success' | 'dange
 
 @Component({
   selector: 'app-card',
-  imports: [],
+  imports: [InlineLoader],
   templateUrl: './card.html',
   styleUrl: './card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CardComponent {
   readonly variant = input<CardVariant>('default');
-
   readonly border = input<CardBorder | undefined>(undefined);
-
   readonly hoverable = input<boolean>(false);
+  readonly isLoading = input<boolean>(false);
 
   readonly onCardClick = input<((event: MouseEvent | KeyboardEvent) => void) | undefined>(
     undefined
@@ -60,13 +60,19 @@ export class CardComponent {
   });
 
   protected handleClick(event?: Event): void {
+    if (this.isLoading()) {
+      return;
+    }
+
     const handler = this.onCardClick();
     if (!handler) {
       return;
     }
+
     if (event instanceof KeyboardEvent && event.code === 'Space') {
       event.preventDefault();
     }
+
     handler(event as MouseEvent | KeyboardEvent);
   }
 }

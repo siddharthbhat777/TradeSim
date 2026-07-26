@@ -12,6 +12,10 @@
   &--disabled {
     opacity: 0.6;
   }
+
+  &--loading {
+    cursor: wait;
+  }
 }
 
 .dropdown__label {
@@ -90,6 +94,10 @@
 
   &:disabled {
     cursor: not-allowed;
+  }
+
+  &--loading {
+    cursor: wait;
   }
 }
 
@@ -290,4 +298,5 @@
   color: var(--text-muted);
   font-size: 0.95rem;
   user-select: none;
+  cursor: wait;
 }

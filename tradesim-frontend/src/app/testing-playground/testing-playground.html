@@ -1672,5 +1672,19 @@
                 Tab to a clickable card and press Enter or Space to confirm keyboard activation works too.
             </p>
         </section>
+
+        <section class="card-test__section">
+            <h2 class="heading-md">Loading State</h2>
+            <div class="card-test__grid">
+                <app-card [isLoading]="true">
+                    <p class="text-body">isLoading: true — content has overlay, loader centered</p>
+                </app-card>
+                <br>
+
+                <app-card [isLoading]="true" [hoverable]="true" [onCardClick]="handleCardClick">
+                    <p class="text-body">isLoading with onCardClick — interactions and focus are disabled</p>
+                </app-card>
+            </div>
+        </section>
     </div>
 </div>
