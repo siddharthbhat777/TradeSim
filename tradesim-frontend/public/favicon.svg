@@ -1,0 +1,12 @@
+<svg viewBox="-15 -15 130 130" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .bg { fill: #ffffff; }
+    .logo-t { fill: #0b1220; } 
+    .logo-bar { fill: #60a5fa; } 
+  </style>
+  <rect x="-15" y="-15" width="130" height="130" rx="30" class="bg" />
+  <path d="M 10 20 H 90 L 70 40 H 50 V 60 L 30 80 V 40 H 10 Z" class="logo-t" />
+  <path d="M 38 80 L 52 66 V 80 Z" class="logo-bar" />
+  <path d="M 57 80 V 61 L 71 47 V 80 Z" class="logo-bar" />
+  <path d="M 76 80 V 42 L 90 28 V 80 Z" class="logo-bar" />
+</svg>

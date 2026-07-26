@@ -29,6 +29,7 @@ import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/chec
 import { Skeleton } from '../shared/components/loaders/skeleton/skeleton';
 import { Loader } from '../shared/components/loaders/loader/loader';
 import { InlineLoader } from '../shared/components/loaders/inline-loader/inline-loader';
+import { Logo } from '../shared/components/logo/logo';
 
 interface PortfolioRow {
   id: number;
@@ -45,7 +46,7 @@ interface PortfolioRow {
     CommonModule, Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
     CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
     Toast, Pagination, Table, DecimalPipe, JsonPipe, SegmentedControl, Alert, PieChartContainer,
-    PieChart, Legend, NumberStepper, Checkbox, CheckboxGroup, Skeleton, Loader, InlineLoader
+    PieChart, Legend, NumberStepper, Checkbox, CheckboxGroup, Skeleton, Loader, InlineLoader, Logo
   ],
   templateUrl: './testing-playground.html',
   styleUrl: './testing-playground.scss'

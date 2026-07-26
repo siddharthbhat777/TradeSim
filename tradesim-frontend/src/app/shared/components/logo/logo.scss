@@ -1,0 +1,115 @@
+:host {
+  display: inline-flex;
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+
+  &.size-small {
+    gap: 8px;
+
+    .logo-svg {
+      width: 50px;
+      height: 50px;
+    }
+
+    .logo-text-container {
+      height: 32px;
+    }
+
+    .logo-title {
+      font-size: 1.25rem;
+    }
+
+    .logo-tagline {
+      font-size: 0.5625rem;
+      letter-spacing: 1px;
+    }
+  }
+
+  &.size-medium {
+    gap: 12px;
+
+    .logo-svg {
+      width: 70px;
+      height: 70px;
+    }
+
+    .logo-text-container {
+      height: 44px;
+    }
+
+    .logo-title {
+      font-size: 1.75rem;
+    }
+
+    .logo-tagline {
+      font-size: 0.75rem;
+      letter-spacing: 1.5px;
+    }
+  }
+
+  &.size-large {
+    gap: 16px;
+
+    .logo-svg {
+      width: 100px;
+      height: 100px;
+    }
+
+    .logo-text-container {
+      height: 68px;
+    }
+
+    .logo-title {
+      font-size: 2.75rem;
+    }
+
+    .logo-tagline {
+      font-size: 1.125rem;
+      letter-spacing: 2px;
+    }
+  }
+}
+
+.logo-svg {
+  flex-shrink: 0;
+}
+
+.logo-t {
+  fill: var(--text-primary);
+  transition: fill 0.3s ease;
+}
+
+.logo-bar {
+  fill: var(--primary);
+  transition: fill 0.3s ease;
+}
+
+.logo-text-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.logo-title {
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 0.9;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  transition: color 0.3s ease;
+}
+
+.logo-accent {
+  color: var(--primary);
+}
+
+.logo-tagline {
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+}
