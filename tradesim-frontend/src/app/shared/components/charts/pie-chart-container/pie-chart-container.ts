@@ -1,11 +1,12 @@
 import { Component, input, signal } from '@angular/core';
 import { PieChart, PieChartData } from './pie-chart/pie-chart';
 import { Legend } from '../legend/legend';
+import { InlineLoader } from '../../loaders/inline-loader/inline-loader';
 
 @Component({
   selector: 'app-pie-chart-container',
   standalone: true,
-  imports: [PieChart, Legend],
+  imports: [PieChart, Legend, InlineLoader],
   templateUrl: './pie-chart-container.html',
   styleUrl: './pie-chart-container.scss'
 })
@@ -16,6 +17,7 @@ export class PieChartContainer {
   readonly size = input<number>(200);
   readonly legendPosition = input<'top' | 'bottom' | 'left' | 'right'>('right');
   readonly wrap = input<boolean>(true);
+  readonly isLoading = input<boolean>(false);
 
   readonly activeSliceId = signal<string | null>(null);
 
