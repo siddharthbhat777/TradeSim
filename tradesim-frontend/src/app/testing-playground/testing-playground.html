@@ -1686,4 +1686,31 @@
             </div>
         </section>
     </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">
+            Time Ago Pipe Showcase
+        </h3>
+
+        <p class="text-muted">Less than 30 seconds</p>
+        <p class="font-medium">{{ justNow | timeAgo }}</p> <br>
+
+        <p class="text-muted">Minutes ago</p>
+        <p class="font-medium">{{ fiveMinsAgo | timeAgo }}</p> <br>
+
+        <p class="text-muted">Hours ago</p>
+        <p class="font-medium">{{ twoHoursAgo | timeAgo }}</p> <br>
+
+        <p class="text-muted">Days ago</p>
+        <p class="font-medium">{{ threeDaysAgo | timeAgo }}</p> <br>
+
+        <p class="text-muted">Hardcoded past date (e.g., an old trade execution)</p>
+        <p class="font-medium">{{ '2025-05-14T10:30:00Z' | timeAgo }}</p> <br>
+
+        <p class="text-muted">Null handling (Should render nothing/empty space)</p>
+        <p class="font-medium">Result: {{ null | timeAgo }}</p> <br>
+
+        <p class="text-muted">Invalid string handling (Should render nothing/empty space)</p>
+        <p class="font-medium">Result: {{ 'random-invalid-string' | timeAgo }}</p> <br>
+    </div>
 </div>
