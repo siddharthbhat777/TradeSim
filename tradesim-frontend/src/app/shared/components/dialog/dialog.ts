@@ -16,7 +16,11 @@ export class Dialog {
     this.dialogService.close();
   }
 
-  protected onConfirm(): void {
-    this.dialogService.confirm();
+  protected onPrimary(): void {
+    this.dialogService.primaryAction();
+  }
+
+  protected onSecondary(): void {
+    this.dialogService.secondaryAction();
   }
 }

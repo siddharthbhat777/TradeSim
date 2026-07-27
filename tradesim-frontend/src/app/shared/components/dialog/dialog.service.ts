@@ -3,11 +3,12 @@ import { Injectable, signal } from '@angular/core';
 export interface DialogOptions {
     title?: string;
     message: string;
-    confirmLabel?: string;
-    cancelLabel?: string;
+    primaryLabel?: string;
+    secondaryLabel?: string;
     isBlocking?: boolean;
-    onConfirm?: () => void;
-    onCancel?: () => void;
+    showClose?: boolean;
+    onPrimary?: () => void;
+    onSecondary?: () => void;
 }
 
 @Injectable({
@@ -21,18 +22,22 @@ export class DialogService {
     }
 
     close(): void {
-        const current = this.currentDialog();
-        if (current?.onCancel) {
-            current.onCancel();
-        }
         this.currentDialog.set(null);
     }
 
-    confirm(): void {
+    primaryAction(): void {
         const current = this.currentDialog();
-        if (current?.onConfirm) {
-            current.onConfirm();
-        }
         this.currentDialog.set(null);
+        if (current?.onPrimary) {
+            current.onPrimary();
+        }
+    }
+
+    secondaryAction(): void {
+        const current = this.currentDialog();
+        this.currentDialog.set(null);
+        if (current?.onSecondary) {
+            current.onSecondary();
+        }
     }
 }

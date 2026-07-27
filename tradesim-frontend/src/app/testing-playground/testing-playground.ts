@@ -41,7 +41,6 @@ interface PortfolioRow {
 
 @Component({
   selector: 'app-testing-playground',
-  standalone: true,
   imports: [
     CommonModule, Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
     CardComponent, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
@@ -129,8 +128,8 @@ export class TestingPlayground implements OnInit {
     this.dialogService.open({
       title: 'Confirm Order',
       message: 'Are you sure you want to sell 50 shares of RELIANCE at market price? Both header and body are used here, so the divider between them should be visible.',
-      cancelLabel: 'Cancel',
-      confirmLabel: 'Confirm Sell'
+      secondaryLabel: 'Cancel',
+      primaryLabel: 'Confirm Sell'
     });
   }
 
@@ -151,7 +150,7 @@ export class TestingPlayground implements OnInit {
     this.dialogService.open({
       title: 'Session Expired',
       message: 'No close button, no backdrop-click, no Escape — the only way out is the button below.',
-      confirmLabel: 'Log back in',
+      primaryLabel: 'Log back in',
       isBlocking: true
     });
   }
@@ -490,4 +489,9 @@ export class TestingPlayground implements OnInit {
   protected readonly fiveMinsAgo = new Date(Date.now() - 5 * 60000).toISOString();
   protected readonly twoHoursAgo = new Date(Date.now() - 2 * 3600000).toISOString();
   protected readonly threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString();
+
+
+  triggerCrash(): void {
+    throw new Error('Simulated fatal error: System crashed while trying to sell stock!');
+  }
 }

@@ -89,7 +89,7 @@
     border: 1px solid transparent;
   }
 
-  .dialog-btn-cancel {
+  .dialog-btn-secondary {
     background: transparent;
     border-color: var(--border);
     color: var(--text-primary);
@@ -99,7 +99,7 @@
     }
   }
 
-  .dialog-btn-confirm {
+  .dialog-btn-primary {
     background: var(--primary);
     color: white;
 

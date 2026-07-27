@@ -1,8 +1,8 @@
 @if (dialogService.currentDialog(); as options) {
 <app-modal [closeOnBackdropClick]="!options.isBlocking" [closeOnEscape]="!options.isBlocking" ariaLabel="Dialog"
     (closed)="onClosed()">
-    <div class="dialog" [class.has-close-button]="!options.isBlocking">
-        @if (!options.isBlocking) {
+    <div class="dialog" [class.has-close-button]="options.showClose || !options.isBlocking">
+        @if (options.showClose || !options.isBlocking) {
         <button type="button" class="dialog-close" (click)="onClosed()" aria-label="Close dialog">
             &times;
         </button>
@@ -21,14 +21,14 @@
         </div>
 
         <div class="dialog-footer">
-            @if (options.cancelLabel) {
-            <button type="button" class="dialog-btn dialog-btn-cancel" (click)="onClosed()">
-                {{ options.cancelLabel }}
+            @if (options.secondaryLabel) {
+            <button type="button" class="dialog-btn dialog-btn-secondary" (click)="onSecondary()">
+                {{ options.secondaryLabel }}
             </button>
             }
-            @if (options.confirmLabel) {
-            <button type="button" class="dialog-btn dialog-btn-confirm" (click)="onConfirm()">
-                {{ options.confirmLabel }}
+            @if (options.primaryLabel) {
+            <button type="button" class="dialog-btn dialog-btn-primary" (click)="onPrimary()">
+                {{ options.primaryLabel }}
             </button>
             }
         </div>

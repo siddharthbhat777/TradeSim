@@ -1646,4 +1646,11 @@
         <p class="text-muted">Invalid string handling (Should render nothing/empty space)</p>
         <p class="font-medium">Result: {{ 'random-invalid-string' | timeAgo }}</p> <br>
     </div>
+
+    <div class="demo-section">
+        <h3 class="heading-md">
+            Global Error Handler Showcase
+        </h3>
+        <app-button variant="danger" text="Crash App" (click)="triggerCrash()" />
+    </div>
 </div>
