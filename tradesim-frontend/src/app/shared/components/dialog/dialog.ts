@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Modal } from '../modal/modal';
+import { DialogService } from './dialog.service';
 
 @Component({
   selector: 'app-dialog',
@@ -9,10 +10,13 @@ import { Modal } from '../modal/modal';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Dialog {
-  readonly closeOnBackdropClick = input<boolean>(true);
-  readonly closeOnEscape = input<boolean>(true);
-  readonly ariaLabel = input<string>('Dialog');
-  readonly titleId = input<string | undefined>(undefined);
-  readonly showCloseButton = input<boolean>(true);
-  readonly closed = output<void>();
+  protected readonly dialogService = inject(DialogService);
+
+  protected onClosed(): void {
+    this.dialogService.close();
+  }
+
+  protected onConfirm(): void {
+    this.dialogService.confirm();
+  }
 }

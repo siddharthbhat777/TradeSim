@@ -38,6 +38,21 @@
 
   .dialog-header {
     padding-right: 1.5rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  }
+
+  .dialog-body {
+    p {
+      margin: 0;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
   }
 
   .dialog-footer:not(:empty) {
@@ -61,6 +76,35 @@
   &.has-close-button {
     .dialog-header:empty + .dialog-divider + .dialog-body:not(:empty) {
       padding-right: 1.5rem;
+    }
+  }
+
+  .dialog-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .dialog-btn-cancel {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-primary);
+
+    &:hover {
+      background: var(--surface-secondary);
+    }
+  }
+
+  .dialog-btn-confirm {
+    background: var(--primary);
+    color: white;
+
+    &:hover {
+      filter: brightness(0.9);
     }
   }
 }

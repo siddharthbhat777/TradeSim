@@ -1,24 +1,37 @@
-<app-modal [closeOnBackdropClick]="closeOnBackdropClick()" [closeOnEscape]="closeOnEscape()" [ariaLabel]="ariaLabel()"
-    [titleId]="titleId()" (closed)="closed.emit()">
-    <div class="dialog" [class.has-close-button]="showCloseButton()">
-        @if (showCloseButton()) {
-        <button type="button" class="dialog-close" (click)="closed.emit()" aria-label="Close dialog">
+@if (dialogService.currentDialog(); as options) {
+<app-modal [closeOnBackdropClick]="!options.isBlocking" [closeOnEscape]="!options.isBlocking" ariaLabel="Dialog"
+    (closed)="onClosed()">
+    <div class="dialog" [class.has-close-button]="!options.isBlocking">
+        @if (!options.isBlocking) {
+        <button type="button" class="dialog-close" (click)="onClosed()" aria-label="Close dialog">
             &times;
         </button>
         }
 
         <div class="dialog-header">
-            <ng-content select="[dialog-header]" />
+            @if (options.title) {
+            <h3>{{ options.title }}</h3>
+            }
         </div>
 
         <div class="dialog-divider"></div>
 
         <div class="dialog-body">
-            <ng-content select="[dialog-body]" />
+            <p>{{ options.message }}</p>
         </div>
 
         <div class="dialog-footer">
-            <ng-content select="[dialog-footer]" />
+            @if (options.cancelLabel) {
+            <button type="button" class="dialog-btn dialog-btn-cancel" (click)="onClosed()">
+                {{ options.cancelLabel }}
+            </button>
+            }
+            @if (options.confirmLabel) {
+            <button type="button" class="dialog-btn dialog-btn-confirm" (click)="onConfirm()">
+                {{ options.confirmLabel }}
+            </button>
+            }
         </div>
     </div>
 </app-modal>
+}

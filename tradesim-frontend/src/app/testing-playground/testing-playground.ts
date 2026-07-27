@@ -5,7 +5,6 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { CustomInput, InputErrorMessages } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
 import { CardBorder, CardComponent, CardVariant } from '../shared/components/card/card';
-import { Dialog } from '../shared/components/dialog/dialog';
 import { PriceIndicator } from '../shared/components/price-indicator/price-indicator';
 import { EmptyState } from '../shared/components/empty-state/empty-state';
 import { Router } from '@angular/router';
@@ -13,7 +12,6 @@ import { Toggle } from '../shared/components/toggle/toggle';
 import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown';
 import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { ToastService } from '../shared/components/toast/toast.service';
-import { Toast } from '../shared/components/toast/toast';
 import { Pagination } from '../shared/components/pagination/pagination';
 import { Table, TableColumn } from '../shared/components/table/table';
 import { DecimalPipe, JsonPipe, CommonModule } from '@angular/common';
@@ -31,6 +29,7 @@ import { Loader } from '../shared/components/loaders/loader/loader';
 import { InlineLoader } from '../shared/components/loaders/inline-loader/inline-loader';
 import { Logo } from '../shared/components/logo/logo';
 import { TimeAgoPipe } from '../shared/pipes/time-ago-pipe';
+import { DialogService } from '../shared/components/dialog/dialog.service';
 
 interface PortfolioRow {
   id: number;
@@ -45,8 +44,8 @@ interface PortfolioRow {
   standalone: true,
   imports: [
     CommonModule, Button, Badge, FormsModule, ReactiveFormsModule, InputDirective, CustomInput,
-    CardComponent, Dialog, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
-    Toast, Pagination, Table, DecimalPipe, JsonPipe, SegmentedControl, Alert, PieChartContainer,
+    CardComponent, PriceIndicator, EmptyState, Toggle, Dropdown, Tooltip,
+    Pagination, Table, DecimalPipe, JsonPipe, SegmentedControl, Alert, PieChartContainer,
     PieChart, Legend, NumberStepper, Checkbox, CheckboxGroup, Skeleton, Loader, InlineLoader, Logo, TimeAgoPipe
   ],
   templateUrl: './testing-playground.html',
@@ -124,11 +123,38 @@ export class TestingPlayground implements OnInit {
     this.clickCount.update((count) => count + 1);
   };
 
-  protected readonly isBasicDialogOpen = signal(false);
-  protected readonly isBodyOnlyDialogOpen = signal(false);
-  protected readonly isHeaderOnlyDialogOpen = signal(false);
-  protected readonly isForcedDialogOpen = signal(false);
-  protected readonly isCustomContentDialogOpen = signal(false);
+  protected readonly dialogService = inject(DialogService);
+
+  protected openBasicDialog(): void {
+    this.dialogService.open({
+      title: 'Confirm Order',
+      message: 'Are you sure you want to sell 50 shares of RELIANCE at market price? Both header and body are used here, so the divider between them should be visible.',
+      cancelLabel: 'Cancel',
+      confirmLabel: 'Confirm Sell'
+    });
+  }
+
+  protected openBodyOnlyDialog(): void {
+    this.dialogService.open({
+      message: 'No header used here — the divider should NOT appear, just this text and the close button.'
+    });
+  }
+
+  protected openHeaderOnlyDialog(): void {
+    this.dialogService.open({
+      title: 'Market is closed right now so come back later buddies chill',
+      message: ''
+    });
+  }
+
+  protected openForcedDialog(): void {
+    this.dialogService.open({
+      title: 'Session Expired',
+      message: 'No close button, no backdrop-click, no Escape — the only way out is the button below.',
+      confirmLabel: 'Log back in',
+      isBlocking: true
+    });
+  }
 
   readonly darkModeControl = new FormControl(false, { nonNullable: true });
 

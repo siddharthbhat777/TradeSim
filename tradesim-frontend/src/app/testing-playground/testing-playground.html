@@ -1055,73 +1055,17 @@
     </div>
 
     <div class="demo-section">
-
         <h3 class="heading-md">
             Dialog Showcase
         </h3>
 
         <div class="button-group">
-            <app-button variant="primary" text="Header + Body + Footer" (click)="isBasicDialogOpen.set(true)" />
-            <app-button variant="secondary" text="Body only" (click)="isBodyOnlyDialogOpen.set(true)" />
-            <app-button variant="secondary" text="Header only" (click)="isHeaderOnlyDialogOpen.set(true)" />
-            <app-button variant="danger" text="Forced acknowledgment" (click)="isForcedDialogOpen.set(true)" />
-            <app-button variant="outline" text="Fully custom content" (click)="isCustomContentDialogOpen.set(true)" />
+            <app-button variant="primary" text="Header + Body + Footer" (click)="openBasicDialog()" />
+            <app-button variant="secondary" text="Body only" (click)="openBodyOnlyDialog()" />
+            <app-button variant="secondary" text="Header only" (click)="openHeaderOnlyDialog()" />
+            <app-button variant="danger" text="Forced acknowledgment" (click)="openForcedDialog()" />
         </div>
-
     </div>
-
-    @if (isBasicDialogOpen()) {
-    <app-dialog ariaLabel="Confirm Order" (closed)="isBasicDialogOpen.set(false)">
-        <h3 class="heading-md" dialog-header>Confirm Order</h3>
-        <p class="text-body" dialog-body>
-            Are you sure you want to sell 50 shares of RELIANCE at market price?
-            Both header and body are used here, so the divider between them should be visible.
-        </p>
-        <div dialog-footer>
-            <app-button variant="outline" text="Cancel" (click)="isBasicDialogOpen.set(false)" /> &nbsp;
-            <app-button variant="danger" text="Confirm Sell" (click)="isBasicDialogOpen.set(false)" />
-        </div>
-    </app-dialog>
-    }
-
-    @if (isBodyOnlyDialogOpen()) {
-    <app-dialog ariaLabel="Notice" (closed)="isBodyOnlyDialogOpen.set(false)">
-        <p class="text-body" dialog-body>
-            No header used here — the divider should NOT appear, just this text and the close button.
-        </p>
-    </app-dialog>
-    }
-
-    @if (isHeaderOnlyDialogOpen()) {
-    <app-dialog ariaLabel="Heads up" (closed)="isHeaderOnlyDialogOpen.set(false)">
-        <h3 class="heading-md" dialog-header>Market is closed right now so come back later buddies chill</h3>
-    </app-dialog>
-    }
-
-    @if (isForcedDialogOpen()) {
-    <app-dialog ariaLabel="Session expired" [showCloseButton]="false" [closeOnBackdropClick]="false"
-        [closeOnEscape]="false" (closed)="isForcedDialogOpen.set(false)">
-        <h3 class="heading-md" dialog-header>Session Expired</h3>
-        <p class="text-body" dialog-body>
-            No close button, no backdrop-click, no Escape — the only way out is the button below.
-        </p>
-        <div dialog-footer>
-            <app-button variant="primary" text="Log back in" (click)="isForcedDialogOpen.set(false)" />
-        </div>
-    </app-dialog>
-    }
-
-    @if (isCustomContentDialogOpen()) {
-    <app-dialog ariaLabel="Custom content" [showCloseButton]="false" (closed)="isCustomContentDialogOpen.set(false)">
-        <div class="dialog-custom-content">
-            <p class="text-body">
-                No dialog-header, dialog-body, or dialog-footer attributes used here at all —
-                just raw projected content, same as using Modal directly.
-            </p>
-            <app-button variant="secondary" text="Close" (click)="isCustomContentDialogOpen.set(false)" />
-        </div>
-    </app-dialog>
-    }
 
     <div class="demo-section">
         <h3 class="heading-md">
@@ -1524,17 +1468,6 @@
         <div class="demo-row">
             <p class="text-muted">6. Toast position</p>
             <app-button variant="secondary" text="Toast position" (click)="fireToastPosition()" />
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">
-                7. Manual checks: (a) hover any toast before it disappears — the progress bar and
-                countdown should freeze exactly where they are, then resume from that same point on
-                mouse-out. (b) click the × on any toast — should dismiss immediately regardless of
-                its timer. (c) fire a danger toast with a screen reader running — it should interrupt
-                immediately, while success/info/warning should wait their turn.
-            </p>
-            <app-toast />
         </div>
     </div>
 
