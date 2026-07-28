@@ -14,6 +14,7 @@ import { Checkbox } from '../shared/components/checkbox/checkbox';
 import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
 import { Toggle } from '../shared/components/toggle/toggle';
 import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown';
+import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
 
 interface DocSection {
   title: string;
@@ -22,7 +23,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -184,6 +185,28 @@ export class TestingPlayground {
     { label: 'India', value: 'in', icon: '🇮🇳' }
   ];
   selectedCountry = null;
+
+  viewOptions: SegmentOption[] = [
+    { label: 'Map', value: 'map' },
+    { label: 'Transit', value: 'transit' },
+    { label: 'Satellite', value: 'satellite' }
+  ];
+  selectedView = 'map';
+
+  sizeOptions: SegmentOption[] = [
+    { label: 'Daily', value: 'daily' },
+    { label: 'Weekly', value: 'weekly' },
+    { label: 'Monthly', value: 'monthly' },
+    { label: 'Yearly', value: 'yearly' }
+  ];
+  selectedFrequency = 'weekly';
+
+  planOptions: SegmentOption[] = [
+    { label: 'Free', value: 'free' },
+    { label: 'Pro (Locked)', value: 'pro', disabled: true },
+    { label: 'Enterprise', value: 'ent' }
+  ];
+  selectedPlan = 'free';
 
   scrollTo(id: string): void {
     const element = document.getElementById(id);

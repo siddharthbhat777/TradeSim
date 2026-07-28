@@ -1071,6 +1071,120 @@
             </div>
         </section>
 
+        <section id="segmented-control" class="doc-section">
+            <div class="section-header">
+                <h2>Segmented Control</h2>
+                <p>A linear set of two or more segments, each of which functions as a mutually exclusive option.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 2.5rem; width: 100%;">
+
+                        <app-segmented-control label="View Mode (Medium)" [options]="viewOptions"
+                            [(ngModel)]="selectedView">
+                        </app-segmented-control>
+
+                        <app-segmented-control label="Frequency (Small)" size="small" [options]="sizeOptions"
+                            [(ngModel)]="selectedFrequency">
+                        </app-segmented-control>
+
+                        <app-segmented-control label="Full Width (Large)" size="large" [fullWidth]="true"
+                            [options]="viewOptions" [(ngModel)]="selectedView">
+                        </app-segmented-control>
+
+                        <app-segmented-control label="Subscription Plan" [options]="planOptions"
+                            [(ngModel)]="selectedPlan">
+                        </app-segmented-control>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-segmented-control [options]=\'opts\' [(ngModel)]=\'val\'></app-segmented-control>')">Copy</button>
+                            <pre><code>&lt;app-segmented-control 
+  label="View Mode" 
+  [options]="viewOptions" 
+  [(ngModel)]="selectedView"&gt;
+&lt;/app-segmented-control&gt;
+
+&lt;app-segmented-control 
+  label="Frequency" 
+  size="small"
+  [options]="sizeOptions" 
+  [(ngModel)]="selectedFrequency"&gt;
+&lt;/app-segmented-control&gt;
+
+&lt;app-segmented-control 
+  [fullWidth]="true"
+  [options]="viewOptions" 
+  [(ngModel)]="selectedView"&gt;
+&lt;/app-segmented-control&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Segmented Control Properties <code>&lt;app-segmented-control&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>options</code></td>
+                                    <td><code>SegmentOption&lt;T&gt;[]</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Required array of objects containing label, value, and disabled properties.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>Text label displayed above the segmented control track.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the padding, min-width, and font size of the segments.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>fullWidth</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the track to expand to 100% of its container width.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>required</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Marks the control as required, triggering validation errors if empty.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>errorMessage</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'Please select an option.'</code></td>
+                                    <td>The message to display when required validation fails.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>
