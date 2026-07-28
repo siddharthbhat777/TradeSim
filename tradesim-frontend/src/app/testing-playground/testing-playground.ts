@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Logo } from '../shared/components/logo/logo';
 import { ToastService } from '../shared/components/toast/toast.service'; // Added ToastService import
 import { Button } from '../shared/components/button/button';
+import { Badge } from '../shared/components/badge/badge';
 
 interface DocSection {
   title: string;
@@ -11,7 +12,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, Logo, Button],
+  imports: [CommonModule, Logo, Button, Badge],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -32,7 +33,8 @@ export class TestingPlayground {
     {
       title: 'Core Components',
       items: [
-        { id: 'button', name: 'Button' } // Added Button here
+        { id: 'button', name: 'Button' },
+        { id: 'badge', name: 'Badge' }
       ]
     },
     {

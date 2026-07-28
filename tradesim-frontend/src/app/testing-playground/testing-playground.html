@@ -326,5 +326,76 @@
             </div>
         </section>
 
+        <!-- COMPONENT: BADGE -->
+        <section id="badge" class="doc-section">
+            <div class="section-header">
+                <h2>Badge</h2>
+                <p>A compact visual indicator used for statuses, tags, and labels.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <!-- 1. LIVE PREVIEW -->
+                <div class="doc-card__preview">
+                    <div
+                        style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
+                        <app-badge color="primary">Primary</app-badge>
+                        <app-badge color="secondary">Secondary</app-badge>
+                        <app-badge color="accent">Accent</app-badge>
+                        <app-badge color="success">Success</app-badge>
+                        <app-badge color="danger">Danger</app-badge>
+                        <app-badge color="warning">Warning</app-badge>
+                    </div>
+                </div>
+
+                <!-- 2. VIEW SOURCE -->
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-badge color=\'success\'>Success</app-badge>')">Copy</button>
+                            <pre><code>&lt;!-- Basic Usage --&gt;
+&lt;app-badge color="primary"&gt;Primary&lt;/app-badge&gt;
+&lt;app-badge color="secondary"&gt;Secondary&lt;/app-badge&gt;
+&lt;app-badge color="accent"&gt;Accent&lt;/app-badge&gt;
+
+&lt;!-- Statuses --&gt;
+&lt;app-badge color="success"&gt;Success&lt;/app-badge&gt;
+&lt;app-badge color="warning"&gt;Warning&lt;/app-badge&gt;
+&lt;app-badge color="danger"&gt;Danger&lt;/app-badge&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- 3. API REFERENCE -->
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>color</code></td>
+                                    <td><code>'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning'</code>
+                                    </td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The semantic color variant of the badge.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
     </main>
 </div>

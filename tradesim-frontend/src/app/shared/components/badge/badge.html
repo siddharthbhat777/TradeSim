@@ -1,5 +1,5 @@
 <span class="badge" [class.badge--primary]="color() === 'primary'" [class.badge--secondary]="color() === 'secondary'"
     [class.badge--accent]="color() === 'accent'" [class.badge--success]="color() === 'success'"
     [class.badge--danger]="color() === 'danger'" [class.badge--warning]="color() === 'warning'">
-    {{ text() }}
+    <ng-content></ng-content>
 </span>
