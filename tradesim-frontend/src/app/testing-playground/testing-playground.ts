@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { Checkbox } from '../shared/components/checkbox/checkbox';
 import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
 import { Toggle } from '../shared/components/toggle/toggle';
+import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown';
 
 interface DocSection {
   title: string;
@@ -21,7 +22,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -163,6 +164,26 @@ export class TestingPlayground {
   toggleSuccess = true;
   toggleDelete = true;
   toggleCustom = false;
+
+  frameworkOptions: DropdownOption[] = [
+    { label: 'Angular', value: 'angular' },
+    { label: 'React', value: 'react' },
+    { label: 'Vue', value: 'vue' },
+    { label: 'Svelte', value: 'svelte' },
+    { label: 'Solid', value: 'solid', disabled: true }
+  ];
+  selectedFramework = null;
+
+  countryOptions: DropdownOption[] = [
+    { label: 'United States', value: 'us', icon: '🇺🇸' },
+    { label: 'United Kingdom', value: 'uk', icon: '🇬🇧' },
+    { label: 'Canada', value: 'ca', icon: '🇨🇦' },
+    { label: 'Australia', value: 'au', icon: '🇦🇺' },
+    { label: 'Germany', value: 'de', icon: '🇩🇪' },
+    { label: 'Japan', value: 'jp', icon: '🇯🇵' },
+    { label: 'India', value: 'in', icon: '🇮🇳' }
+  ];
+  selectedCountry = null;
 
   scrollTo(id: string): void {
     const element = document.getElementById(id);

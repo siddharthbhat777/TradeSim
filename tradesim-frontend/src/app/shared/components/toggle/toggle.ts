@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export type ToggleSize = 'small' | 'medium' | 'large';
@@ -25,9 +25,12 @@ export class Toggle implements ControlValueAccessor {
   readonly variant = input<ToggleVariant>('primary');
   readonly offVariant = input<ToggleVariant>();
   readonly labelPosition = input<'left' | 'right'>('left');
+  readonly disabled = input(false, { transform: booleanAttribute });
 
   protected readonly checked = signal(false);
-  protected readonly disabled = signal(false);
+  protected readonly cvaDisabled = signal(false);
+
+  protected readonly disabledState = computed(() => this.disabled() || this.cvaDisabled());
 
   protected readonly labelId = `app-toggle-label-${Toggle.nextId++}`;
 
@@ -40,7 +43,7 @@ export class Toggle implements ControlValueAccessor {
       classList.push(`toggle--color-off-${this.offVariant()}`);
     }
 
-    if (this.disabled()) {
+    if (this.disabledState()) {
       classList.push('toggle--disabled');
     }
 
@@ -51,7 +54,7 @@ export class Toggle implements ControlValueAccessor {
   private onTouched: () => void = () => { };
 
   protected toggle(): void {
-    if (this.disabled()) {
+    if (this.disabledState()) {
       return;
     }
 
@@ -74,6 +77,6 @@ export class Toggle implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabled.set(isDisabled);
+    this.cvaDisabled.set(isDisabled);
   }
 }

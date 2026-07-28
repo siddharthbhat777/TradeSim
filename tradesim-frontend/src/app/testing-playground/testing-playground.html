@@ -944,6 +944,133 @@
             </div>
         </section>
 
+        <section id="dropdown" class="doc-section">
+            <div class="section-header">
+                <h2>Dropdown</h2>
+                <p>A custom select component with typeahead, search filtering, and custom option templating support.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; width: 100%;">
+
+                        <app-dropdown label="Framework" placeholder="Select a framework"
+                            helperText="Solid is currently disabled." [options]="frameworkOptions"
+                            [(ngModel)]="selectedFramework">
+                        </app-dropdown>
+
+                        <app-dropdown label="Country" placeholder="Select a country" [searchable]="true"
+                            searchPlaceholder="Find country..." [options]="countryOptions"
+                            [(ngModel)]="selectedCountry">
+                        </app-dropdown>
+
+                        <app-dropdown label="Assignee" [loading]="true" placeholder="Loading users..." [options]="[]">
+                        </app-dropdown>
+
+                        <app-dropdown label="Permissions" placeholder="Read Only" [disabled]="true" [options]="[]">
+                        </app-dropdown>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-dropdown [options]=\'opts\' [(ngModel)]=\'val\'></app-dropdown>')">Copy</button>
+                            <pre><code>&lt;app-dropdown 
+  label="Framework" 
+  placeholder="Select a framework" 
+  helperText="Solid is currently disabled."
+  [options]="frameworkOptions" 
+  [(ngModel)]="selectedFramework"&gt;
+&lt;/app-dropdown&gt;
+
+&lt;app-dropdown 
+  label="Country" 
+  placeholder="Select a country" 
+  [searchable]="true"
+  searchPlaceholder="Find country..."
+  [options]="countryOptions" 
+  [(ngModel)]="selectedCountry"&gt;
+&lt;/app-dropdown&gt;
+
+&lt;app-dropdown 
+  label="Assignee" 
+  [loading]="true"
+  [options]="[]"&gt;
+&lt;/app-dropdown&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Dropdown Properties <code>&lt;app-dropdown&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>options</code></td>
+                                    <td><code>DropdownOption&lt;T&gt;[]</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Required array of objects containing label, value, icon, and disabled states.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code> / <code>placeholder</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>The label text and placeholder text when no option is selected.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>searchable</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Enables a text input within the panel to filter options.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'large'</code></td>
+                                    <td>Controls the padding, font size, and height of the trigger element.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>loading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows an inline loader in the trigger and disables interaction.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>panelLoading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows an inline loader inside the open panel (useful for async searching).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>fullWidth</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Removes the default 400px max-width restriction.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>

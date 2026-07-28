@@ -61,6 +61,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   readonly errorText = input('');
   readonly size = input<DropdownSize>('large');
   readonly required = input(false, { transform: booleanAttribute });
+  readonly disabled = input(false, { transform: booleanAttribute });
   readonly fullWidth = input(false, { transform: booleanAttribute });
   readonly showErrors = input(true, { transform: booleanAttribute });
   readonly searchable = input(false, { transform: booleanAttribute });
@@ -78,8 +79,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   protected readonly isOpen = signal(false);
   protected readonly openUpwards = signal(false);
   protected readonly activeIndex = signal(-1);
-  protected readonly disabledState = signal(false);
+  protected readonly cvaDisabled = signal(false);
   protected readonly searchQuery = signal('');
+
+  protected readonly disabledState = computed(() => this.disabled() || this.cvaDisabled());
 
   protected readonly filteredOptions = computed(() => {
     if (!this.searchable()) {
@@ -380,6 +383,6 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabledState.set(isDisabled);
+    this.cvaDisabled.set(isDisabled);
   }
 }
