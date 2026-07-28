@@ -24,8 +24,6 @@ export type ButtonSize = 'small' | 'medium' | 'large';
   }
 })
 export class Button {
-  text = input.required<string>();
-
   variant = input<ButtonVariant>('primary');
   type = input<ButtonType>('button');
   iconPosition = input<ButtonIconPosition>('left');

@@ -205,5 +205,126 @@
             </div>
         </section>
 
+        <!-- COMPONENT: BUTTON -->
+        <section id="button" class="doc-section">
+            <div class="section-header">
+                <h2>Button</h2>
+                <p>Interactive core button component supporting variants, sizes, and content projection for icons.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <!-- 1. LIVE PREVIEW -->
+                <div class="doc-card__preview">
+                    <!-- Added a small wrapper to keep buttons in a row, since __preview uses flex-col -->
+                    <div
+                        style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
+                        <app-button variant="primary">Primary</app-button>
+
+                        <app-button variant="secondary">Secondary</app-button>
+
+                        <app-button variant="outline">Outline</app-button>
+
+                        <app-button variant="primary" [isLoading]="true">Saving...</app-button>
+
+                        <app-button variant="success" [disabled]="true">Success</app-button>
+
+                        <app-button variant="danger" iconPosition="right">
+                            Delete
+                            <svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
+                        </app-button>
+                    </div>
+                </div>
+
+                <!-- 2. VIEW SOURCE -->
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-button variant=\'primary\'>Primary</app-button>')">Copy</button>
+                            <pre><code>&lt;!-- Basic Usage --&gt;
+&lt;app-button variant="primary"&gt;Primary&lt;/app-button&gt;
+
+&lt;!-- With Icon (Using ng-content select="[button-icon]") --&gt;
+&lt;app-button variant="danger" iconPosition="right"&gt;
+  Delete
+  &lt;svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;
+    &lt;path d="M3 6h18"&gt;&lt;/path&gt;
+    &lt;path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"&gt;&lt;/path&gt;
+    &lt;path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"&gt;&lt;/path&gt;
+  &lt;/svg&gt;
+&lt;/app-button&gt;
+
+&lt;!-- Loading State --&gt;
+&lt;app-button variant="primary" [isLoading]="true"&gt;Saving...&lt;/app-button&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- 3. API REFERENCE -->
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'outline'</code>
+                                    </td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The visual style of the button.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Adjusts padding and font-size.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>iconPosition</code></td>
+                                    <td><code>'left' | 'right'</code></td>
+                                    <td><code>'left'</code></td>
+                                    <td>Determines if the icon projects to the left or right of the text.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>isLoading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows the inline loader and disables user interactions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>disabled</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Disables the button native functionality and applies opacity.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>buttonClick</code></td>
+                                    <td><code>EventEmitter&lt;MouseEvent&gt;</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Emitted when clicked (safely ignores clicks if disabled or loading).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
     </main>
 </div>

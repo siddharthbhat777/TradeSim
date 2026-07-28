@@ -12,11 +12,11 @@
     </span>
     } @else {
     <span class="button__icon" aria-hidden="true">
-        <ng-content select="[button-icon]" />
+        <ng-content select="[button-icon]"></ng-content>
     </span>
     }
 
     <span class="button__text">
-        {{ text() }}
+        <ng-content></ng-content>
     </span>
 </button>

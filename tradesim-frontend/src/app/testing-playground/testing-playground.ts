@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Logo } from '../shared/components/logo/logo';
 import { ToastService } from '../shared/components/toast/toast.service'; // Added ToastService import
+import { Button } from '../shared/components/button/button';
 
 interface DocSection {
   title: string;
@@ -10,8 +11,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  standalone: true,
-  imports: [CommonModule, Logo],
+  imports: [CommonModule, Logo, Button],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -26,7 +26,13 @@ export class TestingPlayground {
       items: [
         { id: 'logo', name: 'Logo' },
         { id: 'colors', name: 'Color Palette' },
-        { id: 'typography', name: 'Typography' } // Added Typography here
+        { id: 'typography', name: 'Typography' }
+      ]
+    },
+    {
+      title: 'Core Components',
+      items: [
+        { id: 'button', name: 'Button' } // Added Button here
       ]
     },
     {
