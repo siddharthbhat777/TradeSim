@@ -6,6 +6,7 @@ import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
 import { Card } from '../shared/components/card/card';
 import { Alert } from '../shared/components/alert/alert';
+import { Tooltip } from '../shared/components/tooltip/tooltip';
 
 interface DocSection {
   title: string;
@@ -14,7 +15,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, Logo, Button, Badge, Card, Alert],
+  imports: [CommonModule, Logo, Button, Badge, Card, Alert, Tooltip],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -38,7 +39,8 @@ export class TestingPlayground {
         { id: 'button', name: 'Button' },
         { id: 'badge', name: 'Badge' },
         { id: 'card', name: 'Card' },
-        { id: 'alert', name: 'Alert' }
+        { id: 'alert', name: 'Alert' },
+        { id: 'tooltip', name: 'Tooltip' }
       ]
     },
     {

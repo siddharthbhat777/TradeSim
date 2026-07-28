@@ -622,13 +622,131 @@
                                     <td><code>string</code></td>
                                     <td><code>undefined</code></td>
                                     <td>The title text for the alert. Alternatively, project content using
-                                        <code>[alert-title]</code>.</td>
+                                        <code>[alert-title]</code>.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>showIcon</code></td>
                                     <td><code>boolean</code></td>
                                     <td><code>true</code></td>
                                     <td>Controls whether the leading state icon is displayed.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- COMPONENT: TOOLTIP -->
+        <section id="tooltip" class="doc-section">
+            <div class="section-header">
+                <h2>Tooltip</h2>
+                <p>A native HTML popover utilizing modern CSS Anchor Positioning to display brief, informative text on
+                    hover or focus.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <!-- 1. LIVE PREVIEW -->
+                <div class="doc-card__preview">
+                    <!-- Added extra padding here so the tooltips have room to open -->
+                    <div
+                        style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; align-items: center; padding: 3rem 1rem;">
+
+                        <app-tooltip text="I am a tooltip on the top!" position="top">
+                            <app-button variant="outline">Hover Top</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip text="I am a tooltip on the bottom!" position="bottom">
+                            <app-button variant="outline">Hover Bottom</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip text="Appears on the left side." position="left">
+                            <app-button variant="outline">Hover Left</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip text="Appears on the right side." position="right">
+                            <app-button variant="outline">Hover Right</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip position="top">
+                            <app-button variant="primary">Custom HTML</app-button>
+                            <!-- Projecting custom content into the panel -->
+                            <div tooltipContent style="display: flex; flex-direction: column; gap: 4px;">
+                                <strong style="color: var(--accent);">Pro Tip</strong>
+                                <span>You can inject any custom HTML or components here!</span>
+                            </div>
+                        </app-tooltip>
+
+                    </div>
+                </div>
+
+                <!-- 2. VIEW SOURCE -->
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-tooltip text=\'Helpful info\' position=\'top\'>\n  <button>Hover me</button>\n</app-tooltip>')">Copy</button>
+                            <pre><code>&lt;!-- Basic Text Tooltip --&gt;
+&lt;app-tooltip text="Settings and preferences" position="top"&gt;
+  &lt;app-button variant="outline"&gt;Settings&lt;/app-button&gt;
+&lt;/app-tooltip&gt;
+
+&lt;!-- Custom HTML Tooltip (Using [tooltipContent] slot) --&gt;
+&lt;app-tooltip position="right"&gt;
+  &lt;app-button variant="primary"&gt;More Info&lt;/app-button&gt;
+  
+  &lt;div tooltipContent&gt;
+    &lt;strong&gt;Rich Content&lt;/strong&gt;
+    &lt;p&gt;You can put badges, icons, or any HTML here.&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/app-tooltip&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- 3. API REFERENCE -->
+                <div class="doc-card__api">
+                    <h3>Properties & Slots</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property / Slot</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>text</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>The simple string text to display inside the tooltip panel.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>position</code></td>
+                                    <td><code>'top' | 'right' | 'bottom' | 'left'</code></td>
+                                    <td><code>'top'</code></td>
+                                    <td>The preferred popover position relative to the anchor. Falls back automatically
+                                        if space is restricted.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>&lt;ng-content&gt;</code> (Default)</td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>The element that acts as the trigger (anchor) for the tooltip.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[tooltipContent]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Projects advanced/custom HTML inside the tooltip panel instead of just plain
+                                        string text.</td>
                                 </tr>
                             </tbody>
                         </table>
