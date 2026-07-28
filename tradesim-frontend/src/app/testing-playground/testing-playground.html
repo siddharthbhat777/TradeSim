@@ -658,6 +658,153 @@
             </div>
         </section>
 
+        <section id="checkbox" class="doc-section">
+            <div class="section-header">
+                <h2>Checkbox & Checkbox Group</h2>
+                <p>Standalone checkbox toggles and managed groups with "Select All" and indeterminate states.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 3rem; width: 100%; max-width: 600px;">
+
+                        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                            <app-checkbox [(checked)]="singleCheckbox">Basic Checkbox</app-checkbox>
+                            <app-checkbox [indeterminate]="checkboxIndeterminate"
+                                (click)="checkboxIndeterminate = !checkboxIndeterminate">Indeterminate</app-checkbox>
+                            <app-checkbox [disabled]="true" [checked]="true">Disabled</app-checkbox>
+                            <app-checkbox [invalid]="true">Invalid State</app-checkbox>
+                        </div>
+
+                        <div
+                            style="background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">Document
+                                Permissions</h4>
+                            <app-checkbox-group [options]="permissions" displayKey="name" valueKey="id"
+                                [showSelectAll]="true" selectAllText="Grant All Permissions"
+                                [(selectedValues)]="selectedPermissions">
+                            </app-checkbox-group>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-checkbox [(checked)]=\'val\'>Label</app-checkbox>')">Copy</button>
+                            <pre><code>&lt;app-checkbox [(checked)]="singleCheckbox"&gt;Basic Checkbox&lt;/app-checkbox&gt;
+
+&lt;app-checkbox [indeterminate]="true"&gt;Indeterminate&lt;/app-checkbox&gt;
+
+&lt;app-checkbox [invalid]="true"&gt;Invalid State&lt;/app-checkbox&gt;
+
+&lt;app-checkbox-group 
+  [options]="permissions" 
+  displayKey="name" 
+  valueKey="id" 
+  [showSelectAll]="true" 
+  selectAllText="Grant All Permissions" 
+  [(selectedValues)]="selectedPermissions"&gt;
+&lt;/app-checkbox-group&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Checkbox Properties <code>&lt;app-checkbox&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2.5rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>checked</code></td>
+                                    <td><code>ModelSignal&lt;boolean&gt;</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Two-way bindable state of the checkbox.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>indeterminate</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows a dash icon instead of a checkmark for mixed states.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>invalid</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the error visual state (red border/background).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>labelPosition</code></td>
+                                    <td><code>'left' | 'right'</code></td>
+                                    <td><code>'right'</code></td>
+                                    <td>Positions the projected label text relative to the box.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Group Properties <code>&lt;app-checkbox-group&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>options</code></td>
+                                    <td><code>any[]</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Array of objects representing the checkbox options.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>selectedValues</code></td>
+                                    <td><code>ModelSignal&lt;any[]&gt;</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Two-way bindable array of currently selected <code>valueKey</code>s.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>displayKey</code> / <code>valueKey</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'label' / 'value'</code></td>
+                                    <td>The object keys used to extract the text and underlying value.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>showSelectAll</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Renders a master checkbox that manages the state of all options.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>layout</code></td>
+                                    <td><code>'column' | 'row'</code></td>
+                                    <td><code>'column'</code></td>
+                                    <td>Renders the list vertically or horizontally.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>

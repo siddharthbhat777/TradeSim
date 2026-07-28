@@ -10,6 +10,8 @@ import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { CustomInput } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
 import { FormsModule } from '@angular/forms';
+import { Checkbox } from '../shared/components/checkbox/checkbox';
+import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
 
 interface DocSection {
   title: string;
@@ -18,7 +20,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -140,6 +142,18 @@ export class TestingPlayground {
   ];
 
   logoCodeSnippet = `<app-logo size="large" [showText]="true"></app-logo>`;
+
+  singleCheckbox = false;
+  checkboxIndeterminate = true;
+
+  permissions = [
+    { id: 'create', name: 'Create Documents' },
+    { id: 'read', name: 'Read Documents' },
+    { id: 'update', name: 'Update Documents' },
+    { id: 'delete', name: 'Delete Documents' }
+  ];
+
+  selectedPermissions = ['read'];
 
   scrollTo(id: string): void {
     const element = document.getElementById(id);
