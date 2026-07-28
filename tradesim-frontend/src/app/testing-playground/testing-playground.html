@@ -805,6 +805,145 @@
             </div>
         </section>
 
+        <section id="toggle" class="doc-section">
+            <div class="section-header">
+                <h2>Toggle</h2>
+                <p>A customizable switch component for boolean states with support for sizes, variants, and custom
+                    icons.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 2.5rem; width: 100%;">
+
+                        <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+                            <app-toggle label="Enable Notifications" [(ngModel)]="toggleBasic"></app-toggle>
+                            <app-toggle label="Compact Mode" size="small" [(ngModel)]="toggleSmall"></app-toggle>
+                            <app-toggle label="Master Switch" size="large" [(ngModel)]="toggleLarge"></app-toggle>
+                            <app-toggle label="Disabled" [disabled]="true" [ngModel]="true"></app-toggle>
+                        </div>
+
+                        <div
+                            style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                            <app-toggle label="Auto-Save" variant="success" labelPosition="right"
+                                [(ngModel)]="toggleSuccess"></app-toggle>
+                            <app-toggle label="Delete Protection" variant="danger"
+                                [(ngModel)]="toggleDelete"></app-toggle>
+
+                            <app-toggle label="Dark Mode" variant="accent" offVariant="warning"
+                                [(ngModel)]="toggleCustom">
+                                <svg toggleOnIcon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                                <svg toggleOffIcon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </app-toggle>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-toggle label=\'Switch\' [(ngModel)]=\'val\'></app-toggle>')">Copy</button>
+                            <pre><code>&lt;app-toggle label="Enable Notifications" [(ngModel)]="isActive"&gt;&lt;/app-toggle&gt;
+
+&lt;app-toggle label="Compact Mode" size="small" [(ngModel)]="isCompact"&gt;&lt;/app-toggle&gt;
+
+&lt;app-toggle label="Auto-Save" variant="success" labelPosition="right" [(ngModel)]="autoSave"&gt;&lt;/app-toggle&gt;
+
+&lt;app-toggle label="Dark Mode" variant="accent" offVariant="warning" [(ngModel)]="darkMode"&gt;
+  &lt;svg toggleOnIcon viewBox="0 0 24 24"&gt;
+    &lt;!-- Moon Icon Path --&gt;
+  &lt;/svg&gt;
+  &lt;svg toggleOffIcon viewBox="0 0 24 24"&gt;
+    &lt;!-- Sun Icon Path --&gt;
+  &lt;/svg&gt;
+&lt;/app-toggle&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Toggle Properties <code>&lt;app-toggle&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>The text label displayed next to the toggle switch.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the dimensions of the track and thumb.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>ToggleVariant</code></td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The theme color applied when the toggle is checked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>offVariant</code></td>
+                                    <td><code>ToggleVariant</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>The theme color applied when the toggle is unchecked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>labelPosition</code></td>
+                                    <td><code>'left' | 'right'</code></td>
+                                    <td><code>'left'</code></td>
+                                    <td>Positions the label text relative to the switch element.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[toggleOnIcon]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>ng-content slot for an icon displayed when checked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[toggleOffIcon]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>ng-content slot for an icon displayed when unchecked.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>

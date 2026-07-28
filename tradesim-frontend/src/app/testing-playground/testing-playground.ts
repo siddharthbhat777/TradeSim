@@ -12,6 +12,7 @@ import { InputDirective } from '../shared/directives/input';
 import { FormsModule } from '@angular/forms';
 import { Checkbox } from '../shared/components/checkbox/checkbox';
 import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
+import { Toggle } from '../shared/components/toggle/toggle';
 
 interface DocSection {
   title: string;
@@ -20,13 +21,11 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
 export class TestingPlayground {
-  dummyEmail = '';
-  dummyNotes = '';
   private toastService = inject(ToastService);
 
   navigation: DocSection[] = [
@@ -143,6 +142,9 @@ export class TestingPlayground {
 
   logoCodeSnippet = `<app-logo size="large" [showText]="true"></app-logo>`;
 
+  dummyEmail = '';
+  dummyNotes = '';
+
   singleCheckbox = false;
   checkboxIndeterminate = true;
 
@@ -154,6 +156,13 @@ export class TestingPlayground {
   ];
 
   selectedPermissions = ['read'];
+
+  toggleBasic = false;
+  toggleSmall = false;
+  toggleLarge = true;
+  toggleSuccess = true;
+  toggleDelete = true;
+  toggleCustom = false;
 
   scrollTo(id: string): void {
     const element = document.getElementById(id);
