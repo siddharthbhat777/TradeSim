@@ -19,7 +19,7 @@ export type CardBorder = 'primary' | 'secondary' | 'accent' | 'success' | 'dange
   styleUrl: './card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CardComponent {
+export class Card {
   readonly variant = input<CardVariant>('default');
   readonly border = input<CardBorder | undefined>(undefined);
   readonly hoverable = input<boolean>(false);

@@ -397,5 +397,140 @@
             </div>
         </section>
 
+        <!-- COMPONENT: CARD -->
+        <section id="card" class="doc-section">
+            <div class="section-header">
+                <h2>Card</h2>
+                <p>A versatile container component supporting variants, loading states, and interactive capabilities.
+                </p>
+            </div>
+
+            <div class="doc-card">
+
+                <!-- 1. LIVE PREVIEW -->
+                <div class="doc-card__preview">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; width: 100%;">
+
+                        <app-card>
+                            <h4 style="margin-top: 0;">Default Card</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Standard surface background
+                                with a subtle shadow.</p>
+                        </app-card>
+
+                        <app-card variant="outline" [hoverable]="true">
+                            <h4 style="margin-top: 0;">Outline & Hoverable</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Hover over me to see the
+                                elevation and transform effect.</p>
+                        </app-card>
+
+                        <app-card border="primary">
+                            <h4 style="margin-top: 0;">Bordered Card</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Default variant with a
+                                primary colored border.</p>
+                        </app-card>
+
+                        <app-card variant="accent">
+                            <h4 style="margin-top: 0;">Accent Variant</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Semantic background for
+                                highlighted or featured content.</p>
+                        </app-card>
+
+                        <app-card [isLoading]="true">
+                            <h4 style="margin-top: 0;">Loading State</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">This content is currently
+                                being processed.</p>
+                        </app-card>
+
+                    </div>
+                </div>
+
+                <!-- 2. VIEW SOURCE -->
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-card>\n  <h4>Title</h4>\n  <p>Content goes here.</p>\n</app-card>')">Copy</button>
+                            <pre><code>&lt;!-- Basic Usage --&gt;
+&lt;app-card&gt;
+  &lt;h4&gt;Default Card&lt;/h4&gt;
+  &lt;p&gt;Standard surface background.&lt;/p&gt;
+&lt;/app-card&gt;
+
+&lt;!-- Outline & Hoverable --&gt;
+&lt;app-card variant="outline" [hoverable]="true"&gt;
+  &lt;p&gt;Hover over me!&lt;/p&gt;
+&lt;/app-card&gt;
+
+&lt;!-- Bordered (Must use default variant) --&gt;
+&lt;app-card border="primary"&gt;
+  &lt;p&gt;I have a primary border.&lt;/p&gt;
+&lt;/app-card&gt;
+
+&lt;!-- Loading State --&gt;
+&lt;app-card [isLoading]="true"&gt;
+  &lt;p&gt;Content is loading...&lt;/p&gt;
+&lt;/app-card&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- 3. API REFERENCE -->
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>'default' | 'surface' | 'outline' | 'accent' | 'success' | 'danger' | 'warning'</code>
+                                    </td>
+                                    <td><code>'default'</code></td>
+                                    <td>The visual style and background of the card.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>border</code></td>
+                                    <td><code>'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning'</code>
+                                    </td>
+                                    <td><code>undefined</code></td>
+                                    <td>Applies a specific border color. <br><em>Note: Only applied when variant is
+                                            "default".</em></td>
+                                </tr>
+                                <tr>
+                                    <td><code>hoverable</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Adds a shadow elevation and slight translateY effect on hover.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>isLoading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows a blur overlay with an inline loader and blocks interactions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onCardClick</code></td>
+                                    <td><code>(event: Event) => void</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>If passed, automatically applies a11y attributes (role, tabindex) and transforms
+                                        the card into a clickable element.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
     </main>
 </div>
