@@ -5,6 +5,7 @@ import { ToastService } from '../shared/components/toast/toast.service'; // Adde
 import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
 import { Card } from '../shared/components/card/card';
+import { Alert } from '../shared/components/alert/alert';
 
 interface DocSection {
   title: string;
@@ -13,7 +14,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, Logo, Button, Badge, Card],
+  imports: [CommonModule, Logo, Button, Badge, Card, Alert],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -36,7 +37,8 @@ export class TestingPlayground {
       items: [
         { id: 'button', name: 'Button' },
         { id: 'badge', name: 'Badge' },
-        { id: 'card', name: 'Card' }
+        { id: 'card', name: 'Card' },
+        { id: 'alert', name: 'Alert' }
       ]
     },
     {

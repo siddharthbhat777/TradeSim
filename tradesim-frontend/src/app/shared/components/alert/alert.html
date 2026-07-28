@@ -38,9 +38,14 @@
     }
 
     <div class="alert__content">
-        @if (title()) {
-        <div class="alert__title">{{ title() }}</div>
-        }
+        <div class="alert__title">
+            @if (title()) {
+            {{ title() }}
+            } @else {
+            <ng-content select="[alert-title]"></ng-content>
+            }
+        </div>
+
         <div class="alert__body">
             <ng-content></ng-content>
         </div>
