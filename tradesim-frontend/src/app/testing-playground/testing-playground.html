@@ -1,1656 +1,209 @@
-<div class="demo-container">
+<div class="docs-layout">
 
-    <div class="header-controls">
-        <app-logo size="small" [showText]="true"></app-logo>
-
-        <button class="theme-toggle-btn" (click)="toggleTheme()">
-            {{ isDarkMode() ? '☀️ Light Mode' : '🌙 Dark Mode' }}
-        </button>
-    </div>
-
-    <div class="demo-section">
-
-        <h1 class="heading-xl">
-            Welcome to TradeSim
-        </h1>
-
-        <h2 class="heading-lg">
-            Realistic Stock Market Simulation Platform
-        </h2>
-
-        <h3 class="heading-md">
-            Portfolio & Analytics
-        </h3>
-
-        <p class="text-body">
-            TradeSim is a professional stock market simulator
-            focused on realism, financial correctness and long-term learning.
-        </p>
-
-        <p class="text-muted">
-            Build strategies. Learn markets. Trade with confidence.
-        </p>
-
-    </div>
-
-    <!-- =========================
-         ALERT SHOWCASE
-    ========================= -->
-
-    <div class="demo-section">
-        <h3 class="heading-md">Alert Showcase</h3>
-
-        <div class="alert-grid">
-            <app-alert variant="info" title="Market Open">
-                The stock market is currently open for trading. Execution is live.
-            </app-alert>
-
-            <app-alert variant="success" title="Deposit Successful">
-                ₹50,000 has been successfully added to your trading account balance.
-            </app-alert>
-
-            <app-alert variant="warning" title="High Volatility Warning">
-                Several of your held assets are experiencing higher than normal market volatility today.
-            </app-alert>
-
-            <app-alert variant="danger" title="Margin Call">
-                Your account equity has dropped below the maintenance margin requirement. Add funds to avoid
-                liquidation.
-            </app-alert>
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+        <div class="sidebar-header">
+            <app-logo size="small"></app-logo>
         </div>
 
-        <h4 class="heading-md" style="margin-top: 24px;">Alert Options</h4>
-
-        <div class="alert-grid">
-            <app-alert variant="info">
-                This is a simple alert without a title. Just a straightforward message to the user.
-            </app-alert>
-
-            <app-alert variant="success" title="Icon Disabled" [showIcon]="false">
-                This alert hides the predefined icon while keeping the semantic variant styling intact.
-            </app-alert>
-        </div>
-    </div>
-
-    <!-- =========================
-        LOADER SHOWCASE
-    ========================= -->
-
-    <div class="demo-section">
-        <h3 class="heading-md">Loader Showcase</h3>
-
-        <div class="alert-grid" style="display: flex; gap: 40px; align-items: flex-end; padding-top: 16px;">
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Small</p>
-                <app-loader size="small" [fullScreen]="false"></app-loader>
-            </div>
-
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Medium (Default)</p>
-                <app-loader size="medium" [fullScreen]="false"></app-loader>
-            </div>
-
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Large</p>
-                <app-loader size="large" [fullScreen]="false"></app-loader>
-            </div>
-        </div>
-
-        <h4 class="heading-md" style="margin-top: 32px;">Loader Options</h4>
-
-        <div class="alert-grid">
-            <div style="padding: 24px; border: 1px dashed var(--outline-border); border-radius: 8px;">
-                <p class="text-body" style="margin-bottom: 24px;">
-                    <strong>Fullscreen Overlay:</strong> Change <code>[fullScreen]</code> to <code>true</code> in your
-                    code to test the fixed overlay. It will cover the entire viewport.
-                </p>
-                <app-loader size="medium" [fullScreen]="false"></app-loader>
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================
-     INLINE LOADER SHOWCASE
- ========================= -->
-
-    <div class="demo-section">
-        <h3 class="heading-md">Inline Loader Showcase</h3>
-
-        <!-- SIZES -->
-        <h4 class="heading-md" style="margin-top: 24px;">Sizes</h4>
-        <div class="alert-grid" style="display: flex; gap: 40px; align-items: flex-end; padding-top: 16px;">
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Small</p>
-                <app-inline-loader size="small" variant="primary"></app-inline-loader>
-            </div>
-
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Medium</p>
-                <app-inline-loader size="medium" variant="primary"></app-inline-loader>
-            </div>
-
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Large</p>
-                <app-inline-loader size="large" variant="primary"></app-inline-loader>
-            </div>
-        </div>
-
-        <!-- VARIANTS -->
-        <h4 class="heading-md" style="margin-top: 32px;">Color Variants (Medium)</h4>
-        <div class="alert-grid" style="display: flex; gap: 32px; flex-wrap: wrap; padding-top: 16px;">
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Primary</p>
-                <app-inline-loader size="medium" variant="primary"></app-inline-loader>
-            </div>
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Secondary</p>
-                <app-inline-loader size="medium" variant="secondary"></app-inline-loader>
-            </div>
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Accent</p>
-                <app-inline-loader size="medium" variant="accent"></app-inline-loader>
-            </div>
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Success</p>
-                <app-inline-loader size="medium" variant="success"></app-inline-loader>
-            </div>
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Warning</p>
-                <app-inline-loader size="medium" variant="warning"></app-inline-loader>
-            </div>
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Danger</p>
-                <app-inline-loader size="medium" variant="danger"></app-inline-loader>
-            </div>
-            <div style="text-align: center;">
-                <p class="text-muted" style="margin-bottom: 16px;">Muted</p>
-                <app-inline-loader size="medium" variant="muted"></app-inline-loader>
-            </div>
-        </div>
-
-        <!-- PRACTICAL SCENARIOS -->
-        <h4 class="heading-md" style="margin-top: 32px;">Practical Scenarios</h4>
-        <div class="alert-grid"
-            style="display: flex; gap: 40px; align-items: center; padding-top: 16px; flex-wrap: wrap;">
-
-            <div style="padding: 24px; border: 1px dashed var(--outline-border); border-radius: 8px;">
-                <p class="text-body" style="margin-bottom: 16px;"><strong>Inside a Button:</strong></p>
-                <button
-                    style="display: inline-flex; align-items: center; gap: 12px; padding: 12px 24px; background: var(--surface-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: not-allowed; font-family: inherit; font-size: 1rem;">
-                    <app-inline-loader size="small" variant="muted"></app-inline-loader>
-                    Processing Order...
-                </button>
-            </div>
-
-            <div style="padding: 24px; border: 1px dashed var(--outline-border); border-radius: 8px;">
-                <p class="text-body" style="margin-bottom: 16px;"><strong>Inline with Text:</strong></p>
-                <div
-                    style="display: inline-flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
-                    <span class="text-body">Syncing live market data</span>
-                    <app-inline-loader size="small" variant="accent"></app-inline-loader>
+        <nav class="nav-menu" aria-label="Component Navigation">
+            @for (section of navigation; track section.title) {
+            <div class="nav-group">
+                <h3 class="nav-group-title">{{ section.title }}</h3>
+                <div class="nav-list" role="list">
+                    @for (item of section.items; track item.id) {
+                    <div class="nav-item" role="listitem" tabindex="0" (click)="scrollTo(item.id)"
+                        (keydown.enter)="scrollTo(item.id)">
+                        {{ item.name }}
+                    </div>
+                    }
                 </div>
             </div>
+            }
+        </nav>
+    </aside>
 
-        </div>
-    </div>
+    <!-- Main Content -->
+    <main class="docs-content">
+        <header class="content-header">
+            <h1>Component Library</h1>
+            <p class="header-subtitle">Interactive documentation, code snippets, and API references.</p>
+        </header>
 
-    <div class="demo-section">
+        <!-- COMPONENT: LOGO -->
+        <section id="logo" class="doc-section">
+            <div class="section-header">
+                <h2>Logo</h2>
+                <p>The primary branding component for TradeSim.</p>
+            </div>
 
-        <app-card>
-
-            <h3 class="heading-md">
-                Portfolio Overview
-            </h3>
-
-            <br>
-
-            <p class="text-body">
-                Total Portfolio Value
-            </p>
-
-            <h2 class="heading-lg">
-                ₹ 12,50,000
-            </h2>
-
-            <br>
-
-            <p>
-                Today's P&L:
-                <app-price-indicator [value]="12450" [percentage]="1.12" [showArrow]="false" />
-            </p>
-
-        </app-card>
-
-    </div>
-
-    <!-- =========================
-         PIE CHART SHOWCASE
-    ========================= -->
-
-    <div class="demo-section">
-        <h3 class="heading-md">Pie Chart Showcase</h3>
-        <p class="text-muted" style="margin-bottom: 24px;">
-            Hover over slices to see the custom tracking tooltip. Try hovering/clicking the legend items below each
-            chart to see if the slices highlight!
-        </p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px;">
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">1. Full + Solid (Legend Right)</p>
-                <app-pie-chart-container [data]="pieChartSampleData" shape="full" chartStyle="solid" [size]="200"
-                    legendPosition="right" [wrap]="false">
-                </app-pie-chart-container>
-            </app-card>
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">2. Full + Donut (Legend Bottom)</p>
-                <app-pie-chart-container [data]="pieChartSampleData" shape="full" chartStyle="donut" [size]="280"
-                    legendPosition="bottom" [wrap]="true">
-                </app-pie-chart-container>
-            </app-card>
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">3. Half + Solid (Legend Left)</p>
-                <app-pie-chart-container [data]="pieChartPortfolioData" shape="half" chartStyle="solid" [size]="200"
-                    legendPosition="left" [wrap]="false">
-                </app-pie-chart-container>
-            </app-card>
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">4. Half + Donut (Legend Top)</p>
-                <app-pie-chart-container [data]="pieChartPortfolioData" shape="half" chartStyle="donut" [size]="280"
-                    legendPosition="top" [wrap]="true">
-                </app-pie-chart-container>
-            </app-card>
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">5. Standalone Pie Chart (No Legend)
-                </p>
-                <div style="display: flex; justify-content: center; padding: 24px 0;">
-                    <app-pie-chart [data]="pieChartSampleData" shape="full" chartStyle="donut"
-                        [size]="240"></app-pie-chart>
+            <div class="doc-card">
+                <!-- 1. Live Preview -->
+                <div class="doc-card__preview">
+                    <app-logo size="large" [showText]="true"></app-logo>
+                    <div style="margin-top: 2rem;">
+                        <app-logo size="small" [showText]="false"></app-logo>
+                    </div>
                 </div>
-            </app-card>
 
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">6. Standalone Legend</p>
-                <div style="display: flex; justify-content: center; padding: 24px 0;">
-                    <app-legend [data]="pieChartSampleData"></app-legend>
+                <!-- 2. Expandable Code Block (FIXED: Axe-Linter Nested Interactive) -->
+                <details class="doc-card__code-block">
+                    <summary class="code-summary">
+                        <span>View Source</span>
+                    </summary>
+                    <div class="code-content">
+                        <!-- Button moved completely out of the summary tag -->
+                        <button class="copy-btn" (click)="copyCode(logoCodeSnippet)"
+                            aria-label="Copy code snippet">Copy</button>
+                        <pre><code>{{ logoCodeSnippet }}</code></pre>
+                    </div>
+                </details>
+
+                <!-- 3. API Properties Table -->
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the overall dimensions of the logo SVG and typography.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>showText</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Toggles the visibility of the "TradeSim" text alongside the SVG.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </app-card>
+            </div>
+        </section>
 
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">7. Loading State (Container)</p>
-                <app-pie-chart-container [data]="pieChartSampleData" [isLoading]="true" [size]="200">
-                </app-pie-chart-container>
-            </app-card>
+        <!-- COMPONENT: COLORS -->
+        <section id="colors" class="doc-section">
+            <div class="section-header">
+                <h2>Color Palette</h2>
+                <p>Global CSS variables for TradeSim. Click any swatch to copy the variable.</p>
+            </div>
 
-        </div>
-    </div>
+            <div class="doc-card" style="padding: 2rem;">
+                @for (group of colorGroups; track group.group) {
+                <div class="color-group">
+                    <h3 class="color-group-title">{{ group.group }}</h3>
 
-    <!-- =========================
-         CHECKBOX & GROUP SHOWCASE
-    ========================= -->
+                    <div class="color-grid">
+                        @for (token of group.tokens; track token.variable) {
+                        <!-- Notice we pass var(--name) to the copyCode function so it's ready to paste into CSS -->
+                        <button class="color-swatch-btn" (click)="copyCode('var(' + token.variable + ')')"
+                            aria-label="Copy color variable">
 
-    <div class="demo-section">
-        <h3 class="heading-md">Checkbox & Checkbox Group</h3>
-        <p class="text-muted" style="margin-bottom: 24px;">
-            Testing standalone states, validation, HTML projections, and smart indeterminate groups.
-        </p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px;">
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">1. Standalone States</p>
-                <div style="display: flex; flex-direction: column; gap: 16px;">
-                    <app-checkbox [(checked)]="standaloneBasic">Default Checkbox</app-checkbox>
-                    <app-checkbox [indeterminate]="true">Forced Indeterminate</app-checkbox>
-                    <app-checkbox [checked]="true" [disabled]="true">Disabled Checked</app-checkbox>
-                    <app-checkbox [checked]="false" [disabled]="true">Disabled Unchecked</app-checkbox>
+                            <div class="swatch" [style.background]="'var(' + token.variable + ')'"></div>
+                            <span class="swatch-name">{{ token.name }}</span>
+                            <code class="swatch-var">{{ token.variable }}</code>
+                        </button>
+                        }
+                    </div>
                 </div>
-            </app-card>
+                }
+            </div>
+        </section>
 
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">2. Config & Projections</p>
-                <div style="display: flex; flex-direction: column; gap: 16px;">
-                    <app-checkbox [(checked)]="standaloneLeft" labelPosition="left">Label on Left Side</app-checkbox>
-                    <app-checkbox>
-                        <div style="display: flex; align-items: center; gap: 12px; padding: 4px;">
-                            <span style="font-size: 1.5rem;">🔥</span>
-                            <div style="display: flex; flex-direction: column;">
-                                <strong style="color: var(--text-primary); line-height: 1.2;">Custom HTML Label</strong>
-                                <span class="text-muted" style="font-size: 0.8rem;">Multline support via
-                                    ng-content</span>
-                            </div>
-                        </div>
-                    </app-checkbox>
-                </div>
-            </app-card>
+        <!-- COMPONENT: TYPOGRAPHY (Paste this right below the closing </section> of Colors) -->
+        <section id="typography" class="doc-section">
+            <div class="section-header">
+                <h2>Typography</h2>
+                <p>Global text styles and color tokens. Click the variable tags to copy them.</p>
+            </div>
 
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">3. Validation & Submit Scenario</p>
-                <div style="display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
-                    <app-checkbox #reqCheckbox [(checked)]="standaloneRequiredChecked" [required]="true">
-                        I accept the terms and conditions
-                    </app-checkbox>
-                    <button (click)="submitCheckboxForm()"
-                        style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-secondary); color: var(--text-primary); cursor: pointer; font-weight: 600;">
-                        Submit to Validate
+            <div class="doc-card" style="padding: 2rem;">
+
+                <!-- Text Colors Section -->
+                <h3 class="color-group-title">Text Colors</h3>
+                <div class="color-grid" style="margin-bottom: 3rem;">
+                    <button class="color-swatch-btn" (click)="copyCode('var(--text-primary)')"
+                        aria-label="Copy text-primary">
+                        <div class="swatch" style="background: var(--text-primary); height: 40px;"></div>
+                        <span class="swatch-name">Primary Text</span>
+                        <code class="swatch-var">--text-primary</code>
+                    </button>
+
+                    <button class="color-swatch-btn" (click)="copyCode('var(--text-secondary)')"
+                        aria-label="Copy text-secondary">
+                        <div class="swatch" style="background: var(--text-secondary); height: 40px;"></div>
+                        <span class="swatch-name">Secondary Text</span>
+                        <code class="swatch-var">--text-secondary</code>
+                    </button>
+
+                    <button class="color-swatch-btn" (click)="copyCode('var(--text-muted)')"
+                        aria-label="Copy text-muted">
+                        <div class="swatch" style="background: var(--text-muted); height: 40px;"></div>
+                        <span class="swatch-name">Muted Text</span>
+                        <code class="swatch-var">--text-muted</code>
                     </button>
                 </div>
-            </app-card>
 
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">4. Only Checkbox (No Label)</p>
-                <div style="display: flex; align-items: center; justify-content: center; padding: 24px;">
-                    <app-checkbox [(checked)]="standaloneNoLabel"></app-checkbox>
-                </div>
-            </app-card>
+                <!-- Global Classes Section -->
+                <h3 class="color-group-title">Global Text Classes</h3>
+                <div class="typography-preview-list">
 
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">5. Basic Checkbox Group</p>
-                <app-checkbox-group [options]="simpleGroupOptions" [(selectedValues)]="selectedSimpleGroup"
-                    [showSelectAll]="true" selectAllText="Select All Stocks">
-                </app-checkbox-group>
-                <div style="margin-top: 24px; padding: 12px; background: var(--surface-secondary); border-radius: 8px;">
-                    <span class="text-muted" style="font-size: 0.85rem;">Bound Output:</span>
-                    <pre
-                        style="margin: 4px 0 0; font-size: 0.85rem; color: var(--primary);">{{ selectedSimpleGroup() | json }}</pre>
-                </div>
-            </app-card>
-
-            <app-card style="grid-column: 1 / -1;">
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">6. Checkbox Group (Row Layout &
-                    Custom Templates)</p>
-
-                <app-checkbox-group [options]="sectorGroupOptions" [(selectedValues)]="selectedSectorGroup"
-                    displayKey="name" valueKey="id" [showSelectAll]="true" layout="row">
-
-                    <div header-content style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1.2rem;">🌍</span>
-                        <strong style="color: var(--primary);">Global Market Sectors</strong>
-                    </div>
-
-                    <ng-template #optionTemplate let-sector>
-                        <div
-                            style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--surface-secondary); border-radius: 8px; border: 1px solid var(--border);">
-                            <span>{{ sector.icon }}</span>
-                            <strong style="color: var(--text-primary);">{{ sector.name }}</strong>
-                            <span class="text-muted" style="font-size: 0.85rem;">({{ sector.count }})</span>
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('heading-xl')">Copy Class</button>
+                            <code>.heading-xl</code>
                         </div>
-                    </ng-template>
-
-                </app-checkbox-group>
-            </app-card>
-
-        </div>
-    </div>
-
-    <!-- =========================
-         SKELETON LOADER SHOWCASE
-    ========================= -->
-
-    <div class="demo-section">
-        <h3 class="heading-md">Skeleton Loaders</h3>
-        <p class="text-muted" style="margin-bottom: 24px;">
-            Testing shimmer effects, standard shapes (text, rect, circle), and custom configurations.
-        </p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px;">
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">1. Standard Shapes</p>
-                <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <div>
-                        <span class="text-muted" style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Text
-                            (Default)</span>
-                        <app-skeleton shape="text"></app-skeleton>
-                        <app-skeleton shape="text" width="80%"></app-skeleton>
-                        <app-skeleton shape="text" width="60%"></app-skeleton>
+                        <div class="type-sample heading-xl">The quick brown fox</div>
                     </div>
-                    <div>
-                        <span class="text-muted"
-                            style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Circle</span>
-                        <app-skeleton shape="circle"></app-skeleton>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('heading-lg')">Copy Class</button>
+                            <code>.heading-lg</code>
+                        </div>
+                        <div class="type-sample heading-lg">The quick brown fox</div>
                     </div>
-                    <div>
-                        <span class="text-muted"
-                            style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Rectangle (Soft
-                            Edges)</span>
-                        <app-skeleton shape="rect" height="100px"></app-skeleton>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('heading-md')">Copy Class</button>
+                            <code>.heading-md</code>
+                        </div>
+                        <div class="type-sample heading-md">The quick brown fox jumps over the lazy dog.</div>
                     </div>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('text-body')">Copy Class</button>
+                            <code>.text-body</code>
+                        </div>
+                        <div class="type-sample text-body">TradeSim provides a sandbox environment for users to simulate
+                            market conditions. The quick brown fox jumps over the lazy dog.</div>
+                    </div>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('text-muted')">Copy Class</button>
+                            <code>.text-muted</code>
+                        </div>
+                        <div class="type-sample text-muted">Press ESC to close this dialog. This is an example of muted
+                            helper text.</div>
+                    </div>
+
                 </div>
-            </app-card>
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">2. Custom Sizing & Rounding</p>
-                <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <div style="display: flex; gap: 16px;">
-                        <app-skeleton shape="circle" width="80px" height="80px"></app-skeleton>
-                        <app-skeleton shape="circle" width="32px" height="32px"></app-skeleton>
-                    </div>
-                    <div>
-                        <span class="text-muted" style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Sharp
-                            Rectangle (rounded="0")</span>
-                        <app-skeleton shape="rect" height="60px" rounded="0"></app-skeleton>
-                    </div>
-                    <div>
-                        <span class="text-muted" style="font-size: 0.85rem; margin-bottom: 8px; display: block;">Pill
-                            Rectangle (rounded="40px")</span>
-                        <app-skeleton shape="rect" height="40px" rounded="40px"></app-skeleton>
-                    </div>
-                </div>
-            </app-card>
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">3. Mock Layout (Profile View)</p>
-                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px;">
-                    <app-skeleton shape="circle" width="64px" height="64px"></app-skeleton>
-                    <div style="flex: 1;">
-                        <app-skeleton shape="text" width="40%" height="24px"></app-skeleton>
-                        <app-skeleton shape="text" width="25%"></app-skeleton>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                    <div style="flex: 1;">
-                        <app-skeleton shape="rect" height="36px" rounded="8px"></app-skeleton>
-                    </div>
-                    <div style="flex: 1;">
-                        <app-skeleton shape="rect" height="36px" rounded="8px"></app-skeleton>
-                    </div>
-                </div>
-                <app-skeleton shape="text"></app-skeleton>
-                <app-skeleton shape="text"></app-skeleton>
-                <app-skeleton shape="text" width="80%"></app-skeleton>
-            </app-card>
-
-            <app-card>
-                <p class="text-body" style="font-weight: 600; margin-bottom: 16px;">4. Mock Layout (Dashboard Card)</p>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <app-skeleton shape="text" width="120px"></app-skeleton>
-                    <app-skeleton shape="rect" width="32px" height="32px" rounded="8px"></app-skeleton>
-                </div>
-                <div style="margin-bottom: 8px;">
-                    <app-skeleton shape="text" width="60%" height="40px"></app-skeleton>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 24px;">
-                    <app-skeleton shape="circle" width="16px" height="16px"></app-skeleton>
-                    <div style="flex: 1; padding-top: 4px;">
-                        <app-skeleton shape="text" width="100px" height="12px"></app-skeleton>
-                    </div>
-                </div>
-                <app-skeleton shape="rect" height="80px"></app-skeleton>
-            </app-card>
-
-        </div>
-    </div>
-
-    <!-- =========================
-         NUMBER STEPPER SHOWCASE
-    ========================= -->
-
-    <div class="demo-section">
-        <h2>Number Stepper</h2>
-
-        <h3 class="stepper-header">Sizes</h3>
-        <div class="stepper-grid">
-            <div class="stepper-row">
-                <app-number-stepper size="small" [(value)]="stepperSmall"></app-number-stepper>
-                <span class="val-display">Value: {{ stepperSmall() }}</span>
-            </div>
-            <div class="stepper-row">
-                <app-number-stepper size="medium" [(value)]="stepperMedium"></app-number-stepper>
-                <span class="val-display">Value: {{ stepperMedium() }}</span>
-            </div>
-            <div class="stepper-row">
-                <app-number-stepper size="large" [(value)]="stepperLarge"></app-number-stepper>
-                <span class="val-display">Value: {{ stepperLarge() }}</span>
-            </div>
-        </div>
-
-        <h3 class="stepper-header">Variants</h3>
-        <div class="stepper-grid">
-            <div class="stepper-row">
-                <app-number-stepper variant="primary" [(value)]="stepperPrimary"></app-number-stepper>
-                <span class="val-display">Primary: {{ stepperPrimary() }}</span>
-            </div>
-            <div class="stepper-row">
-                <app-number-stepper variant="secondary" [(value)]="stepperSecondary"></app-number-stepper>
-                <span class="val-display">Secondary: {{ stepperSecondary() }}</span>
-            </div>
-            <div class="stepper-row">
-                <app-number-stepper variant="success" [(value)]="stepperSuccess"></app-number-stepper>
-                <span class="val-display">Success: {{ stepperSuccess() }}</span>
-            </div>
-            <div class="stepper-row">
-                <app-number-stepper variant="danger" [(value)]="stepperDanger"></app-number-stepper>
-                <span class="val-display">Danger: {{ stepperDanger() }}</span>
-            </div>
-            <div class="stepper-row">
-                <app-number-stepper variant="warning" [(value)]="stepperWarning"></app-number-stepper>
-                <span class="val-display">Warning: {{ stepperWarning() }}</span>
-            </div>
-            <div class="stepper-row">
-                <app-number-stepper variant="outline" [(value)]="stepperOutline"></app-number-stepper>
-                <span class="val-display">Outline: {{ stepperOutline() }}</span>
-            </div>
-        </div>
-
-        <h3 class="stepper-header">Min/Max Bounds (-3 to 5)</h3>
-        <div class="stepper-row">
-            <app-number-stepper variant="danger" [min]="-3" [max]="5" [(value)]="stepperMinMax"></app-number-stepper>
-            <span class="val-display">Value: {{ stepperMinMax() }} (Try going below -3 or above 5)</span>
-        </div>
-
-        <h3 class="stepper-header">Mixed Variants</h3>
-        <div class="stepper-row">
-            <app-number-stepper variant="outline" secondaryVariant="primary"
-                [(value)]="stepperMixed"></app-number-stepper>
-            <span class="val-display">Left: Outline, Right: Primary</span>
-        </div>
-    </div>
-
-    <div class="demo-section">
-        <app-button variant="primary" text="Place Order" /> &nbsp;
-        <app-button variant="secondary" text="Cancel Order" /> &nbsp;
-        <app-button variant="outline" text="Reset Order" />
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Color Palette
-        </h3>
-
-        <div class="color-grid">
-
-            <div class="color-box primary-box"></div>
-            <div class="color-box success-box"></div>
-            <div class="color-box danger-box"></div>
-            <div class="color-box warning-box"></div>
-
-            <div class="color-box chart-1"></div>
-            <div class="color-box chart-2"></div>
-            <div class="color-box chart-3"></div>
-            <div class="color-box chart-4"></div>
-            <div class="color-box chart-5"></div>
-
-        </div>
-
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Surface Preview
-        </h3>
-
-        <div class="surface-grid">
-
-            <div class="card">
-                Primary Surface
-            </div>
-
-            <div class="card surface-secondary-demo">
-                Secondary Surface
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Border Preview
-        </h3>
-
-        <div class="border-demo">
-            This box demonstrates the global border color.
-        </div>
-
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Button Showcase
-        </h3>
-
-        <div class="button-group">
-
-            <app-button variant="primary" text="Place Order" />
-            <app-button variant="secondary" text="Cancel Order" />
-            <app-button variant="success" text="Buy Stock" />
-            <app-button variant="danger" text="Sell Stock" />
-            <app-button variant="warning" text="Review Risk" />
-            <app-button variant="outline" text="Reset Order" />
-
-            <app-button variant="primary" text="With Icon">
-                <svg button-icon xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-apple" viewBox="0 0 16 16">
-                    <path
-                        d="M11.182.008C11.148-.03 9.923.023 8.857 1.18c-1.066 1.156-.902 2.482-.878 2.516s1.52.087 2.475-1.258.762-2.391.728-2.43m3.314 11.733c-.048-.096-2.325-1.234-2.113-3.422s1.675-2.789 1.698-2.854-.597-.79-1.254-1.157a3.7 3.7 0 0 0-1.563-.434c-.108-.003-.483-.095-1.254.116-.508.139-1.653.589-1.968.607-.316.018-1.256-.522-2.267-.665-.647-.125-1.333.131-1.824.328-.49.196-1.422.754-2.074 2.237-.652 1.482-.311 3.83-.067 4.56s.625 1.924 1.273 2.796c.576.984 1.34 1.667 1.659 1.899s1.219.386 1.843.067c.502-.308 1.408-.485 1.766-.472.357.013 1.061.154 1.782.539.571.197 1.111.115 1.652-.105.541-.221 1.324-1.059 2.238-2.758q.52-1.185.473-1.282" />
-                    <path
-                        d="M11.182.008C11.148-.03 9.923.023 8.857 1.18c-1.066 1.156-.902 2.482-.878 2.516s1.52.087 2.475-1.258.762-2.391.728-2.43m3.314 11.733c-.048-.096-2.325-1.234-2.113-3.422s1.675-2.789 1.698-2.854-.597-.79-1.254-1.157a3.7 3.7 0 0 0-1.563-.434c-.108-.003-.483-.095-1.254.116-.508.139-1.653.589-1.968.607-.316.018-1.256-.522-2.267-.665-.647-.125-1.333.131-1.824.328-.49.196-1.422.754-2.074 2.237-.652 1.482-.311 3.83-.067 4.56s.625 1.924 1.273 2.796c.576.984 1.34 1.667 1.659 1.899s1.219.386 1.843.067c.502-.308 1.408-.485 1.766-.472.357.013 1.061.154 1.782.539.571.197 1.111.115 1.652-.105.541-.221 1.324-1.059 2.238-2.758q.52-1.185.473-1.282" />
-                </svg>
-            </app-button>
-
-            <app-button variant="secondary" iconPosition="right" text="With Icon on right">
-                <svg button-icon xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-chevron-down" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
-                </svg>
-            </app-button>
-
-
-        </div>
-
-        <br>
-
-        <app-button variant="primary" size="small" text="Small" /> &nbsp;
-        <app-button variant="primary" size="medium" text="Medium (default)" /> &nbsp;
-        <app-button variant="primary" size="large" text="Large" /> &nbsp;
-
-        <app-button variant="secondary" size="small" text="Small + icon">
-            <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd"
-                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
-            </svg>
-        </app-button> &nbsp;
-        <app-button variant="secondary" size="large" text="Large + icon">
-            <svg button-icon xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd"
-                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
-            </svg>
-        </app-button> &nbsp;
-
-        <app-button variant="outline" text="Fixed 220x60" width="220px" height="60px" /> &nbsp;
-
-        <app-button variant="danger" text="✕" ariaLabel="Cancel order" width="44px" height="44px" /> &nbsp;
-
-        <app-button variant="primary" text="Disabled" [disabled]="true" />
-
-        <!-- =========================
-             LOADING STATES SHOWCASE
-         ========================= -->
-        <h4 class="heading-md" style="margin-top: 32px; margin-bottom: 16px;">Loading States</h4>
-
-        <div class="button-group">
-            <app-button variant="primary" text="Placing Order..." [isLoading]="true" />
-            <app-button variant="secondary" text="Syncing Data..." [isLoading]="true" />
-            <app-button variant="success" text="Processing..." [isLoading]="true" />
-            <app-button variant="outline" text="Connecting..." [isLoading]="true" />
-        </div>
-
-        <br>
-
-        <app-button variant="primary" size="small" text="Small Loading" [isLoading]="true" /> &nbsp;
-        <app-button variant="primary" size="medium" text="Medium Loading" [isLoading]="true" /> &nbsp;
-        <app-button variant="primary" size="large" text="Large Loading" [isLoading]="true" /> &nbsp;
-
-        <br><br>
-
-        <app-button variant="danger" text="Disabled & Loading" [disabled]="true" [isLoading]="true" />
-
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Input Showcase
-        </h3>
-
-        <form class="input-group" [formGroup]="inputDemoForm" novalidate>
-            <app-input label="Email">
-                <input appInput required type="email" placeholder="Email address" formControlName="email">
-            </app-input>
-
-            <app-input [reserveMessageSpace]="false">
-                <input appInput type="text" placeholder="Search">
-            </app-input>
-
-            <app-input [reserveMessageSpace]="true">
-                <input appInput type="text" placeholder="Optional field">
-            </app-input>
-
-            <app-input label="Order Notes" fullWidth>
-                <textarea appInput appInputFullWidth required rows="4" formControlName="notes"
-                    placeholder="Write order notes"></textarea>
-            </app-input>
-
-            <app-input label="Username" [errorMessages]="usernameErrorMessages">
-                <input appInput required type="text" placeholder="Choose a username" formControlName="username">
-            </app-input>
-        </form>
-
-        <button type="button" (click)="submitInputDemo()">Submit (reveal touched-mode errors above)</button>
-
-        <app-input label="Always-validate mode"
-            helperText="This one shows its error immediately, unlike the fields above">
-            <input appInput appInputValidationMode="always" required type="text" placeholder="Try leaving this empty"
-                [formControl]="alwaysValidateControl">
-        </app-input>
-
-        <app-input label="Force-invalid override"
-            errorText="Forced invalid via appInputInvalid, ignoring the real value">
-            <input appInput appInputInvalid type="text" value="This value is actually fine">
-        </app-input>
-
-        <app-input label="Errors suppressed" [showErrors]="false"
-            helperText="Invalid underneath, but showErrors is false so nothing red ever shows">
-            <input appInput appInputValidationMode="always" required type="text"
-                placeholder="Also try leaving this empty">
-        </app-input>
-
-        <app-input label="Disabled">
-            <input appInput type="text" value="Can't edit this" disabled>
-        </app-input>
-
-        <app-input label="Read-only">
-            <input appInput type="text" value="REF-2026-04471" readonly>
-        </app-input>
-
-        <app-input label="Small">
-            <input appInput appInputSize="small" type="text" placeholder="Small input">
-        </app-input>
-
-        <app-input label="Medium (default)">
-            <input appInput appInputSize="medium" type="text" placeholder="Medium input">
-        </app-input>
-
-        <app-input label="Large">
-            <input appInput appInputSize="large" type="text" placeholder="Large input">
-        </app-input>
-
-        <hr style="margin: 2rem 0; opacity: 0.2;">
-
-        <h3 class="heading-md">
-            Icon Layout Scenarios
-        </h3>
-
-        <app-input label="Prefix Only (Medium)">
-            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input appInput type="text" placeholder="Search with prefix">
-        </app-input>
-
-        <app-input label="Suffix Only (Medium)">
-            <svg suffix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-            </svg>
-            <input appInput type="text" placeholder="User icon at suffix">
-        </app-input>
-
-        <app-input label="Both Prefix & Suffix (Medium)">
-            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="16" x="2" y="4" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
-            <svg suffix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-            </svg>
-            <input appInput type="email" placeholder="Email with status check">
-        </app-input>
-
-        <app-input label="Small Input with Prefix">
-            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input appInput appInputSize="small" type="text" placeholder="Tighter prefix padding">
-        </app-input>
-
-        <app-input label="Small Input with Suffix">
-            <svg suffix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2v20" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-            <input appInput appInputSize="small" type="text" placeholder="Tighter suffix padding">
-        </app-input>
-
-        <app-input label="Large Input with Both Icons">
-            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="16" x="2" y="4" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
-            <svg suffix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-            <input appInput appInputSize="large" type="text" placeholder="Large padding test">
-        </app-input>
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Status Badges
-        </h3>
-
-        <div class="badge-group">
-            <app-badge color="primary" text="OPEN" />
-            <app-badge color="success" text="FILLED" />
-            <app-badge color="danger" text="CANCELLED" />
-            <app-badge color="warning" text="PENDING" />
-            <app-badge color="accent" text="NEW FEATURE" />
-        </div>
-
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Segmented Control</h3>
-
-        <div class="badge-group" style="flex-direction: column; align-items: flex-start; gap: 24px;">
-
-            <app-segmented-control #planComponent [options]="planOptions" label="Billing cycle" size="small"
-                [required]="true" errorMessage="Please choose a billing cycle." [formControl]="planControl" />
-            <pre>selected: {{ plan() }}</pre>
-
-            <app-segmented-control size="large" [options]="viewOptions" label="View (has a default, can't be cleared)"
-                [formControl]="viewControl" />
-            <pre>selected: {{ view() }}</pre>
-
-            <button type="button" (click)="onSubmit()">Submit</button>
-            @if (submitted) {
-            <p>Submitted — if billing cycle is empty above, you'll see the error now.</p>
-            }
-
-        </div>
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Portfolio Table Preview
-        </h3>
-
-        <table class="demo-table">
-
-            <thead>
-                <tr>
-                    <th>Stock</th>
-                    <th>Quantity</th>
-                    <th>Avg Price</th>
-                    <th>P&amp;L</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                <tr>
-                    <td>RELIANCE</td>
-                    <td>150</td>
-                    <td>₹2,500</td>
-                    <td class="badge-profit">
-                        +₹12,500
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>TCS</td>
-                    <td>75</td>
-                    <td>₹3,850</td>
-                    <td class="badge-loss">
-                        -₹4,200
-                    </td>
-                </tr>
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Table Showcase</h3>
-
-        <div class="demo-row">
-            <p class="text-muted">1. Custom cell template (P&amp;L) + pagination</p>
-            <app-table [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey"
-                [pageSizeOptions]="[2, 5, 10]" [pageSize]="2">
-                <ng-template tableCell="pnl" let-value let-row="row">
-                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
-                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
-                    </span>
-                </ng-template>
-            </app-table>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">2. Pagination disabled</p>
-            <app-table [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey"
-                [paginated]="false">
-                <ng-template tableCell="pnl" let-value>
-                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
-                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
-                    </span>
-                </ng-template>
-            </app-table>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">3. Empty data — falls back to app-empty-state</p>
-            <app-table [columns]="portfolioColumns" [data]="[]" emptyText="No positions yet"
-                emptySubtext="Place a trade to see it here."></app-table>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">4. Sizes — small/medium/large row density, pagination always small</p>
-            <app-table size="small" [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey"
-                [pageSize]="2">
-                <ng-template tableCell="pnl" let-value>
-                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
-                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
-                    </span>
-                </ng-template>
-            </app-table>
-        </div>
-
-        <!-- =========================
-         NEW LOADER SCENARIOS 
-    ========================= -->
-        <div class="demo-row">
-            <p class="text-muted">5. Loading state (Overlay with existing data)</p>
-            <app-table [columns]="portfolioColumns" [data]="portfolioData" [rowKey]="portfolioRowKey" [isLoading]="true"
-                [paginated]="false">
-                <ng-template tableCell="pnl" let-value>
-                    <span [class.badge-profit]="value >= 0" [class.badge-loss]="value < 0">
-                        {{ value >= 0 ? '+' : '' }}₹{{ value | number }}
-                    </span>
-                </ng-template>
-            </app-table>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">6. Loading state (Empty data during initial fetch)</p>
-            <app-table [columns]="portfolioColumns" [data]="[]" [isLoading]="true" emptyText="No positions yet"
-                emptySubtext="Place a trade to see it here."></app-table>
-        </div>
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Shadow Showcase
-        </h3>
-
-        <div class="shadow-grid">
-
-            <div class="card no-shadow">
-                No Shadow
-            </div>
-
-            <div class="card">
-                Default Shadow
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="demo-section">
-
-        <h3 class="heading-md">
-            Accent Color Showcase
-        </h3>
-
-        <p class="text-body">
-            Learn more about our
-            <a href="#" class="accent-link-demo">
-                portfolio analytics
-            </a>
-        </p>
-
-        <br>
-
-        <div class="accent-tabs">
-
-            <button class="tab-button">
-                Dashboard
-            </button>
-
-            <button class="tab-button active-tab">
-                Analytics
-            </button>
-
-            <button class="tab-button">
-                Orders
-            </button>
-
-        </div>
-
-        <br>
-
-        <div class="accent-badge">
-            New Feature
-        </div>
-
-        <br>
-
-        <div class="notification-demo">
-
-            <span class="notification-text">
-                Price Alert Enabled
-            </span>
-
-            <span class="notification-dot"></span>
-
-        </div>
-
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">
-            Dialog Showcase
-        </h3>
-
-        <div class="button-group">
-            <app-button variant="primary" text="Header + Body + Footer" (click)="openBasicDialog()" />
-            <app-button variant="secondary" text="Body only" (click)="openBodyOnlyDialog()" />
-            <app-button variant="secondary" text="Header only" (click)="openHeaderOnlyDialog()" />
-            <app-button variant="danger" text="Forced acknowledgment" (click)="openForcedDialog()" />
-        </div>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">
-            Empty state
-        </h3>
-        <app-empty-state text="No open positions yet" subtext="Your positions will show up here once you place a trade."
-            actionLabel="Go to Login" (actionClick)="router.navigate(['/'])">
-            <span icon>📈</span>
-        </app-empty-state>
-        <app-empty-state text="No open positions yet"
-            subtext="Your positions will show up here once you place a trade.">
-            <span icon>📈</span>
-        </app-empty-state>
-        <app-empty-state text="No open positions yet"
-            subtext="Your positions will show up here once you place a trade.">
-        </app-empty-state>
-        <app-empty-state text="No open positions yet">
-            <span icon>📈</span>
-        </app-empty-state>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Toggle button Showcase</h3>
-
-        <div class="demo-row">
-            <p class="text-muted">1. Standalone — [formControl], dark/light mode with both icons</p>
-            <app-toggle [formControl]="darkModeControl" label="Dark mode" variant="accent" offVariant="warning">
-                <svg toggleOnIcon viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-                <svg toggleOffIcon viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="12" r="4" />
-                    <path
-                        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </app-toggle>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">2. Inside a FormGroup — formControlName</p>
-            <form [formGroup]="settingsForm" class="demo-form">
-                <app-toggle formControlName="emailAlerts" label="Email alerts" variant="primary"></app-toggle>
-                <app-toggle formControlName="smsAlerts" label="SMS alerts" variant="primary"></app-toggle>
-                <app-toggle formControlName="autoInvest" label="Auto-invest round-ups" variant="success"></app-toggle>
-            </form>
-            <p class="text-muted">{{ settingsSummary }}</p>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">3. No label, no icons</p>
-            <app-toggle [formControl]="darkModeControl" variant="accent"></app-toggle>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">4. Disabled, checked — plan-gated feature</p>
-            <app-toggle [formControl]="lockedFeatureControl" label="Premium analytics" variant="secondary"></app-toggle>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">5. Disabled toggled at runtime</p>
-            <app-toggle [formControl]="riskModeControl" label="High-risk trading mode" variant="danger"></app-toggle>
-            <button type="button" (click)="toggleLock()">
-                {{ riskModeLocked ? 'Unlock control' : 'Lock control' }}
-            </button>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">6. Sizes</p>
-            <div class="demo-inline">
-                <app-toggle [formControl]="darkModeControl" size="small" label="Small" variant="primary"></app-toggle>
-                <app-toggle [formControl]="darkModeControl" size="medium" label="Medium" variant="primary"></app-toggle>
-                <app-toggle [formControl]="darkModeControl" size="large" label="Large" variant="primary"></app-toggle>
-            </div>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">7. ON-state variants</p>
-            <div class="demo-inline">
-                <app-toggle [formControl]="darkModeControl" variant="primary" label="Primary"></app-toggle>
-                <app-toggle [formControl]="darkModeControl" variant="secondary" label="Secondary"></app-toggle>
-                <app-toggle [formControl]="darkModeControl" variant="accent" label="Accent"></app-toggle>
-                <app-toggle [formControl]="darkModeControl" variant="success" label="Success"></app-toggle>
-                <app-toggle [formControl]="darkModeControl" variant="danger" label="Danger"></app-toggle>
-                <app-toggle [formControl]="darkModeControl" variant="warning" label="Warning"></app-toggle>
-            </div>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">8. OFF-state variants (explicit offVariant, not the default gray)</p>
-            <div class="demo-inline">
-                <app-toggle [formControl]="riskModeControl" variant="primary" offVariant="secondary"
-                    label="Off = secondary"></app-toggle>
-                <app-toggle [formControl]="riskModeControl" variant="primary" offVariant="danger"
-                    label="Off = danger"></app-toggle>
-                <app-toggle [formControl]="riskModeControl" variant="primary" offVariant="warning"
-                    label="Off = warning"></app-toggle>
-            </div>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">9. Default OFF color (no offVariant — always neutral gray)</p>
-            <app-toggle [formControl]="riskModeControl" variant="success" label="Autopilot"></app-toggle>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">10. Projected &lt;img&gt; icons on both sides</p>
-            <app-toggle [formControl]="darkModeControl" label="Notifications" variant="accent">
-                <img toggleOnIcon src="https://api.iconify.design/lucide:bell.svg" alt="" />
-                <img toggleOffIcon src="https://api.iconify.design/lucide:bell-off.svg" alt="" />
-            </app-toggle>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">11. Only the ON icon provided</p>
-            <app-toggle [formControl]="darkModeControl" label="Beta features" variant="accent">
-                <svg toggleOnIcon viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2l2.4 7.2H22l-6 4.4 2.4 7.2-6.4-4.6L5.6 20.8 8 13.6l-6-4.4h7.6z" />
-                </svg>
-            </app-toggle>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">12. Text alignment</p>
-            <app-toggle [formControl]="darkModeControl" label="Checking alignment" labelPosition="right"></app-toggle>
-        </div>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">
-            Price Indicator Showcase
-        </h3>
-
-        <p class="text-muted">Positive</p>
-        <app-price-indicator [value]="12450" [percentage]="1.12" /> <br>
-
-        <p class="text-muted">Negative</p>
-        <app-price-indicator [value]="-4200" [percentage]="-2.34" /> <br>
-
-        <p class="text-muted">Zero (neutral, no arrow)</p>
-        <app-price-indicator [value]="0" /> <br>
-
-        <p class="text-muted">Zero with percentage still passed — should stay neutral, no arrow, percentage still shown
-        </p>
-        <app-price-indicator [value]="0" [percentage]="0" /> <br>
-
-        <p class="text-muted">No percentage passed at all — no bracket, even though showPercentage defaults true</p>
-        <app-price-indicator [value]="12450" /> <br>
-
-        <p class="text-muted">Percentage passed but showPercentage false — bracket hidden</p>
-        <app-price-indicator [value]="12450" [percentage]="1.12" [showPercentage]="false" /> <br>
-
-        <p class="text-muted">Positive, arrow hidden</p>
-        <app-price-indicator [value]="12450" [percentage]="1.12" [showArrow]="false" /> <br>
-
-        <p class="text-muted">Negative, arrow hidden</p>
-        <app-price-indicator [value]="-4200" [percentage]="-2.34" [showArrow]="false" /> <br>
-
-        <p class="text-muted">USD instead of default INR</p>
-        <app-price-indicator [value]="3206546544.50" [percentage]="0.85" currency="USD" locale="en-US" /> <br>
-
-        <p class="text-muted">Negative USD</p>
-        <app-price-indicator [value]="-18.25" [percentage]="-1.4" currency="USD" locale="en-US" /> <br>
-
-        <p class="text-muted">2 decimal places on value (e.g. cents), 0 on percentage</p>
-        <app-price-indicator [value]="245.75" [percentage]="3" [valueDecimals]="2" [percentageDecimals]="0" /> <br>
-
-        <p class="text-muted">Small value near zero, with decimals — confirms sign logic still works</p>
-        <app-price-indicator [value]="-0.05" [percentage]="-0.02" [valueDecimals]="2" /> <br>
-
-        <p class="text-muted">Large value (lakh grouping)</p>
-        <app-price-indicator [value]="1250000" [percentage]="4.2" /> <br>
-
-        <p class="text-muted">Table-style: arrow off, compact rows</p>
-        <div class="price-indicator-table-demo">
-            <app-price-indicator [value]="12500" [percentage]="5.1" [showArrow]="false" />
-            <app-price-indicator [value]="-4200" [percentage]="-1.8" [showArrow]="false" />
-            <app-price-indicator [value]="875" [percentage]="0.3" [showArrow]="false" />
-            <app-price-indicator [value]="0" [percentage]="0" [showArrow]="false" />
-        </div>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Dropdown Showcase</h3>
-
-        <div class="demo-row">
-            <p class="text-muted">1. Standalone, no placeholder — auto-selects first enabled option</p>
-            <app-dropdown label="Order type" [formControl]="orderTypeControl"
-                [options]="orderTypeOptions"></app-dropdown>
-            <p class="text-muted">Value: {{ orderTypeControl.value }}</p>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">2. Placeholder mode — starts empty until user picks</p>
-            <app-dropdown label="Sort by" placeholder="Choose a sort order" [formControl]="sortByControl"
-                [options]="sortByOptions"></app-dropdown>
-            <p class="text-muted">Value: {{ sortByControl.value ?? 'null' }}</p>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">3. Required, inside a FormGroup — submit to trigger the error</p>
-            <form [formGroup]="tradePrefsForm" class="demo-form">
-                <app-dropdown label="Exchange" [required]="true" formControlName="exchange"
-                    placeholder="Select an exchange" [options]="exchangeOptions"></app-dropdown>
-            </form>
-            <button type="button" (click)="submitTradePrefs()">Submit</button>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">4. Options with icons (visible in trigger once selected)</p>
-            <app-dropdown label="Currency" placeholder="Select a currency" [formControl]="currencyControl"
-                [options]="currencyOptions"></app-dropdown>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">5. Disabled, pre-set from the form model</p>
-            <app-dropdown label="Primary exchange" [formControl]="lockedExchangeControl"
-                [options]="exchangeOptions"></app-dropdown>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">6. Disabled toggled at runtime</p>
-            <app-dropdown label="Watchlist sort" placeholder="Pick a sort" [formControl]="runtimeLockControl"
-                [options]="sortByOptions"></app-dropdown>
-            <button type="button" (click)="toggleDropdownLock()">
-                {{ runtimeLockControlLocked ? 'Unlock control' : 'Lock control' }}
-            </button>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">7. fullWidth</p>
-            <app-dropdown label="Watchlist category" [required]="true" fullWidth placeholder="Select a category"
-                [formControl]="watchlistCategoryControl" [options]="watchlistCategoryOptions"></app-dropdown>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">
-                8. Keyboard nav check — focus this, then try Arrow Up/Down, Home, End, and typing "L" or "S".
-                "Stop" is disabled and should be skipped entirely.
-            </p>
-            <app-dropdown label="Order type (keyboard test)" [formControl]="orderTypeControl"
-                [options]="orderTypeOptions"></app-dropdown>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">9. Sizes — small is meant for tight spots like pagination controls</p>
-            <div class="demo-inline">
-                <app-dropdown size="small" label="Small" [formControl]="pageSizeControl"
-                    [options]="pageSizeOptions"></app-dropdown>
-                <app-dropdown size="medium" label="Medium" [formControl]="pageSizeControl"
-                    [options]="pageSizeOptions"></app-dropdown>
-                <app-dropdown size="large" label="Large (default)" [formControl]="pageSizeControl"
-                    [options]="pageSizeOptions"></app-dropdown>
-            </div>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">
-                10. Searchable — type to filter, or just scroll/arrow-key through the full list.
-                Try opening it and pressing an arrow key without typing anything first.
-            </p>
-            <app-dropdown label="Stock" searchable searchPlaceholder="Search stocks..." [formControl]="stockControl"
-                [options]="stockOptions"></app-dropdown>
-            <p class="text-muted">Value: {{ stockControl.value ?? 'null' }}</p>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">11. Loading state (Static) — useful when initial data is being fetched and you want to
-                block interaction</p>
-            <app-dropdown label="Bank account (Loading)" [loading]="true" placeholder="Select an account"
-                [formControl]="loadingStaticControl" [options]="[]"></app-dropdown>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">12. Loading state (Dynamic) — click the button to simulate an API fetch</p>
-            <app-dropdown label="Server Region" [loading]="isDynamicLoading()" placeholder="Select a region"
-                [formControl]="dynamicServerControl" [options]="dynamicServerOptions()"></app-dropdown>
-            <button type="button" (click)="fetchServers()" [disabled]="isDynamicLoading()">
-                {{ isDynamicLoading() ? 'Fetching...' : 'Fetch Servers' }}
-            </button>
-            <p class="text-muted">Value: {{ dynamicServerControl.value ?? 'null' }}</p>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">13. Lazy Panel Fetch — loads data inside the panel exactly when you click to open it
-            </p>
-            <app-dropdown label="Department (Lazy Load)" placeholder="Open me to fetch" [formControl]="lazyFetchControl"
-                [options]="lazyFetchOptions()" [panelLoading]="isLazyPanelLoading()"
-                (opened)="fetchLazyOptions()"></app-dropdown>
-            <p class="text-muted">Value: {{ lazyFetchControl.value ?? 'null' }}</p>
-        </div>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Tooltip Showcase</h3>
-
-        <div class="demo-row">
-            <p class="text-muted">1. Text shorthand, icon trigger, default position (top)</p>
-            <app-tooltip text="Total value of all your open positions">
-                <span>ⓘ</span>
-            </app-tooltip>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">2. Rich content — header + paragraph + image via tooltipContent</p>
-            <app-tooltip position="right">
-                <span>ⓘ</span>
-                <div tooltipContent>
-                    <h4>Margin Requirement</h4>
-                    <p>Minimum capital needed to open and hold this position.</p>
-                    <img src="tradesim_logo_light_mode.png" alt="" width="60" />
-                </div>
-            </app-tooltip>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">3. All four positions</p>
-            <div class="demo-inline">
-                <app-tooltip text="Appears above" position="top"><span>Top</span></app-tooltip>
-                <app-tooltip text="Appears to the right" position="right"><span>Right</span></app-tooltip>
-                <app-tooltip text="Appears below" position="bottom"><span>Bottom</span></app-tooltip>
-                <app-tooltip text="Appears to the left" position="left"><span>Left</span></app-tooltip>
-            </div>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">4. Edge-of-viewport flip check — resize window narrow, or check on mobile width</p>
-            <div class="demo-edge-push">
-                <app-tooltip text="This should flip to the left if there's no room on the right" position="right">
-                    <span>ⓘ Near edge</span>
-                </app-tooltip>
-            </div>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">5. Trigger wrapping a plain word, not an icon</p>
-            <p class="text-body">
-                Your <app-tooltip
-                    text="Realized + unrealized profit and loss, before fees"><span>P&amp;L</span></app-tooltip> updates
-                every few seconds.
-            </p>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">6. Link pattern — tooltip on the adjacent icon, link stays untouched</p>
-            <p class="text-body">
-                <app-tooltip text="Opens in the same tab, no confirmation needed">
-                    <span><a href="#" class="accent-link-demo">View margin policy</a></span>
-                </app-tooltip>
-            </p>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">
-                7. Manual checks: (a) Tab to any ⓘ above — tooltip should appear immediately, no delay,
-                and disappear immediately on tab-away. (b) Hover any ⓘ and press Escape — it should close.
-                (c) Click/tap any ⓘ — it should toggle open, then tap again to close.
-            </p>
-        </div>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Toast Showcase</h3>
-
-        <div class="demo-row">
-            <p class="text-muted">1. Variants — each uses its own default duration</p>
-            <div class="button-group">
-                <app-button variant="success" text="Success"
-                    (click)="toastService.success('Order placed successfully')" />
-                <app-button variant="danger" text="Danger"
-                    (click)="toastService.danger('Order failed — insufficient shares')" />
-                <app-button variant="warning" text="Warning"
-                    (click)="toastService.warning('Price moved 5% since you loaded this page')" />
-                <app-button variant="secondary" text="Info"
-                    (click)="toastService.info('Market closes in 15 minutes')" />
-            </div>
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">2. Custom duration override — 10 seconds instead of the default</p>
-            <app-button variant="outline" text="10s toast"
-                (click)="toastService.info('This one sticks around for 10 seconds', { duration: 10000 })" />
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">3. Action slot — Undo (genuine reversal, check console)</p>
-            <app-button variant="danger" text="Revoke manager" (click)="fireUndoDemo()" />
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">4. Action slot — Reorder (new order, not a true undo, check console)</p>
-            <app-button variant="secondary" text="Cancel order" (click)="fireReorderDemo()" />
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">5. Stacking cap — fires 6 at once, only 4 visible, rest queue in behind</p>
-            <app-button variant="outline" text="Fire 6 toasts" (click)="fireStackTest()" />
-        </div>
-
-        <div class="demo-row">
-            <p class="text-muted">6. Toast position</p>
-            <app-button variant="secondary" text="Toast position" (click)="fireToastPosition()" />
-        </div>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Pagination — Basic usage</h3>
-        <p class="text-muted">145 items, default page sizes. Test Prev/Next, typing a page number, Enter, blur, and the
-            page-size dropdown.</p>
-        <app-pagination [totalItems]="demoBasicTotalItems()" [(currentPage)]="demoBasicCurrentPage"
-            [(pageSize)]="demoBasicPageSize">
-        </app-pagination>
-        <p class="text-muted">currentPage: {{ demoBasicCurrentPage() }} · pageSize: {{ demoBasicPageSize() }}</p>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Pagination — Single page (fully disabled)</h3>
-        <p class="text-muted">8 items with a page size of 10 → only 1 total page. Component should render fully but with
-            both buttons and input disabled, not hidden.</p>
-        <app-pagination [totalItems]="demoSinglePageTotalItems()" [(currentPage)]="demoSinglePageCurrentPage"
-            [(pageSize)]="demoSinglePageSize">
-        </app-pagination>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Pagination — Custom page-size options</h3>
-        <p class="text-muted">Passing a custom [5, 20, 40] array instead of the default sizes.</p>
-        <app-pagination [totalItems]="demoCustomTotalItems()" [pageSizeOptions]="[5, 20, 40]"
-            [(currentPage)]="demoCustomCurrentPage" [(pageSize)]="demoCustomPageSize">
-        </app-pagination>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Pagination — Large page count (multi-digit typing)</h3>
-        <p class="text-muted">999 items, page size 10 → 100 pages. Try typing "100", then try typing "1000" — the extra
-            "0" keystroke should be rejected with a shake.</p>
-        <app-pagination [totalItems]="demoLargeTotalItems()" [(currentPage)]="demoLargeCurrentPage"
-            [(pageSize)]="demoLargePageSize">
-        </app-pagination>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Pagination — sizes</h3>
-        <app-pagination [totalItems]="145" size="small" /> <br>
-        <app-pagination [totalItems]="145" /> <br>
-        <app-pagination [totalItems]="145" size="large" />
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">Pagination — Out-of-bounds recovery</h3>
-        <p class="text-muted">Sit on a high page, then shrink the dataset (simulating a filter/search) and confirm the
-            current page auto-clamps to the new last page instead of breaking.</p>
-        <app-pagination [totalItems]="demoRecoveryTotalItems()" [(currentPage)]="demoRecoveryCurrentPage"
-            [(pageSize)]="demoRecoveryPageSize">
-        </app-pagination>
-        <div class="demo-actions">
-            <button type="button" (click)="goToHighRecoveryPage()">Jump to page 9</button>
-            <button type="button" (click)="shrinkRecoveryData()">Shrink to 12 items (simulate filter)</button>
-            <button type="button" (click)="resetRecoveryData()">Reset to 97 items</button>
-        </div>
-        <p class="text-muted">currentPage: {{ demoRecoveryCurrentPage() }} of {{ demoRecoveryTotalItems() }} items</p>
-    </div>
-
-    <div class="card-test">
-        <h2 class="heading-lg">Card Playground</h2>
-
-        <section class="card-test__section">
-            <h2 class="heading-md">Variants</h2>
-            <div class="card-test__grid">
-                @for (v of variants; track v) {
-                <app-card [variant]="v">
-                    <p class="text-body">variant: {{ v }}</p>
-                </app-card>
-                <br>
-                }
             </div>
         </section>
 
-        <section class="card-test__section">
-            <h2 class="heading-md">Borders (default variant)</h2>
-            <div class="card-test__grid">
-                @for (b of borders; track b) {
-                <app-card [border]="b">
-                    <p class="text-body">border: {{ b }}</p>
-                </app-card>
-                <br>
-                }
-            </div>
-        </section>
-
-        <section class="card-test__section">
-            <h2 class="heading-md">Misuse check: border + non-default variant</h2>
-            <div class="card-test__grid">
-                <app-card variant="success" border="danger">
-                    <p class="text-body">
-                        variant="success" + border="danger" — border should be dropped,
-                        check console for warning
-                    </p>
-                </app-card>
-            </div>
-        </section>
-
-        <section class="card-test__section">
-            <h2 class="heading-md">Hoverable</h2>
-            <div class="card-test__grid">
-                <app-card [hoverable]="false">
-                    <p class="text-body">hoverable: false</p>
-                </app-card>
-                <br>
-                <app-card [hoverable]="true">
-                    <p class="text-body">hoverable: true — hover over me</p>
-                </app-card>
-            </div>
-        </section>
-
-        <section class="card-test__section">
-            <h2 class="heading-md">Clickable</h2>
-            <div class="card-test__grid">
-                <app-card>
-                    <p class="text-body">no onCardClick — should not look clickable, no focus ring</p>
-                </app-card>
-                <br>
-
-                <app-card [onCardClick]="handleCardClick">
-                    <p class="text-body">onCardClick only — cursor pointer, focusable, no lift on hover</p>
-                </app-card>
-                <br>
-
-                <app-card [hoverable]="true" [onCardClick]="handleCardClick">
-                    <p class="text-body">onCardClick + hoverable — both effects together</p>
-                </app-card>
-                <br>
-            </div>
-            <p class="text-muted">Clicks registered: {{ clickCount() }}</p>
-            <p class="text-muted">
-                Tab to a clickable card and press Enter or Space to confirm keyboard activation works too.
-            </p>
-        </section>
-
-        <section class="card-test__section">
-            <h2 class="heading-md">Loading State</h2>
-            <div class="card-test__grid">
-                <app-card [isLoading]="true">
-                    <p class="text-body">isLoading: true — content has overlay, loader centered</p>
-                </app-card>
-                <br>
-
-                <app-card [isLoading]="true" [hoverable]="true" [onCardClick]="handleCardClick">
-                    <p class="text-body">isLoading with onCardClick — interactions and focus are disabled</p>
-                </app-card>
-            </div>
-        </section>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">
-            Time Ago Pipe Showcase
-        </h3>
-
-        <p class="text-muted">Less than 30 seconds</p>
-        <p class="font-medium">{{ justNow | timeAgo }}</p> <br>
-
-        <p class="text-muted">Minutes ago</p>
-        <p class="font-medium">{{ fiveMinsAgo | timeAgo }}</p> <br>
-
-        <p class="text-muted">Hours ago</p>
-        <p class="font-medium">{{ twoHoursAgo | timeAgo }}</p> <br>
-
-        <p class="text-muted">Days ago</p>
-        <p class="font-medium">{{ threeDaysAgo | timeAgo }}</p> <br>
-
-        <p class="text-muted">Hardcoded past date (e.g., an old trade execution)</p>
-        <p class="font-medium">{{ '2025-05-14T10:30:00Z' | timeAgo }}</p> <br>
-
-        <p class="text-muted">Null handling (Should render nothing/empty space)</p>
-        <p class="font-medium">Result: {{ null | timeAgo }}</p> <br>
-
-        <p class="text-muted">Invalid string handling (Should render nothing/empty space)</p>
-        <p class="font-medium">Result: {{ 'random-invalid-string' | timeAgo }}</p> <br>
-    </div>
-
-    <div class="demo-section">
-        <h3 class="heading-md">
-            Global Error Handler Showcase
-        </h3>
-        <app-button variant="danger" text="Crash App" (click)="triggerCrash()" />
-    </div>
+    </main>
 </div>
