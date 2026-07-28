@@ -1185,6 +1185,137 @@
             </div>
         </section>
 
+        <section id="number-stepper" class="doc-section">
+            <div class="section-header">
+                <h2>Number Stepper</h2>
+                <p>A numeric input control with increment and decrement buttons.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem; width: 100%; align-items: center;">
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Basic ({{
+                                stepperBasic }})</span>
+                            <app-number-stepper [(value)]="stepperBasic">
+                            </app-number-stepper>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Min 0 / Max
+                                10</span>
+                            <app-number-stepper [min]="0" [max]="10" variant="secondary" [(value)]="stepperLimited">
+                            </app-number-stepper>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Large &
+                                Outline</span>
+                            <app-number-stepper size="large" variant="outline" [(value)]="stepperLarge">
+                            </app-number-stepper>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Mixed
+                                Variants</span>
+                            <app-number-stepper variant="danger" secondaryVariant="success" [(value)]="stepperMixed">
+                            </app-number-stepper>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-number-stepper [(value)]=\'val\'></app-number-stepper>')">Copy</button>
+                            <pre><code>&lt;app-number-stepper 
+  [(value)]="stepperBasic"&gt;
+&lt;/app-number-stepper&gt;
+
+&lt;app-number-stepper 
+  [min]="0" 
+  [max]="10" 
+  variant="secondary"
+  [(value)]="stepperLimited"&gt;
+&lt;/app-number-stepper&gt;
+
+&lt;app-number-stepper 
+  size="large" 
+  variant="outline"
+  [(value)]="stepperLarge"&gt;
+&lt;/app-number-stepper&gt;
+
+&lt;app-number-stepper 
+  variant="danger" 
+  secondaryVariant="success"
+  [(value)]="stepperMixed"&gt;
+&lt;/app-number-stepper&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Number Stepper Properties <code>&lt;app-number-stepper&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>value</code></td>
+                                    <td><code>ModelSignal&lt;number&gt;</code></td>
+                                    <td><code>0</code></td>
+                                    <td>The current numeric value. Supports two-way binding via <code>[(value)]</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>min</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>0</code></td>
+                                    <td>The minimum allowed value. Disables decrement button when reached.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>max</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>Number.MAX_SAFE_INTEGER</code></td>
+                                    <td>The maximum allowed value. Disables increment button when reached.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the dimensions of the stepper input and buttons.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>StepperVariant</code></td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The color theme applied to the buttons.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>secondaryVariant</code></td>
+                                    <td><code>StepperVariant | null</code></td>
+                                    <td><code>null</code></td>
+                                    <td>Overrides the color of the right (increment) button.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>

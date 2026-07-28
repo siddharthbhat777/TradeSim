@@ -15,6 +15,7 @@ import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/chec
 import { Toggle } from '../shared/components/toggle/toggle';
 import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown';
 import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
+import { NumberStepper } from '../shared/components/number-stepper/number-stepper';
 
 interface DocSection {
   title: string;
@@ -23,7 +24,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -207,6 +208,11 @@ export class TestingPlayground {
     { label: 'Enterprise', value: 'ent' }
   ];
   selectedPlan = 'free';
+
+  stepperBasic = 0;
+  stepperLimited = 5;
+  stepperLarge = 10;
+  stepperMixed = 0;
 
   scrollTo(id: string): void {
     const element = document.getElementById(id);
