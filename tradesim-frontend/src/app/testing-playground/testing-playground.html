@@ -498,6 +498,166 @@
             </div>
         </section>
 
+        <section id="input" class="doc-section">
+            <div class="section-header">
+                <h2>Input</h2>
+                <p>A highly composable form field component combining a structural wrapper with a native input
+                    directive.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; width: 100%;">
+
+                        <app-input label="Email Address" helperText="We will never share your email." [required]="true">
+                            <input appInput type="email" placeholder="e.g. sid@example.com" [(ngModel)]="dummyEmail"
+                                required email />
+                        </app-input>
+
+                        <app-input label="Search Portfolio">
+                            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input appInput type="text" placeholder="Search ticker symbol..." />
+                        </app-input>
+
+                        <app-input label="Investment Amount" errorText="Amount exceeds your buying power.">
+                            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <input appInput type="number" placeholder="0.00" [appInputInvalid]="true" value="50000" />
+                            <span suffix style="font-weight: 600; font-size: 0.85rem;">USD</span>
+                        </app-input>
+
+                        <app-input label="Trade Notes" helperText="Optional notes for your trading journal.">
+                            <textarea appInput placeholder="Why are you taking this trade?" [(ngModel)]="dummyNotes"
+                                required></textarea>
+                        </app-input>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-input label=\'Email\' [required]=\'true\'>\n  <input appInput type=\'email\' />\n</app-input>')">Copy</button>
+                            <pre><code>&lt;app-input label="Email Address" helperText="We will never share your email." [required]="true"&gt;
+  &lt;input appInput type="email" placeholder="e.g. sid@example.com" /&gt;
+&lt;/app-input&gt;
+
+&lt;app-input label="Search Portfolio"&gt;
+  &lt;svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;
+    &lt;circle cx="11" cy="11" r="8"&gt;&lt;/circle&gt;
+    &lt;line x1="21" y1="21" x2="16.65" y2="16.65"&gt;&lt;/line&gt;
+  &lt;/svg&gt;
+  &lt;input appInput type="text" placeholder="Search ticker symbol..." /&gt;
+&lt;/app-input&gt;
+
+&lt;app-input label="Investment Amount" errorText="Amount exceeds your buying power."&gt;
+  &lt;input appInput type="number" [appInputInvalid]="true" value="50000" /&gt;
+  &lt;span suffix&gt;USD&lt;/span&gt;
+&lt;/app-input&gt;
+
+&lt;app-input label="Trade Notes"&gt;
+  &lt;textarea appInput placeholder="Why are you taking this trade?"&gt;&lt;/textarea&gt;
+&lt;/app-input&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Wrapper Properties <code>&lt;app-input&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>The label text associated with the native input.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>helperText</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>Secondary text displayed below the input.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>errorText</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>Explicit error message to display when invalid.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>required</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Renders the required asterisk next to the label.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[prefix]</code> / <code>[suffix]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>ng-content slots for icons or text inside the input boundaries.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Directive Properties <code>[appInput]</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>appInputSize</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the padding and height of the native element.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>appInputInvalid</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the invalid visual state (red border/shadow).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>appInputFullWidth</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Removes the max-width restriction on the input element.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>
