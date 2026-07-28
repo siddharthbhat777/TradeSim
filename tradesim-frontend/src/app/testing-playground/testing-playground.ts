@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Logo } from '../shared/components/logo/logo';
-import { ToastService } from '../shared/components/toast/toast.service'; // Added ToastService import
+import { ToastService } from '../shared/components/toast/toast.service';
 import { Button } from '../shared/components/button/button';
 import { Badge } from '../shared/components/badge/badge';
 import { Card } from '../shared/components/card/card';
@@ -20,13 +20,11 @@ interface DocSection {
   styleUrls: ['./testing-playground.scss']
 })
 export class TestingPlayground {
-  // Inject the ToastService
   private toastService = inject(ToastService);
 
-  // Structured Navigation
   navigation: DocSection[] = [
     {
-      title: 'Foundations',
+      title: 'Foundations & Branding',
       items: [
         { id: 'logo', name: 'Logo' },
         { id: 'colors', name: 'Color Palette' },
@@ -38,21 +36,59 @@ export class TestingPlayground {
       items: [
         { id: 'button', name: 'Button' },
         { id: 'badge', name: 'Badge' },
-        { id: 'card', name: 'Card' },
+        { id: 'card', name: 'Card' }
+      ]
+    },
+    {
+      title: 'Forms & Controls',
+      items: [
+        { id: 'input', name: 'Input' },
+        { id: 'checkbox', name: 'Checkbox' },
+        { id: 'toggle', name: 'Toggle' },
+        { id: 'dropdown', name: 'Dropdown' },
+        { id: 'segmented-control', name: 'Segmented Control' },
+        { id: 'number-stepper', name: 'Number Stepper' }
+      ]
+    },
+    {
+      title: 'Feedback & States',
+      items: [
         { id: 'alert', name: 'Alert' },
+        { id: 'toast', name: 'Toast' },
+        { id: 'empty-state', name: 'Empty State' },
+        { id: 'loaders', name: 'Loaders' }
+      ]
+    },
+    {
+      title: 'Overlays & Popups',
+      items: [
+        { id: 'dialog', name: 'Dialog' },
         { id: 'tooltip', name: 'Tooltip' }
       ]
     },
     {
-      title: 'Form Inputs',
+      title: 'Data Display',
       items: [
-        { id: 'dropdown', name: 'Dropdown' },
-        { id: 'segmented-control', name: 'Segmented Control' }
+        { id: 'table', name: 'Table' },
+        { id: 'pagination', name: 'Pagination' },
+        { id: 'price-indicator', name: 'Price Indicator' }
+      ]
+    },
+    {
+      title: 'Charts & Visualizations',
+      items: [
+        { id: 'pie-chart', name: 'Pie Chart' },
+        { id: 'legend', name: 'Legend' }
+      ]
+    },
+    {
+      title: 'Utilities & Pipes',
+      items: [
+        { id: 'time-ago', name: 'Time Ago Pipe' }
       ]
     }
   ];
 
-  // Replace your current colorGroups array with this one:
   colorGroups = [
     {
       group: 'Background & Surface',
@@ -63,7 +99,7 @@ export class TestingPlayground {
       ]
     },
     {
-      group: 'Borders & Outlines', // Added this new group!
+      group: 'Borders & Outlines',
       tokens: [
         { name: 'Border', variable: '--border' },
         { name: 'Outline BG', variable: '--outline-bg' },
@@ -96,13 +132,10 @@ export class TestingPlayground {
         { name: 'Chart 5', variable: '--chart-5' },
       ]
     }
-    // Notice: The Text group is completely removed from here!
   ];
 
-  // Code Snippets
   logoCodeSnippet = `<app-logo size="large" [showText]="true"></app-logo>`;
 
-  // Actions
   scrollTo(id: string): void {
     const element = document.getElementById(id);
     if (element) {
@@ -114,11 +147,9 @@ export class TestingPlayground {
   async copyCode(code: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(code);
-      // Trigger the toast message on success
       this.toastService.success('Copied to clipboard!', { position: 'bottom-right' });
     } catch (err) {
       console.error('Failed to copy code: ', err);
-      // Fixed: Using .danger() instead of .error()
       this.toastService.danger('Failed to copy code to clipboard', { position: 'bottom-right' });
     }
   }

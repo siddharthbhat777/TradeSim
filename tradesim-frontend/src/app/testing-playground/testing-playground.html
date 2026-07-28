@@ -1,6 +1,5 @@
 <div class="docs-layout">
 
-    <!-- Sidebar -->
     <aside class="docs-sidebar">
         <div class="sidebar-header">
             <app-logo size="small"></app-logo>
@@ -23,14 +22,12 @@
         </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="docs-content">
         <header class="content-header">
             <h1>Component Library</h1>
             <p class="header-subtitle">Interactive documentation, code snippets, and API references.</p>
         </header>
 
-        <!-- COMPONENT: LOGO -->
         <section id="logo" class="doc-section">
             <div class="section-header">
                 <h2>Logo</h2>
@@ -38,7 +35,6 @@
             </div>
 
             <div class="doc-card">
-                <!-- 1. Live Preview -->
                 <div class="doc-card__preview">
                     <app-logo size="large" [showText]="true"></app-logo>
                     <div style="margin-top: 2rem;">
@@ -46,20 +42,17 @@
                     </div>
                 </div>
 
-                <!-- 2. Expandable Code Block (FIXED: Axe-Linter Nested Interactive) -->
                 <details class="doc-card__code-block">
                     <summary class="code-summary">
                         <span>View Source</span>
                     </summary>
                     <div class="code-content">
-                        <!-- Button moved completely out of the summary tag -->
                         <button class="copy-btn" (click)="copyCode(logoCodeSnippet)"
                             aria-label="Copy code snippet">Copy</button>
                         <pre><code>{{ logoCodeSnippet }}</code></pre>
                     </div>
                 </details>
 
-                <!-- 3. API Properties Table -->
                 <div class="doc-card__api">
                     <h3>Properties</h3>
                     <div class="table-container">
@@ -92,7 +85,6 @@
             </div>
         </section>
 
-        <!-- COMPONENT: COLORS -->
         <section id="colors" class="doc-section">
             <div class="section-header">
                 <h2>Color Palette</h2>
@@ -106,7 +98,6 @@
 
                     <div class="color-grid">
                         @for (token of group.tokens; track token.variable) {
-                        <!-- Notice we pass var(--name) to the copyCode function so it's ready to paste into CSS -->
                         <button class="color-swatch-btn" (click)="copyCode('var(' + token.variable + ')')"
                             aria-label="Copy color variable">
 
@@ -121,7 +112,6 @@
             </div>
         </section>
 
-        <!-- COMPONENT: TYPOGRAPHY (Paste this right below the closing </section> of Colors) -->
         <section id="typography" class="doc-section">
             <div class="section-header">
                 <h2>Typography</h2>
@@ -130,7 +120,6 @@
 
             <div class="doc-card" style="padding: 2rem;">
 
-                <!-- Text Colors Section -->
                 <h3 class="color-group-title">Text Colors</h3>
                 <div class="color-grid" style="margin-bottom: 3rem;">
                     <button class="color-swatch-btn" (click)="copyCode('var(--text-primary)')"
@@ -155,7 +144,6 @@
                     </button>
                 </div>
 
-                <!-- Global Classes Section -->
                 <h3 class="color-group-title">Global Text Classes</h3>
                 <div class="typography-preview-list">
 
@@ -205,7 +193,6 @@
             </div>
         </section>
 
-        <!-- COMPONENT: BUTTON -->
         <section id="button" class="doc-section">
             <div class="section-header">
                 <h2>Button</h2>
@@ -214,9 +201,7 @@
 
             <div class="doc-card">
 
-                <!-- 1. LIVE PREVIEW -->
                 <div class="doc-card__preview">
-                    <!-- Added a small wrapper to keep buttons in a row, since __preview uses flex-col -->
                     <div
                         style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
                         <app-button variant="primary">Primary</app-button>
@@ -241,17 +226,14 @@
                     </div>
                 </div>
 
-                <!-- 2. VIEW SOURCE -->
                 <div class="doc-card__code-block">
                     <details>
                         <summary class="code-summary">View Source</summary>
                         <div class="code-content">
                             <button class="copy-btn"
                                 (click)="copyCode('<app-button variant=\'primary\'>Primary</app-button>')">Copy</button>
-                            <pre><code>&lt;!-- Basic Usage --&gt;
-&lt;app-button variant="primary"&gt;Primary&lt;/app-button&gt;
+                            <pre><code>&lt;app-button variant="primary"&gt;Primary&lt;/app-button&gt;
 
-&lt;!-- With Icon (Using ng-content select="[button-icon]") --&gt;
 &lt;app-button variant="danger" iconPosition="right"&gt;
   Delete
   &lt;svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;
@@ -261,13 +243,11 @@
   &lt;/svg&gt;
 &lt;/app-button&gt;
 
-&lt;!-- Loading State --&gt;
 &lt;app-button variant="primary" [isLoading]="true"&gt;Saving...&lt;/app-button&gt;</code></pre>
                         </div>
                     </details>
                 </div>
 
-                <!-- 3. API REFERENCE -->
                 <div class="doc-card__api">
                     <h3>Properties</h3>
                     <div class="table-container">
@@ -326,7 +306,6 @@
             </div>
         </section>
 
-        <!-- COMPONENT: BADGE -->
         <section id="badge" class="doc-section">
             <div class="section-header">
                 <h2>Badge</h2>
@@ -335,7 +314,6 @@
 
             <div class="doc-card">
 
-                <!-- 1. LIVE PREVIEW -->
                 <div class="doc-card__preview">
                     <div
                         style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
@@ -348,19 +326,16 @@
                     </div>
                 </div>
 
-                <!-- 2. VIEW SOURCE -->
                 <div class="doc-card__code-block">
                     <details>
                         <summary class="code-summary">View Source</summary>
                         <div class="code-content">
                             <button class="copy-btn"
                                 (click)="copyCode('<app-badge color=\'success\'>Success</app-badge>')">Copy</button>
-                            <pre><code>&lt;!-- Basic Usage --&gt;
-&lt;app-badge color="primary"&gt;Primary&lt;/app-badge&gt;
+                            <pre><code>&lt;app-badge color="primary"&gt;Primary&lt;/app-badge&gt;
 &lt;app-badge color="secondary"&gt;Secondary&lt;/app-badge&gt;
 &lt;app-badge color="accent"&gt;Accent&lt;/app-badge&gt;
 
-&lt;!-- Statuses --&gt;
 &lt;app-badge color="success"&gt;Success&lt;/app-badge&gt;
 &lt;app-badge color="warning"&gt;Warning&lt;/app-badge&gt;
 &lt;app-badge color="danger"&gt;Danger&lt;/app-badge&gt;</code></pre>
@@ -368,7 +343,6 @@
                     </details>
                 </div>
 
-                <!-- 3. API REFERENCE -->
                 <div class="doc-card__api">
                     <h3>Properties</h3>
                     <div class="table-container">
@@ -397,7 +371,6 @@
             </div>
         </section>
 
-        <!-- COMPONENT: CARD -->
         <section id="card" class="doc-section">
             <div class="section-header">
                 <h2>Card</h2>
@@ -407,7 +380,6 @@
 
             <div class="doc-card">
 
-                <!-- 1. LIVE PREVIEW -->
                 <div class="doc-card__preview">
                     <div
                         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; width: 100%;">
@@ -445,30 +417,25 @@
                     </div>
                 </div>
 
-                <!-- 2. VIEW SOURCE -->
                 <div class="doc-card__code-block">
                     <details>
                         <summary class="code-summary">View Source</summary>
                         <div class="code-content">
                             <button class="copy-btn"
                                 (click)="copyCode('<app-card>\n  <h4>Title</h4>\n  <p>Content goes here.</p>\n</app-card>')">Copy</button>
-                            <pre><code>&lt;!-- Basic Usage --&gt;
-&lt;app-card&gt;
+                            <pre><code>&lt;app-card&gt;
   &lt;h4&gt;Default Card&lt;/h4&gt;
   &lt;p&gt;Standard surface background.&lt;/p&gt;
 &lt;/app-card&gt;
 
-&lt;!-- Outline & Hoverable --&gt;
 &lt;app-card variant="outline" [hoverable]="true"&gt;
   &lt;p&gt;Hover over me!&lt;/p&gt;
 &lt;/app-card&gt;
 
-&lt;!-- Bordered (Must use default variant) --&gt;
 &lt;app-card border="primary"&gt;
   &lt;p&gt;I have a primary border.&lt;/p&gt;
 &lt;/app-card&gt;
 
-&lt;!-- Loading State --&gt;
 &lt;app-card [isLoading]="true"&gt;
   &lt;p&gt;Content is loading...&lt;/p&gt;
 &lt;/app-card&gt;</code></pre>
@@ -476,7 +443,6 @@
                     </details>
                 </div>
 
-                <!-- 3. API REFERENCE -->
                 <div class="doc-card__api">
                     <h3>Properties</h3>
                     <div class="table-container">
@@ -532,7 +498,6 @@
             </div>
         </section>
 
-        <!-- COMPONENT: ALERT -->
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>
@@ -541,7 +506,6 @@
 
             <div class="doc-card">
 
-                <!-- 1. LIVE PREVIEW -->
                 <div class="doc-card__preview">
                     <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 600px;">
 
@@ -566,30 +530,25 @@
                     </div>
                 </div>
 
-                <!-- 2. VIEW SOURCE -->
                 <div class="doc-card__code-block">
                     <details>
                         <summary class="code-summary">View Source</summary>
                         <div class="code-content">
                             <button class="copy-btn"
                                 (click)="copyCode('<app-alert variant=\'info\' title=\'System Update\'>\n  A new software update is available.\n</app-alert>')">Copy</button>
-                            <pre><code>&lt;!-- Basic Usage with title input --&gt;
-&lt;app-alert variant="info" title="System Update"&gt;
+                            <pre><code>&lt;app-alert variant="info" title="System Update"&gt;
   A new software update is available. Please refresh your browser.
 &lt;/app-alert&gt;
 
-&lt;!-- Success Alert --&gt;
 &lt;app-alert variant="success" title="Payment Received"&gt;
   Your transaction was processed successfully.
 &lt;/app-alert&gt;
 
-&lt;!-- Using Projected Title Slot ([alert-title]) --&gt;
 &lt;app-alert variant="warning"&gt;
   &lt;span alert-title&gt;Storage Limit Reached&lt;/span&gt;
   You have used 90% of your allotted storage space.
 &lt;/app-alert&gt;
 
-&lt;!-- Danger Alert --&gt;
 &lt;app-alert variant="danger" title="Connection Error"&gt;
   Unable to connect to the authentication server.
 &lt;/app-alert&gt;</code></pre>
@@ -597,7 +556,6 @@
                     </details>
                 </div>
 
-                <!-- 3. API REFERENCE -->
                 <div class="doc-card__api">
                     <h3>Properties</h3>
                     <div class="table-container">
@@ -639,7 +597,6 @@
             </div>
         </section>
 
-        <!-- COMPONENT: TOOLTIP -->
         <section id="tooltip" class="doc-section">
             <div class="section-header">
                 <h2>Tooltip</h2>
@@ -649,9 +606,7 @@
 
             <div class="doc-card">
 
-                <!-- 1. LIVE PREVIEW -->
                 <div class="doc-card__preview">
-                    <!-- Added extra padding here so the tooltips have room to open -->
                     <div
                         style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; align-items: center; padding: 3rem 1rem;">
 
@@ -673,7 +628,6 @@
 
                         <app-tooltip position="top">
                             <app-button variant="primary">Custom HTML</app-button>
-                            <!-- Projecting custom content into the panel -->
                             <div tooltipContent style="display: flex; flex-direction: column; gap: 4px;">
                                 <strong style="color: var(--accent);">Pro Tip</strong>
                                 <span>You can inject any custom HTML or components here!</span>
@@ -683,19 +637,16 @@
                     </div>
                 </div>
 
-                <!-- 2. VIEW SOURCE -->
                 <div class="doc-card__code-block">
                     <details>
                         <summary class="code-summary">View Source</summary>
                         <div class="code-content">
                             <button class="copy-btn"
                                 (click)="copyCode('<app-tooltip text=\'Helpful info\' position=\'top\'>\n  <button>Hover me</button>\n</app-tooltip>')">Copy</button>
-                            <pre><code>&lt;!-- Basic Text Tooltip --&gt;
-&lt;app-tooltip text="Settings and preferences" position="top"&gt;
+                            <pre><code>&lt;app-tooltip text="Settings and preferences" position="top"&gt;
   &lt;app-button variant="outline"&gt;Settings&lt;/app-button&gt;
 &lt;/app-tooltip&gt;
 
-&lt;!-- Custom HTML Tooltip (Using [tooltipContent] slot) --&gt;
 &lt;app-tooltip position="right"&gt;
   &lt;app-button variant="primary"&gt;More Info&lt;/app-button&gt;
   
@@ -708,7 +659,6 @@
                     </details>
                 </div>
 
-                <!-- 3. API REFERENCE -->
                 <div class="doc-card__api">
                     <h3>Properties & Slots</h3>
                     <div class="table-container">

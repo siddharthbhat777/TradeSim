@@ -8,7 +8,6 @@
     sans-serif;
 }
 
-/* --- SIDEBAR --- */
 .docs-sidebar {
   width: 280px;
   background-color: #ffffff;
@@ -69,7 +68,6 @@
   }
 }
 
-/* --- MAIN CONTENT --- */
 .docs-content {
   flex: 1;
   padding: 3rem 4rem;
@@ -94,7 +92,6 @@
   }
 }
 
-/* --- DOC COMPONENT CARD --- */
 .doc-section {
   margin-bottom: 4rem;
   scroll-margin-top: 2rem;
@@ -125,7 +122,6 @@
   overflow: hidden;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 
-  /* 1. Preview Area */
   &__preview {
     padding: 3rem;
     display: flex;
@@ -136,7 +132,6 @@
     background-size: 20px 20px;
   }
 
-  /* 2. Expandable Code Area */
   &__code-block {
     border-top: 1px solid #e5e7eb;
 
@@ -150,22 +145,21 @@
       font-weight: 600;
       color: #4b5563;
       font-size: 0.875rem;
-      list-style: none; /* Hides default arrow in some browsers */
+      list-style: none;
 
       &::-webkit-details-marker {
         display: none;
-      } /* Hides arrow in Safari */
+      }
     }
 
     .code-content {
-      position: relative; /* Essential for absolute positioning the button */
+      position: relative;
       background: #1f2937;
       margin: 0;
       padding: 1.5rem;
-      padding-top: 2.5rem; /* Extra padding so code doesn't hide behind the button */
+      padding-top: 2.5rem;
       overflow-x: auto;
 
-      /* Button is now styled for a dark background */
       .copy-btn {
         position: absolute;
         top: 0.75rem;
@@ -201,7 +195,6 @@
     }
   }
 
-  /* 3. API Table Area */
   &__api {
     border-top: 1px solid #e5e7eb;
     padding: 1.5rem;
@@ -252,7 +245,6 @@
   }
 }
 
-/* --- COLOR PALETTE STYLES --- */
 .color-group {
   margin-bottom: 2.5rem;
 
@@ -303,7 +295,6 @@
     border-radius: 0.5rem;
     margin-bottom: 0.75rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    /* Adding a border in case the color is pure white on a white background */
     border: 1px solid var(--border, #e2e8f0);
   }
 
@@ -323,8 +314,6 @@
     border-radius: 0.25rem;
   }
 }
-
-/* --- TYPOGRAPHY PREVIEW STYLES (Added at the very bottom, outside of any other rules) --- */
 
 .typography-preview-list {
   display: flex;
@@ -362,7 +351,6 @@
 }
 
 .type-sample {
-  /* This ensures the sample text actually uses the colors defined in your global styles */
   color: inherit;
 }
 
