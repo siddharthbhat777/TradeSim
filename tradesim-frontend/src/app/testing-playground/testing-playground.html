@@ -1415,6 +1415,141 @@
             </div>
         </section>
 
+        <section id="toast" class="doc-section">
+            <div class="section-header">
+                <h2>Toast (Snackbar)</h2>
+                <p>Brief, non-interruptive notifications that appear temporarily to provide feedback.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; width: 100%;">
+
+                        <app-button variant="success" (click)="showSuccessToast()">Success Toast</app-button>
+                        <app-button variant="danger" (click)="showErrorToast()">Error Toast</app-button>
+                        <app-button variant="warning" (click)="showWarningToast()">Warning Toast</app-button>
+                        <app-button variant="outline" (click)="showInfoToast()">Info Toast</app-button>
+                        <app-button variant="primary" (click)="showActionToast()">With Action</app-button>
+                        <app-button variant="secondary" (click)="showPositionToast()">Top Center Position</app-button>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('this.toastService.success(\'Message\')')">Copy</button>
+                            <pre ngNonBindable><code>// Inject the service
+toastService = inject(ToastService);
+
+// Basic variants
+this.toastService.success('Settings saved!');
+this.toastService.danger('Update failed.');
+this.toastService.warning('Storage almost full.');
+this.toastService.info('New version available.');
+
+// Advanced options
+this.toastService.info('Review terms', {
+  duration: 8000,
+  position: 'top-center',
+  action: {
+    label: 'Review',
+    onClick: () => router.navigate(['/terms'])
+  }
+});</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>ToastService Methods</h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Parameters</th>
+                                    <th>Returns</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>success()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows a success formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>danger()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows a danger/error formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>warning()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows a warning formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>info()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows an info formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>dismiss()</code></td>
+                                    <td><code>id: number</code></td>
+                                    <td><code>void</code></td>
+                                    <td>Manually dismisses a specific toast by its ID.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>ToastOptions Interface</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>duration</code></td>
+                                    <td><code>number</code></td>
+                                    <td>Varies by variant</td>
+                                    <td>Time in milliseconds before the toast auto-dismisses.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>position</code></td>
+                                    <td><code>ToastPosition</code></td>
+                                    <td><code>'bottom-right'</code></td>
+                                    <td>Screen placement. Options include top/bottom paired with left/center/right, plus
+                                        center-left/right.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>action</code></td>
+                                    <td><code>ToastAction</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Object containing a <code>label</code> string and <code>onClick</code> callback
+                                        function.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="tooltip" class="doc-section">
             <div class="section-header">
                 <h2>Tooltip</h2>

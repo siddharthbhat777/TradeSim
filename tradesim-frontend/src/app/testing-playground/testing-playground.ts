@@ -231,4 +231,36 @@ export class TestingPlayground {
       this.toastService.danger('Failed to copy code to clipboard', { position: 'bottom-right' });
     }
   }
+
+  showSuccessToast(): void {
+    this.toastService.success('Your settings have been saved successfully.');
+  }
+
+  showErrorToast(): void {
+    this.toastService.danger('Connection lost. Please check your network.');
+  }
+
+  showWarningToast(): void {
+    this.toastService.warning('Your session will expire in 2 minutes.');
+  }
+
+  showInfoToast(): void {
+    this.toastService.info('A new software update is available.');
+  }
+
+  showActionToast(): void {
+    this.toastService.info('Please review the updated privacy policy.', {
+      duration: 10000,
+      action: {
+        label: 'Review',
+        onClick: () => console.log('Action clicked!')
+      }
+    });
+  }
+
+  showPositionToast(): void {
+    this.toastService.success('This toast appears at the top center.', {
+      position: 'top-center'
+    });
+  }
 }
