@@ -2767,5 +2767,96 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="time-ago" class="doc-section">
+            <div class="section-header">
+                <h2>Time Ago Pipe</h2>
+                <p>A pure Angular pipe that transforms standard Dates, timestamps, or ISO strings into human-readable
+                    relative time formats (e.g., "Just now", "5 minutes ago").</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="max-width: 500px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Right now</span>
+                            <strong style="color: var(--text-primary);">{{ rightNow | timeAgo }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 5
+                                mins</span>
+                            <strong style="color: var(--text-primary);">{{ fiveMinutesAgo | timeAgo }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 2
+                                hours</span>
+                            <strong style="color: var(--text-primary);">{{ twoHoursAgo | timeAgo }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 3
+                                days</span>
+                            <strong style="color: var(--text-primary);">{{ threeDaysAgo | timeAgo }}</strong>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 1
+                                year</span>
+                            <strong style="color: var(--text-primary);">{{ oneYearAgo | timeAgo }}</strong>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Time Ago snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Pass a standard JavaScript Date object --&gt;
+&lt;span&gt;{{ myDateObject | timeAgo }}&lt;/span&gt;
+
+&lt;!-- Pass a Unix timestamp (milliseconds) --&gt;
+&lt;span&gt;{{ 1718293049000 | timeAgo }}&lt;/span&gt;
+
+&lt;!-- Pass an ISO string --&gt;
+&lt;span&gt;{{ '2024-05-10T12:00:00Z' | timeAgo }}&lt;/span&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Time Ago Usage <code>timeAgo</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Input Type</th>
+                                    <th>Output Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>string | Date | number | null</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Calculates the difference between the provided time and exactly now. Handles
+                                        plurals automatically and returns "Just now" for times under 30 seconds or
+                                        invalid inputs.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 </div>

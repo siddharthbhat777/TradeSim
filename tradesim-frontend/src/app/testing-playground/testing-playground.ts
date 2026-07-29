@@ -27,6 +27,7 @@ import { PriceIndicator } from '../shared/components/price-indicator/price-indic
 import { PieChart } from '../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
 import { Legend } from '../shared/components/charts/legend/legend';
 import { PieChartContainer } from '../shared/components/charts/pie-chart-container/pie-chart-container';
+import { TimeAgoPipe } from '../shared/pipes/time-ago-pipe';
 
 interface DocSection {
   title: string;
@@ -35,7 +36,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -264,6 +265,12 @@ export class TestingPlayground {
   protected activeLegendId = signal<string | null>(null);
 
   protected containerIsLoading = signal(false);
+
+  protected readonly rightNow = new Date();
+  protected readonly fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  protected readonly twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  protected readonly threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+  protected readonly oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
 
   protected toggleContainerLoading(): void {
     this.containerIsLoading.update(v => !v);
