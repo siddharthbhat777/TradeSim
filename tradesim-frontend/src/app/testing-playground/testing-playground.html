@@ -1550,6 +1550,133 @@ this.toastService.info('Review terms', {
             </div>
         </section>
 
+        <section id="empty-state" class="doc-section">
+            <div class="section-header">
+                <h2>Empty State</h2>
+                <p>Visual placeholders for empty lists, missing data, or initial unconfigured states.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="display: flex; flex-direction: column; gap: 3rem; width: 100%; border: 1px dashed var(--border); border-radius: 8px; padding: 2rem; background: var(--surface-secondary);">
+
+                        <app-empty-state text="No results found"
+                            subtext="Try adjusting your search or filter to find what you're looking for.">
+                            <svg icon xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </app-empty-state>
+
+                        <hr style="width: 100%; border: none; border-top: 1px solid var(--border);">
+
+                        <app-empty-state text="You have no projects yet"
+                            subtext="Get started by creating your very first project." actionLabel="Create Project"
+                            (actionClick)="handleEmptyStateAction()">
+                            <svg icon xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                </path>
+                            </svg>
+                        </app-empty-state>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-empty-state text=\'No data\'></app-empty-state>')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Basic with Icon and Subtext --&gt;
+&lt;app-empty-state 
+  text="No results found" 
+  subtext="Try adjusting your search or filter."&gt;
+  &lt;svg icon viewBox="..."&gt;...&lt;/svg&gt;
+&lt;/app-empty-state&gt;
+
+&lt;!-- With Call to Action --&gt;
+&lt;app-empty-state 
+  text="You have no projects yet" 
+  subtext="Get started by creating your very first project."
+  actionLabel="Create Project"
+  (actionClick)="handleEmptyStateAction()"&gt;
+  &lt;i icon class="fas fa-folder-open"&gt;&lt;/i&gt;
+&lt;/app-empty-state&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Empty State Properties <code>&lt;app-empty-state&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>text</code></td>
+                                    <td><code>string</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The main primary heading for the empty state.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>subtext</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Optional secondary description or instructions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>actionLabel</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Text for the call-to-action button. If provided, the button renders.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Empty State Events & Content</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>(actionClick)</code></td>
+                                    <td><code>EventEmitter&lt;void&gt;</code></td>
+                                    <td>Fired when the action button is clicked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>&lt;ng-content select="[icon]"&gt;</code></td>
+                                    <td><code>Content Projection</code></td>
+                                    <td>Place an element with the <code>icon</code> attribute inside the component to
+                                        render it above the text.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="tooltip" class="doc-section">
             <div class="section-header">
                 <h2>Tooltip</h2>

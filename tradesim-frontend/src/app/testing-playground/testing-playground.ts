@@ -16,6 +16,7 @@ import { Toggle } from '../shared/components/toggle/toggle';
 import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown';
 import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
 import { NumberStepper } from '../shared/components/number-stepper/number-stepper';
+import { EmptyState } from '../shared/components/empty-state/empty-state';
 
 interface DocSection {
   title: string;
@@ -24,7 +25,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -262,5 +263,10 @@ export class TestingPlayground {
     this.toastService.success('This toast appears at the top center.', {
       position: 'top-center'
     });
+  }
+
+  handleEmptyStateAction(): void {
+    console.log('Empty state action clicked!');
+    this.toastService.success('Action triggered from empty state.');
   }
 }
