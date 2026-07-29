@@ -20,6 +20,7 @@ import { EmptyState } from '../shared/components/empty-state/empty-state';
 import { InlineLoader } from '../shared/components/loaders/inline-loader/inline-loader';
 import { Loader } from '../shared/components/loaders/loader/loader';
 import { Skeleton } from '../shared/components/loaders/skeleton/skeleton';
+import { DialogService } from '../shared/components/dialog/dialog.service';
 
 interface DocSection {
   title: string;
@@ -34,6 +35,7 @@ interface DocSection {
 })
 export class TestingPlayground {
   private toastService = inject(ToastService);
+  protected dialogService = inject(DialogService);
 
   navigation: DocSection[] = [
     {
@@ -280,5 +282,33 @@ export class TestingPlayground {
   handleEmptyStateAction(): void {
     console.log('Empty state action clicked!');
     this.toastService.success('Action triggered from empty state.');
+  }
+
+  triggerStandardDialog() {
+    this.dialogService.open({
+      title: 'Action Completed',
+      message: 'Your settings have been saved successfully. You can now continue using the application.',
+      primaryLabel: 'Got it'
+    });
+  }
+
+  triggerConfirmDialog() {
+    this.dialogService.open({
+      title: 'Delete Workspace?',
+      message: 'Are you sure you want to delete this workspace? All data will be permanently removed. This action cannot be undone.',
+      primaryLabel: 'Delete',
+      secondaryLabel: 'Cancel',
+      onPrimary: () => console.log('User clicked Delete!'),
+      onSecondary: () => console.log('User clicked Cancel')
+    });
+  }
+
+  triggerBlockingDialog() {
+    this.dialogService.open({
+      title: 'Session Expired',
+      message: 'Your authentication session has expired due to inactivity. Please log in again to continue.',
+      primaryLabel: 'Log In',
+      isBlocking: true // Prevents closing via backdrop or escape key
+    });
   }
 }

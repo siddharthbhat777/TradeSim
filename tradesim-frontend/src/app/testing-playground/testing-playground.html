@@ -1883,6 +1883,127 @@ this.toastService.info('Review terms', {
         <app-loader [fullScreen]="true"></app-loader>
         }
 
+        <section id="dialog" class="doc-section">
+            <div class="section-header">
+                <h2>Dialog (Modal)</h2>
+                <p>A global, service-driven dialog for alerts, confirmations, and blocking prompts. Triggered via
+                    <code>DialogService</code>.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <app-button variant="secondary" (click)="triggerStandardDialog()">Standard Alert</app-button>
+                        <app-button variant="primary" (click)="triggerConfirmDialog()">Confirm Action</app-button>
+                        <app-button variant="danger" (click)="triggerBlockingDialog()">Blocking Dialog</app-button>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Dialog snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>// 1. Inject the service
+dialogService = inject(DialogService);
+
+// 2. Standard Alert
+this.dialogService.open(&#123;
+  title: 'Success',
+  message: 'Your profile has been updated.',
+  primaryLabel: 'OK'
+&#125;);
+
+// 3. Confirmation Dialog
+this.dialogService.open(&#123;
+  title: 'Delete User?',
+  message: 'Are you sure? This cannot be undone.',
+  primaryLabel: 'Delete',
+  secondaryLabel: 'Cancel',
+  onPrimary: () => console.log('Confirmed'),
+  onSecondary: () => console.log('Cancelled')
+&#125;);
+
+// 4. Blocking / Critical (No close button/backdrop click)
+this.dialogService.open(&#123;
+  title: 'Session Expired',
+  message: 'Please log in again.',
+  primaryLabel: 'Log In',
+  isBlocking: true
+&#125;);</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">DialogOptions Interface</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>message</code></td>
+                                    <td><code>string</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The main body text of the dialog.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>title</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Optional header text. If omitted, the header section is hidden.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>primaryLabel</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Text for the primary confirmation button. If omitted, button is hidden.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>secondaryLabel</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Text for the secondary/cancel button. If omitted, button is hidden.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>isBlocking</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, hides the "X" close button and prevents closing via backdrop click or
+                                        Escape key.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>showClose</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the "X" close button to show, even if the dialog lacks a title.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onPrimary</code></td>
+                                    <td><code>() => void</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Callback function executed when the primary button is clicked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onSecondary</code></td>
+                                    <td><code>() => void</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Callback function executed when the secondary button is clicked.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="tooltip" class="doc-section">
             <div class="section-header">
                 <h2>Tooltip</h2>
