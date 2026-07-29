@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Logo } from '../shared/components/logo/logo';
 import { ToastService } from '../shared/components/toast/toast.service';
@@ -21,6 +21,8 @@ import { InlineLoader } from '../shared/components/loaders/inline-loader/inline-
 import { Loader } from '../shared/components/loaders/loader/loader';
 import { Skeleton } from '../shared/components/loaders/skeleton/skeleton';
 import { DialogService } from '../shared/components/dialog/dialog.service';
+import { Pagination } from '../shared/components/pagination/pagination';
+import { Table, TableColumn } from '../shared/components/table/table';
 
 interface DocSection {
   title: string;
@@ -29,7 +31,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -221,6 +223,32 @@ export class TestingPlayground {
   stepperMixed = 0;
 
   showFullScreenLoader = false;
+
+  protected pagTotalItems = signal(87);
+  protected pagCurrentPage = signal(1);
+  protected pagPageSize = signal(10);
+
+  protected tableIsLoading = signal(false);
+  protected tableCurrentPage = signal(1);
+  protected tablePageSize = signal(10);
+
+  protected tableColumns = signal<TableColumn<any>[]>([
+    { key: 'id', header: 'ID', width: '80px' },
+    { key: 'name', header: 'User Name' },
+    { key: 'status', header: 'Status', align: 'center' },
+    { key: 'actions', header: 'Actions', align: 'right' }
+  ]);
+
+  protected tableData = signal([
+    { id: '101', name: 'Siddharth Bhat', status: 'Active' },
+    { id: '102', name: 'John Doe', status: 'Inactive' },
+    { id: '103', name: 'Jane Smith', status: 'Active' },
+    { id: '104', name: 'Alice Johnson', status: 'Pending' }
+  ]);
+
+  protected toggleTableLoading() {
+    this.tableIsLoading.update(v => !v);
+  }
 
   triggerFullScreenLoader(): void {
     this.showFullScreenLoader = true;
