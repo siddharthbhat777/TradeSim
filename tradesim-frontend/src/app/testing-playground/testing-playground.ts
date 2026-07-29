@@ -17,6 +17,9 @@ import { Dropdown, DropdownOption } from '../shared/components/dropdown/dropdown
 import { SegmentedControl, SegmentOption } from '../shared/components/segmented-control/segmented-control';
 import { NumberStepper } from '../shared/components/number-stepper/number-stepper';
 import { EmptyState } from '../shared/components/empty-state/empty-state';
+import { InlineLoader } from '../shared/components/loaders/inline-loader/inline-loader';
+import { Loader } from '../shared/components/loaders/loader/loader';
+import { Skeleton } from '../shared/components/loaders/skeleton/skeleton';
 
 interface DocSection {
   title: string;
@@ -25,7 +28,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -214,6 +217,15 @@ export class TestingPlayground {
   stepperLimited = 5;
   stepperLarge = 10;
   stepperMixed = 0;
+
+  showFullScreenLoader = false;
+
+  triggerFullScreenLoader(): void {
+    this.showFullScreenLoader = true;
+    setTimeout(() => {
+      this.showFullScreenLoader = false;
+    }, 3000); // Auto-hide after 3 seconds
+  }
 
   scrollTo(id: string): void {
     const element = document.getElementById(id);

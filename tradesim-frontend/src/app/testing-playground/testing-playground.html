@@ -1677,6 +1677,212 @@ this.toastService.info('Review terms', {
             </div>
         </section>
 
+        <section id="loaders" class="doc-section">
+            <div class="section-header">
+                <h2>Loaders & Skeletons</h2>
+                <p>Visual indicators used to communicate background processing, data fetching, or page transitions.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 3rem; width: 100%;">
+
+                        <!-- 1. Inline Spinner -->
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Inline
+                                Spinners</h3>
+                            <div style="display: flex; align-items: center; gap: 2rem;">
+                                <app-inline-loader size="small"></app-inline-loader>
+                                <app-inline-loader size="medium"></app-inline-loader>
+                                <app-inline-loader size="large" variant="accent"></app-inline-loader>
+                                <app-inline-loader size="large" variant="danger"></app-inline-loader>
+                                <app-inline-loader size="large" variant="success"></app-inline-loader>
+                            </div>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px dashed var(--border);">
+
+                        <!-- 2. App Loader (Brand Pulse) -->
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">App Loader
+                                (TradeSim Pulse)</h3>
+                            <div style="display: flex; align-items: center; gap: 2rem;">
+                                <div style="background: var(--surface-secondary); padding: 1rem; border-radius: 8px;">
+                                    <app-loader size="small"></app-loader>
+                                </div>
+                                <app-button variant="primary" (click)="triggerFullScreenLoader()">
+                                    Show Fullscreen Overlay (3s)
+                                </app-button>
+                            </div>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px dashed var(--border);">
+
+                        <!-- 3. Skeleton UI -->
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Skeleton UI
+                            </h3>
+
+                            <!-- Mock Skeleton Card -->
+                            <div
+                                style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px; padding: 1.5rem; border: 1px solid var(--border); border-radius: 12px;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <app-skeleton shape="circle"></app-skeleton>
+                                    <div style="flex: 1;">
+                                        <app-skeleton shape="text" width="60%"></app-skeleton>
+                                        <app-skeleton shape="text" width="40%"></app-skeleton>
+                                    </div>
+                                </div>
+                                <app-skeleton shape="rect" height="120px"></app-skeleton>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Loader snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- 1. Inline Loader --&gt;
+&lt;app-inline-loader size="small" variant="primary"&gt;&lt;/app-inline-loader&gt;
+&lt;app-inline-loader size="large" variant="accent"&gt;&lt;/app-inline-loader&gt;
+
+&lt;!-- 2. App Loader (Pulse) --&gt;
+&lt;app-loader size="medium"&gt;&lt;/app-loader&gt;
+
+&lt;!-- Fullscreen overlay wrapper example --&gt;
+&#64;if (isAppLoading) &#123;
+  &lt;app-loader [fullScreen]="true"&gt;&lt;/app-loader&gt;
+&#125;
+
+&lt;!-- 3. Skeleton UI --&gt;
+&lt;!-- Circle Avatar --&gt;
+&lt;app-skeleton shape="circle" width="48px" height="48px"&gt;&lt;/app-skeleton&gt;
+
+&lt;!-- Text Lines --&gt;
+&lt;app-skeleton shape="text" width="100%"&gt;&lt;/app-skeleton&gt;
+&lt;app-skeleton shape="text" width="60%"&gt;&lt;/app-skeleton&gt;
+
+&lt;!-- Image/Block Placeholder --&gt;
+&lt;app-skeleton shape="rect" height="200px"&gt;&lt;/app-skeleton&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+
+                    <!-- Inline Loader API -->
+                    <h3 style="margin-top: 0;">Inline Loader Properties <code>&lt;app-inline-loader&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'small'</code></td>
+                                    <td>The dimensions of the spinner (16px, 24px, or 48px).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning' | 'muted'</code>
+                                    </td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The semantic color theme of the spinner stroke.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- App Loader API -->
+                    <h3>App Loader Properties <code>&lt;app-loader&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>The dimensions of the SVG graphic.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>fullScreen</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, wraps the loader in a fixed, full-screen background overlay (z-index
+                                        99999).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Skeleton API -->
+                    <h3>Skeleton Properties <code>&lt;app-skeleton&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>shape</code></td>
+                                    <td><code>'text' | 'rect' | 'circle'</code></td>
+                                    <td><code>'text'</code></td>
+                                    <td>Determines the base shape and default dimensions/border-radius.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>width</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Auto</td>
+                                    <td>Custom CSS width (e.g., '100%', '60px'). Overrides default shape widths.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>height</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Auto</td>
+                                    <td>Custom CSS height. Overrides default shape heights.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>rounded</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Auto</td>
+                                    <td>Custom border-radius (e.g., '4px'). Overrides default shape radius.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        @if (showFullScreenLoader) {
+        <app-loader [fullScreen]="true"></app-loader>
+        }
+
         <section id="tooltip" class="doc-section">
             <div class="section-header">
                 <h2>Tooltip</h2>
