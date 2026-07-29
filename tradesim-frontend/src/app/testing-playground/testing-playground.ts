@@ -24,6 +24,9 @@ import { DialogService } from '../shared/components/dialog/dialog.service';
 import { Pagination } from '../shared/components/pagination/pagination';
 import { Table, TableColumn } from '../shared/components/table/table';
 import { PriceIndicator } from '../shared/components/price-indicator/price-indicator';
+import { PieChart } from '../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
+import { Legend } from '../shared/components/charts/legend/legend';
+import { PieChartContainer } from '../shared/components/charts/pie-chart-container/pie-chart-container';
 
 interface DocSection {
   title: string;
@@ -32,7 +35,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table, PriceIndicator],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })
@@ -96,7 +99,8 @@ export class TestingPlayground {
       title: 'Charts & Visualizations',
       items: [
         { id: 'pie-chart', name: 'Pie Chart' },
-        { id: 'legend', name: 'Legend' }
+        { id: 'legend', name: 'Legend' },
+        { id: 'pie-chart-container', name: 'Pie Chart Container' }
       ]
     },
     {
@@ -246,6 +250,32 @@ export class TestingPlayground {
     { id: '103', name: 'Jane Smith', status: 'Active' },
     { id: '104', name: 'Alice Johnson', status: 'Pending' }
   ]);
+
+  // Shared Data for Pie Chart & Legend Demos
+  protected chartDemoData = signal([
+    { id: 'tech', label: 'Technology', value: 45000, color: '#3b82f6' },
+    { id: 'health', label: 'Healthcare', value: 25000, color: '#10b981' },
+    { id: 'finance', label: 'Financials', value: 20000, color: '#f59e0b' },
+    { id: 'energy', label: 'Energy', value: 10000, color: '#ef4444' }
+  ]);
+
+  // Hover States
+  protected activePieSlice = signal<string | null>(null);
+  protected activeLegendId = signal<string | null>(null);
+
+  protected containerIsLoading = signal(false);
+
+  protected toggleContainerLoading(): void {
+    this.containerIsLoading.update(v => !v);
+  }
+
+  protected onPieHover(id: string | null): void {
+    this.activePieSlice.set(id);
+  }
+
+  protected onLegendHover(id: string | null): void {
+    this.activeLegendId.set(id);
+  }
 
   protected toggleTableLoading() {
     this.tableIsLoading.update(v => !v);

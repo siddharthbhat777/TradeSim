@@ -2460,5 +2460,312 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="pie-chart" class="doc-section">
+            <div class="section-header">
+                <h2>Pie Chart</h2>
+                <p>A standalone SVG-based pie and donut chart component. Supports hover states, tooltips, and custom
+                    center content projection.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; gap: 4rem; flex-wrap: wrap; justify-content: center;">
+
+                        <!-- 1. Full Donut with Center Content -->
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Standard
+                                Donut</h3>
+                            <app-pie-chart [data]="chartDemoData()" shape="full" chartStyle="donut" [size]="240"
+                                [activeSliceId]="activePieSlice()" (sliceHover)="onPieHover($event)">
+
+                                <div chartCenter>
+                                    <span style="font-size: 0.875rem; color: var(--text-muted);">Total Value</span>
+                                    <strong style="font-size: 1.25rem; color: var(--text-primary);">$100,000</strong>
+                                </div>
+                            </app-pie-chart>
+                        </div>
+
+                        <!-- 2. Half Shape (Gauge Style) -->
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Half Shape
+                            </h3>
+                            <app-pie-chart [data]="chartDemoData()" shape="half" chartStyle="donut" [size]="240"
+                                [donutThickness]="60">
+                            </app-pie-chart>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Pie Chart snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Donut Chart with Projected Center --&gt;
+&lt;app-pie-chart 
+  [data]="chartDemoData()" 
+  shape="full" 
+  chartStyle="donut" 
+  [size]="240"
+  [activeSliceId]="activePieSlice()"
+  (sliceHover)="onPieHover($event)"&gt;
+  
+  &lt;div chartCenter&gt;
+    &lt;span&gt;Total&lt;/span&gt;
+    &lt;strong&gt;$100k&lt;/strong&gt;
+  &lt;/div&gt;
+
+&lt;/app-pie-chart&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Pie Chart Properties <code>&lt;app-pie-chart&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>PieChartData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of objects containing id, label, value, and color.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[shape]</code></td>
+                                    <td><code>'full' | 'half'</code></td>
+                                    <td><code>'full'</code></td>
+                                    <td>Renders a complete 360-degree circle or a 180-degree semi-circle.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[chartStyle]</code></td>
+                                    <td><code>'solid' | 'donut'</code></td>
+                                    <td><code>'donut'</code></td>
+                                    <td>Whether to draw solid wedges or annular donut slices.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[size]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>400</code></td>
+                                    <td>The width (and maximum height) of the SVG in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[activeSliceId]</code></td>
+                                    <td><code>string | null</code></td>
+                                    <td><code>null</code></td>
+                                    <td>Externally controls which slice is highlighted (e.g., from a legend).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(sliceHover)</code></td>
+                                    <td><code>EventEmitter&lt;string | null&gt;</code></td>
+                                    <td>-</td>
+                                    <td>Emits the ID of the slice currently being hovered over.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="legend" class="doc-section">
+            <div class="section-header">
+                <h2>Legend</h2>
+                <p>An interactive list displaying data categorizations, exact values, and automatically calculated
+                    percentages.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="max-width: 300px; margin: 0 auto; background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
+
+                        <h3 style="margin-bottom: 1rem; margin-top: 0; font-size: 1rem; color: var(--text-secondary);">
+                            Portfolio Breakdown</h3>
+
+                        <app-legend [data]="chartDemoData()" [activeId]="activeLegendId()" [showPercentage]="true"
+                            (itemHover)="onLegendHover($event)">
+                        </app-legend>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Legend snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;app-legend 
+  [data]="chartDemoData()" 
+  [activeId]="activeLegendId()"
+  [showPercentage]="true"
+  (itemHover)="onLegendHover($event)"&gt;
+&lt;/app-legend&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Legend Properties <code>&lt;app-legend&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>LegendItem[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of objects containing id, label, value, and color.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[activeId]</code></td>
+                                    <td><code>string | null</code></td>
+                                    <td><code>null</code></td>
+                                    <td>Highlights the matching row and dims others.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[showPercentage]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Whether to automatically calculate and display the percentage of the total.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(itemHover)</code></td>
+                                    <td><code>EventEmitter&lt;string | null&gt;</code></td>
+                                    <td>-</td>
+                                    <td>Emits the ID of the legend item currently being hovered over.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pie-chart-container" class="doc-section">
+            <div class="section-header">
+                <h2>Pie Chart Container</h2>
+                <p>A smart wrapper that orchestrates the Pie Chart and Legend components together, handling layout,
+                    loading states, and automatic hover synchronization.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="margin-bottom: 2rem;">
+                        <app-button variant="secondary" size="small" (click)="toggleContainerLoading()">Toggle Loading
+                            State</app-button>
+                    </div>
+
+                    <div
+                        style="background: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
+                        <!-- 
+                  Using the same chartDemoData() from the PieChart/Legend demos.
+                  Try hovering over the chart or the legend in the UI to see them sync! 
+                -->
+                        <app-pie-chart-container [data]="chartDemoData()" [isLoading]="containerIsLoading()"
+                            legendPosition="right" chartStyle="donut" [size]="220">
+                        </app-pie-chart-container>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('Pie Chart Container snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Fully wired up chart and legend --&gt;
+&lt;app-pie-chart-container 
+  [data]="chartDemoData()" 
+  [isLoading]="isLoading()"
+  legendPosition="right"
+  chartStyle="donut"
+  shape="full"
+  [size]="220"&gt;
+&lt;/app-pie-chart-container&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Pie Chart Container Properties
+                        <code>&lt;app-pie-chart-container&gt;</code>
+                    </h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>PieChartData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Passed down to both the chart and the legend.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[legendPosition]</code></td>
+                                    <td><code>'top' | 'bottom' | 'left' | 'right'</code></td>
+                                    <td><code>'right'</code></td>
+                                    <td>Controls the flex layout orientation between the chart and legend.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[shape]</code></td>
+                                    <td><code>'full' | 'half'</code></td>
+                                    <td><code>'full'</code></td>
+                                    <td>Passed down to the pie chart.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[chartStyle]</code></td>
+                                    <td><code>'solid' | 'donut'</code></td>
+                                    <td><code>'solid'</code></td>
+                                    <td>Passed down to the pie chart.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[size]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>200</code></td>
+                                    <td>Controls the SVG size of the pie chart and the min-height of the loader.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[wrap]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Allows the flex container to wrap on smaller screens.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[isLoading]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Replaces the entire container contents with an inline loader.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 </div>
