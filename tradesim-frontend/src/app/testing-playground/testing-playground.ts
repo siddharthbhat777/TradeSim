@@ -23,6 +23,7 @@ import { Skeleton } from '../shared/components/loaders/skeleton/skeleton';
 import { DialogService } from '../shared/components/dialog/dialog.service';
 import { Pagination } from '../shared/components/pagination/pagination';
 import { Table, TableColumn } from '../shared/components/table/table';
+import { PriceIndicator } from '../shared/components/price-indicator/price-indicator';
 
 interface DocSection {
   title: string;
@@ -31,7 +32,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-testing-playground',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table, PriceIndicator],
   templateUrl: './testing-playground.html',
   styleUrls: ['./testing-playground.scss']
 })

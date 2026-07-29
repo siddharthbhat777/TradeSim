@@ -2320,5 +2320,145 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="price-indicator" class="doc-section">
+            <div class="section-header">
+                <h2>Price Indicator</h2>
+                <p>A presentational component for displaying financial values and market changes with automatic
+                    formatting, color-coding, and directional arrows.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+                        <!-- 1. Positive & Negative -->
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Market
+                                Changes (INR)</h3>
+                            <div style="display: flex; gap: 2rem; align-items: center;">
+                                <app-price-indicator [value]="15240" [percentage]="2.45"></app-price-indicator>
+                                <app-price-indicator [value]="-3420" [percentage]="-1.12"></app-price-indicator>
+                                <app-price-indicator [value]="0" [percentage]="0"></app-price-indicator>
+                            </div>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px dashed var(--border);">
+
+                        <!-- 2. Custom Formatting -->
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Custom
+                                Currency & Decimals</h3>
+                            <div style="display: flex; gap: 2rem; align-items: center;">
+                                <app-price-indicator [value]="4250.75" [valueDecimals]="2" currency="USD" locale="en-US"
+                                    [showPercentage]="false">
+                                </app-price-indicator>
+
+                                <app-price-indicator [value]="-85.5" [valueDecimals]="2" currency="EUR" locale="de-DE"
+                                    [showArrow]="false">
+                                </app-price-indicator>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Price Indicator snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Standard (Defaults to INR) --&gt;
+&lt;app-price-indicator 
+  [value]="15240" 
+  [percentage]="2.45"&gt;
+&lt;/app-price-indicator&gt;
+
+&lt;!-- Custom Currency (Locale is required if currency != INR) --&gt;
+&lt;app-price-indicator 
+  [value]="4250.75" 
+  [valueDecimals]="2" 
+  currency="USD" 
+  locale="en-US" 
+  [showPercentage]="false"&gt;
+&lt;/app-price-indicator&gt;
+
+&lt;!-- Hide visual extras --&gt;
+&lt;app-price-indicator 
+  [value]="-85.5" 
+  [showArrow]="false"&gt;
+&lt;/app-price-indicator&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Price Indicator Properties <code>&lt;app-price-indicator&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[value]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The absolute numerical value to display.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[percentage]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>The percentage change. Will format automatically as a %.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[showPercentage]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Whether to display the percentage value (if provided).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[showArrow]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Whether to display the directional SVG arrow.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[currency]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>The ISO 4217 currency code (e.g., 'INR', 'USD', 'EUR').</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[locale]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'en-IN'</code> (if INR)</td>
+                                    <td>The BCP 47 language tag. <strong style="color: var(--danger)">Required if
+                                            currency is not INR.</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>[valueDecimals]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>0</code></td>
+                                    <td>Number of decimal places for the main value.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[percentageDecimals]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>2</code></td>
+                                    <td>Number of decimal places for the percentage.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 </div>
