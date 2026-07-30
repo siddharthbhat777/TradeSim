@@ -35,12 +35,12 @@ interface DocSection {
 }
 
 @Component({
-  selector: 'app-testing-playground',
+  selector: 'app-design-system',
   imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe],
-  templateUrl: './testing-playground.html',
-  styleUrls: ['./testing-playground.scss']
+  templateUrl: './design-system.html',
+  styleUrls: ['./design-system.scss']
 })
-export class TestingPlayground {
+export class DesignSystem {
   private toastService = inject(ToastService);
   protected dialogService = inject(DialogService);
 
