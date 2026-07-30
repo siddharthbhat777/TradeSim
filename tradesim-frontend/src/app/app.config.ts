@@ -2,17 +2,19 @@ import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer, provide
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { authTokenInterceptor } from './interceptors/auth-token';
+import { authTokenInterceptor } from './interceptors/auth-token-interceptor';
 import { AuthService } from './services/auth-service/auth-service';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { GlobalErrorHandler } from './services/global-error-handler';
+import { loadingInterceptor } from './interceptors/loading-interceptor';
+import { errorInterceptor } from './interceptors/error-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authTokenInterceptor])),
+    provideHttpClient(withInterceptors([authTokenInterceptor, loadingInterceptor, errorInterceptor])),
     provideAppInitializer(() => {
       const authService = inject(AuthService);
 

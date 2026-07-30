@@ -1,4 +1,5 @@
-import { Component, input } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
+import { LoaderService } from './loader.service';
 
 @Component({
   selector: 'app-loader',
@@ -8,4 +9,6 @@ import { Component, input } from '@angular/core';
 export class Loader {
   size = input<'small' | 'medium' | 'large'>('medium');
   fullScreen = input<boolean>(false);
+
+  loaderService = inject(LoaderService);
 }

@@ -18,7 +18,6 @@ import { SegmentedControl, SegmentOption } from '../shared/components/segmented-
 import { NumberStepper } from '../shared/components/number-stepper/number-stepper';
 import { EmptyState } from '../shared/components/empty-state/empty-state';
 import { InlineLoader } from '../shared/components/loaders/inline-loader/inline-loader';
-import { Loader } from '../shared/components/loaders/loader/loader';
 import { Skeleton } from '../shared/components/loaders/skeleton/skeleton';
 import { DialogService } from '../shared/components/dialog/dialog.service';
 import { Pagination } from '../shared/components/pagination/pagination';
@@ -38,7 +37,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-design-system',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Loader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe],
   templateUrl: './design-system.html',
   styleUrls: ['./design-system.scss']
 })
@@ -291,8 +290,6 @@ export class DesignSystem implements OnInit, OnDestroy {
   stepperLarge = 10;
   stepperMixed = 0;
 
-  showFullScreenLoader = false;
-
   protected pagTotalItems = signal(87);
   protected pagCurrentPage = signal(1);
   protected pagPageSize = signal(10);
@@ -347,13 +344,6 @@ export class DesignSystem implements OnInit, OnDestroy {
 
   protected toggleTableLoading() {
     this.tableIsLoading.update(v => !v);
-  }
-
-  triggerFullScreenLoader(): void {
-    this.showFullScreenLoader = true;
-    setTimeout(() => {
-      this.showFullScreenLoader = false;
-    }, 3000);
   }
 
   scrollTo(id: string): void {

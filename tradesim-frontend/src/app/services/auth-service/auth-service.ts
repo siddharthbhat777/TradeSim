@@ -7,6 +7,7 @@ import { AuthUser } from '../../models/auth-user';
 import { LoginRequest } from '../../models/login-request';
 import { LoginResponse } from '../../models/login-respons';
 import { catchError, finalize, tap, throwError } from 'rxjs';
+import { skipInterceptors } from '../../interceptors/http-context.util';
 
 @Injectable({
   providedIn: 'root'
@@ -27,12 +28,15 @@ export class AuthService {
   private readonly authUrl = `${environment.apiBaseURL}/auth`;
 
   registerUser(formData: RegisterRequest) {
-    return this.http.post(`${this.authUrl}/register`, formData)
+    return this.http.post(`${this.authUrl}/register`, formData, {
+      context: skipInterceptors({ toast: true })
+    });
   }
 
   loginUser(formData: LoginRequest) {
     return this.http.post<LoginResponse>(`${this.authUrl}/login`, formData, {
-      withCredentials: true
+      withCredentials: true,
+      context: skipInterceptors({ toast: true })
     }).pipe(
       tap((response) => this.setSession(response))
     );
@@ -40,7 +44,8 @@ export class AuthService {
 
   refreshSession() {
     return this.http.post<LoginResponse>(`${this.authUrl}/refresh`, {}, {
-      withCredentials: true
+      withCredentials: true,
+      context: skipInterceptors({ loader: true, toast: true })
     }).pipe(
       tap((response) => this.setSession(response)),
       catchError((error) => {
@@ -60,7 +65,8 @@ export class AuthService {
 
   reactivateAccount(formData: LoginRequest) {
     return this.http.post<LoginResponse>(`${this.authUrl}/reactivate`, formData, {
-      withCredentials: true
+      withCredentials: true,
+      context: skipInterceptors({ toast: true })
     }).pipe(
       tap((response) => this.setSession(response))
     );
