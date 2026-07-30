@@ -77,7 +77,7 @@ body {
    DARK THEME TOKENS
 ========================= */
 
-.dark-theme {
+[data-theme='dark'] {
   --background: #0b1220;
   --surface: #1e293b;
   --surface-secondary: #334155;

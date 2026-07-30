@@ -1,31 +1,41 @@
 .docs-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f9fafb;
+  background-color: var(--background);
+  color: var(--text-primary);
   font-family:
     system-ui,
     -apple-system,
     sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 .docs-sidebar {
   width: 280px;
-  background-color: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 
   .sidebar-header {
     padding: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
-    background: #fff;
+    background: var(--surface);
     z-index: 10;
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease;
   }
 
   .nav-menu {
@@ -40,7 +50,7 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-weight: 700;
-    color: #9ca3af;
+    color: var(--text-muted);
     margin: 0 0 0.5rem 0.5rem;
   }
 
@@ -53,7 +63,7 @@
   .nav-item {
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
-    color: #4b5563;
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 500;
@@ -61,8 +71,8 @@
 
     &:hover,
     &:focus-visible {
-      background-color: #f3f4f6;
-      color: #111827;
+      background-color: var(--surface-secondary);
+      color: var(--text-primary);
       outline: none;
     }
   }
@@ -80,14 +90,14 @@
       margin: 0;
       font-size: 2.5rem;
       font-weight: 800;
-      color: #111827;
+      color: var(--text-primary);
       letter-spacing: -0.025em;
     }
 
     .header-subtitle {
       margin: 0.5rem 0 0;
       font-size: 1.125rem;
-      color: #6b7280;
+      color: var(--text-secondary);
     }
   }
 }
@@ -103,24 +113,28 @@
       margin: 0;
       font-size: 1.75rem;
       font-weight: 700;
-      color: #111827;
-      border-bottom: 2px solid #e5e7eb;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border);
       padding-bottom: 0.5rem;
     }
 
     p {
       margin: 0.5rem 0 0;
-      color: #6b7280;
+      color: var(--text-secondary);
     }
   }
 }
 
 .doc-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 
   &__preview {
     padding: 3rem;
@@ -128,22 +142,22 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-image: radial-gradient(#e5e7eb 1px, transparent 0);
+    background-image: radial-gradient(var(--border) 1px, transparent 0);
     background-size: 20px 20px;
   }
 
   &__code-block {
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border);
 
     .code-summary {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0.75rem 1.5rem;
-      background: #f9fafb;
+      background: var(--surface-secondary);
       cursor: pointer;
       font-weight: 600;
-      color: #4b5563;
+      color: var(--text-secondary);
       font-size: 0.875rem;
       list-style: none;
 
@@ -196,13 +210,13 @@
   }
 
   &__api {
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border);
     padding: 1.5rem;
 
     h3 {
       margin: 0 0 1rem 0;
       font-size: 1.125rem;
-      color: #111827;
+      color: var(--text-primary);
     }
 
     .table-container {
@@ -217,22 +231,22 @@
 
       th {
         padding: 0.75rem 1rem;
-        background-color: #f9fafb;
-        color: #374151;
+        background-color: var(--surface-secondary);
+        color: var(--text-primary);
         font-weight: 600;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border);
       }
 
       td {
         padding: 0.75rem 1rem;
-        border-bottom: 1px solid #e5e7eb;
-        color: #4b5563;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-secondary);
 
         code {
-          background: #f3f4f6;
+          background: var(--surface-secondary);
           padding: 0.2em 0.4em;
           border-radius: 0.25rem;
-          color: #be185d;
+          color: var(--accent);
           font-family: monospace;
           font-size: 0.8em;
         }
@@ -256,9 +270,9 @@
 .color-group-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-secondary, #4b5563);
+  color: var(--text-secondary);
   margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border, #e5e7eb);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 0.5rem;
 }
 
@@ -295,21 +309,21 @@
     border-radius: 0.5rem;
     margin-bottom: 0.75rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border, #e2e8f0);
+    border: 1px solid var(--border);
   }
 
   .swatch-name {
     font-weight: 600;
-    color: var(--text-primary, #0f172a);
+    color: var(--text-primary);
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
   }
 
   .swatch-var {
     font-size: 0.75rem;
-    color: var(--text-muted, #94a3b8);
+    color: var(--text-muted);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    background: var(--surface-secondary, #f1f5f9);
+    background: var(--surface-secondary);
     padding: 0.15rem 0.35rem;
     border-radius: 0.25rem;
   }
@@ -326,7 +340,7 @@
   flex-direction: column;
   gap: 0.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border, #e5e7eb);
+  border-bottom: 1px solid var(--border);
 
   &:last-child {
     border-bottom: none;
@@ -341,10 +355,10 @@
 
   code {
     font-size: 0.875rem;
-    color: var(--primary, #2563eb);
+    color: var(--primary);
     font-weight: 600;
     font-family: ui-monospace, SFMono-Regular, monospace;
-    background: var(--surface-secondary, #f1f5f9);
+    background: var(--surface-secondary);
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
   }
@@ -355,18 +369,18 @@
 }
 
 .copy-btn-small {
-  background: var(--surface-secondary, #f1f5f9);
-  border: 1px solid var(--border, #e2e8f0);
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
-  color: var(--text-secondary, #475569);
+  color: var(--text-secondary);
   transition: all 0.2s;
 
   &:hover {
-    background: var(--border, #e2e8f0);
-    color: var(--text-primary, #0f172a);
+    background: var(--border);
+    color: var(--text-primary);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, effect, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Logo } from '../shared/components/logo/logo';
 import { ToastService } from '../shared/components/toast/toast.service';
@@ -29,6 +29,8 @@ import { Legend } from '../shared/components/charts/legend/legend';
 import { PieChartContainer } from '../shared/components/charts/pie-chart-container/pie-chart-container';
 import { TimeAgoPipe } from '../shared/pipes/time-ago-pipe';
 
+type ThemeMode = 'light' | 'dark' | 'system';
+
 interface DocSection {
   title: string;
   items: { id: string; name: string }[];
@@ -40,9 +42,70 @@ interface DocSection {
   templateUrl: './design-system.html',
   styleUrls: ['./design-system.scss']
 })
-export class DesignSystem {
+export class DesignSystem implements OnInit, OnDestroy {
   private toastService = inject(ToastService);
   protected dialogService = inject(DialogService);
+
+  theme = signal<ThemeMode>('system');
+  private mediaQueryList: MediaQueryList | null = null;
+
+  themeOptions: DropdownOption<ThemeMode>[] = [
+    { label: 'System Default', value: 'system', icon: '💻' },
+    { label: 'Light Mode', value: 'light', icon: '☀️' },
+    { label: 'Dark Mode', value: 'dark', icon: '🌙' }
+  ];
+
+  constructor() {
+    effect(() => {
+      this.applyTheme(this.theme());
+    });
+  }
+
+  ngOnInit() {
+    this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+    this.mediaQueryList.addEventListener('change', this.onSystemThemeChange);
+
+    const savedTheme = localStorage.getItem('design-system-theme') as ThemeMode;
+    if (savedTheme) {
+      this.theme.set(savedTheme);
+    } else {
+      this.applyTheme('system');
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.mediaQueryList) {
+      this.mediaQueryList.removeEventListener('change', this.onSystemThemeChange);
+    }
+  }
+
+  onThemeChange(mode: ThemeMode) {
+    this.theme.set(mode);
+  }
+
+  private onSystemThemeChange = (e: MediaQueryListEvent) => {
+    if (this.theme() === 'system') {
+      this.applyTheme('system');
+    }
+  };
+
+  private applyTheme(mode: ThemeMode) {
+    let isDark = false;
+
+    if (mode === 'system') {
+      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } else {
+      isDark = mode === 'dark';
+    }
+
+    if (isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+
+    localStorage.setItem('design-system-theme', mode);
+  }
 
   navigation: DocSection[] = [
     {
@@ -252,7 +315,6 @@ export class DesignSystem {
     { id: '104', name: 'Alice Johnson', status: 'Pending' }
   ]);
 
-  // Shared Data for Pie Chart & Legend Demos
   protected chartDemoData = signal([
     { id: 'tech', label: 'Technology', value: 45000, color: '#3b82f6' },
     { id: 'health', label: 'Healthcare', value: 25000, color: '#10b981' },
@@ -260,7 +322,6 @@ export class DesignSystem {
     { id: 'energy', label: 'Energy', value: 10000, color: '#ef4444' }
   ]);
 
-  // Hover States
   protected activePieSlice = signal<string | null>(null);
   protected activeLegendId = signal<string | null>(null);
 
@@ -292,7 +353,7 @@ export class DesignSystem {
     this.showFullScreenLoader = true;
     setTimeout(() => {
       this.showFullScreenLoader = false;
-    }, 3000); // Auto-hide after 3 seconds
+    }, 3000);
   }
 
   scrollTo(id: string): void {
@@ -374,7 +435,7 @@ export class DesignSystem {
       title: 'Session Expired',
       message: 'Your authentication session has expired due to inactivity. Please log in again to continue.',
       primaryLabel: 'Log In',
-      isBlocking: true // Prevents closing via backdrop or escape key
+      isBlocking: true
     });
   }
 }

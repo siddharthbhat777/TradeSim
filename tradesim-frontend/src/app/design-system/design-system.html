@@ -3,6 +3,12 @@
     <aside class="docs-sidebar">
         <div class="sidebar-header">
             <app-logo size="small"></app-logo>
+
+            <div class="theme-switcher" style="display: flex; align-items: center; gap: 0.5rem; width: 200px;">
+                <app-dropdown [options]="themeOptions" [ngModel]="theme()" (ngModelChange)="onThemeChange($event)"
+                    size="medium" [fullWidth]="true">
+                </app-dropdown>
+            </div>
         </div>
 
         <nav class="nav-menu" aria-label="Component Navigation">
