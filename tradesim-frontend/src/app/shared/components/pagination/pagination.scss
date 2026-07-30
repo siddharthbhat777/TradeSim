@@ -4,15 +4,18 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-
-  &--disabled {
-    opacity: 0.6;
-  }
+  position: relative;
+  z-index: 10;
 
   &__nav {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+
+    &--disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
   }
 
   &__nav-btn {

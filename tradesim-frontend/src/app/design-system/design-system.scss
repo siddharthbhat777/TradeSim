@@ -129,7 +129,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow);
   transition:
     background-color 0.3s ease,
@@ -144,6 +144,8 @@
     justify-content: center;
     background-image: radial-gradient(var(--border) 1px, transparent 0);
     background-size: 20px 20px;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
   }
 
   &__code-block {
@@ -212,6 +214,8 @@
   &__api {
     border-top: 1px solid var(--border);
     padding: 1.5rem;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
 
     h3 {
       margin: 0 0 1rem 0;

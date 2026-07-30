@@ -1,5 +1,5 @@
-<div class="pagination" [class.pagination--disabled]="totalPages() <= 1">
-    <div class="pagination__nav">
+<div class="pagination">
+    <div class="pagination__nav" [class.pagination__nav--disabled]="totalPages() <= 1">
         <app-button class="pagination__nav-btn" variant="outline" [size]="size()" text="" ariaLabel="Previous page"
             [width]="navBtnDimension()" [height]="navBtnDimension()" [disabled]="isFirstPage()"
             (buttonClick)="goToPrevious()">
