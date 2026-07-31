@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, input, signal, viewChild } from '@angular/core';
+import { generateUniqueId } from '../../utils/id-generator';
 
 export type TooltipPosition = 'top' | 'right' | 'bottom' | 'left';
 
 const SHOW_DELAY = 300;
 const HIDE_DELAY = 100;
-
-let nextTooltipId = 0;
 
 @Component({
   selector: 'app-tooltip',
@@ -16,7 +15,7 @@ let nextTooltipId = 0;
 export class Tooltip {
   private readonly panelRef = viewChild.required<ElementRef<HTMLDivElement>>('panel');
 
-  private readonly uid = nextTooltipId++;
+  private readonly uid = generateUniqueId('tt');
 
   protected readonly tooltipId = `app-tooltip-${this.uid}`;
   protected readonly anchorName = `--app-tooltip-anchor-${this.uid}`;

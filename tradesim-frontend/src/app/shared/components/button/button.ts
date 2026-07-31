@@ -1,4 +1,4 @@
-import { booleanAttribute, Component, input, output } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { InlineLoader } from '../loaders/inline-loader/inline-loader';
 
 export type ButtonVariant =
@@ -21,7 +21,8 @@ export type ButtonSize = 'small' | 'medium' | 'large';
   host: {
     '[style.width]': 'width() || null',
     '[style.height]': 'height() || null'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Button {
   variant = input<ButtonVariant>('primary');

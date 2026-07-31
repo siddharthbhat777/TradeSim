@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 export type BadgeColor =
   | 'primary'
@@ -11,7 +11,8 @@ export type BadgeColor =
 @Component({
   selector: 'app-badge',
   templateUrl: './badge.html',
-  styleUrl: './badge.scss'
+  styleUrl: './badge.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Badge {
   color = input<BadgeColor>('primary');

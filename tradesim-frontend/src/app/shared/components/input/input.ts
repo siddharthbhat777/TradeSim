@@ -1,4 +1,4 @@
-import { booleanAttribute, Component, computed, contentChild, input, ViewEncapsulation } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, contentChild, input, ViewEncapsulation } from '@angular/core';
 import type { ValidationErrors } from '@angular/forms';
 import { InputDirective } from '../../directives/input';
 
@@ -7,20 +7,12 @@ export type InputErrorMessages = Record<
   string | ((error: unknown, errors: ValidationErrors) => string)
 >;
 
-const booleanAttributeOrNull = (value: unknown): boolean | null => {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  return booleanAttribute(value);
-};
-
 @Component({
   selector: 'app-input',
-  imports: [],
   templateUrl: './input.html',
   styleUrl: './input.scss',
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomInput {
   private readonly inputDirective = contentChild(InputDirective);
@@ -33,13 +25,11 @@ export class CustomInput {
   required = input(false, { transform: booleanAttribute });
   fullWidth = input(false, { transform: booleanAttribute });
   showErrors = input(true, { transform: booleanAttribute });
-  reserveMessageSpace = input<boolean | null>(null, {
-    transform: booleanAttributeOrNull
-  });
+  reserveMessageSpace = input<boolean | null>(null);
 
   shouldReserveMessageSpace = computed(() => {
     if (this.reserveMessageSpace() !== null) {
-      return this.reserveMessageSpace();
+      return this.reserveMessageSpace() as boolean;
     }
 
     const control = this.inputDirective()?.control;

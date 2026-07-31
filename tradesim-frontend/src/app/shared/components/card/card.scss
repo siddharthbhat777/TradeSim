@@ -109,6 +109,6 @@
   }
 }
 
-.dark-theme .card--hoverable:hover {
+[data-theme='dark'] .card--hoverable:hover {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
 }

@@ -7,7 +7,7 @@ import { AuthUser } from '../../models/auth-user';
 import { LoginRequest } from '../../models/login-request';
 import { LoginResponse } from '../../models/login-respons';
 import { catchError, finalize, tap, throwError } from 'rxjs';
-import { skipInterceptors } from '../../interceptors/http-context.util';
+import { skipInterceptors } from '../../shared/utils/http-context';
 
 @Injectable({
   providedIn: 'root'

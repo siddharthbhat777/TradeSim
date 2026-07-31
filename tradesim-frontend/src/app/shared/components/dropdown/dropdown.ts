@@ -18,6 +18,7 @@ import { NgControl } from '@angular/forms';
 import { CustomInput } from '../input/input';
 import { InputDirective } from '../../directives/input';
 import { InlineLoader } from '../loaders/inline-loader/inline-loader';
+import { generateUniqueId } from '../../utils/id-generator';
 
 export interface DropdownOption<T = unknown> {
   label: string;
@@ -43,13 +44,11 @@ const booleanAttributeOrNull = (value: unknown): boolean | null => {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Dropdown<T = unknown> implements ControlValueAccessor {
-  private static nextId = 0;
-
   private readonly ngControl = inject(NgControl, { optional: true, self: true });
   private readonly hostRef = inject(ElementRef);
   private readonly searchInputRef = viewChild<ElementRef<HTMLInputElement>>('searchInput');
 
-  private readonly uid = `dd-${Dropdown.nextId++}`;
+  private readonly uid = generateUniqueId('dd');
 
   protected readonly triggerId = `app-dropdown-trigger-${this.uid}`;
   protected readonly labelId = `app-dropdown-label-${this.uid}`;

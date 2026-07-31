@@ -1,10 +1,10 @@
-import { Component, input, model, signal, ElementRef, viewChild } from '@angular/core';
+import { Component, input, model, signal, ElementRef, viewChild, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-checkbox',
-  standalone: true,
   templateUrl: './checkbox.html',
   styleUrl: './checkbox.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Checkbox {
   checked = model<boolean>(false);

@@ -8,7 +8,7 @@
 
     @if (isLoading()) {
     <span class="button__loader">
-        <app-inline-loader [size]="size() === 'large' ? 'medium' : 'small'"></app-inline-loader>
+        <app-inline-loader variant="inherit" [size]="size() === 'large' ? 'medium' : 'small'"></app-inline-loader>
     </span>
     } @else {
     <span class="button__icon" aria-hidden="true">

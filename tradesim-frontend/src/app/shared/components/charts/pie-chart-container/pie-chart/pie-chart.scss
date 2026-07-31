@@ -36,16 +36,16 @@
   transform: scale(0.98);
 }
 
-:host-context(.dark-theme) .pie-slice,
-.dark-theme .pie-slice {
+:host-context([data-theme='dark']) .pie-slice,
+[data-theme='dark'] .pie-slice {
   fill: color-mix(in srgb, var(--slice-base-color) 40%, #1e293b);
   stroke: color-mix(in srgb, var(--slice-base-color) 80%, white);
 }
 
-:host-context(.dark-theme) .pie-slice:hover,
-:host-context(.dark-theme) .pie-slice.is-hovered,
-.dark-theme .pie-slice:hover,
-.dark-theme .pie-slice.is-hovered {
+:host-context([data-theme='dark']) .pie-slice:hover,
+:host-context([data-theme='dark']) .pie-slice.is-hovered,
+[data-theme='dark'] .pie-slice:hover,
+[data-theme='dark'] .pie-slice.is-hovered {
   fill: color-mix(in srgb, var(--slice-base-color) 70%, #1e293b);
 }
 

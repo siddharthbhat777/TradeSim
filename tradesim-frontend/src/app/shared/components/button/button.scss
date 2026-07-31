@@ -8,7 +8,7 @@
   display: inline-block;
   --button-icon-size: 18px;
 
-  ::ng-deep [button-icon] {
+  [button-icon] {
     width: var(--button-icon-size);
     height: var(--button-icon-size);
     max-width: var(--button-icon-size);
@@ -153,9 +153,6 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-
-    ::ng-deep .spinner-wrapper {
-      color: currentColor !important;
-    }
+    color: currentColor;
   }
 }

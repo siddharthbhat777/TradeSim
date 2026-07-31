@@ -49,6 +49,10 @@
   &.variant-muted {
     color: var(--text-muted);
   }
+
+  &.variant-inherit {
+    color: inherit;
+  }
 }
 
 .spinner-svg {

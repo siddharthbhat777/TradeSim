@@ -6,6 +6,7 @@ import {
   contentChildren,
   input,
   model,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Directive, inject } from '@angular/core';
@@ -39,7 +40,8 @@ export class TableCellDirective<T = unknown> {
   selector: 'app-table',
   imports: [Pagination, EmptyState, NgTemplateOutlet, InlineLoader],
   templateUrl: './table.html',
-  styleUrl: './table.scss'
+  styleUrl: './table.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Table<T = unknown> {
   readonly columns = input.required<TableColumn<T>[]>();

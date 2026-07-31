@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import type { ControlValueAccessor } from '@angular/forms';
 import { NgControl } from '@angular/forms';
+import { generateUniqueId } from '../../utils/id-generator';
 
 export interface SegmentOption<T = unknown> {
   label: string;
@@ -20,16 +21,6 @@ export interface SegmentOption<T = unknown> {
 }
 
 export type SegmentedControlSize = 'small' | 'medium' | 'large';
-
-const booleanAttributeOrNull = (value: unknown): boolean | null => {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  return booleanAttribute(value);
-};
-
-let nextSegmentedId = 0;
 
 @Component({
   selector: 'app-segmented-control',
@@ -49,7 +40,7 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor, OnDe
 
   private readonly segmentRefs = viewChildren<ElementRef<HTMLButtonElement>>('segmentButton');
 
-  private readonly uid = nextSegmentedId++;
+  private readonly uid = generateUniqueId('seg');
   protected readonly labelId = `app-segmented-label-${this.uid}`;
   protected readonly errorId = `app-segmented-error-${this.uid}`;
 
@@ -60,9 +51,7 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor, OnDe
   readonly fullWidth = input(false, { transform: booleanAttribute });
   readonly required = input(false, { transform: booleanAttribute });
   readonly errorMessage = input('Please select an option.');
-  readonly reserveMessageSpace = input<boolean | null>(null, {
-    transform: booleanAttributeOrNull
-  });
+  readonly reserveMessageSpace = input<boolean | null>(null);
 
   protected readonly value = signal<T | null>(null);
   protected readonly disabledState = signal(false);
@@ -94,7 +83,7 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor, OnDe
 
   protected readonly shouldReserveMessageSpace = computed(() => {
     if (this.reserveMessageSpace() !== null) {
-      return this.reserveMessageSpace();
+      return this.reserveMessageSpace() as boolean;
     }
 
     return this.required();

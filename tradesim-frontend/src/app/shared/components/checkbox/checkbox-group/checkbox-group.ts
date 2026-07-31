@@ -1,4 +1,4 @@
-import { Component, input, model, computed, contentChild, TemplateRef } from '@angular/core';
+import { Component, input, model, computed, contentChild, TemplateRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Checkbox } from '../checkbox';
 
@@ -6,7 +6,8 @@ import { Checkbox } from '../checkbox';
   selector: 'app-checkbox-group',
   imports: [CommonModule, Checkbox],
   templateUrl: './checkbox-group.html',
-  styleUrl: './checkbox-group.scss'
+  styleUrl: './checkbox-group.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CheckboxGroup {
   options = input<any[]>([]);

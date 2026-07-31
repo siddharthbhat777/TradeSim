@@ -1,5 +1,5 @@
 import { HttpContext } from '@angular/common/http';
-import { SKIP_ERROR_TOAST, SKIP_GLOBAL_LOADER } from '../constants/http-context';
+import { SKIP_ERROR_TOAST, SKIP_GLOBAL_LOADER } from '../../constants/http-context';
 
 export interface InterceptorSkipOptions {
     loader?: boolean;

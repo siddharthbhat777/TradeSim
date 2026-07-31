@@ -26,7 +26,7 @@
   }
 }
 
-:host-context(.dark-theme) .skeleton {
+:host-context([data-theme='dark']) .skeleton {
   --skeleton-base: var(--surface-secondary);
   --skeleton-highlight: var(--outline-border-hover);
 }

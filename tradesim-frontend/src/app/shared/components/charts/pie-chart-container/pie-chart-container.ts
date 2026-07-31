@@ -1,14 +1,14 @@
-import { Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import { PieChart, PieChartData } from './pie-chart/pie-chart';
 import { Legend } from '../legend/legend';
 import { InlineLoader } from '../../loaders/inline-loader/inline-loader';
 
 @Component({
   selector: 'app-pie-chart-container',
-  standalone: true,
   imports: [PieChart, Legend, InlineLoader],
   templateUrl: './pie-chart-container.html',
-  styleUrl: './pie-chart-container.scss'
+  styleUrl: './pie-chart-container.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PieChartContainer {
   readonly data = input.required<PieChartData[]>();

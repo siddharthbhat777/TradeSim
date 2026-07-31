@@ -1,4 +1,4 @@
-import { Component, computed, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 
 export type StepperVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'outline';
 export type StepperSize = 'small' | 'medium' | 'large';
@@ -6,7 +6,8 @@ export type StepperSize = 'small' | 'medium' | 'large';
 @Component({
   selector: 'app-number-stepper',
   templateUrl: './number-stepper.html',
-  styleUrl: './number-stepper.scss'
+  styleUrl: './number-stepper.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NumberStepper {
   readonly value = model<number>(0);

@@ -1,5 +1,6 @@
 import { booleanAttribute, ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { generateUniqueId } from '../../utils/id-generator';
 
 export type ToggleSize = 'small' | 'medium' | 'large';
 export type ToggleVariant = 'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning';
@@ -18,8 +19,6 @@ export type ToggleVariant = 'primary' | 'secondary' | 'accent' | 'success' | 'da
   ]
 })
 export class Toggle implements ControlValueAccessor {
-  private static nextId = 0;
-
   readonly label = input<string>();
   readonly size = input<ToggleSize>('medium');
   readonly variant = input<ToggleVariant>('primary');
@@ -32,7 +31,7 @@ export class Toggle implements ControlValueAccessor {
 
   protected readonly disabledState = computed(() => this.disabled() || this.cvaDisabled());
 
-  protected readonly labelId = `app-toggle-label-${Toggle.nextId++}`;
+  protected readonly labelId = generateUniqueId('app-toggle-label');
 
   protected readonly classes = computed(() => {
     const classList = ['toggle', `toggle--${this.size()}`];

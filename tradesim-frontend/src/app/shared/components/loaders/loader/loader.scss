@@ -87,7 +87,7 @@
   animation: draw-line 2.4s ease-in-out infinite;
   filter: drop-shadow(0 4px 6px rgba(6, 182, 212, 0.2));
 
-  :host-context(.dark-theme) & {
+  :host-context([data-theme='dark']) & {
     filter: drop-shadow(0 4px 8px rgba(34, 211, 238, 0.5));
   }
 }

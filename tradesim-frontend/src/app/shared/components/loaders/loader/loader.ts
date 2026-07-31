@@ -1,10 +1,11 @@
-import { Component, input, inject } from '@angular/core';
+import { Component, input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { LoaderService } from './loader.service';
 
 @Component({
   selector: 'app-loader',
   templateUrl: './loader.html',
-  styleUrl: './loader.scss'
+  styleUrl: './loader.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Loader {
   size = input<'small' | 'medium' | 'large'>('medium');
