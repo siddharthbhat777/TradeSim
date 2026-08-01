@@ -9,7 +9,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      let errorMessage = 'An unexpected error occurred.';
+      let errorMessage = '';
 
       if (error.error instanceof ErrorEvent) {
         errorMessage = `Network Error: ${error.error.message}`;
@@ -34,12 +34,19 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 500:
             errorMessage = backendMessage || 'Server error. Our team has been notified.';
             break;
+          default:
+            errorMessage = backendMessage || 'An unexpected error occurred. Please try again.';
+            break;
         }
       }
 
       console.error('[Global Error]', errorMessage);
 
-      if (!req.context.get(SKIP_ERROR_TOAST)) {
+      const toastConfig = req.context.get(SKIP_ERROR_TOAST);
+      const skipAll = toastConfig === true;
+      const skipSpecific = Array.isArray(toastConfig) && toastConfig.includes(error.status);
+
+      if (!skipAll && !skipSpecific) {
         toastService.danger(errorMessage);
       }
 

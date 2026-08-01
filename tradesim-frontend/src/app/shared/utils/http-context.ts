@@ -3,7 +3,7 @@ import { SKIP_ERROR_TOAST, SKIP_GLOBAL_LOADER } from '../../constants/http-conte
 
 export interface InterceptorSkipOptions {
     loader?: boolean;
-    toast?: boolean;
+    toast?: boolean | number[];
 }
 
 export function skipInterceptors(options: InterceptorSkipOptions): HttpContext {
@@ -13,8 +13,8 @@ export function skipInterceptors(options: InterceptorSkipOptions): HttpContext {
         context.set(SKIP_GLOBAL_LOADER, true);
     }
 
-    if (options.toast) {
-        context.set(SKIP_ERROR_TOAST, true);
+    if (options.toast !== undefined) {
+        context.set(SKIP_ERROR_TOAST, options.toast);
     }
 
     return context;

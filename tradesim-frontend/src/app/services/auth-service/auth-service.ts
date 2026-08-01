@@ -29,14 +29,14 @@ export class AuthService {
 
   registerUser(formData: RegisterRequest) {
     return this.http.post(`${this.authUrl}/register`, formData, {
-      context: skipInterceptors({ toast: true })
+      context: skipInterceptors({ loader: true })
     });
   }
 
   loginUser(formData: LoginRequest) {
     return this.http.post<LoginResponse>(`${this.authUrl}/login`, formData, {
       withCredentials: true,
-      context: skipInterceptors({ toast: true })
+      context: skipInterceptors({ loader: true })
     }).pipe(
       tap((response) => this.setSession(response))
     );
@@ -57,7 +57,8 @@ export class AuthService {
 
   logout() {
     return this.http.post<void>(`${this.authUrl}/logout`, {}, {
-      withCredentials: true
+      withCredentials: true,
+      context: skipInterceptors({ loader: true })
     }).pipe(
       finalize(() => this.clearSession())
     );
@@ -66,7 +67,7 @@ export class AuthService {
   reactivateAccount(formData: LoginRequest) {
     return this.http.post<LoginResponse>(`${this.authUrl}/reactivate`, formData, {
       withCredentials: true,
-      context: skipInterceptors({ toast: true })
+      context: skipInterceptors({ loader: true })
     }).pipe(
       tap((response) => this.setSession(response))
     );
