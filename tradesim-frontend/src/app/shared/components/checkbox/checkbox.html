@@ -1,0 +1,22 @@
+<label class="checkbox-wrapper" [class.disabled]="disabled()" [class.label-left]="labelPosition() === 'left'"
+    [class.is-invalid]="invalid() || (required() && !checked() && touched())">
+    <input #inputElement type="checkbox" class="visually-hidden" [checked]="checked()" [indeterminate]="indeterminate()"
+        [disabled]="disabled()" [required]="required()" (change)="toggle($event)" (blur)="touched.set(true)" />
+
+    <div class="custom-checkbox">
+        @if (indeterminate()) {
+        <svg viewBox="0 0 24 24" class="state-icon">
+            <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" />
+        </svg>
+        } @else if (checked()) {
+        <svg viewBox="0 0 24 24" class="state-icon">
+            <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round" />
+        </svg>
+        }
+    </div>
+
+    <div class="checkbox-label">
+        <ng-content></ng-content>
+    </div>
+</label>

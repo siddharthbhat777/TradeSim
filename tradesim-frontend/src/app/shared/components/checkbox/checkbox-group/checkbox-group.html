@@ -1,0 +1,27 @@
+<div class="checkbox-group-container">
+
+    @if (showSelectAll()) {
+    <div class="checkbox-group-header">
+        <app-checkbox [checked]="allSelected()" [indeterminate]="isIndeterminate()" (checkedChange)="toggleAll($event)">
+            <ng-content select="[header-content]">
+                <span class="default-header-text">{{ selectAllText() }}</span>
+            </ng-content>
+        </app-checkbox>
+    </div>
+    <div class="group-divider"></div>
+    }
+
+    <div class="checkbox-group-list" [class.row-layout]="layout() === 'row'">
+        @for (option of options(); track option[valueKey()]) {
+        <app-checkbox [checked]="isSelected(option[valueKey()])"
+            (checkedChange)="toggleItem(option[valueKey()], $event)">
+            @if (optionTemplate()) {
+            <ng-container *ngTemplateOutlet="optionTemplate()!; context: { $implicit: option }"></ng-container>
+            } @else {
+            <span class="default-list-text">{{ option[displayKey()] }}</span>
+            }
+        </app-checkbox>
+        }
+    </div>
+
+</div>

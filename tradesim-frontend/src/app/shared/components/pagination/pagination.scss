@@ -1,0 +1,120 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  position: relative;
+  z-index: 10;
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &--disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  }
+
+  &__nav-btn {
+    flex-shrink: 0;
+
+    ::ng-deep .button {
+      gap: 0;
+      padding: 0;
+    }
+  }
+
+  &__page-input {
+    .app-input {
+      width: 100%;
+      text-align: center;
+    }
+
+    .pagination__input--shake {
+      animation: pagination-shake 0.3s ease;
+    }
+
+    &--small {
+      width: 3.5rem;
+    }
+
+    &--medium {
+      width: 4rem;
+    }
+
+    &--large {
+      width: 4.5rem;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__page-size {
+    &--small {
+      width: 8rem;
+    }
+
+    &--medium {
+      width: 9rem;
+    }
+
+    &--large {
+      width: 10rem;
+    }
+  }
+
+  &__range {
+    color: var(--text-secondary);
+    white-space: nowrap;
+
+    &--small {
+      font-size: 0.85rem;
+    }
+
+    &--medium {
+      font-size: 0.9rem;
+    }
+
+    &--large {
+      font-size: 1rem;
+    }
+  }
+}
+
+@keyframes pagination-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+@media (max-width: 640px) {
+  .pagination {
+    &__range {
+      display: none;
+    }
+  }
+}

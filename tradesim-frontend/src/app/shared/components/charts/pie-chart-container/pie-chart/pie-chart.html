@@ -1,0 +1,37 @@
+<div class="chart-wrapper">
+
+    <svg [attr.width]="size()" [attr.height]="shape() === 'half' ? size() / 2 : size()" [attr.viewBox]="viewBox()"
+        class="pie-svg" (mouseleave)="onMouseLeave()">
+
+        @for (slice of slices(); track slice.id) {
+        <path [attr.d]="slice.pathD" [style.--slice-base-color]="slice.color" class="pie-slice"
+            [class.is-hovered]="hoveredSlice()?.id === slice.id || activeSliceId() === slice.id"
+            [class.is-dimmed]="(hoveredSlice() !== null && hoveredSlice()?.id !== slice.id) || (activeSliceId() !== null && activeSliceId() !== slice.id)"
+            (mousemove)="onMouseMove($event, slice)">
+        </path>
+        }
+    </svg>
+
+    @if (chartStyle() === 'donut') {
+    <div class="chart-center-content" [class.is-half]="shape() === 'half'"
+        [style.width.px]="size() - (donutThickness() * 2) - 40">
+        <ng-content select="[chartCenter]"></ng-content>
+    </div>
+    }
+
+    @if (hoveredSlice(); as activeSlice) {
+    <div class="mouse-tooltip" [style.left.px]="tooltipX()" [style.top.px]="tooltipY()">
+
+        <div class="tooltip-header">
+            <span class="legend-icon" [style.background]="activeSlice.color"></span>
+            <span class="tooltip-title">{{ activeSlice.label }}</span>
+        </div>
+
+        <div class="tooltip-body">
+            <span class="tooltip-value">{{ activeSlice.value | number }}</span>
+            <span class="tooltip-percentage">({{ activeSlice.percentage | number:'1.0-1' }}%)</span>
+        </div>
+    </div>
+    }
+
+</div>

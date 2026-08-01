@@ -1,4 +1,4 @@
-<app-modal>
+<app-modal (closed)="closeAuth()" [ariaLabel]="currentAuthStatus() === authStatus.Login ? 'Login' : 'Sign up'">
     <div class="forms-layout">
         <div class="close-button" (click)="closeAuth()">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" stroke='#000' strokeWidth='0.5'

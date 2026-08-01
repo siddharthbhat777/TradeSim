@@ -1,0 +1,116 @@
+.table-wrapper {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: visible;
+  position: relative;
+}
+
+.table__content-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.table__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 950;
+  cursor: wait;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--surface);
+    opacity: 0.6;
+    backdrop-filter: blur(2px);
+    z-index: -1;
+  }
+}
+
+.table__loading-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  cursor: wait;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface);
+
+  th {
+    background: var(--surface-secondary);
+    color: var(--text-primary);
+    font-weight: 600;
+
+    &:first-child {
+      border-top-left-radius: 15px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 15px;
+    }
+  }
+
+  td {
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  tbody tr {
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-secondary);
+    }
+  }
+}
+
+.table__cell--left {
+  text-align: left;
+}
+
+.table__cell--center {
+  text-align: center;
+}
+
+.table__cell--right {
+  text-align: right;
+}
+
+.table__pagination {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-secondary);
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+
+.table--small .table th,
+.table--small .table td {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+}
+
+.table--medium .table th,
+.table--medium .table td {
+  padding: 14px 16px;
+  font-size: 0.9rem;
+}
+
+.table--large .table th,
+.table--large .table td {
+  padding: 18px 20px;
+  font-size: 1rem;
+}

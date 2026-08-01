@@ -1,0 +1,35 @@
+<div class="app-form-field" [class.app-form-field--full-width]="fullWidth()"
+    [class.app-form-field--invalid]="shouldShowError()"
+    [class.app-form-field--reserve-message]="shouldReserveMessageSpace()">
+    @if (label()) {
+    <label class="app-form-field__label" [attr.for]="inputId()">
+        {{ label() }}
+
+        @if (isRequired()) {
+        <span class="app-form-field__required" aria-hidden="true">*</span>
+        }
+    </label>
+    }
+
+    <div class="app-form-field__control-wrapper">
+        <span class="app-form-field__prefix">
+            <ng-content select="[prefix]"></ng-content>
+        </span>
+
+        <ng-content></ng-content>
+
+        <span class="app-form-field__suffix">
+            <ng-content select="[suffix]"></ng-content>
+        </span>
+    </div>
+
+    @if (shouldReserveMessageSpace()) {
+    <p class="app-form-field__message" [class.app-form-field__message--error]="shouldShowError()">
+        @if (shouldShowError()) {
+        {{ getErrorMessage() }}
+        } @else if (helperText()) {
+        {{ helperText() }}
+        }
+    </p>
+    }
+</div>

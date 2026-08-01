@@ -1,0 +1,2800 @@
+<div class="docs-layout">
+
+    <aside class="docs-sidebar">
+        <div class="sidebar-header">
+            <app-logo size="small"></app-logo>
+
+            <div class="theme-switcher" style="display: flex; align-items: center; gap: 0.5rem; width: 200px;">
+                <app-dropdown [options]="themeOptions" [ngModel]="theme()" (ngModelChange)="onThemeChange($event)"
+                    size="medium" [fullWidth]="true">
+                </app-dropdown>
+            </div>
+        </div>
+
+        <nav class="nav-menu" aria-label="Component Navigation">
+            @for (section of navigation; track section.title) {
+            <div class="nav-group">
+                <h3 class="nav-group-title">{{ section.title }}</h3>
+                <div class="nav-list" role="list">
+                    @for (item of section.items; track item.id) {
+                    <div class="nav-item" role="listitem" tabindex="0" (click)="scrollTo(item.id)"
+                        (keydown.enter)="scrollTo(item.id)">
+                        {{ item.name }}
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+        </nav>
+    </aside>
+
+    <main class="docs-content">
+        <header class="content-header">
+            <h1>Component Library</h1>
+            <p class="header-subtitle">Interactive documentation, code snippets, and API references.</p>
+        </header>
+
+        <section id="logo" class="doc-section">
+            <div class="section-header">
+                <h2>Logo</h2>
+                <p>The primary branding component for TradeSim.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <app-logo size="large" [showText]="true"></app-logo>
+                    <div style="margin-top: 2rem;">
+                        <app-logo size="small" [showText]="false"></app-logo>
+                    </div>
+                </div>
+
+                <details class="doc-card__code-block">
+                    <summary class="code-summary">
+                        <span>View Source</span>
+                    </summary>
+                    <div class="code-content">
+                        <button class="copy-btn" (click)="copyCode(logoCodeSnippet)"
+                            aria-label="Copy code snippet">Copy</button>
+                        <pre><code>{{ logoCodeSnippet }}</code></pre>
+                    </div>
+                </details>
+
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the overall dimensions of the logo SVG and typography.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>showText</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Toggles the visibility of the "TradeSim" text alongside the SVG.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="colors" class="doc-section">
+            <div class="section-header">
+                <h2>Color Palette</h2>
+                <p>Global CSS variables for TradeSim. Click any swatch to copy the variable.</p>
+            </div>
+
+            <div class="doc-card" style="padding: 2rem;">
+                @for (group of colorGroups; track group.group) {
+                <div class="color-group">
+                    <h3 class="color-group-title">{{ group.group }}</h3>
+
+                    <div class="color-grid">
+                        @for (token of group.tokens; track token.variable) {
+                        <button class="color-swatch-btn" (click)="copyCode('var(' + token.variable + ')')"
+                            aria-label="Copy color variable">
+
+                            <div class="swatch" [style.background]="'var(' + token.variable + ')'"></div>
+                            <span class="swatch-name">{{ token.name }}</span>
+                            <code class="swatch-var">{{ token.variable }}</code>
+                        </button>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+        </section>
+
+        <section id="typography" class="doc-section">
+            <div class="section-header">
+                <h2>Typography</h2>
+                <p>Global text styles and color tokens. Click the variable tags to copy them.</p>
+            </div>
+
+            <div class="doc-card" style="padding: 2rem;">
+
+                <h3 class="color-group-title">Text Colors</h3>
+                <div class="color-grid" style="margin-bottom: 3rem;">
+                    <button class="color-swatch-btn" (click)="copyCode('var(--text-primary)')"
+                        aria-label="Copy text-primary">
+                        <div class="swatch" style="background: var(--text-primary); height: 40px;"></div>
+                        <span class="swatch-name">Primary Text</span>
+                        <code class="swatch-var">--text-primary</code>
+                    </button>
+
+                    <button class="color-swatch-btn" (click)="copyCode('var(--text-secondary)')"
+                        aria-label="Copy text-secondary">
+                        <div class="swatch" style="background: var(--text-secondary); height: 40px;"></div>
+                        <span class="swatch-name">Secondary Text</span>
+                        <code class="swatch-var">--text-secondary</code>
+                    </button>
+
+                    <button class="color-swatch-btn" (click)="copyCode('var(--text-muted)')"
+                        aria-label="Copy text-muted">
+                        <div class="swatch" style="background: var(--text-muted); height: 40px;"></div>
+                        <span class="swatch-name">Muted Text</span>
+                        <code class="swatch-var">--text-muted</code>
+                    </button>
+                </div>
+
+                <h3 class="color-group-title">Global Text Classes</h3>
+                <div class="typography-preview-list">
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('heading-xl')">Copy Class</button>
+                            <code>.heading-xl</code>
+                        </div>
+                        <div class="type-sample heading-xl">The quick brown fox</div>
+                    </div>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('heading-lg')">Copy Class</button>
+                            <code>.heading-lg</code>
+                        </div>
+                        <div class="type-sample heading-lg">The quick brown fox</div>
+                    </div>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('heading-md')">Copy Class</button>
+                            <code>.heading-md</code>
+                        </div>
+                        <div class="type-sample heading-md">The quick brown fox jumps over the lazy dog.</div>
+                    </div>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('text-body')">Copy Class</button>
+                            <code>.text-body</code>
+                        </div>
+                        <div class="type-sample text-body">TradeSim provides a sandbox environment for users to simulate
+                            market conditions. The quick brown fox jumps over the lazy dog.</div>
+                    </div>
+
+                    <div class="type-row">
+                        <div class="type-class">
+                            <button class="copy-btn-small" (click)="copyCode('text-muted')">Copy Class</button>
+                            <code>.text-muted</code>
+                        </div>
+                        <div class="type-sample text-muted">Press ESC to close this dialog. This is an example of muted
+                            helper text.</div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="button" class="doc-section">
+            <div class="section-header">
+                <h2>Button</h2>
+                <p>Interactive core button component supporting variants, sizes, and content projection for icons.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
+                        <app-button variant="primary">Primary</app-button>
+
+                        <app-button variant="secondary">Secondary</app-button>
+
+                        <app-button variant="outline">Outline</app-button>
+
+                        <app-button variant="warning" [isLoading]="true">Saving...</app-button>
+
+                        <app-button variant="success" [disabled]="true">Success</app-button>
+
+                        <app-button variant="danger" iconPosition="right">
+                            Delete
+                            <svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
+                        </app-button>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-button variant=\'primary\'>Primary</app-button>')">Copy</button>
+                            <pre><code>&lt;app-button variant="primary"&gt;Primary&lt;/app-button&gt;
+
+&lt;app-button variant="danger" iconPosition="right"&gt;
+  Delete
+  &lt;svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;
+    &lt;path d="M3 6h18"&gt;&lt;/path&gt;
+    &lt;path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"&gt;&lt;/path&gt;
+    &lt;path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"&gt;&lt;/path&gt;
+  &lt;/svg&gt;
+&lt;/app-button&gt;
+
+&lt;app-button variant="primary" [isLoading]="true"&gt;Saving...&lt;/app-button&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'outline'</code>
+                                    </td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The visual style of the button.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Adjusts padding and font-size.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>iconPosition</code></td>
+                                    <td><code>'left' | 'right'</code></td>
+                                    <td><code>'left'</code></td>
+                                    <td>Determines if the icon projects to the left or right of the text.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>isLoading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows the inline loader and disables user interactions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>disabled</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Disables the button native functionality and applies opacity.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>buttonClick</code></td>
+                                    <td><code>EventEmitter&lt;MouseEvent&gt;</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Emitted when clicked (safely ignores clicks if disabled or loading).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="badge" class="doc-section">
+            <div class="section-header">
+                <h2>Badge</h2>
+                <p>A compact visual indicator used for statuses, tags, and labels.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
+                        <app-badge color="primary">Primary</app-badge>
+                        <app-badge color="secondary">Secondary</app-badge>
+                        <app-badge color="accent">Accent</app-badge>
+                        <app-badge color="success">Success</app-badge>
+                        <app-badge color="danger">Danger</app-badge>
+                        <app-badge color="warning">Warning</app-badge>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-badge color=\'success\'>Success</app-badge>')">Copy</button>
+                            <pre><code>&lt;app-badge color="primary"&gt;Primary&lt;/app-badge&gt;
+&lt;app-badge color="secondary"&gt;Secondary&lt;/app-badge&gt;
+&lt;app-badge color="accent"&gt;Accent&lt;/app-badge&gt;
+
+&lt;app-badge color="success"&gt;Success&lt;/app-badge&gt;
+&lt;app-badge color="warning"&gt;Warning&lt;/app-badge&gt;
+&lt;app-badge color="danger"&gt;Danger&lt;/app-badge&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>color</code></td>
+                                    <td><code>'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning'</code>
+                                    </td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The semantic color variant of the badge.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="card" class="doc-section">
+            <div class="section-header">
+                <h2>Card</h2>
+                <p>A versatile container component supporting variants, loading states, and interactive capabilities.
+                </p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; width: 100%;">
+
+                        <app-card>
+                            <h4 style="margin-top: 0;">Default Card</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Standard surface background
+                                with a subtle shadow.</p>
+                        </app-card>
+
+                        <app-card variant="outline" [hoverable]="true">
+                            <h4 style="margin-top: 0;">Outline & Hoverable</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Hover over me to see the
+                                elevation and transform effect.</p>
+                        </app-card>
+
+                        <app-card border="primary">
+                            <h4 style="margin-top: 0;">Bordered Card</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Default variant with a
+                                primary colored border.</p>
+                        </app-card>
+
+                        <app-card variant="accent">
+                            <h4 style="margin-top: 0;">Accent Variant</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">Semantic background for
+                                highlighted or featured content.</p>
+                        </app-card>
+
+                        <app-card [isLoading]="true">
+                            <h4 style="margin-top: 0;">Loading State</h4>
+                            <p style="margin-bottom: 0; color: #6b7280; font-size: 0.9rem;">This content is currently
+                                being processed.</p>
+                        </app-card>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-card>\n  <h4>Title</h4>\n  <p>Content goes here.</p>\n</app-card>')">Copy</button>
+                            <pre><code>&lt;app-card&gt;
+  &lt;h4&gt;Default Card&lt;/h4&gt;
+  &lt;p&gt;Standard surface background.&lt;/p&gt;
+&lt;/app-card&gt;
+
+&lt;app-card variant="outline" [hoverable]="true"&gt;
+  &lt;p&gt;Hover over me!&lt;/p&gt;
+&lt;/app-card&gt;
+
+&lt;app-card border="primary"&gt;
+  &lt;p&gt;I have a primary border.&lt;/p&gt;
+&lt;/app-card&gt;
+
+&lt;app-card [isLoading]="true"&gt;
+  &lt;p&gt;Content is loading...&lt;/p&gt;
+&lt;/app-card&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>'default' | 'surface' | 'outline' | 'accent' | 'success' | 'danger' | 'warning'</code>
+                                    </td>
+                                    <td><code>'default'</code></td>
+                                    <td>The visual style and background of the card.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>border</code></td>
+                                    <td><code>'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning'</code>
+                                    </td>
+                                    <td><code>undefined</code></td>
+                                    <td>Applies a specific border color. <br><em>Note: Only applied when variant is
+                                            "default".</em></td>
+                                </tr>
+                                <tr>
+                                    <td><code>hoverable</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Adds a shadow elevation and slight translateY effect on hover.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>isLoading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows a blur overlay with an inline loader and blocks interactions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onCardClick</code></td>
+                                    <td><code>(event: Event) => void</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>If passed, automatically applies a11y attributes (role, tabindex) and transforms
+                                        the card into a clickable element.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="input" class="doc-section">
+            <div class="section-header">
+                <h2>Input</h2>
+                <p>A highly composable form field component combining a structural wrapper with a native input
+                    directive.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; width: 100%;">
+
+                        <app-input label="Email Address" helperText="We will never share your email." [required]="true">
+                            <input appInput type="email" placeholder="e.g. sid@example.com" [(ngModel)]="dummyEmail"
+                                required email />
+                        </app-input>
+
+                        <app-input label="Search Portfolio">
+                            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input appInput type="text" placeholder="Search ticker symbol..." />
+                        </app-input>
+
+                        <app-input label="Investment Amount" errorText="Amount exceeds your buying power.">
+                            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <input appInput type="number" placeholder="0.00" [appInputInvalid]="true" value="50000" />
+                            <span suffix style="font-weight: 600; font-size: 0.85rem;">USD</span>
+                        </app-input>
+
+                        <app-input label="Trade Notes" helperText="Optional notes for your trading journal.">
+                            <textarea appInput placeholder="Why are you taking this trade?" [(ngModel)]="dummyNotes"
+                                required></textarea>
+                        </app-input>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-input label=\'Email\' [required]=\'true\'>\n  <input appInput type=\'email\' />\n</app-input>')">Copy</button>
+                            <pre><code>&lt;app-input label="Email Address" helperText="We will never share your email." [required]="true"&gt;
+  &lt;input appInput type="email" placeholder="e.g. sid@example.com" /&gt;
+&lt;/app-input&gt;
+
+&lt;app-input label="Search Portfolio"&gt;
+  &lt;svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;
+    &lt;circle cx="11" cy="11" r="8"&gt;&lt;/circle&gt;
+    &lt;line x1="21" y1="21" x2="16.65" y2="16.65"&gt;&lt;/line&gt;
+  &lt;/svg&gt;
+  &lt;input appInput type="text" placeholder="Search ticker symbol..." /&gt;
+&lt;/app-input&gt;
+
+&lt;app-input label="Investment Amount" errorText="Amount exceeds your buying power."&gt;
+  &lt;input appInput type="number" [appInputInvalid]="true" value="50000" /&gt;
+  &lt;span suffix&gt;USD&lt;/span&gt;
+&lt;/app-input&gt;
+
+&lt;app-input label="Trade Notes"&gt;
+  &lt;textarea appInput placeholder="Why are you taking this trade?"&gt;&lt;/textarea&gt;
+&lt;/app-input&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Wrapper Properties <code>&lt;app-input&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>The label text associated with the native input.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>helperText</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>Secondary text displayed below the input.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>errorText</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>Explicit error message to display when invalid.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>required</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Renders the required asterisk next to the label.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[prefix]</code> / <code>[suffix]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>ng-content slots for icons or text inside the input boundaries.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Directive Properties <code>[appInput]</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>appInputSize</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the padding and height of the native element.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>appInputInvalid</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the invalid visual state (red border/shadow).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>appInputFullWidth</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Removes the max-width restriction on the input element.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="checkbox" class="doc-section">
+            <div class="section-header">
+                <h2>Checkbox & Checkbox Group</h2>
+                <p>Standalone checkbox toggles and managed groups with "Select All" and indeterminate states.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 3rem; width: 100%; max-width: 600px;">
+
+                        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                            <app-checkbox [(checked)]="singleCheckbox">Basic Checkbox</app-checkbox>
+                            <app-checkbox [indeterminate]="checkboxIndeterminate"
+                                (click)="checkboxIndeterminate = !checkboxIndeterminate">Indeterminate</app-checkbox>
+                            <app-checkbox [disabled]="true" [checked]="true">Disabled</app-checkbox>
+                            <app-checkbox [invalid]="true">Invalid State</app-checkbox>
+                        </div>
+
+                        <div
+                            style="background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">Document
+                                Permissions</h4>
+                            <app-checkbox-group [options]="permissions" displayKey="name" valueKey="id"
+                                [showSelectAll]="true" selectAllText="Grant All Permissions"
+                                [(selectedValues)]="selectedPermissions">
+                            </app-checkbox-group>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-checkbox [(checked)]=\'val\'>Label</app-checkbox>')">Copy</button>
+                            <pre><code>&lt;app-checkbox [(checked)]="singleCheckbox"&gt;Basic Checkbox&lt;/app-checkbox&gt;
+
+&lt;app-checkbox [indeterminate]="true"&gt;Indeterminate&lt;/app-checkbox&gt;
+
+&lt;app-checkbox [invalid]="true"&gt;Invalid State&lt;/app-checkbox&gt;
+
+&lt;app-checkbox-group 
+  [options]="permissions" 
+  displayKey="name" 
+  valueKey="id" 
+  [showSelectAll]="true" 
+  selectAllText="Grant All Permissions" 
+  [(selectedValues)]="selectedPermissions"&gt;
+&lt;/app-checkbox-group&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Checkbox Properties <code>&lt;app-checkbox&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2.5rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>checked</code></td>
+                                    <td><code>ModelSignal&lt;boolean&gt;</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Two-way bindable state of the checkbox.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>indeterminate</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows a dash icon instead of a checkmark for mixed states.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>invalid</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the error visual state (red border/background).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>labelPosition</code></td>
+                                    <td><code>'left' | 'right'</code></td>
+                                    <td><code>'right'</code></td>
+                                    <td>Positions the projected label text relative to the box.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Group Properties <code>&lt;app-checkbox-group&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>options</code></td>
+                                    <td><code>any[]</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Array of objects representing the checkbox options.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>selectedValues</code></td>
+                                    <td><code>ModelSignal&lt;any[]&gt;</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Two-way bindable array of currently selected <code>valueKey</code>s.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>displayKey</code> / <code>valueKey</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'label' / 'value'</code></td>
+                                    <td>The object keys used to extract the text and underlying value.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>showSelectAll</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Renders a master checkbox that manages the state of all options.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>layout</code></td>
+                                    <td><code>'column' | 'row'</code></td>
+                                    <td><code>'column'</code></td>
+                                    <td>Renders the list vertically or horizontally.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="toggle" class="doc-section">
+            <div class="section-header">
+                <h2>Toggle</h2>
+                <p>A customizable switch component for boolean states with support for sizes, variants, and custom
+                    icons.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 2.5rem; width: 100%;">
+
+                        <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+                            <app-toggle label="Enable Notifications" [(ngModel)]="toggleBasic"></app-toggle>
+                            <app-toggle label="Compact Mode" size="small" [(ngModel)]="toggleSmall"></app-toggle>
+                            <app-toggle label="Master Switch" size="large" [(ngModel)]="toggleLarge"></app-toggle>
+                            <app-toggle label="Disabled" [disabled]="true" [ngModel]="true"></app-toggle>
+                        </div>
+
+                        <div
+                            style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                            <app-toggle label="Auto-Save" variant="success" labelPosition="right"
+                                [(ngModel)]="toggleSuccess"></app-toggle>
+                            <app-toggle label="Delete Protection" variant="danger"
+                                [(ngModel)]="toggleDelete"></app-toggle>
+
+                            <app-toggle label="Dark Mode" variant="accent" offVariant="warning"
+                                [(ngModel)]="toggleCustom">
+                                <svg toggleOnIcon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                                <svg toggleOffIcon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </app-toggle>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-toggle label=\'Switch\' [(ngModel)]=\'val\'></app-toggle>')">Copy</button>
+                            <pre><code>&lt;app-toggle label="Enable Notifications" [(ngModel)]="isActive"&gt;&lt;/app-toggle&gt;
+
+&lt;app-toggle label="Compact Mode" size="small" [(ngModel)]="isCompact"&gt;&lt;/app-toggle&gt;
+
+&lt;app-toggle label="Auto-Save" variant="success" labelPosition="right" [(ngModel)]="autoSave"&gt;&lt;/app-toggle&gt;
+
+&lt;app-toggle label="Dark Mode" variant="accent" offVariant="warning" [(ngModel)]="darkMode"&gt;
+  &lt;svg toggleOnIcon viewBox="0 0 24 24"&gt;
+    &lt;!-- Moon Icon Path --&gt;
+  &lt;/svg&gt;
+  &lt;svg toggleOffIcon viewBox="0 0 24 24"&gt;
+    &lt;!-- Sun Icon Path --&gt;
+  &lt;/svg&gt;
+&lt;/app-toggle&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Toggle Properties <code>&lt;app-toggle&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>The text label displayed next to the toggle switch.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the dimensions of the track and thumb.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>ToggleVariant</code></td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The theme color applied when the toggle is checked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>offVariant</code></td>
+                                    <td><code>ToggleVariant</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>The theme color applied when the toggle is unchecked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>labelPosition</code></td>
+                                    <td><code>'left' | 'right'</code></td>
+                                    <td><code>'left'</code></td>
+                                    <td>Positions the label text relative to the switch element.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[toggleOnIcon]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>ng-content slot for an icon displayed when checked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[toggleOffIcon]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>ng-content slot for an icon displayed when unchecked.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="dropdown" class="doc-section">
+            <div class="section-header">
+                <h2>Dropdown</h2>
+                <p>A custom select component with typeahead, search filtering, and custom option templating support.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; width: 100%;">
+
+                        <app-dropdown label="Framework" placeholder="Select a framework"
+                            helperText="Solid is currently disabled." [options]="frameworkOptions"
+                            [(ngModel)]="selectedFramework">
+                        </app-dropdown>
+
+                        <app-dropdown label="Country" placeholder="Select a country" [searchable]="true"
+                            searchPlaceholder="Find country..." [options]="countryOptions"
+                            [(ngModel)]="selectedCountry">
+                        </app-dropdown>
+
+                        <app-dropdown label="Assignee" [loading]="true" placeholder="Loading users..." [options]="[]">
+                        </app-dropdown>
+
+                        <app-dropdown label="Permissions" placeholder="Read Only" [disabled]="true" [options]="[]">
+                        </app-dropdown>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-dropdown [options]=\'opts\' [(ngModel)]=\'val\'></app-dropdown>')">Copy</button>
+                            <pre><code>&lt;app-dropdown 
+  label="Framework" 
+  placeholder="Select a framework" 
+  helperText="Solid is currently disabled."
+  [options]="frameworkOptions" 
+  [(ngModel)]="selectedFramework"&gt;
+&lt;/app-dropdown&gt;
+
+&lt;app-dropdown 
+  label="Country" 
+  placeholder="Select a country" 
+  [searchable]="true"
+  searchPlaceholder="Find country..."
+  [options]="countryOptions" 
+  [(ngModel)]="selectedCountry"&gt;
+&lt;/app-dropdown&gt;
+
+&lt;app-dropdown 
+  label="Assignee" 
+  [loading]="true"
+  [options]="[]"&gt;
+&lt;/app-dropdown&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Dropdown Properties <code>&lt;app-dropdown&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>options</code></td>
+                                    <td><code>DropdownOption&lt;T&gt;[]</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Required array of objects containing label, value, icon, and disabled states.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code> / <code>placeholder</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>The label text and placeholder text when no option is selected.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>searchable</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Enables a text input within the panel to filter options.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'large'</code></td>
+                                    <td>Controls the padding, font size, and height of the trigger element.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>loading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows an inline loader in the trigger and disables interaction.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>panelLoading</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows an inline loader inside the open panel (useful for async searching).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>fullWidth</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Removes the default 400px max-width restriction.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="segmented-control" class="doc-section">
+            <div class="section-header">
+                <h2>Segmented Control</h2>
+                <p>A linear set of two or more segments, each of which functions as a mutually exclusive option.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 2.5rem; width: 100%;">
+
+                        <app-segmented-control label="View Mode (Medium)" [options]="viewOptions"
+                            [(ngModel)]="selectedView">
+                        </app-segmented-control>
+
+                        <app-segmented-control label="Frequency (Small)" size="small" [options]="sizeOptions"
+                            [(ngModel)]="selectedFrequency">
+                        </app-segmented-control>
+
+                        <app-segmented-control label="Full Width (Large)" size="large" [fullWidth]="true"
+                            [options]="viewOptions" [(ngModel)]="selectedView">
+                        </app-segmented-control>
+
+                        <app-segmented-control label="Subscription Plan" [options]="planOptions"
+                            [(ngModel)]="selectedPlan">
+                        </app-segmented-control>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-segmented-control [options]=\'opts\' [(ngModel)]=\'val\'></app-segmented-control>')">Copy</button>
+                            <pre><code>&lt;app-segmented-control 
+  label="View Mode" 
+  [options]="viewOptions" 
+  [(ngModel)]="selectedView"&gt;
+&lt;/app-segmented-control&gt;
+
+&lt;app-segmented-control 
+  label="Frequency" 
+  size="small"
+  [options]="sizeOptions" 
+  [(ngModel)]="selectedFrequency"&gt;
+&lt;/app-segmented-control&gt;
+
+&lt;app-segmented-control 
+  [fullWidth]="true"
+  [options]="viewOptions" 
+  [(ngModel)]="selectedView"&gt;
+&lt;/app-segmented-control&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Segmented Control Properties <code>&lt;app-segmented-control&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>options</code></td>
+                                    <td><code>SegmentOption&lt;T&gt;[]</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Required array of objects containing label, value, and disabled properties.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>Text label displayed above the segmented control track.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the padding, min-width, and font size of the segments.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>fullWidth</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the track to expand to 100% of its container width.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>required</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Marks the control as required, triggering validation errors if empty.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>errorMessage</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'Please select an option.'</code></td>
+                                    <td>The message to display when required validation fails.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="number-stepper" class="doc-section">
+            <div class="section-header">
+                <h2>Number Stepper</h2>
+                <p>A numeric input control with increment and decrement buttons.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem; width: 100%; align-items: center;">
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Basic ({{
+                                stepperBasic }})</span>
+                            <app-number-stepper [(value)]="stepperBasic">
+                            </app-number-stepper>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Min 0 / Max
+                                10</span>
+                            <app-number-stepper [min]="0" [max]="10" variant="secondary" [(value)]="stepperLimited">
+                            </app-number-stepper>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Large &
+                                Outline</span>
+                            <app-number-stepper size="large" variant="outline" [(value)]="stepperLarge">
+                            </app-number-stepper>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Mixed
+                                Variants</span>
+                            <app-number-stepper variant="danger" secondaryVariant="success" [(value)]="stepperMixed">
+                            </app-number-stepper>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-number-stepper [(value)]=\'val\'></app-number-stepper>')">Copy</button>
+                            <pre><code>&lt;app-number-stepper 
+  [(value)]="stepperBasic"&gt;
+&lt;/app-number-stepper&gt;
+
+&lt;app-number-stepper 
+  [min]="0" 
+  [max]="10" 
+  variant="secondary"
+  [(value)]="stepperLimited"&gt;
+&lt;/app-number-stepper&gt;
+
+&lt;app-number-stepper 
+  size="large" 
+  variant="outline"
+  [(value)]="stepperLarge"&gt;
+&lt;/app-number-stepper&gt;
+
+&lt;app-number-stepper 
+  variant="danger" 
+  secondaryVariant="success"
+  [(value)]="stepperMixed"&gt;
+&lt;/app-number-stepper&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Number Stepper Properties <code>&lt;app-number-stepper&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>value</code></td>
+                                    <td><code>ModelSignal&lt;number&gt;</code></td>
+                                    <td><code>0</code></td>
+                                    <td>The current numeric value. Supports two-way binding via <code>[(value)]</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>min</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>0</code></td>
+                                    <td>The minimum allowed value. Disables decrement button when reached.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>max</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>Number.MAX_SAFE_INTEGER</code></td>
+                                    <td>The maximum allowed value. Disables increment button when reached.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the dimensions of the stepper input and buttons.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>StepperVariant</code></td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The color theme applied to the buttons.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>secondaryVariant</code></td>
+                                    <td><code>StepperVariant | null</code></td>
+                                    <td><code>null</code></td>
+                                    <td>Overrides the color of the right (increment) button.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="alert" class="doc-section">
+            <div class="section-header">
+                <h2>Alert</h2>
+                <p>A banner component for communicating important state messages, warnings, or feedback to users.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 600px;">
+
+                        <app-alert variant="info" title="System Update">
+                            A new software update is available. Please refresh your browser to apply the latest changes.
+                        </app-alert>
+
+                        <app-alert variant="success" title="Payment Received">
+                            Your transaction was processed successfully. A receipt has been sent to your email.
+                        </app-alert>
+
+                        <app-alert variant="warning">
+                            <span alert-title>Storage Limit Reached</span>
+                            You have used 90% of your allotted storage space. Consider upgrading your plan.
+                        </app-alert>
+
+                        <app-alert variant="danger" title="Connection Error">
+                            Unable to connect to the authentication server. Please check your network connection and try
+                            again.
+                        </app-alert>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-alert variant=\'info\' title=\'System Update\'>\n  A new software update is available.\n</app-alert>')">Copy</button>
+                            <pre><code>&lt;app-alert variant="info" title="System Update"&gt;
+  A new software update is available. Please refresh your browser.
+&lt;/app-alert&gt;
+
+&lt;app-alert variant="success" title="Payment Received"&gt;
+  Your transaction was processed successfully.
+&lt;/app-alert&gt;
+
+&lt;app-alert variant="warning"&gt;
+  &lt;span alert-title&gt;Storage Limit Reached&lt;/span&gt;
+  You have used 90% of your allotted storage space.
+&lt;/app-alert&gt;
+
+&lt;app-alert variant="danger" title="Connection Error"&gt;
+  Unable to connect to the authentication server.
+&lt;/app-alert&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Properties</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>'info' | 'success' | 'warning' | 'danger'</code></td>
+                                    <td><code>'info'</code></td>
+                                    <td>The contextual severity and color theme of the alert.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>title</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>The title text for the alert. Alternatively, project content using
+                                        <code>[alert-title]</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>showIcon</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Controls whether the leading state icon is displayed.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="toast" class="doc-section">
+            <div class="section-header">
+                <h2>Toast (Snackbar)</h2>
+                <p>Brief, non-interruptive notifications that appear temporarily to provide feedback.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; width: 100%;">
+
+                        <app-button variant="success" (click)="showSuccessToast()">Success Toast</app-button>
+                        <app-button variant="danger" (click)="showErrorToast()">Error Toast</app-button>
+                        <app-button variant="warning" (click)="showWarningToast()">Warning Toast</app-button>
+                        <app-button variant="outline" (click)="showInfoToast()">Info Toast</app-button>
+                        <app-button variant="primary" (click)="showActionToast()">With Action</app-button>
+                        <app-button variant="secondary" (click)="showPositionToast()">Top Center Position</app-button>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('this.toastService.success(\'Message\')')">Copy</button>
+                            <pre ngNonBindable><code>// Inject the service
+toastService = inject(ToastService);
+
+// Basic variants
+this.toastService.success('Settings saved!');
+this.toastService.danger('Update failed.');
+this.toastService.warning('Storage almost full.');
+this.toastService.info('New version available.');
+
+// Advanced options
+this.toastService.info('Review terms', {
+  duration: 8000,
+  position: 'top-center',
+  action: {
+    label: 'Review',
+    onClick: () => router.navigate(['/terms'])
+  }
+});</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>ToastService Methods</h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Parameters</th>
+                                    <th>Returns</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>success()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows a success formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>danger()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows a danger/error formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>warning()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows a warning formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>info()</code></td>
+                                    <td><code>message: string, options?: ToastOptions</code></td>
+                                    <td><code>number (ID)</code></td>
+                                    <td>Shows an info formatted toast.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>dismiss()</code></td>
+                                    <td><code>id: number</code></td>
+                                    <td><code>void</code></td>
+                                    <td>Manually dismisses a specific toast by its ID.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>ToastOptions Interface</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>duration</code></td>
+                                    <td><code>number</code></td>
+                                    <td>Varies by variant</td>
+                                    <td>Time in milliseconds before the toast auto-dismisses.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>position</code></td>
+                                    <td><code>ToastPosition</code></td>
+                                    <td><code>'bottom-right'</code></td>
+                                    <td>Screen placement. Options include top/bottom paired with left/center/right, plus
+                                        center-left/right.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>action</code></td>
+                                    <td><code>ToastAction</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Object containing a <code>label</code> string and <code>onClick</code> callback
+                                        function.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="empty-state" class="doc-section">
+            <div class="section-header">
+                <h2>Empty State</h2>
+                <p>Visual placeholders for empty lists, missing data, or initial unconfigured states.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="display: flex; flex-direction: column; gap: 3rem; width: 100%; border: 1px dashed var(--border); border-radius: 8px; padding: 2rem; background: var(--surface-secondary);">
+
+                        <app-empty-state text="No results found"
+                            subtext="Try adjusting your search or filter to find what you're looking for.">
+                            <svg icon xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </app-empty-state>
+
+                        <hr style="width: 100%; border: none; border-top: 1px solid var(--border);">
+
+                        <app-empty-state text="You have no projects yet"
+                            subtext="Get started by creating your very first project." actionLabel="Create Project"
+                            (actionClick)="handleEmptyStateAction()">
+                            <svg icon xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                </path>
+                            </svg>
+                        </app-empty-state>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-empty-state text=\'No data\'></app-empty-state>')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Basic with Icon and Subtext --&gt;
+&lt;app-empty-state 
+  text="No results found" 
+  subtext="Try adjusting your search or filter."&gt;
+  &lt;svg icon viewBox="..."&gt;...&lt;/svg&gt;
+&lt;/app-empty-state&gt;
+
+&lt;!-- With Call to Action --&gt;
+&lt;app-empty-state 
+  text="You have no projects yet" 
+  subtext="Get started by creating your very first project."
+  actionLabel="Create Project"
+  (actionClick)="handleEmptyStateAction()"&gt;
+  &lt;i icon class="fas fa-folder-open"&gt;&lt;/i&gt;
+&lt;/app-empty-state&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Empty State Properties <code>&lt;app-empty-state&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>text</code></td>
+                                    <td><code>string</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The main primary heading for the empty state.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>subtext</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Optional secondary description or instructions.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>actionLabel</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Text for the call-to-action button. If provided, the button renders.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Empty State Events & Content</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>(actionClick)</code></td>
+                                    <td><code>EventEmitter&lt;void&gt;</code></td>
+                                    <td>Fired when the action button is clicked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>&lt;ng-content select="[icon]"&gt;</code></td>
+                                    <td><code>Content Projection</code></td>
+                                    <td>Place an element with the <code>icon</code> attribute inside the component to
+                                        render it above the text.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="loaders" class="doc-section">
+            <div class="section-header">
+                <h2>Loaders & Skeletons</h2>
+                <p>Visual indicators used to communicate background processing, data fetching, or page transitions.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 3rem; width: 100%;">
+
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Inline
+                                Spinners</h3>
+                            <div style="display: flex; align-items: center; gap: 2rem;">
+                                <app-inline-loader size="small"></app-inline-loader>
+                                <app-inline-loader size="medium"></app-inline-loader>
+                                <app-inline-loader size="large" variant="accent"></app-inline-loader>
+                                <app-inline-loader size="large" variant="danger"></app-inline-loader>
+                                <app-inline-loader size="large" variant="success"></app-inline-loader>
+                            </div>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px dashed var(--border);">
+
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Skeleton UI
+                            </h3>
+
+                            <div
+                                style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px; padding: 1.5rem; border: 1px solid var(--border); border-radius: 12px;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <app-skeleton shape="circle"></app-skeleton>
+                                    <div style="flex: 1;">
+                                        <app-skeleton shape="text" width="60%"></app-skeleton>
+                                        <app-skeleton shape="text" width="40%"></app-skeleton>
+                                    </div>
+                                </div>
+                                <app-skeleton shape="rect" height="120px"></app-skeleton>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Loader snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;app-inline-loader size="small" variant="primary"&gt;&lt;/app-inline-loader&gt;
+&lt;app-inline-loader size="large" variant="accent"&gt;&lt;/app-inline-loader&gt;
+
+&lt;app-skeleton shape="circle" width="48px" height="48px"&gt;&lt;/app-skeleton&gt;
+
+&lt;app-skeleton shape="text" width="100%"&gt;&lt;/app-skeleton&gt;
+&lt;app-skeleton shape="text" width="60%"&gt;&lt;/app-skeleton&gt;
+
+&lt;app-skeleton shape="rect" height="200px"&gt;&lt;/app-skeleton&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+
+                    <h3 style="margin-top: 0;">Inline Loader Properties <code>&lt;app-inline-loader&gt;</code></h3>
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'small'</code></td>
+                                    <td>The dimensions of the spinner (16px, 24px, or 48px).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>variant</code></td>
+                                    <td><code>'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning' | 'muted'</code>
+                                    </td>
+                                    <td><code>'primary'</code></td>
+                                    <td>The semantic color theme of the spinner stroke.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Skeleton Properties <code>&lt;app-skeleton&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>shape</code></td>
+                                    <td><code>'text' | 'rect' | 'circle'</code></td>
+                                    <td><code>'text'</code></td>
+                                    <td>Determines the base shape and default dimensions/border-radius.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>width</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Auto</td>
+                                    <td>Custom CSS width (e.g., '100%', '60px'). Overrides default shape widths.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>height</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Auto</td>
+                                    <td>Custom CSS height. Overrides default shape heights.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>rounded</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Auto</td>
+                                    <td>Custom border-radius (e.g., '4px'). Overrides default shape radius.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="dialog" class="doc-section">
+            <div class="section-header">
+                <h2>Dialog (Modal)</h2>
+                <p>A global, service-driven dialog for alerts, confirmations, and blocking prompts. Triggered via
+                    <code>DialogService</code>.
+                </p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <app-button variant="secondary" (click)="triggerStandardDialog()">Standard Alert</app-button>
+                        <app-button variant="primary" (click)="triggerConfirmDialog()">Confirm Action</app-button>
+                        <app-button variant="danger" (click)="triggerBlockingDialog()">Blocking Dialog</app-button>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Dialog snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>// 1. Inject the service
+dialogService = inject(DialogService);
+
+// 2. Standard Alert
+this.dialogService.open(&#123;
+  title: 'Success',
+  message: 'Your profile has been updated.',
+  primaryLabel: 'OK'
+&#125;);
+
+// 3. Confirmation Dialog
+this.dialogService.open(&#123;
+  title: 'Delete User?',
+  message: 'Are you sure? This cannot be undone.',
+  primaryLabel: 'Delete',
+  secondaryLabel: 'Cancel',
+  onPrimary: () => console.log('Confirmed'),
+  onSecondary: () => console.log('Cancelled')
+&#125;);
+
+// 4. Blocking / Critical (No close button/backdrop click)
+this.dialogService.open(&#123;
+  title: 'Session Expired',
+  message: 'Please log in again.',
+  primaryLabel: 'Log In',
+  isBlocking: true
+&#125;);</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">DialogOptions Interface</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>message</code></td>
+                                    <td><code>string</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The main body text of the dialog.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>title</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Optional header text. If omitted, the header section is hidden.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>primaryLabel</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Text for the primary confirmation button. If omitted, button is hidden.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>secondaryLabel</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Text for the secondary/cancel button. If omitted, button is hidden.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>isBlocking</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, hides the "X" close button and prevents closing via backdrop click or
+                                        Escape key.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>showClose</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Forces the "X" close button to show, even if the dialog lacks a title.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onPrimary</code></td>
+                                    <td><code>() => void</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Callback function executed when the primary button is clicked.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onSecondary</code></td>
+                                    <td><code>() => void</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Callback function executed when the secondary button is clicked.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tooltip" class="doc-section">
+            <div class="section-header">
+                <h2>Tooltip</h2>
+                <p>A native HTML popover utilizing modern CSS Anchor Positioning to display brief, informative text on
+                    hover or focus.</p>
+            </div>
+
+            <div class="doc-card">
+
+                <div class="doc-card__preview">
+                    <div
+                        style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; align-items: center; padding: 3rem 1rem;">
+
+                        <app-tooltip text="I am a tooltip on the top!" position="top">
+                            <app-button variant="outline">Hover Top</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip text="I am a tooltip on the bottom!" position="bottom">
+                            <app-button variant="outline">Hover Bottom</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip text="Appears on the left side." position="left">
+                            <app-button variant="outline">Hover Left</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip text="Appears on the right side." position="right">
+                            <app-button variant="outline">Hover Right</app-button>
+                        </app-tooltip>
+
+                        <app-tooltip position="top">
+                            <app-button variant="primary">Custom HTML</app-button>
+                            <div tooltipContent style="display: flex; flex-direction: column; gap: 4px;">
+                                <strong style="color: var(--accent);">Pro Tip</strong>
+                                <span>You can inject any custom HTML or components here!</span>
+                            </div>
+                        </app-tooltip>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('<app-tooltip text=\'Helpful info\' position=\'top\'>\n  <button>Hover me</button>\n</app-tooltip>')">Copy</button>
+                            <pre><code>&lt;app-tooltip text="Settings and preferences" position="top"&gt;
+  &lt;app-button variant="outline"&gt;Settings&lt;/app-button&gt;
+&lt;/app-tooltip&gt;
+
+&lt;app-tooltip position="right"&gt;
+  &lt;app-button variant="primary"&gt;More Info&lt;/app-button&gt;
+  
+  &lt;div tooltipContent&gt;
+    &lt;strong&gt;Rich Content&lt;/strong&gt;
+    &lt;p&gt;You can put badges, icons, or any HTML here.&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/app-tooltip&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Properties & Slots</h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property / Slot</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>text</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>''</code></td>
+                                    <td>The simple string text to display inside the tooltip panel.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>position</code></td>
+                                    <td><code>'top' | 'right' | 'bottom' | 'left'</code></td>
+                                    <td><code>'top'</code></td>
+                                    <td>The preferred popover position relative to the anchor. Falls back automatically
+                                        if space is restricted.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>&lt;ng-content&gt;</code> (Default)</td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>The element that acts as the trigger (anchor) for the tooltip.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[tooltipContent]</code></td>
+                                    <td><code>Slot</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Projects advanced/custom HTML inside the tooltip panel instead of just plain
+                                        string text.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="table" class="doc-section">
+            <div class="section-header">
+                <h2>Data Table</h2>
+                <p>A comprehensive table component with built-in pagination, loading states, empty states, and custom
+                    cell rendering via <code>tableCell</code> directive.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="margin-bottom: 1rem;">
+                        <app-button variant="secondary" size="small" (click)="toggleTableLoading()">Toggle Loading
+                            State</app-button>
+                    </div>
+
+                    <app-table [columns]="tableColumns()" [data]="tableData()" [isLoading]="tableIsLoading()"
+                        [(currentPage)]="tableCurrentPage" [(pageSize)]="tablePageSize">
+
+                        <!-- Custom template for 'status' column -->
+                        <ng-template tableCell="status" let-val>
+                            <span [style.color]="val === 'Active' ? 'var(--success)' : 'var(--text-muted)'"
+                                style="font-weight: 600;">
+                                {{ val }}
+                            </span>
+                        </ng-template>
+
+                        <!-- Custom template for 'actions' column -->
+                        <ng-template tableCell="actions" let-row="row">
+                            <app-button variant="outline" size="small">Edit</app-button>
+                        </ng-template>
+
+                    </app-table>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Table snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;app-table 
+  [columns]="columns()" 
+  [data]="data()"
+  [isLoading]="isLoading()"
+  [(currentPage)]="currentPage"
+  [(pageSize)]="pageSize"&gt;
+
+  &lt;!-- Custom Cell Template (binds to column 'key') --&gt;
+  &lt;ng-template tableCell="status" let-val&gt;
+    &lt;span class="status-badge"&gt;&#123;&#123; val &#125;&#125;&lt;/span&gt;
+  &lt;/ng-template&gt;
+
+  &lt;!-- Accessing the full row object --&gt;
+  &lt;ng-template tableCell="actions" let-row="row"&gt;
+    &lt;app-button variant="outline" size="small"&gt;Edit &#123;&#123; row.name &#125;&#125;&lt;/app-button&gt;
+  &lt;/ng-template&gt;
+
+&lt;/app-table&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Table Properties <code>&lt;app-table&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[columns]</code></td>
+                                    <td><code>TableColumn&lt;T&gt;[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Defines column keys, headers, alignment, and widths.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>T[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The array of objects to display in the table.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[paginated]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Whether to show pagination and slice the data automatically.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[isLoading]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Shows a loading overlay or a loading empty state.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[(currentPage)]</code></td>
+                                    <td><code>ModelSignal&lt;number&gt;</code></td>
+                                    <td><code>1</code></td>
+                                    <td>Two-way binding for the current active page.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[emptyText]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'No data to display'</code></td>
+                                    <td>Main text displayed when the data array is empty.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pagination" class="doc-section">
+            <div class="section-header">
+                <h2>Pagination</h2>
+                <p>Navigation controls for splitting large datasets across multiple pages. Uses internal dropdowns and
+                    inputs for page size and navigation.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
+                        <!-- Standard Pagination -->
+                        <div>
+                            <app-pagination [totalItems]="pagTotalItems()" [pageSizeOptions]="[10, 25, 50, 100]"
+                                [(currentPage)]="pagCurrentPage" [(pageSize)]="pagPageSize">
+                            </app-pagination>
+                            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                                State Check: Page <strong>{{ pagCurrentPage() }}</strong> | Size <strong>{{
+                                    pagPageSize() }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Pagination snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Basic Usage with Two-Way Binding --&gt;
+&lt;app-pagination
+  [totalItems]="87"
+  [pageSizeOptions]="[10, 25, 50, 100]"
+  [(currentPage)]="currentPage"
+  [(pageSize)]="pageSize"
+  size="medium"&gt;
+&lt;/app-pagination&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Pagination Properties <code>&lt;app-pagination&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[totalItems]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The total count of items across all pages.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[pageSizeOptions]</code></td>
+                                    <td><code>number[]</code></td>
+                                    <td><code>[10, 25, 50, 100]</code></td>
+                                    <td>Available options for the items-per-page dropdown.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[size]</code></td>
+                                    <td><code>'small' | 'medium' | 'large'</code></td>
+                                    <td><code>'medium'</code></td>
+                                    <td>Controls the scaling of internal buttons and inputs.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[(currentPage)]</code></td>
+                                    <td><code>ModelSignal&lt;number&gt;</code></td>
+                                    <td><code>1</code></td>
+                                    <td>Two-way bound active page number.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[(pageSize)]</code></td>
+                                    <td><code>ModelSignal&lt;number&gt;</code></td>
+                                    <td><code>10</code></td>
+                                    <td>Two-way bound items-per-page limit.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="price-indicator" class="doc-section">
+            <div class="section-header">
+                <h2>Price Indicator</h2>
+                <p>A presentational component for displaying financial values and market changes with automatic
+                    formatting, color-coding, and directional arrows.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+                        <!-- 1. Positive & Negative -->
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Market
+                                Changes (INR)</h3>
+                            <div style="display: flex; gap: 2rem; align-items: center;">
+                                <app-price-indicator [value]="15240" [percentage]="2.45"></app-price-indicator>
+                                <app-price-indicator [value]="-3420" [percentage]="-1.12"></app-price-indicator>
+                                <app-price-indicator [value]="0" [percentage]="0"></app-price-indicator>
+                            </div>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px dashed var(--border);">
+
+                        <!-- 2. Custom Formatting -->
+                        <div>
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Custom
+                                Currency & Decimals</h3>
+                            <div style="display: flex; gap: 2rem; align-items: center;">
+                                <app-price-indicator [value]="4250.75" [valueDecimals]="2" currency="USD" locale="en-US"
+                                    [showPercentage]="false">
+                                </app-price-indicator>
+
+                                <app-price-indicator [value]="-85.5" [valueDecimals]="2" currency="EUR" locale="de-DE"
+                                    [showArrow]="false">
+                                </app-price-indicator>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Price Indicator snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Standard (Defaults to INR) --&gt;
+&lt;app-price-indicator 
+  [value]="15240" 
+  [percentage]="2.45"&gt;
+&lt;/app-price-indicator&gt;
+
+&lt;!-- Custom Currency (Locale is required if currency != INR) --&gt;
+&lt;app-price-indicator 
+  [value]="4250.75" 
+  [valueDecimals]="2" 
+  currency="USD" 
+  locale="en-US" 
+  [showPercentage]="false"&gt;
+&lt;/app-price-indicator&gt;
+
+&lt;!-- Hide visual extras --&gt;
+&lt;app-price-indicator 
+  [value]="-85.5" 
+  [showArrow]="false"&gt;
+&lt;/app-price-indicator&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Price Indicator Properties <code>&lt;app-price-indicator&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[value]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The absolute numerical value to display.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[percentage]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>The percentage change. Will format automatically as a %.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[showPercentage]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Whether to display the percentage value (if provided).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[showArrow]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Whether to display the directional SVG arrow.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[currency]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>The ISO 4217 currency code (e.g., 'INR', 'USD', 'EUR').</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[locale]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'en-IN'</code> (if INR)</td>
+                                    <td>The BCP 47 language tag. <strong style="color: var(--danger)">Required if
+                                            currency is not INR.</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>[valueDecimals]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>0</code></td>
+                                    <td>Number of decimal places for the main value.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[percentageDecimals]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>2</code></td>
+                                    <td>Number of decimal places for the percentage.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pie-chart" class="doc-section">
+            <div class="section-header">
+                <h2>Pie Chart</h2>
+                <p>A standalone SVG-based pie and donut chart component. Supports hover states, tooltips, and custom
+                    center content projection.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; gap: 4rem; flex-wrap: wrap; justify-content: center;">
+
+                        <!-- 1. Full Donut with Center Content -->
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Standard
+                                Donut</h3>
+                            <app-pie-chart [data]="chartDemoData()" shape="full" chartStyle="donut" [size]="240"
+                                [activeSliceId]="activePieSlice()" (sliceHover)="onPieHover($event)">
+
+                                <div chartCenter>
+                                    <span style="font-size: 0.875rem; color: var(--text-muted);">Total Value</span>
+                                    <strong style="font-size: 1.25rem; color: var(--text-primary);">$100,000</strong>
+                                </div>
+                            </app-pie-chart>
+                        </div>
+
+                        <!-- 2. Half Shape (Gauge Style) -->
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Half Shape
+                            </h3>
+                            <app-pie-chart [data]="chartDemoData()" shape="half" chartStyle="donut" [size]="240"
+                                [donutThickness]="60">
+                            </app-pie-chart>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Pie Chart snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Donut Chart with Projected Center --&gt;
+&lt;app-pie-chart 
+  [data]="chartDemoData()" 
+  shape="full" 
+  chartStyle="donut" 
+  [size]="240"
+  [activeSliceId]="activePieSlice()"
+  (sliceHover)="onPieHover($event)"&gt;
+  
+  &lt;div chartCenter&gt;
+    &lt;span&gt;Total&lt;/span&gt;
+    &lt;strong&gt;$100k&lt;/strong&gt;
+  &lt;/div&gt;
+
+&lt;/app-pie-chart&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Pie Chart Properties <code>&lt;app-pie-chart&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>PieChartData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of objects containing id, label, value, and color.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[shape]</code></td>
+                                    <td><code>'full' | 'half'</code></td>
+                                    <td><code>'full'</code></td>
+                                    <td>Renders a complete 360-degree circle or a 180-degree semi-circle.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[chartStyle]</code></td>
+                                    <td><code>'solid' | 'donut'</code></td>
+                                    <td><code>'donut'</code></td>
+                                    <td>Whether to draw solid wedges or annular donut slices.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[size]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>400</code></td>
+                                    <td>The width (and maximum height) of the SVG in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[activeSliceId]</code></td>
+                                    <td><code>string | null</code></td>
+                                    <td><code>null</code></td>
+                                    <td>Externally controls which slice is highlighted (e.g., from a legend).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(sliceHover)</code></td>
+                                    <td><code>EventEmitter&lt;string | null&gt;</code></td>
+                                    <td>-</td>
+                                    <td>Emits the ID of the slice currently being hovered over.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="legend" class="doc-section">
+            <div class="section-header">
+                <h2>Legend</h2>
+                <p>An interactive list displaying data categorizations, exact values, and automatically calculated
+                    percentages.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="max-width: 300px; margin: 0 auto; background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
+
+                        <h3 style="margin-bottom: 1rem; margin-top: 0; font-size: 1rem; color: var(--text-secondary);">
+                            Portfolio Breakdown</h3>
+
+                        <app-legend [data]="chartDemoData()" [activeId]="activeLegendId()" [showPercentage]="true"
+                            (itemHover)="onLegendHover($event)">
+                        </app-legend>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Legend snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;app-legend 
+  [data]="chartDemoData()" 
+  [activeId]="activeLegendId()"
+  [showPercentage]="true"
+  (itemHover)="onLegendHover($event)"&gt;
+&lt;/app-legend&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Legend Properties <code>&lt;app-legend&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>LegendItem[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of objects containing id, label, value, and color.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[activeId]</code></td>
+                                    <td><code>string | null</code></td>
+                                    <td><code>null</code></td>
+                                    <td>Highlights the matching row and dims others.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[showPercentage]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Whether to automatically calculate and display the percentage of the total.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(itemHover)</code></td>
+                                    <td><code>EventEmitter&lt;string | null&gt;</code></td>
+                                    <td>-</td>
+                                    <td>Emits the ID of the legend item currently being hovered over.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pie-chart-container" class="doc-section">
+            <div class="section-header">
+                <h2>Pie Chart Container</h2>
+                <p>A smart wrapper that orchestrates the Pie Chart and Legend components together, handling layout,
+                    loading states, and automatic hover synchronization.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="margin-bottom: 2rem;">
+                        <app-button variant="secondary" size="small" (click)="toggleContainerLoading()">Toggle Loading
+                            State</app-button>
+                    </div>
+
+                    <div
+                        style="background: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
+                        <!-- 
+                  Using the same chartDemoData() from the PieChart/Legend demos.
+                  Try hovering over the chart or the legend in the UI to see them sync! 
+                -->
+                        <app-pie-chart-container [data]="chartDemoData()" [isLoading]="containerIsLoading()"
+                            legendPosition="right" chartStyle="donut" [size]="220">
+                        </app-pie-chart-container>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn"
+                                (click)="copyCode('Pie Chart Container snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Fully wired up chart and legend --&gt;
+&lt;app-pie-chart-container 
+  [data]="chartDemoData()" 
+  [isLoading]="isLoading()"
+  legendPosition="right"
+  chartStyle="donut"
+  shape="full"
+  [size]="220"&gt;
+&lt;/app-pie-chart-container&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Pie Chart Container Properties
+                        <code>&lt;app-pie-chart-container&gt;</code>
+                    </h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>PieChartData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Passed down to both the chart and the legend.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[legendPosition]</code></td>
+                                    <td><code>'top' | 'bottom' | 'left' | 'right'</code></td>
+                                    <td><code>'right'</code></td>
+                                    <td>Controls the flex layout orientation between the chart and legend.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[shape]</code></td>
+                                    <td><code>'full' | 'half'</code></td>
+                                    <td><code>'full'</code></td>
+                                    <td>Passed down to the pie chart.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[chartStyle]</code></td>
+                                    <td><code>'solid' | 'donut'</code></td>
+                                    <td><code>'solid'</code></td>
+                                    <td>Passed down to the pie chart.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[size]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>200</code></td>
+                                    <td>Controls the SVG size of the pie chart and the min-height of the loader.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[wrap]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Allows the flex container to wrap on smaller screens.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[isLoading]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Replaces the entire container contents with an inline loader.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="time-ago" class="doc-section">
+            <div class="section-header">
+                <h2>Time Ago Pipe</h2>
+                <p>A pure Angular pipe that transforms standard Dates, timestamps, or ISO strings into human-readable
+                    relative time formats (e.g., "Just now", "5 minutes ago").</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="max-width: 500px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Right now</span>
+                            <strong style="color: var(--text-primary);">{{ rightNow | timeAgo }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 5
+                                mins</span>
+                            <strong style="color: var(--text-primary);">{{ fiveMinutesAgo | timeAgo }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 2
+                                hours</span>
+                            <strong style="color: var(--text-primary);">{{ twoHoursAgo | timeAgo }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 3
+                                days</span>
+                            <strong style="color: var(--text-primary);">{{ threeDaysAgo | timeAgo }}</strong>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Current time - 1
+                                year</span>
+                            <strong style="color: var(--text-primary);">{{ oneYearAgo | timeAgo }}</strong>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Time Ago snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Pass a standard JavaScript Date object --&gt;
+&lt;span&gt;{{ myDateObject | timeAgo }}&lt;/span&gt;
+
+&lt;!-- Pass a Unix timestamp (milliseconds) --&gt;
+&lt;span&gt;{{ 1718293049000 | timeAgo }}&lt;/span&gt;
+
+&lt;!-- Pass an ISO string --&gt;
+&lt;span&gt;{{ '2024-05-10T12:00:00Z' | timeAgo }}&lt;/span&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Time Ago Usage <code>timeAgo</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Input Type</th>
+                                    <th>Output Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>string | Date | number | null</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Calculates the difference between the provided time and exactly now. Handles
+                                        plurals automatically and returns "Just now" for times under 30 seconds or
+                                        invalid inputs.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>

@@ -1,0 +1,46 @@
+.skeleton {
+  --skeleton-base: var(--border);
+  --skeleton-highlight: var(--surface-secondary);
+
+  display: block;
+  background-color: var(--skeleton-base);
+  position: relative;
+  overflow: hidden;
+  contain: paint;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 15%,
+      var(--skeleton-highlight) 35%,
+      var(--skeleton-highlight) 65%,
+      transparent 85%,
+      transparent 100%
+    );
+    animation: shimmer 2s infinite linear;
+  }
+}
+
+:host-context([data-theme='dark']) .skeleton {
+  --skeleton-base: var(--surface-secondary);
+  --skeleton-highlight: var(--outline-border-hover);
+}
+
+.text {
+  margin-bottom: 0.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

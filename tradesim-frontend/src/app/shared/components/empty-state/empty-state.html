@@ -1,0 +1,17 @@
+<div class="empty-state">
+    <div class="empty-state__icon">
+        <ng-content select="[icon]"></ng-content>
+    </div>
+
+    <p class="empty-state__text">{{ text() }}</p>
+
+    @if (subtext()) {
+    <p class="empty-state__subtext">{{ subtext() }}</p>
+    }
+
+    @if (actionLabel()) {
+    <button type="button" class="empty-state__action" (click)="actionClick.emit()">
+        {{ actionLabel() }}
+    </button>
+    }
+</div>

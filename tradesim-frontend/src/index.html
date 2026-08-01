@@ -6,15 +6,171 @@
   <title>TradesimFrontend</title>
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
+  <style>
+    .loader-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f8fafc;
+    }
+
+    .loader-wrapper.fullscreen-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .loader-wrapper.size-medium .loader-container {
+      width: 168px;
+      height: 140px;
+    }
+
+    .market-pulse-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .pulse-bar {
+      transform-origin: 50% 70px;
+      animation: bar-grow 1.2s ease-out infinite alternate;
+    }
+
+    .pulse-bar.bar-1 {
+      animation-delay: 0s;
+      fill: #475569;
+    }
+
+    .pulse-bar.bar-2 {
+      animation-delay: 0.2s;
+      fill: color-mix(in srgb, #2563eb 60%, transparent);
+    }
+
+    .pulse-bar.bar-3 {
+      animation-delay: 0.4s;
+      fill: #2563eb;
+    }
+
+    @keyframes bar-grow {
+      0% {
+        transform: scaleY(0.3);
+        opacity: 0.4;
+      }
+
+      100% {
+        transform: scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    .trend-line {
+      fill: none;
+      stroke: #06b6d4;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 150;
+      stroke-dashoffset: 150;
+      animation: draw-line 2.4s ease-in-out infinite;
+      filter: drop-shadow(0 4px 6px rgba(6, 182, 212, 0.2));
+    }
+
+    @keyframes draw-line {
+      0% {
+        stroke-dashoffset: 150;
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      50% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    .brand-text {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      fill: #0f172a;
+      animation: text-glow 2.4s ease-in-out infinite;
+    }
+
+    .brand-accent {
+      font-weight: 900;
+      fill: #2563eb;
+    }
+
+    @keyframes text-glow {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .loader-wrapper {
+        background-color: #0b1220;
+      }
+
+      .pulse-bar.bar-1 {
+        fill: #cbd5e1;
+      }
+
+      .trend-line {
+        stroke: #22d3ee;
+        filter: drop-shadow(0 4px 8px rgba(34, 211, 238, 0.5));
+      }
+
+      .brand-text {
+        fill: #f8fafc;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div class="loader-wrapper fullscreen-overlay size-medium">
+      <div class="loader-container">
+        <svg viewBox="0 0 120 100" class="market-pulse-svg" xmlns="http://www.w3.org/2000/svg">
+          <rect class="pulse-bar bar-1" x="25" y="40" width="12" height="30" rx="2" />
+          <rect class="pulse-bar bar-2" x="54" y="25" width="12" height="45" rx="2" />
+          <rect class="pulse-bar bar-3" x="83" y="10" width="12" height="60" rx="2" />
+          <path class="trend-line" d="M 10,55 L 31,30 L 60,20 L 89,0 L 110,-15" />
+          <text x="60" y="87" text-anchor="middle" class="brand-text">
+            Trade<tspan class="brand-accent">Sim</tspan>
+          </text>
+        </svg>
+      </div>
+    </div>
+  </app-root>
 </body>
 
 </html>

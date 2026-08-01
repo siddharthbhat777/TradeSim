@@ -1,0 +1,135 @@
+.toggle-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &--disabled {
+    opacity: 0.6;
+  }
+
+  &--label-right {
+    flex-direction: row-reverse;
+  }
+}
+
+.toggle {
+  --toggle-track-width: 2.75rem;
+  --toggle-track-height: 1.5rem;
+  --toggle-thumb-size: 1.15rem;
+  --toggle-thumb-inset: 0.175rem;
+  --toggle-icon-size: 0.9rem;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: var(--toggle-track-width);
+  height: var(--toggle-track-height);
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: var(--surface-secondary);
+  transition: background-color 0.2s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &--small {
+    --toggle-track-width: 2.25rem;
+    --toggle-track-height: 1.25rem;
+    --toggle-thumb-size: 0.95rem;
+    --toggle-icon-size: 0.75rem;
+  }
+
+  &--large {
+    --toggle-track-width: 3.5rem;
+    --toggle-track-height: 1.9rem;
+    --toggle-thumb-size: 1.5rem;
+    --toggle-icon-size: 1.15rem;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+  }
+
+  @each $name,
+    $token
+      in (
+        primary: var(--primary),
+        secondary: var(--secondary),
+        accent: var(--accent),
+        success: var(--success),
+        danger: var(--danger),
+        warning: var(--warning)
+      )
+  {
+    &--color-on-#{$name} {
+      background: #{$token};
+    }
+
+    &--color-off-#{$name} {
+      background: #{$token};
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--toggle-icon-size);
+    height: var(--toggle-icon-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    pointer-events: none;
+
+    ::ng-deep svg,
+    ::ng-deep img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    &--on {
+      left: var(--toggle-thumb-inset);
+    }
+
+    &--off {
+      right: var(--toggle-thumb-inset);
+    }
+  }
+
+  &__thumb {
+    position: absolute;
+    top: var(--toggle-thumb-inset);
+    left: var(--toggle-thumb-inset);
+    width: var(--toggle-thumb-size);
+    height: var(--toggle-thumb-size);
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
+    z-index: 1;
+  }
+
+  &--checked &__thumb {
+    transform: translateX(
+      calc(var(--toggle-track-width) - var(--toggle-thumb-size) - (var(--toggle-thumb-inset) * 2))
+    );
+  }
+
+  &--disabled &__thumb {
+    background: var(--border);
+  }
+}
+
+.toggle__label {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  user-select: none;
+}

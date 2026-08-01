@@ -1,0 +1,15 @@
+@if (isLoading()) {
+<div class="loader-section" [style.min-height.px]="size()">
+    <app-inline-loader size="large" variant="primary" />
+</div>
+} @else {
+<div class="container-layout" [class]="['pos-' + legendPosition(), wrap() ? 'wrap' : 'nowrap']">
+    <div class="chart-section">
+        <app-pie-chart [data]="data()" [shape]="shape()" [chartStyle]="chartStyle()" [size]="size()"
+            [activeSliceId]="activeSliceId()" (sliceHover)="onSliceHover($event)" />
+    </div>
+    <div class="legend-section">
+        <app-legend [data]="data()" [activeId]="activeSliceId()" (itemHover)="onLegendHover($event)" />
+    </div>
+</div>
+}

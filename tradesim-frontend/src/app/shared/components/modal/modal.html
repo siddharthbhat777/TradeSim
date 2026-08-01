@@ -1,5 +1,6 @@
-<div class="modal">
-    <div class="modal-content">
+<div class="modal" (click)="handleBackdropClick($event)">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-label="{{ ariaLabel() }}"
+        [attr.aria-labelledby]="titleId() ?? null" tabindex="-1" #modalContent (keydown.tab)="trapFocus($event)">
         <ng-content />
     </div>
 </div>

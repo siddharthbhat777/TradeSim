@@ -1,0 +1,37 @@
+.checkbox-group-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.checkbox-group-header {
+  padding-bottom: 0.25rem;
+
+  .default-header-text {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.group-divider {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
+
+.checkbox-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &.row-layout {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .default-list-text {
+    color: var(--text-secondary);
+  }
+}

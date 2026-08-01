@@ -1,0 +1,37 @@
+@if (dialogService.currentDialog(); as options) {
+<app-modal [closeOnBackdropClick]="!options.isBlocking" [closeOnEscape]="!options.isBlocking" ariaLabel="Dialog"
+    (closed)="onClosed()">
+    <div class="dialog" [class.has-close-button]="options.showClose || !options.isBlocking">
+        @if (options.showClose || !options.isBlocking) {
+        <button type="button" class="dialog-close" (click)="onClosed()" aria-label="Close dialog">
+            &times;
+        </button>
+        }
+
+        <div class="dialog-header">
+            @if (options.title) {
+            <h3>{{ options.title }}</h3>
+            }
+        </div>
+
+        <div class="dialog-divider"></div>
+
+        <div class="dialog-body">
+            <p>{{ options.message }}</p>
+        </div>
+
+        <div class="dialog-footer">
+            @if (options.secondaryLabel) {
+            <button type="button" class="dialog-btn dialog-btn-secondary" (click)="onSecondary()">
+                {{ options.secondaryLabel }}
+            </button>
+            }
+            @if (options.primaryLabel) {
+            <button type="button" class="dialog-btn dialog-btn-primary" (click)="onPrimary()">
+                {{ options.primaryLabel }}
+            </button>
+            }
+        </div>
+    </div>
+</app-modal>
+}

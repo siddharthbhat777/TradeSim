@@ -1,0 +1,15 @@
+@if (loaderService.isLoading()) {
+<div [class.fullscreen-overlay]="fullScreen()" class="loader-wrapper size-{{ size() }}">
+    <div class="loader-container">
+        <svg viewBox="0 0 120 100" class="market-pulse-svg" xmlns="http://www.w3.org/2000/svg">
+            <rect class="pulse-bar bar-1" x="25" y="40" width="12" height="30" rx="2" />
+            <rect class="pulse-bar bar-2" x="54" y="25" width="12" height="45" rx="2" />
+            <rect class="pulse-bar bar-3" x="83" y="10" width="12" height="60" rx="2" />
+            <path class="trend-line" d="M 10,55 L 31,30 L 60,20 L 89,0 L 110,-15" />
+            <text x="60" y="87" text-anchor="middle" class="brand-text">
+                Trade<tspan class="brand-accent">Sim</tspan>
+            </text>
+        </svg>
+    </div>
+</div>
+}

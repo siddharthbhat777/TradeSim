@@ -1,0 +1,46 @@
+@mixin badge-variant($color, $opacity: 15%) {
+  background: color-mix(in srgb, $color $opacity, transparent);
+  color: $color;
+}
+
+:host {
+  display: inline-block;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+
+  &--primary {
+    @include badge-variant(var(--primary));
+  }
+
+  &--secondary {
+    @include badge-variant(var(--secondary));
+  }
+
+  &--accent {
+    @include badge-variant(var(--accent));
+  }
+
+  &--success {
+    @include badge-variant(var(--success));
+  }
+
+  &--danger {
+    @include badge-variant(var(--danger));
+  }
+
+  &--warning {
+    @include badge-variant(var(--warning), 18%);
+  }
+}

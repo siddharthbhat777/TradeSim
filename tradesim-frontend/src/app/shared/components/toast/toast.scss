@@ -1,0 +1,198 @@
+.toast-container {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 340px;
+  max-width: calc(100vw - 48px);
+
+  &[data-position='top-left'] {
+    top: 24px;
+    left: 24px;
+    flex-direction: column-reverse;
+  }
+
+  &[data-position='top-center'] {
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: column-reverse;
+  }
+
+  &[data-position='top-right'] {
+    top: 24px;
+    right: 24px;
+    flex-direction: column-reverse;
+  }
+
+  &[data-position='center-left'] {
+    top: 50%;
+    left: 24px;
+    transform: translateY(-50%);
+  }
+
+  &[data-position='center-right'] {
+    top: 50%;
+    right: 24px;
+    transform: translateY(-50%);
+  }
+
+  &[data-position='bottom-left'] {
+    bottom: 24px;
+    left: 24px;
+  }
+
+  &[data-position='bottom-center'] {
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  &[data-position='bottom-right'] {
+    bottom: 24px;
+    right: 24px;
+  }
+}
+
+.toast {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.toast__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px 18px;
+}
+
+.toast__message {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.toast__action {
+  flex-shrink: 0;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.toast__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  opacity: 0.8;
+  cursor: pointer;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    opacity: 1;
+    color: var(--text-primary);
+  }
+}
+
+.toast__progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  transform-origin: left;
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@mixin toast-variant($color) {
+  background: color-mix(in srgb, $color 10%, var(--surface));
+  border-color: color-mix(in srgb, $color 40%, var(--border));
+
+  .toast__message,
+  .toast__action {
+    color: $color;
+  }
+
+  .toast__progress {
+    background: $color;
+  }
+}
+
+.toast--success {
+  @include toast-variant(var(--success));
+}
+
+.toast--danger {
+  @include toast-variant(var(--danger));
+}
+
+.toast--warning {
+  @include toast-variant(var(--warning));
+}
+
+.toast--info {
+  @include toast-variant(var(--accent));
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.toast-enter {
+  animation: toast-enter 0.25s ease;
+}
+
+.toast-leave {
+  animation: toast-leave 0.2s ease forwards;
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-leave {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.9);
+  }
+}
