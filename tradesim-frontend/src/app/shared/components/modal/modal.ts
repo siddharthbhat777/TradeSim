@@ -44,11 +44,11 @@ export class Modal {
         const focusable = this.getFocusableElements(content);
         (focusable[0] ?? content).focus();
       }
-    });
 
-    this.destroyRef.onDestroy(() => {
-      this.unlockScroll();
-      this.previouslyFocusedElement?.focus();
+      this.destroyRef.onDestroy(() => {
+        this.unlockScroll();
+        this.previouslyFocusedElement?.focus();
+      });
     });
   }
 

@@ -3,8 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
-  DOCUMENT,
   ElementRef,
   effect,
   inject,
@@ -13,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import type { ControlValueAccessor } from '@angular/forms';
 import { NgControl } from '@angular/forms';
 import { CustomInput } from '../input/input';
@@ -47,6 +46,8 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   private readonly ngControl = inject(NgControl, { optional: true, self: true });
   private readonly hostRef = inject(ElementRef);
   private readonly searchInputRef = viewChild<ElementRef<HTMLInputElement>>('searchInput');
+  private readonly document = inject(DOCUMENT);
+  private readonly window = this.document.defaultView;
 
   private readonly uid = generateUniqueId('dd');
 
@@ -119,19 +120,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   private typeAheadBuffer = '';
   private typeAheadTimeout?: ReturnType<typeof setTimeout>;
 
-  private readonly window = inject(DOCUMENT).defaultView;
-  private readonly destroyRef = inject(DestroyRef);
-
   constructor() {
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
     }
-
-    this.destroyRef.onDestroy(() => {
-      this.window?.removeEventListener('click', this.onWindowClick, { capture: true });
-      this.window?.removeEventListener('scroll', this.calculatePosition, { capture: true });
-      this.window?.removeEventListener('resize', this.calculatePosition);
-    });
 
     effect(() => {
       const opts = this.options();
@@ -142,16 +134,18 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
       }
     });
 
-    effect(() => {
+    effect((onCleanup) => {
       if (this.isOpen()) {
         this.calculatePosition();
         this.window?.addEventListener('click', this.onWindowClick, { capture: true });
         this.window?.addEventListener('scroll', this.calculatePosition, { capture: true, passive: true });
         this.window?.addEventListener('resize', this.calculatePosition, { passive: true });
-      } else {
-        this.window?.removeEventListener('click', this.onWindowClick, { capture: true });
-        this.window?.removeEventListener('scroll', this.calculatePosition, { capture: true });
-        this.window?.removeEventListener('resize', this.calculatePosition);
+
+        onCleanup(() => {
+          this.window?.removeEventListener('click', this.onWindowClick, { capture: true });
+          this.window?.removeEventListener('scroll', this.calculatePosition, { capture: true });
+          this.window?.removeEventListener('resize', this.calculatePosition);
+        });
       }
     });
   }

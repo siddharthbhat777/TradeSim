@@ -1,5 +1,6 @@
-import { Component, inject, signal, effect, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, effect, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Logo } from '../shared/components/logo/logo';
 import { ToastService } from '../shared/components/toast/toast.service';
 import { Button } from '../shared/components/button/button';
@@ -9,7 +10,6 @@ import { Alert } from '../shared/components/alert/alert';
 import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { CustomInput } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
-import { FormsModule } from '@angular/forms';
 import { Checkbox } from '../shared/components/checkbox/checkbox';
 import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
 import { Toggle } from '../shared/components/toggle/toggle';
@@ -44,6 +44,7 @@ interface DocSection {
 export class DesignSystem implements OnInit, OnDestroy {
   private toastService = inject(ToastService);
   protected dialogService = inject(DialogService);
+  private platformId = inject(PLATFORM_ID);
 
   theme = signal<ThemeMode>('system');
   private mediaQueryList: MediaQueryList | null = null;
@@ -61,14 +62,16 @@ export class DesignSystem implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-    this.mediaQueryList.addEventListener('change', this.onSystemThemeChange);
+    if (isPlatformBrowser(this.platformId)) {
+      this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+      this.mediaQueryList.addEventListener('change', this.onSystemThemeChange);
 
-    const savedTheme = localStorage.getItem('design-system-theme') as ThemeMode;
-    if (savedTheme) {
-      this.theme.set(savedTheme);
-    } else {
-      this.applyTheme('system');
+      const savedTheme = localStorage.getItem('design-system-theme') as ThemeMode;
+      if (savedTheme) {
+        this.theme.set(savedTheme);
+      } else {
+        this.theme.set('system');
+      }
     }
   }
 
@@ -89,6 +92,8 @@ export class DesignSystem implements OnInit, OnDestroy {
   };
 
   private applyTheme(mode: ThemeMode) {
+    if (!isPlatformBrowser(this.platformId)) return;
+
     let isDark = false;
 
     if (mode === 'system') {
@@ -100,7 +105,7 @@ export class DesignSystem implements OnInit, OnDestroy {
     if (isDark) {
       document.documentElement.setAttribute('data-theme', 'dark');
     } else {
-      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.removeAttribute('data-theme');
     }
 
     localStorage.setItem('design-system-theme', mode);
