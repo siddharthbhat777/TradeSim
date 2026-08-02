@@ -104,7 +104,34 @@
     color: white;
 
     &:hover {
-      filter: brightness(0.9);
+      filter: brightness(0.94);
+    }
+  }
+
+  .dialog-btn-danger {
+    background: var(--danger);
+    color: white;
+
+    &:hover {
+      filter: brightness(0.94);
+    }
+  }
+
+  .dialog-btn-success {
+    background: var(--success);
+    color: white;
+
+    &:hover {
+      filter: brightness(0.94);
+    }
+  }
+
+  .dialog-btn-warning {
+    background: var(--warning);
+    color: #0f172a;
+
+    &:hover {
+      filter: brightness(0.94);
     }
   }
 }

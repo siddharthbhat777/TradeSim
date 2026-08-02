@@ -27,7 +27,8 @@
             </button>
             }
             @if (options.primaryLabel) {
-            <button type="button" class="dialog-btn dialog-btn-primary" (click)="onPrimary()">
+            <button type="button" class="dialog-btn dialog-btn-{{ options.primaryVariant || 'primary' }}"
+                (click)="onPrimary()">
                 {{ options.primaryLabel }}
             </button>
             }

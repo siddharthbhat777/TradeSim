@@ -8,6 +8,7 @@ import { LoginRequest } from '../../models/login-request';
 import { LoginResponse } from '../../models/login-respons';
 import { catchError, finalize, tap, throwError } from 'rxjs';
 import { skipInterceptors } from '../../shared/utils/http-context';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,7 @@ export class AuthService {
   readonly isLoggedIn = computed(() => this.accessToken() !== null);
 
   private http = inject(HttpClient);
+  private router = inject(Router);
   private readonly authUrl = `${environment.apiBaseURL}/auth`;
 
   registerUser(formData: RegisterRequest) {
@@ -80,6 +82,7 @@ export class AuthService {
   clearSession() {
     this.accessToken.set(null);
     this.user.set(null);
+    this.router.navigate(['/']);
   }
 
   private setSession(response: LoginResponse) {
