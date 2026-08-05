@@ -41,5 +41,12 @@ public class User extends AuditableEntity {
     @Column(nullable = false)
     private AccountStatus accountStatus;
 
+    @Column(length = 60)
+    private String country;
+
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private String baseCurrency = "INR";
+
     private Instant lastLogin;
 }

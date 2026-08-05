@@ -3,7 +3,11 @@ package com.siddharth.tradesim_backend.order.service;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
@@ -48,6 +52,7 @@ public class OrderService {
 
     private final AuthRepository authRepository;
     private final StockRepository stockRepository;
+    private final ExchangeRepository exchangeRepository;
     private final OrderRepository orderRepository;
     private final PositionRepository positionRepository;
     private final OrderBookManager orderBookManager;
@@ -58,6 +63,7 @@ public class OrderService {
     private final LedgerService ledgerService;
     private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
+    private final ForexService forexService;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
@@ -75,6 +81,8 @@ public class OrderService {
             throw StockException.conflict("Stock is not active");
         }
 
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
         validateOrderShape(request);
 
         Instant expiresAt = request.timeInForce() == TimeInForce.DAY ? exchangeService.resolveDayOrderExpiry(stock.getExchangeId()) : null;
@@ -87,7 +95,7 @@ public class OrderService {
             BigDecimal reservationPrice = null;
             if (request.side() == OrderSide.BUY) {
                 tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
-                reservationPrice = prepareBuyReservation(tradingAccount, stock, request);
+                reservationPrice = prepareBuyReservation(tradingAccount, stock, exchange, user, request);
             } else {
                 prepareSellReservation(userId, stock.getId(), request);
             }
@@ -110,7 +118,7 @@ public class OrderService {
                     .build();
 
             orderRepository.save(order);
-            recordLockLedgerIfRequired(order, tradingAccount);
+            recordLockLedgerIfRequired(order, tradingAccount, exchange.getCurrency(), user.getBaseCurrency());
 
             if (order.getBookPrice() != null) {
                 orderBookManager.addOrder(order);
@@ -166,10 +174,10 @@ public class OrderService {
         }
     }
 
-    private BigDecimal prepareBuyReservation(TradingAccount tradingAccount, Stock stock, @Valid OrderRequest request) {
+    private BigDecimal prepareBuyReservation(TradingAccount tradingAccount, Stock stock, Exchange exchange, User user, @Valid OrderRequest request) {
         return switch (request.orderType()) {
-            case LIMIT -> lockLimitBuy(tradingAccount, request);
-            case MARKET -> prepareMarketBuy(tradingAccount, stock, request);
+            case LIMIT -> lockLimitBuy(tradingAccount, exchange.getCurrency(), user.getBaseCurrency(), request);
+            case MARKET -> prepareMarketBuy(tradingAccount, stock, exchange.getCurrency(), user.getBaseCurrency(), request);
         };
     }
 
@@ -186,26 +194,30 @@ public class OrderService {
         }
     }
 
-    private BigDecimal lockLimitBuy(TradingAccount tradingAccount, @Valid OrderRequest request) {
-        BigDecimal requiredMargin = calculateRequiredMargin(request.limitPrice(), request.quantity(), tradingAccount.getLeverage());
-        tradingAccount.lockFunds(requiredMargin);
+    private BigDecimal lockLimitBuy(TradingAccount tradingAccount, String stockCurrency, String userCurrency, @Valid OrderRequest request) {
+        BigDecimal requiredMarginInStockCurrency = calculateRequiredMargin(request.limitPrice(), request.quantity(), tradingAccount.getLeverage());
+        BigDecimal requiredMarginInUserCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, userCurrency);
+        tradingAccount.lockFunds(requiredMarginInUserCurrency);
         return request.limitPrice();
     }
 
-    private BigDecimal prepareMarketBuy(TradingAccount tradingAccount, Stock stock, @Valid OrderRequest request) {
+    private BigDecimal prepareMarketBuy(TradingAccount tradingAccount, Stock stock, String stockCurrency, String userCurrency, @Valid OrderRequest request) {
         if (request.timeInForce() == TimeInForce.IOC) {
-            BigDecimal estimatedCost = estimateMarketBuyCost(stock.getId(), request.quantity());
-            riskService.validateBuyOrder(tradingAccount, estimatedCost);
+            BigDecimal estimatedCostInStockCurrency = estimateMarketBuyCost(stock.getId(), request.quantity());
+            BigDecimal estimatedCostInUserCurrency = forexService.convert(estimatedCostInStockCurrency, stockCurrency, userCurrency);
+            riskService.validateBuyOrder(tradingAccount, estimatedCostInUserCurrency);
             return null;
         }
 
         BigDecimal reservationPrice = calculateProtectedMarketBuyPrice(stock);
-        BigDecimal orderValue = reservationPrice.multiply(BigDecimal.valueOf(request.quantity()));
+        BigDecimal orderValueInStockCurrency = reservationPrice.multiply(BigDecimal.valueOf(request.quantity()));
+        BigDecimal orderValueInUserCurrency = forexService.convert(orderValueInStockCurrency, stockCurrency, userCurrency);
 
-        riskService.validateBuyOrder(tradingAccount, orderValue);
+        riskService.validateBuyOrder(tradingAccount, orderValueInUserCurrency);
 
-        BigDecimal requiredMargin = calculateRequiredMargin(reservationPrice, request.quantity(), tradingAccount.getLeverage());
-        tradingAccount.lockFunds(requiredMargin);
+        BigDecimal requiredMarginInStockCurrency = calculateRequiredMargin(reservationPrice, request.quantity(), tradingAccount.getLeverage());
+        BigDecimal requiredMarginInUserCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, userCurrency);
+        tradingAccount.lockFunds(requiredMarginInUserCurrency);
         return reservationPrice;
     }
 
@@ -233,20 +245,21 @@ public class OrderService {
         }
     }
 
-    private void recordLockLedgerIfRequired(Order order, TradingAccount tradingAccount) {
+    private void recordLockLedgerIfRequired(Order order, TradingAccount tradingAccount, String stockCurrency, String userCurrency) {
         if (order.getSide() != OrderSide.BUY || order.getReservationPrice() == null) {
             return;
         }
 
-        BigDecimal lockedMargin = calculateRequiredMargin(order.getReservationPrice(), order.getQuantity(), tradingAccount.getLeverage());
+        BigDecimal lockedMarginInStockCurrency = calculateRequiredMargin(order.getReservationPrice(), order.getQuantity(), tradingAccount.getLeverage());
+        BigDecimal lockedMarginInUserCurrency = forexService.convert(lockedMarginInStockCurrency, stockCurrency, userCurrency);
         tradingAccountService.saveTradingAccount(tradingAccount);
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            ledgerService.recordBuyLimitMarginLock(tradingAccount, lockedMargin, order.getStockId(), order.getId());
+            ledgerService.recordBuyLimitMarginLock(tradingAccount, lockedMarginInUserCurrency, order.getStockId(), order.getId());
             return;
         }
 
-        ledgerService.recordBuyOrderMarginLock(tradingAccount, lockedMargin, order.getStockId(), order.getId());
+        ledgerService.recordBuyOrderMarginLock(tradingAccount, lockedMarginInUserCurrency, order.getStockId(), order.getId());
     }
 
     private void finalizeRemainder(Order order, Stock stock, MatchResult result) {
