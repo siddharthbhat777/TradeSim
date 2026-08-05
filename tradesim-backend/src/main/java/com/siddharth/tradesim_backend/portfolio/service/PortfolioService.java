@@ -1,6 +1,11 @@
 package com.siddharth.tradesim_backend.portfolio.service;
 
+import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.PortfolioSnapshotRepository;
@@ -34,9 +39,11 @@ public class PortfolioService {
     private final PortfolioSnapshotRepository portfolioSnapshotRepository;
     private final TradingAccountService tradingAccountService;
     private final LedgerService ledgerService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
-        authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
 
         List<Position> positions = positionRepository.findByUserId(userId);
@@ -56,9 +63,11 @@ public class PortfolioService {
                 throw StockException.notFound("Stock not found");
             }
 
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal currentValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
+            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), user.getBaseCurrency());
+            BigDecimal currentValue = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal unrealizedPnl = currentPriceInUserCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
             BigDecimal invested = position.getAverageBuyPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
 
             totalValue = totalValue.add(currentValue);
@@ -71,7 +80,7 @@ public class PortfolioService {
                     stock.getSymbol(),
                     position.getQuantity(),
                     position.getAverageBuyPrice(),
-                    currentPrice,
+                    currentPriceInUserCurrency,
                     currentValue,
                     unrealizedPnl
             );
@@ -109,6 +118,7 @@ public class PortfolioService {
 
     @Transactional(readOnly = true)
     public List<PortfolioExposureResponse> fetchExposure(UUID userId) {
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         List<Position> positions = positionRepository.findByUserId(userId);
 
         if (positions.isEmpty()) {
@@ -125,8 +135,11 @@ public class PortfolioService {
             if (stock == null) {
                 throw StockException.notFound("Stock not found");
             }
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal value = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
+            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), user.getBaseCurrency());
+            BigDecimal value = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
 
             positionValues.put(position.getStockId(), value);
 
@@ -165,10 +178,19 @@ public class PortfolioService {
         if (execution.buyerId().equals(execution.sellerId())) {
             throw PortfolioException.conflict("Self-trading is not allowed");
         }
-        BigDecimal tradeValue = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
 
-        authRepository.findById(execution.buyerId()).orElseThrow(() -> UserException.notFound("User not found"));
-        authRepository.findById(execution.sellerId()).orElseThrow(() -> UserException.notFound("User not found"));
+        User buyer = authRepository.findById(execution.buyerId()).orElseThrow(() -> UserException.notFound("User not found"));
+        User seller = authRepository.findById(execution.sellerId()).orElseThrow(() -> UserException.notFound("User not found"));
+        Stock stock = stockRepository.findById(execution.stockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
+        String stockCurrency = exchange.getCurrency();
+
+        BigDecimal buyerExecutionPrice = forexService.convert(execution.executionPrice(), stockCurrency, buyer.getBaseCurrency());
+        BigDecimal sellerExecutionPrice = forexService.convert(execution.executionPrice(), stockCurrency, seller.getBaseCurrency());
+
+        BigDecimal buyerTradeValue = buyerExecutionPrice.multiply(BigDecimal.valueOf(execution.quantity()));
+        BigDecimal sellerTradeValue = sellerExecutionPrice.multiply(BigDecimal.valueOf(execution.quantity()));
 
         UUID firstLockedUserId = execution.buyerId().compareTo(execution.sellerId()) <= 0 ? execution.buyerId() : execution.sellerId();
         UUID secondLockedUserId = firstLockedUserId.equals(execution.buyerId()) ? execution.sellerId() : execution.buyerId();
@@ -181,9 +203,9 @@ public class PortfolioService {
 
         Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
 
-        settleBuyer(execution, buyerTradingAccount, tradeValue);
-        settleSeller(execution, sellerTradingAccount, sellerPosition, tradeValue);
-        Position buyerPosition = updateBuyerPosition(execution);
+        settleBuyer(execution, buyerTradingAccount, buyerTradeValue, stockCurrency, buyer.getBaseCurrency());
+        settleSeller(execution, sellerTradingAccount, sellerPosition, sellerTradeValue, sellerExecutionPrice);
+        Position buyerPosition = updateBuyerPosition(execution, buyerExecutionPrice);
         positionRepository.save(buyerPosition);
 
         tradingAccountService.saveTradingAccount(buyerTradingAccount);
@@ -196,36 +218,38 @@ public class PortfolioService {
         }
     }
 
-    private void settleBuyer(TradeExecution execution, TradingAccount buyerTradingAccount, BigDecimal tradeValue) {
+    private void settleBuyer(TradeExecution execution, TradingAccount buyerTradingAccount, BigDecimal buyerTradeValue, String stockCurrency, String buyerCurrency) {
         if (execution.buyerFundsReserved()) {
             if (execution.buyerReservationPrice() == null) {
                 throw PortfolioException.conflict("Missing buyer reservation price");
             }
 
-            BigDecimal reservedMargin = execution.buyerReservationPrice()
+            BigDecimal reservedMarginInStockCurrency = execution.buyerReservationPrice()
                     .multiply(BigDecimal.valueOf(execution.quantity()))
                     .divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-            buyerTradingAccount.unlockFunds(reservedMargin);
+            BigDecimal reservedMarginInBuyerCurrency = forexService.convert(reservedMarginInStockCurrency, stockCurrency, buyerCurrency);
+
+            buyerTradingAccount.unlockFunds(reservedMarginInBuyerCurrency);
 
             if (execution.buyerOrderType() == OrderType.LIMIT) {
                 ledgerService.recordBuyLimitMarginUnlock(
                         buyerTradingAccount,
-                        reservedMargin,
+                        reservedMarginInBuyerCurrency,
                         execution.stockId(),
                         execution.buyOrderId()
                 );
             } else {
                 ledgerService.recordBuyOrderMarginUnlock(
                         buyerTradingAccount,
-                        reservedMargin,
+                        reservedMarginInBuyerCurrency,
                         execution.stockId(),
                         execution.buyOrderId()
                 );
             }
         }
 
-        BigDecimal requiredMargin = tradeValue.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal requiredMargin = buyerTradeValue.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
         buyerTradingAccount.debit(requiredMargin);
         ledgerService.recordTradeMarginDebit(
                 buyerTradingAccount,
@@ -234,7 +258,7 @@ public class PortfolioService {
                 execution.buyOrderId()
         );
 
-        BigDecimal loanIncrease = tradeValue.subtract(requiredMargin);
+        BigDecimal loanIncrease = buyerTradeValue.subtract(requiredMargin);
         if (loanIncrease.compareTo(BigDecimal.ZERO) > 0) {
             buyerTradingAccount.increaseMarginLoan(loanIncrease);
             ledgerService.recordMarginLoanIncrease(
@@ -246,19 +270,18 @@ public class PortfolioService {
         }
     }
 
-    private void settleSeller(TradeExecution execution, TradingAccount sellerTradingAccount, Position sellerPosition, BigDecimal tradeValue) {
+    private void settleSeller(TradeExecution execution, TradingAccount sellerTradingAccount, Position sellerPosition, BigDecimal sellerTradeValue, BigDecimal sellerExecutionPrice) {
         if (execution.sellerSharesReserved()) {
             sellerPosition.unlockShares(execution.quantity());
         }
 
-        BigDecimal executionPrice = execution.executionPrice();
         BigDecimal averagePrice = sellerPosition.getAverageBuyPrice();
 
-        BigDecimal pnl = executionPrice.subtract(averagePrice).multiply(BigDecimal.valueOf(execution.quantity()));
+        BigDecimal pnl = sellerExecutionPrice.subtract(averagePrice).multiply(BigDecimal.valueOf(execution.quantity()));
         sellerPosition.decreaseQuantity(execution.quantity());
         sellerPosition.addRealizedPnl(pnl);
 
-        BigDecimal remainingProceeds = tradeValue;
+        BigDecimal remainingProceeds = sellerTradeValue;
         BigDecimal loanToRepay = sellerTradingAccount.getMarginLoan().min(remainingProceeds);
         if (loanToRepay.compareTo(BigDecimal.ZERO) > 0) {
             sellerTradingAccount.decreaseMarginLoan(loanToRepay);
@@ -281,21 +304,21 @@ public class PortfolioService {
         }
     }
 
-    private Position updateBuyerPosition(TradeExecution execution) {
+    private Position updateBuyerPosition(TradeExecution execution, BigDecimal buyerExecutionPrice) {
         Position buyerPosition = positionRepository.findByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
 
         if (buyerPosition == null) {
             buyerPosition = Position.builder()
                     .userId(execution.buyerId())
                     .stockId(execution.stockId())
-                    .averageBuyPrice(execution.executionPrice())
+                    .averageBuyPrice(buyerExecutionPrice)
                     .realizedPnl(BigDecimal.ZERO)
                     .quantity(0)
                     .lockedQuantity(0)
                     .build();
         }
 
-        buyerPosition.updateAverageBuyPrice(execution.executionPrice(), execution.quantity());
+        buyerPosition.updateAverageBuyPrice(buyerExecutionPrice, execution.quantity());
         buyerPosition.increaseQuantity(execution.quantity());
         return buyerPosition;
     }

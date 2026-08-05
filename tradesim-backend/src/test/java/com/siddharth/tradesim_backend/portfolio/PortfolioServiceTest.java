@@ -3,6 +3,9 @@ package com.siddharth.tradesim_backend.portfolio;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;
@@ -47,13 +50,37 @@ class PortfolioServiceTest {
     @Mock
     private LedgerService ledgerService;
 
+    @Mock
+    private ExchangeRepository exchangeRepository;
+
+    @Mock
+    private ForexService forexService;
+
     @InjectMocks
     private PortfolioService portfolioService;
+
+    private void setupForexAndExchangeMocksForSettle(UUID stockId, User buyer, User seller) {
+        Stock stock = mock(Stock.class);
+        Exchange exchange = mock(Exchange.class);
+        UUID exchangeId = UUID.randomUUID();
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stock.getExchangeId()).thenReturn(exchangeId);
+
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
+        when(exchange.getCurrency()).thenReturn("USD");
+
+        when(buyer.getBaseCurrency()).thenReturn("INR");
+        when(seller.getBaseCurrency()).thenReturn("INR");
+
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+    }
 
     @Test
     void shouldFetchPortfolioCorrectly() {
         UUID userId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
 
         User user = mock(User.class);
         TradingAccount tradingAccount = mock(TradingAccount.class);
@@ -70,14 +97,22 @@ class PortfolioServiceTest {
         Stock stock = Stock.builder()
                 .id(stockId)
                 .symbol("AAPL")
+                .exchangeId(exchangeId)
                 .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
+
+        Exchange exchange = mock(Exchange.class);
 
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findAllById(List.of(stockId))).thenReturn(List.of(stock));
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(tradingAccount.calculateEquity(any())).thenReturn(BigDecimal.valueOf(1000));
+
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
+        when(exchange.getCurrency()).thenReturn("USD");
+        when(user.getBaseCurrency()).thenReturn("INR");
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         PortfolioResponse response = portfolioService.fetchPortfolio(userId);
 
@@ -171,11 +206,13 @@ class PortfolioServiceTest {
         when(buyerTradingAccount.getLeverage()).thenReturn(5);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
 
+        setupForexAndExchangeMocksForSettle(stockId, buyer, seller);
+
         portfolioService.settleTrade(execution);
 
         verify(buyerTradingAccount).debit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(100)) == 0));
         verify(buyerTradingAccount).increaseMarginLoan(argThat(amount -> amount.compareTo(BigDecimal.valueOf(400)) == 0));
-        verify(sellerTradingAccount).credit(BigDecimal.valueOf(500));
+        verify(sellerTradingAccount).credit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(500)) == 0));
         verify(positionRepository, times(2)).save(any(Position.class));
         verify(tradingAccountService).saveTradingAccount(buyerTradingAccount);
         verify(tradingAccountService).saveTradingAccount(sellerTradingAccount);
@@ -222,6 +259,8 @@ class PortfolioServiceTest {
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(sellerPosition.getQuantity()).thenReturn(10);
         when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+
+        setupForexAndExchangeMocksForSettle(stockId, buyer, seller);
 
         portfolioService.settleTrade(execution);
 
@@ -270,6 +309,8 @@ class PortfolioServiceTest {
         when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
         when(buyerTradingAccount.getLeverage()).thenReturn(5);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
+
+        setupForexAndExchangeMocksForSettle(stockId, buyer, seller);
 
         portfolioService.settleTrade(execution);
 
@@ -323,6 +364,8 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+
+        setupForexAndExchangeMocksForSettle(stockId, buyer, seller);
 
         portfolioService.settleTrade(execution);
 
@@ -378,6 +421,8 @@ class PortfolioServiceTest {
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
+        setupForexAndExchangeMocksForSettle(stockId, buyer, seller);
+
         portfolioService.settleTrade(execution);
 
         assertThat(sellerTradingAccount.getMarginLoan()).isEqualByComparingTo(BigDecimal.ZERO);
@@ -424,6 +469,8 @@ class PortfolioServiceTest {
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(sellerPosition.getQuantity()).thenReturn(10);
         when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+
+        setupForexAndExchangeMocksForSettle(stockId, buyer, seller);
 
         portfolioService.settleTrade(execution);
 

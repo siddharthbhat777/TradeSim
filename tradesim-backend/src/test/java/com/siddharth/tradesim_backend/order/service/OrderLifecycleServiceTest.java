@@ -1,5 +1,10 @@
 package com.siddharth.tradesim_backend.order.service;
 
+import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
@@ -10,6 +15,8 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +45,9 @@ class OrderLifecycleServiceTest {
     private TradingAccountService tradingAccountService;
     private PositionRepository positionRepository;
     private LedgerService ledgerService;
+    private StockRepository stockRepository;
+    private ExchangeRepository exchangeRepository;
+    private AuthRepository authRepository;
 
     private UUID userId;
     private UUID stockId;
@@ -49,13 +59,21 @@ class OrderLifecycleServiceTest {
         tradingAccountService = mock(TradingAccountService.class);
         positionRepository = mock(PositionRepository.class);
         ledgerService = mock(LedgerService.class);
+        stockRepository = mock(StockRepository.class);
+        exchangeRepository = mock(ExchangeRepository.class);
+        authRepository = mock(AuthRepository.class);
+        ForexService forexService = mock(ForexService.class);
 
         service = new OrderLifecycleService(
                 orderRepository,
                 orderBookManager,
                 tradingAccountService,
                 positionRepository,
-                ledgerService
+                ledgerService,
+                stockRepository,
+                exchangeRepository,
+                authRepository,
+                forexService
         );
 
         userId = UUID.randomUUID();
@@ -63,6 +81,7 @@ class OrderLifecycleServiceTest {
 
         ReentrantLock lock = new ReentrantLock();
         when(orderBookManager.getLock(any())).thenReturn(lock);
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     private Order createOrder(OrderSide side, OrderType type, TimeInForce tif, int qty, BigDecimal limitPrice, BigDecimal reservationPrice) {
@@ -85,6 +104,20 @@ class OrderLifecycleServiceTest {
         return order;
     }
 
+    private void mockBuyerCancellationSetup() {
+        User user = mock(User.class);
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(user.getBaseCurrency()).thenReturn("INR");
+
+        Stock stock = mock(Stock.class);
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stock.getExchangeId()).thenReturn(UUID.randomUUID());
+
+        Exchange exchange = mock(Exchange.class);
+        when(exchangeRepository.findById(any())).thenReturn(Optional.of(exchange));
+        when(exchange.getCurrency()).thenReturn("USD");
+    }
+
     @Test
     void shouldCancelBuyLimitOrderAndUnlockFunds() {
         Order order = createOrder(OrderSide.BUY, OrderType.LIMIT, TimeInForce.DAY, 10, BigDecimal.valueOf(100), BigDecimal.valueOf(100));
@@ -92,6 +125,8 @@ class OrderLifecycleServiceTest {
         TradingAccount tradingAccount = mock(TradingAccount.class);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getLeverage()).thenReturn(5);
+
+        mockBuyerCancellationSetup();
 
         service.cancelOrder(order);
 
@@ -110,6 +145,8 @@ class OrderLifecycleServiceTest {
         TradingAccount tradingAccount = mock(TradingAccount.class);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getLeverage()).thenReturn(5);
+
+        mockBuyerCancellationSetup();
 
         service.cancelOrder(order);
 

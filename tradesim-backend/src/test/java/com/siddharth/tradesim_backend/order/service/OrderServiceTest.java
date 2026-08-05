@@ -4,7 +4,10 @@ import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -50,6 +53,7 @@ class OrderServiceTest {
 
     private AuthRepository authRepository;
     private StockRepository stockRepository;
+    private ExchangeRepository exchangeRepository;
     private OrderRepository orderRepository;
     private PositionRepository positionRepository;
     private OrderBookManager orderBookManager;
@@ -60,6 +64,7 @@ class OrderServiceTest {
     private LedgerService ledgerService;
     private OrderLifecycleService orderLifecycleService;
     private MarketStateService marketStateService;
+    private ForexService forexService;
 
     private UUID userId;
     private UUID stockId;
@@ -69,6 +74,7 @@ class OrderServiceTest {
     void setup() {
         authRepository = mock(AuthRepository.class);
         stockRepository = mock(StockRepository.class);
+        exchangeRepository = mock(ExchangeRepository.class);
         orderRepository = mock(OrderRepository.class);
         positionRepository = mock(PositionRepository.class);
         orderBookManager = mock(OrderBookManager.class);
@@ -79,10 +85,12 @@ class OrderServiceTest {
         ledgerService = mock(LedgerService.class);
         orderLifecycleService = mock(OrderLifecycleService.class);
         marketStateService = mock(MarketStateService.class);
+        forexService = mock(ForexService.class);
 
         orderService = new OrderService(
                 authRepository,
                 stockRepository,
+                exchangeRepository,
                 orderRepository,
                 positionRepository,
                 orderBookManager,
@@ -92,7 +100,8 @@ class OrderServiceTest {
                 tradingAccountService,
                 ledgerService,
                 orderLifecycleService,
-                marketStateService
+                marketStateService,
+                forexService
         );
 
         userId = UUID.randomUUID();
@@ -106,6 +115,7 @@ class OrderServiceTest {
     private void mockActiveUserAndStock(TradingAccount tradingAccount, Stock stock) {
         User user = mock(User.class);
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
+        when(user.getBaseCurrency()).thenReturn("INR");
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
@@ -113,6 +123,12 @@ class OrderServiceTest {
         when(stock.getExchangeId()).thenReturn(exchangeId);
         when(stock.getId()).thenReturn(stockId);
         doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
+
+        Exchange exchange = mock(Exchange.class);
+        when(exchange.getCurrency()).thenReturn("USD");
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
+
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     private OrderRequest createLimitBuyDayRequest() {
