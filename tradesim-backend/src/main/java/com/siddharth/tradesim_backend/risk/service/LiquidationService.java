@@ -1,5 +1,8 @@
 package com.siddharth.tradesim_backend.risk.service;
 
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -38,6 +41,8 @@ public class LiquidationService {
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
     private final Set<UUID> liquidatingUsers = ConcurrentHashMap.newKeySet();
 
     public void liquidateUser(UUID userId) {
@@ -50,9 +55,12 @@ public class LiquidationService {
 
             if (positions.isEmpty()) return;
 
+            TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+            String userCurrency = tradingAccount.getBaseCurrency();
+
             positions.sort((position1, position2) -> {
-                BigDecimal loss1 = getUnrealizedLoss(position1);
-                BigDecimal loss2 = getUnrealizedLoss(position2);
+                BigDecimal loss1 = getUnrealizedLoss(position1, userCurrency);
+                BigDecimal loss2 = getUnrealizedLoss(position2, userCurrency);
                 return loss2.compareTo(loss1);
             });
 
@@ -66,7 +74,7 @@ public class LiquidationService {
                         break;
                     }
 
-                    if (!shouldLiquidate(userId)) {
+                    if (!shouldLiquidate(tradingAccount)) {
                         return;
                     }
 
@@ -118,26 +126,29 @@ public class LiquidationService {
         }
     }
 
-    private BigDecimal getUnrealizedLoss(Position position) {
+    private BigDecimal getUnrealizedLoss(Position position, String userCurrency) {
         Stock stock = stockRepository.findById(position.getStockId()).orElseThrow();
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow();
 
-        BigDecimal currentPrice = stock.getLastTradedPrice();
-        BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+        BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), userCurrency);
+        BigDecimal unrealizedPnl = currentPriceInUserCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
 
         return unrealizedPnl.min(BigDecimal.ZERO);
     }
 
-    private boolean shouldLiquidate(UUID userId) {
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
-        List<Position> positions = positionRepository.findByUserId(userId);
+    private boolean shouldLiquidate(TradingAccount tradingAccount) {
+        List<Position> positions = positionRepository.findByUserId(tradingAccount.getUserId());
+        String userCurrency = tradingAccount.getBaseCurrency();
 
         BigDecimal totalPositionValue = BigDecimal.ZERO;
 
         for (Position position : positions) {
             Stock stock = stockRepository.findById(position.getStockId()).orElseThrow();
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow();
 
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal positionValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), userCurrency);
+            BigDecimal positionValue = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+
             totalPositionValue = totalPositionValue.add(positionValue);
         }
 

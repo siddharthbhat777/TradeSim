@@ -1,6 +1,10 @@
 package com.siddharth.tradesim_backend.risk.service;
 
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.dto.RiskResponse;
@@ -28,9 +32,11 @@ public class RiskService {
     private final AuthRepository authRepository;
     private final TradingAccountService tradingAccountService;
     private final LiquidationService liquidationService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
 
-    public void validateBuyOrder(TradingAccount tradingAccount, BigDecimal orderValue) {
-        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+    public void validateBuyOrder(TradingAccount tradingAccount, BigDecimal orderValueUserCurrency) {
+        BigDecimal requiredMargin = orderValueUserCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
         if (tradingAccount.getAvailableBalance().compareTo(requiredMargin) < 0) {
             throw RiskException.conflict("Insufficient margin");
@@ -61,10 +67,13 @@ public class RiskService {
 
         for (Position position : positions) {
             Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+            String stockCurrency = exchange.getCurrency();
 
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal positionValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), stockCurrency, tradingAccount.getBaseCurrency());
+
+            BigDecimal positionValue = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal unrealizedPnl = currentPriceInUserCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
 
             totalPositionValue = totalPositionValue.add(positionValue);
             totalUnrealizedPnl = totalUnrealizedPnl.add(unrealizedPnl);
