@@ -1,7 +1,5 @@
 package com.siddharth.tradesim_backend.order.service;
 
-import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
@@ -20,7 +18,6 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
-import com.siddharth.tradesim_backend.user.UserException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +39,6 @@ public class OrderLifecycleService {
     private final LedgerService ledgerService;
     private final StockRepository stockRepository;
     private final ExchangeRepository exchangeRepository;
-    private final AuthRepository authRepository;
     private final ForexService forexService;
 
     @Transactional
@@ -82,30 +78,30 @@ public class OrderLifecycleService {
             return;
         }
 
-        User user = authRepository.findById(order.getUserId()).orElseThrow(() -> UserException.notFound("User not found"));
         Stock stock = stockRepository.findById(order.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
         Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> com.siddharth.tradesim_backend.exchange.ExchangeException.notFound("Exchange not found"));
 
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(order.getUserId());
+
         BigDecimal unlockAmountInStockCurrency = order.getReservationPrice()
                 .multiply(BigDecimal.valueOf(remainingQty))
                 .divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-        BigDecimal unlockAmountInUserCurrency = forexService.convert(
+        BigDecimal unlockAmountInAccountCurrency = forexService.convert(
                 unlockAmountInStockCurrency,
                 exchange.getCurrency(),
-                user.getBaseCurrency()
+                tradingAccount.getBaseCurrency()
         );
 
-        tradingAccount.unlockFunds(unlockAmountInUserCurrency);
+        tradingAccount.unlockFunds(unlockAmountInAccountCurrency);
         tradingAccountService.saveTradingAccount(tradingAccount);
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            ledgerService.recordBuyLimitMarginUnlock(tradingAccount, unlockAmountInUserCurrency, order.getStockId(), order.getId());
+            ledgerService.recordBuyLimitMarginUnlock(tradingAccount, unlockAmountInAccountCurrency, order.getStockId(), order.getId());
             return;
         }
 
-        ledgerService.recordBuyOrderMarginUnlock(tradingAccount, unlockAmountInUserCurrency, order.getStockId(), order.getId());
+        ledgerService.recordBuyOrderMarginUnlock(tradingAccount, unlockAmountInAccountCurrency, order.getStockId(), order.getId());
     }
 
     private void releaseSellReservation(Order order, int remainingQty) {

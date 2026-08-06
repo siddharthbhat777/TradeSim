@@ -28,6 +28,7 @@ public class TradingAccountService {
 
         TradingAccount tradingAccount = TradingAccount.builder()
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(DEFAULT_INITIAL_BALANCE)
                 .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.ZERO)
@@ -65,6 +66,7 @@ public class TradingAccountService {
         return new TradingAccountResponse(
                 tradingAccount.getId(),
                 tradingAccount.getUserId(),
+                tradingAccount.getBaseCurrency(),
                 tradingAccount.getBalance(),
                 tradingAccount.getLockedBalance(),
                 tradingAccount.getAvailableBalance(),

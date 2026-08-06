@@ -7,6 +7,7 @@ import java.util.UUID;
 public record TradingAccountResponse(
         UUID id,
         UUID userId,
+        String baseCurrency,
         BigDecimal balance,
         BigDecimal lockedBalance,
         BigDecimal availableBalance,

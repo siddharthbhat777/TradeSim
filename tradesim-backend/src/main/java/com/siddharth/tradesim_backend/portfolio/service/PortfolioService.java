@@ -1,6 +1,5 @@
 package com.siddharth.tradesim_backend.portfolio.service;
 
-import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeException;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
@@ -43,7 +42,10 @@ public class PortfolioService {
     private final ForexService forexService;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
-        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+        if (!authRepository.existsById(userId)) {
+            throw UserException.notFound("User not found");
+        }
+
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
 
         List<Position> positions = positionRepository.findByUserId(userId);
@@ -65,9 +67,9 @@ public class PortfolioService {
 
             Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
-            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), user.getBaseCurrency());
-            BigDecimal currentValue = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal unrealizedPnl = currentPriceInUserCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal currentPriceInAccountCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), tradingAccount.getBaseCurrency());
+            BigDecimal currentValue = currentPriceInAccountCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal unrealizedPnl = currentPriceInAccountCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
             BigDecimal invested = position.getAverageBuyPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
 
             totalValue = totalValue.add(currentValue);
@@ -80,7 +82,7 @@ public class PortfolioService {
                     stock.getSymbol(),
                     position.getQuantity(),
                     position.getAverageBuyPrice(),
-                    currentPriceInUserCurrency,
+                    currentPriceInAccountCurrency,
                     currentValue,
                     unrealizedPnl
             );
@@ -118,7 +120,11 @@ public class PortfolioService {
 
     @Transactional(readOnly = true)
     public List<PortfolioExposureResponse> fetchExposure(UUID userId) {
-        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+        if (!authRepository.existsById(userId)) {
+            throw UserException.notFound("User not found");
+        }
+
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
         List<Position> positions = positionRepository.findByUserId(userId);
 
         if (positions.isEmpty()) {
@@ -138,8 +144,8 @@ public class PortfolioService {
 
             Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
-            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), user.getBaseCurrency());
-            BigDecimal value = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal currentPriceInAccountCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), tradingAccount.getBaseCurrency());
+            BigDecimal value = currentPriceInAccountCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
 
             positionValues.put(position.getStockId(), value);
 
@@ -179,18 +185,14 @@ public class PortfolioService {
             throw PortfolioException.conflict("Self-trading is not allowed");
         }
 
-        User buyer = authRepository.findById(execution.buyerId()).orElseThrow(() -> UserException.notFound("User not found"));
-        User seller = authRepository.findById(execution.sellerId()).orElseThrow(() -> UserException.notFound("User not found"));
+        if (!authRepository.existsById(execution.buyerId()) || !authRepository.existsById(execution.sellerId())) {
+            throw UserException.notFound("User not found");
+        }
+
         Stock stock = stockRepository.findById(execution.stockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
         Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
         String stockCurrency = exchange.getCurrency();
-
-        BigDecimal buyerExecutionPrice = forexService.convert(execution.executionPrice(), stockCurrency, buyer.getBaseCurrency());
-        BigDecimal sellerExecutionPrice = forexService.convert(execution.executionPrice(), stockCurrency, seller.getBaseCurrency());
-
-        BigDecimal buyerTradeValue = buyerExecutionPrice.multiply(BigDecimal.valueOf(execution.quantity()));
-        BigDecimal sellerTradeValue = sellerExecutionPrice.multiply(BigDecimal.valueOf(execution.quantity()));
 
         UUID firstLockedUserId = execution.buyerId().compareTo(execution.sellerId()) <= 0 ? execution.buyerId() : execution.sellerId();
         UUID secondLockedUserId = firstLockedUserId.equals(execution.buyerId()) ? execution.sellerId() : execution.buyerId();
@@ -201,9 +203,18 @@ public class PortfolioService {
         TradingAccount buyerTradingAccount = execution.buyerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
         TradingAccount sellerTradingAccount = execution.sellerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
 
+        String buyerCurrency = buyerTradingAccount.getBaseCurrency();
+        String sellerCurrency = sellerTradingAccount.getBaseCurrency();
+
+        BigDecimal buyerExecutionPrice = forexService.convert(execution.executionPrice(), stockCurrency, buyerCurrency);
+        BigDecimal sellerExecutionPrice = forexService.convert(execution.executionPrice(), stockCurrency, sellerCurrency);
+
+        BigDecimal buyerTradeValue = buyerExecutionPrice.multiply(BigDecimal.valueOf(execution.quantity()));
+        BigDecimal sellerTradeValue = sellerExecutionPrice.multiply(BigDecimal.valueOf(execution.quantity()));
+
         Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
 
-        settleBuyer(execution, buyerTradingAccount, buyerTradeValue, stockCurrency, buyer.getBaseCurrency());
+        settleBuyer(execution, buyerTradingAccount, buyerTradeValue, stockCurrency, buyerCurrency);
         settleSeller(execution, sellerTradingAccount, sellerPosition, sellerTradeValue, sellerExecutionPrice);
         Position buyerPosition = updateBuyerPosition(execution, buyerExecutionPrice);
         positionRepository.save(buyerPosition);

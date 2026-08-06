@@ -34,6 +34,10 @@ public class TradingAccount extends AuditableEntity {
     @Column(nullable = false)
     private UUID userId;
 
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private String baseCurrency = "INR";
+
     @Column(nullable = false, precision = 19, scale = 4)
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
