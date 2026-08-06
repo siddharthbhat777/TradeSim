@@ -1,7 +1,5 @@
 package com.siddharth.tradesim_backend.order.service;
 
-import com.siddharth.tradesim_backend.auth.model.User;
-import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
@@ -47,7 +45,6 @@ class OrderLifecycleServiceTest {
     private LedgerService ledgerService;
     private StockRepository stockRepository;
     private ExchangeRepository exchangeRepository;
-    private AuthRepository authRepository;
 
     private UUID userId;
     private UUID stockId;
@@ -61,7 +58,6 @@ class OrderLifecycleServiceTest {
         ledgerService = mock(LedgerService.class);
         stockRepository = mock(StockRepository.class);
         exchangeRepository = mock(ExchangeRepository.class);
-        authRepository = mock(AuthRepository.class);
         ForexService forexService = mock(ForexService.class);
 
         service = new OrderLifecycleService(
@@ -72,7 +68,6 @@ class OrderLifecycleServiceTest {
                 ledgerService,
                 stockRepository,
                 exchangeRepository,
-                authRepository,
                 forexService
         );
 
@@ -104,11 +99,7 @@ class OrderLifecycleServiceTest {
         return order;
     }
 
-    private void mockBuyerCancellationSetup() {
-        User user = mock(User.class);
-        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(user.getBaseCurrency()).thenReturn("INR");
-
+    private void mockBuyerCancellationSetup(TradingAccount tradingAccount) {
         Stock stock = mock(Stock.class);
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(stock.getExchangeId()).thenReturn(UUID.randomUUID());
@@ -116,6 +107,8 @@ class OrderLifecycleServiceTest {
         Exchange exchange = mock(Exchange.class);
         when(exchangeRepository.findById(any())).thenReturn(Optional.of(exchange));
         when(exchange.getCurrency()).thenReturn("USD");
+
+        when(tradingAccount.getBaseCurrency()).thenReturn("INR");
     }
 
     @Test
@@ -126,7 +119,7 @@ class OrderLifecycleServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getLeverage()).thenReturn(5);
 
-        mockBuyerCancellationSetup();
+        mockBuyerCancellationSetup(tradingAccount);
 
         service.cancelOrder(order);
 
@@ -146,7 +139,7 @@ class OrderLifecycleServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getLeverage()).thenReturn(5);
 
-        mockBuyerCancellationSetup();
+        mockBuyerCancellationSetup(tradingAccount);
 
         service.cancelOrder(order);
 

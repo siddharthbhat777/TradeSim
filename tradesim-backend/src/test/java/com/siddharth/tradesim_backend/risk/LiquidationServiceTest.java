@@ -1,5 +1,8 @@
 package com.siddharth.tradesim_backend.risk;
 
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
@@ -55,6 +58,12 @@ class LiquidationServiceTest {
     @Mock
     private OrderLifecycleService orderLifecycleService;
 
+    @Mock
+    private ExchangeRepository exchangeRepository;
+
+    @Mock
+    private ForexService forexService;
+
     @InjectMocks
     private LiquidationService liquidationService;
 
@@ -77,11 +86,13 @@ class LiquidationServiceTest {
 
         Stock stock = Stock.builder()
                 .id(stockId)
+                .exchangeId(UUID.randomUUID())
                 .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
         TradingAccount tradingAccount = TradingAccount.builder()
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.ZERO)
                 .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.valueOf(3000))
@@ -89,10 +100,15 @@ class LiquidationServiceTest {
                 .maintenanceMarginPercent(BigDecimal.valueOf(50))
                 .build();
 
+        Exchange exchange = Exchange.builder().currency("USD").build();
+
         when(positionRepository.findByUserId(userId)).thenReturn(new ArrayList<>(List.of(position)));
         when(positionRepository.findById(positionId)).thenReturn(Optional.of(position), Optional.empty());
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+
         when(orderBookManager.withLock(eq(stockId), ArgumentMatchers.<Function<OrderBook, Boolean>>any())).thenReturn(true);
         when(orderMatchingEngine.match(any())).thenAnswer(invocation -> {
             com.siddharth.tradesim_backend.order.model.Order order = invocation.getArgument(0);

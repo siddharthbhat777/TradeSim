@@ -404,9 +404,12 @@ class IpoServiceTest {
                 .status(StockStatus.HALTED)
                 .build();
 
+        Exchange exchange = Exchange.builder().currency("USD").build();
+
         when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(
                 IpoSubscription.builder().id(UUID.randomUUID()).ipoOfferId(ipoOfferId).userId(UUID.randomUUID()).lockedAmount(BigDecimal.valueOf(5000)).allottedShares(0).status(IpoSubscriptionStatus.SUBMITTED).build(),
                 IpoSubscription.builder().id(UUID.randomUUID()).ipoOfferId(ipoOfferId).userId(UUID.randomUUID()).lockedAmount(BigDecimal.valueOf(5000)).allottedShares(0).status(IpoSubscriptionStatus.SUBMITTED).build()

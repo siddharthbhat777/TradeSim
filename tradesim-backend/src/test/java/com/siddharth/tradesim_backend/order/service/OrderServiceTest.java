@@ -115,9 +115,11 @@ class OrderServiceTest {
     private void mockActiveUserAndStock(TradingAccount tradingAccount, Stock stock) {
         User user = mock(User.class);
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
-        when(user.getBaseCurrency()).thenReturn("INR");
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
+        when(tradingAccount.getBaseCurrency()).thenReturn("INR");
+
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
         when(stock.getExchangeId()).thenReturn(exchangeId);

@@ -3,6 +3,9 @@ package com.siddharth.tradesim_backend.risk;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.dto.RiskResponse;
@@ -31,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +56,12 @@ class RiskServiceTest {
     @Mock
     private LiquidationService liquidationService;
 
+    @Mock
+    private ExchangeRepository exchangeRepository;
+
+    @Mock
+    private ForexService forexService;
+
     @InjectMocks
     private RiskService riskService;
 
@@ -65,7 +75,14 @@ class RiskServiceTest {
                 .marginLoan(BigDecimal.ZERO)
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
+                .baseCurrency("INR")
                 .build();
+    }
+
+    private void mockExchangeAndForex(Stock stock) {
+        Exchange exchange = Exchange.builder().currency("USD").build();
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -116,8 +133,9 @@ class RiskServiceTest {
                 .id(userId)
                 .build();
 
-        TradingAccount tradingAccount = TradingAccount.builder()
+        TradingAccount mockTradingAccount = TradingAccount.builder()
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.valueOf(10000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
@@ -132,13 +150,16 @@ class RiskServiceTest {
 
         Stock stock = Stock.builder()
                 .id(position.getStockId())
+                .exchangeId(UUID.randomUUID())
                 .lastTradedPrice(BigDecimal.valueOf(120))
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
+
+        mockExchangeAndForex(stock);
 
         RiskResponse response = riskService.getUserRisk(userId);
 
@@ -154,8 +175,9 @@ class RiskServiceTest {
                 .id(userId)
                 .build();
 
-        TradingAccount tradingAccount = TradingAccount.builder()
+        TradingAccount mockTradingAccount = TradingAccount.builder()
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.valueOf(950))
                 .leverage(5)
@@ -171,13 +193,16 @@ class RiskServiceTest {
 
         Stock stock = Stock.builder()
                 .id(position.getStockId())
+                .exchangeId(UUID.randomUUID())
                 .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
+
+        mockExchangeAndForex(stock);
 
         riskService.checkLiquidation(userId);
 
@@ -192,8 +217,9 @@ class RiskServiceTest {
                 .id(userId)
                 .build();
 
-        TradingAccount tradingAccount = TradingAccount.builder()
+        TradingAccount mockTradingAccount = TradingAccount.builder()
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.valueOf(850))
                 .leverage(5)
@@ -209,13 +235,16 @@ class RiskServiceTest {
 
         Stock stock = Stock.builder()
                 .id(position.getStockId())
+                .exchangeId(UUID.randomUUID())
                 .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
+
+        mockExchangeAndForex(stock);
 
         RiskResponse response = riskService.getUserRisk(userId);
 
@@ -230,8 +259,9 @@ class RiskServiceTest {
                 .id(userId)
                 .build();
 
-        TradingAccount tradingAccount = TradingAccount.builder()
+        TradingAccount mockTradingAccount = TradingAccount.builder()
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.valueOf(1000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.ZERO)
@@ -246,13 +276,16 @@ class RiskServiceTest {
 
         Stock stock = Stock.builder()
                 .id(position.getStockId())
+                .exchangeId(UUID.randomUUID())
                 .lastTradedPrice(BigDecimal.valueOf(50))
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
+
+        mockExchangeAndForex(stock);
 
         RiskResponse response = riskService.getUserRisk(userId);
 
@@ -267,15 +300,16 @@ class RiskServiceTest {
                 .id(userId)
                 .build();
 
-        TradingAccount tradingAccount = TradingAccount.builder()
+        TradingAccount mockTradingAccount = TradingAccount.builder()
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.valueOf(5000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of());
 
         RiskResponse response = riskService.getUserRisk(userId);
