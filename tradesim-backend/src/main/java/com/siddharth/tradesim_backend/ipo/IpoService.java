@@ -9,7 +9,11 @@ import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
 import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
 import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
@@ -52,6 +56,8 @@ public class IpoService {
     private final PositionRepository positionRepository;
     private final StockService stockService;
     private final LedgerService ledgerService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
 
     @Transactional
     public IpoOfferResponse submitIpoOffer(UUID companyId, UUID stockId, UUID actingUserId, CreateIpoOfferRequest request) {
@@ -147,17 +153,24 @@ public class IpoService {
             throw IpoException.conflict("You have already subscribed to this IPO offer");
         }
 
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
-        BigDecimal subscriptionAmount = calculateSubscriptionAmount(ipoOffer);
+        Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+        String stockCurrency = exchange.getCurrency();
 
-        tradingAccount.lockFunds(subscriptionAmount);
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
+        String userCurrency = tradingAccount.getBaseCurrency();
+
+        BigDecimal subscriptionAmountInStockCurrency = calculateSubscriptionAmount(ipoOffer);
+        BigDecimal subscriptionAmountInUserCurrency = forexService.convert(subscriptionAmountInStockCurrency, stockCurrency, userCurrency);
+
+        tradingAccount.lockFunds(subscriptionAmountInUserCurrency);
         tradingAccountService.saveTradingAccount(tradingAccount);
-        ledgerService.recordIpoSubscriptionLock(tradingAccount, subscriptionAmount, ipoOffer.getStockId(), ipoOffer.getId());
+        ledgerService.recordIpoSubscriptionLock(tradingAccount, subscriptionAmountInUserCurrency, ipoOffer.getStockId(), ipoOffer.getId());
 
         IpoSubscription ipoSubscription = IpoSubscription.builder()
                 .ipoOfferId(ipoOfferId)
                 .userId(userId)
-                .lockedAmount(subscriptionAmount)
+                .lockedAmount(subscriptionAmountInUserCurrency)
                 .allottedShares(0)
                 .status(IpoSubscriptionStatus.SUBMITTED)
                 .build();
@@ -214,6 +227,8 @@ public class IpoService {
         }
 
         Stock stock = validateStockForIpo(ipoOffer.getCompanyId(), ipoOffer.getStockId());
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+        String stockCurrency = exchange.getCurrency();
 
         List<IpoSubscription> subscriptions = ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId);
         if (subscriptions.size() < ipoOffer.getMaxAllottees()) {
@@ -226,19 +241,22 @@ public class IpoService {
         List<IpoSubscription> winningSubscriptions = shuffledSubscriptions.subList(0, ipoOffer.getMaxAllottees());
         List<IpoSubscription> losingSubscriptions = shuffledSubscriptions.subList(ipoOffer.getMaxAllottees(), shuffledSubscriptions.size());
 
-        BigDecimal subscriptionAmount = calculateSubscriptionAmount(ipoOffer);
         Map<UUID, TradingAccount> lockedAccounts = lockTradingAccounts(shuffledSubscriptions.stream().map(IpoSubscription::getUserId).toList());
 
         for (IpoSubscription winningSubscription : winningSubscriptions) {
             TradingAccount tradingAccount = lockedAccounts.get(winningSubscription.getUserId());
-            tradingAccount.debitLockedFunds(subscriptionAmount);
+            String userCurrency = tradingAccount.getBaseCurrency();
+
+            BigDecimal issuePriceInUserCurrency = forexService.convert(ipoOffer.getIssuePrice(), stockCurrency, userCurrency);
+
+            tradingAccount.debitLockedFunds(winningSubscription.getLockedAmount());
             tradingAccountService.saveTradingAccount(tradingAccount);
-            ledgerService.recordIpoAllotmentDebit(tradingAccount, subscriptionAmount, stock.getId(), ipoOffer.getId());
+            ledgerService.recordIpoAllotmentDebit(tradingAccount, winningSubscription.getLockedAmount(), stock.getId(), ipoOffer.getId());
 
             allocateIpoPosition(
                     winningSubscription.getUserId(),
                     stock,
-                    ipoOffer.getIssuePrice(),
+                    issuePriceInUserCurrency,
                     ipoOffer.getSharesPerAllottee()
             );
 

@@ -10,7 +10,10 @@ import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
 import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
 import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
@@ -85,6 +88,12 @@ class IpoServiceTest {
 
     @Mock
     private LedgerService ledgerService;
+
+    @Mock
+    private ExchangeRepository exchangeRepository;
+
+    @Mock
+    private ForexService forexService;
 
     @InjectMocks
     private IpoService ipoService;
@@ -208,6 +217,7 @@ class IpoServiceTest {
         TradingAccount tradingAccount = TradingAccount.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.valueOf(100000))
                 .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.ZERO)
@@ -215,10 +225,16 @@ class IpoServiceTest {
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
 
+        Stock stock = Stock.builder().id(stockId).exchangeId(UUID.randomUUID()).build();
+        Exchange exchange = Exchange.builder().currency("USD").build();
+
         when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(ipoSubscriptionRepository.existsByIpoOfferIdAndUserId(ipoOfferId, userId)).thenReturn(false);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(ipoSubscriptionRepository.save(any(IpoSubscription.class))).thenAnswer(invocation -> {
             IpoSubscription subscription = invocation.getArgument(0);
             subscription.setId(UUID.randomUUID());
@@ -292,6 +308,7 @@ class IpoServiceTest {
         TradingAccount tradingAccountOne = TradingAccount.builder()
                 .id(UUID.randomUUID())
                 .userId(userOneId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.valueOf(10000))
                 .lockedBalance(BigDecimal.valueOf(5000))
                 .marginLoan(BigDecimal.ZERO)
@@ -302,12 +319,15 @@ class IpoServiceTest {
         TradingAccount tradingAccountTwo = TradingAccount.builder()
                 .id(UUID.randomUUID())
                 .userId(userTwoId)
+                .baseCurrency("INR")
                 .balance(BigDecimal.valueOf(12000))
                 .lockedBalance(BigDecimal.valueOf(5000))
                 .marginLoan(BigDecimal.ZERO)
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
+
+        Exchange exchange = Exchange.builder().currency("USD").build();
 
         StockResponse activatedStock = new StockResponse(
                 stockId,
@@ -321,11 +341,13 @@ class IpoServiceTest {
         when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(subscriptionOne, subscriptionTwo));
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userOneId)).thenReturn(tradingAccountOne);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userTwoId)).thenReturn(tradingAccountTwo);
         when(positionRepository.findByUserIdAndStockId(userOneId, stockId)).thenReturn(Optional.empty());
         when(positionRepository.findByUserIdAndStockId(userTwoId, stockId)).thenReturn(Optional.empty());
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(stockService.activateStockFromIpoAllotment(stockId, 100, 100)).thenReturn(activatedStock);
         when(ipoOfferRepository.save(any(IpoOffer.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
