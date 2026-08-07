@@ -5,6 +5,7 @@ import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.model.dto.PortfolioResponse;
@@ -55,6 +56,9 @@ class PortfolioServiceTest {
     @Mock
     private ForexService forexService;
 
+    @Mock
+    private FxFeeService fxFeeService;
+
     @InjectMocks
     private PortfolioService portfolioService;
 
@@ -70,6 +74,7 @@ class PortfolioServiceTest {
         when(exchange.getCurrency()).thenReturn("USD");
 
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(fxFeeService.calculateConversionFee(any(), any(), any())).thenReturn(BigDecimal.ZERO);
     }
 
     @Test

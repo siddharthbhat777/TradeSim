@@ -268,7 +268,9 @@ public class PortfolioService {
         BigDecimal executionFxFee = fxFeeService.calculateConversionFee(buyerCurrency, stockCurrency, requiredMargin);
 
         buyerTradingAccount.debit(requiredMargin);
-        buyerTradingAccount.debit(executionFxFee);
+        if (executionFxFee.compareTo(BigDecimal.ZERO) > 0) {
+            buyerTradingAccount.debit(executionFxFee);
+        }
 
         ledgerService.recordTradeMarginDebit(
                 buyerTradingAccount,

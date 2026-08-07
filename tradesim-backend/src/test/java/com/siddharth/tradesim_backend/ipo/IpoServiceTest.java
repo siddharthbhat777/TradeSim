@@ -14,6 +14,7 @@ import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
 import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
 import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
@@ -94,6 +95,9 @@ class IpoServiceTest {
 
     @Mock
     private ForexService forexService;
+
+    @Mock
+    private FxFeeService fxFeeService;
 
     @InjectMocks
     private IpoService ipoService;
@@ -235,6 +239,7 @@ class IpoServiceTest {
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(fxFeeService.calculateConversionFee(any(), any(), any())).thenReturn(BigDecimal.ZERO);
         when(ipoSubscriptionRepository.save(any(IpoSubscription.class))).thenAnswer(invocation -> {
             IpoSubscription subscription = invocation.getArgument(0);
             subscription.setId(UUID.randomUUID());
@@ -348,6 +353,7 @@ class IpoServiceTest {
         when(positionRepository.findByUserIdAndStockId(userOneId, stockId)).thenReturn(Optional.empty());
         when(positionRepository.findByUserIdAndStockId(userTwoId, stockId)).thenReturn(Optional.empty());
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(fxFeeService.calculateConversionFee(any(), any(), any())).thenReturn(BigDecimal.ZERO);
         when(stockService.activateStockFromIpoAllotment(stockId, 100, 100)).thenReturn(activatedStock);
         when(ipoOfferRepository.save(any(IpoOffer.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

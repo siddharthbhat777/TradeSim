@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.order.service;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
@@ -59,6 +60,7 @@ class OrderLifecycleServiceTest {
         stockRepository = mock(StockRepository.class);
         exchangeRepository = mock(ExchangeRepository.class);
         ForexService forexService = mock(ForexService.class);
+        FxFeeService fxFeeService = mock(FxFeeService.class);
 
         service = new OrderLifecycleService(
                 orderRepository,
@@ -68,7 +70,8 @@ class OrderLifecycleServiceTest {
                 ledgerService,
                 stockRepository,
                 exchangeRepository,
-                forexService
+                forexService,
+                fxFeeService
         );
 
         userId = UUID.randomUUID();
@@ -77,6 +80,7 @@ class OrderLifecycleServiceTest {
         ReentrantLock lock = new ReentrantLock();
         when(orderBookManager.getLock(any())).thenReturn(lock);
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(fxFeeService.calculateConversionFee(any(), any(), any())).thenReturn(BigDecimal.ZERO);
     }
 
     private Order createOrder(OrderSide side, OrderType type, TimeInForce tif, int qty, BigDecimal limitPrice, BigDecimal reservationPrice) {

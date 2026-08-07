@@ -8,6 +8,7 @@ import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -86,6 +87,7 @@ class OrderServiceTest {
         orderLifecycleService = mock(OrderLifecycleService.class);
         marketStateService = mock(MarketStateService.class);
         forexService = mock(ForexService.class);
+        FxFeeService fxFeeService = mock(FxFeeService.class);
 
         orderService = new OrderService(
                 authRepository,
@@ -101,7 +103,8 @@ class OrderServiceTest {
                 ledgerService,
                 orderLifecycleService,
                 marketStateService,
-                forexService
+                forexService,
+                fxFeeService
         );
 
         userId = UUID.randomUUID();
@@ -110,6 +113,7 @@ class OrderServiceTest {
 
         ReentrantLock lock = new ReentrantLock();
         when(orderBookManager.getLock(any())).thenReturn(lock);
+        when(fxFeeService.calculateConversionFee(any(), any(), any())).thenReturn(BigDecimal.ZERO);
     }
 
     private void mockActiveUserAndStock(TradingAccount tradingAccount, Stock stock) {

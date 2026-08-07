@@ -259,7 +259,9 @@ public class IpoService {
 
             tradingAccount.unlockFunds(winningSubscription.getLockedAmount());
             tradingAccount.debit(finalSubInUserCurr);
-            tradingAccount.debit(finalFxFee);
+            if (finalFxFee.compareTo(BigDecimal.ZERO) > 0) {
+                tradingAccount.debit(finalFxFee);
+            }
 
             tradingAccountService.saveTradingAccount(tradingAccount);
 
