@@ -19,158 +19,68 @@ public class LedgerService {
 
     @Transactional
     public void recordInitialCredit(TradingAccount tradingAccount, BigDecimal amount) {
-        saveEntry(
-                tradingAccount,
-                null,
-                null,
-                null,
-                LedgerEntryType.INITIAL_CREDIT,
-                amount,
-                "Initial trading account funding"
-        );
+        saveEntry(tradingAccount, null, null, null, LedgerEntryType.INITIAL_CREDIT, amount, "Initial trading account funding");
     }
 
     @Transactional
     public void recordBuyLimitMarginLock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.BUY_LIMIT_MARGIN_LOCK,
-                amount,
-                "Locked margin for BUY LIMIT order"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.BUY_LIMIT_MARGIN_LOCK, amount, "Locked margin for BUY LIMIT order");
     }
 
     @Transactional
     public void recordBuyLimitMarginUnlock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.BUY_LIMIT_MARGIN_UNLOCK,
-                amount,
-                "Unlocked reserved margin for BUY LIMIT order"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.BUY_LIMIT_MARGIN_UNLOCK, amount, "Unlocked reserved margin for BUY LIMIT order");
     }
 
     @Transactional
     public void recordBuyOrderMarginLock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.BUY_ORDER_MARGIN_LOCK,
-                amount,
-                "Locked margin for BUY order"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.BUY_ORDER_MARGIN_LOCK, amount, "Locked margin for BUY order");
     }
 
     @Transactional
     public void recordBuyOrderMarginUnlock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.BUY_ORDER_MARGIN_UNLOCK,
-                amount,
-                "Unlocked reserved margin for BUY order"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.BUY_ORDER_MARGIN_UNLOCK, amount, "Unlocked reserved margin for BUY order");
     }
 
     @Transactional
     public void recordTradeMarginDebit(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.TRADE_MARGIN_DEBIT,
-                amount,
-                "Debited cash margin during trade settlement"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.TRADE_MARGIN_DEBIT, amount, "Debited cash margin during trade settlement");
     }
 
     @Transactional
     public void recordTradeProceedsCredit(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.TRADE_PROCEEDS_CREDIT,
-                amount,
-                "Credited trade proceeds after settlement"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.TRADE_PROCEEDS_CREDIT, amount, "Credited trade proceeds after settlement");
     }
 
     @Transactional
     public void recordMarginLoanIncrease(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.MARGIN_LOAN_INCREASE,
-                amount,
-                "Increased margin loan during leveraged buy settlement"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.MARGIN_LOAN_INCREASE, amount, "Increased margin loan during leveraged buy settlement");
     }
 
     @Transactional
     public void recordMarginLoanRepayment(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                orderId,
-                null,
-                LedgerEntryType.MARGIN_LOAN_REPAYMENT,
-                amount,
-                "Repaid margin loan from sell proceeds"
-        );
+        saveEntry(tradingAccount, stockId, orderId, null, LedgerEntryType.MARGIN_LOAN_REPAYMENT, amount, "Repaid margin loan from sell proceeds");
     }
 
     @Transactional
     public void recordIpoSubscriptionLock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID ipoOfferId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                null,
-                ipoOfferId,
-                LedgerEntryType.IPO_SUBSCRIPTION_LOCK,
-                amount,
-                "Locked funds for IPO subscription"
-        );
+        saveEntry(tradingAccount, stockId, null, ipoOfferId, LedgerEntryType.IPO_SUBSCRIPTION_LOCK, amount, "Locked funds for IPO subscription");
     }
 
     @Transactional
     public void recordIpoSubscriptionUnlock(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID ipoOfferId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                null,
-                ipoOfferId,
-                LedgerEntryType.IPO_SUBSCRIPTION_UNLOCK,
-                amount,
-                "Unlocked funds for non-allotted IPO subscription"
-        );
+        saveEntry(tradingAccount, stockId, null, ipoOfferId, LedgerEntryType.IPO_SUBSCRIPTION_UNLOCK, amount, "Unlocked funds for non-allotted IPO subscription");
     }
 
     @Transactional
     public void recordIpoAllotmentDebit(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID ipoOfferId) {
-        saveEntry(
-                tradingAccount,
-                stockId,
-                null,
-                ipoOfferId,
-                LedgerEntryType.IPO_ALLOTMENT_DEBIT,
-                amount,
-                "Debited locked funds for IPO allotment"
-        );
+        saveEntry(tradingAccount, stockId, null, ipoOfferId, LedgerEntryType.IPO_ALLOTMENT_DEBIT, amount, "Debited locked funds for IPO allotment");
+    }
+
+    @Transactional
+    public void recordFxConversionFee(TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId, UUID ipoOfferId, String sourceCurrency, String targetCurrency) {
+        String description = String.format("FX Conversion Fee (%s to %s)", sourceCurrency, targetCurrency);
+        saveEntry(tradingAccount, stockId, orderId, ipoOfferId, LedgerEntryType.FX_CONVERSION_FEE, amount, description);
     }
 
     @Transactional(readOnly = true)
@@ -178,17 +88,13 @@ public class LedgerService {
         return ledgerEntryRepository.findByUserIdOrderByCreatedAtDesc(userId).stream().map(this::toResponse).toList();
     }
 
-    private void saveEntry(
-            TradingAccount tradingAccount,
-            UUID stockId,
-            UUID orderId,
-            UUID ipoOfferId,
-            LedgerEntryType type,
-            BigDecimal amount,
-            String description
-    ) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Ledger amount must be positive");
+    private void saveEntry(TradingAccount tradingAccount, UUID stockId, UUID orderId, UUID ipoOfferId, LedgerEntryType type, BigDecimal amount, String description) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Ledger amount must be non-negative and not null");
+        }
+
+        if (amount.compareTo(BigDecimal.ZERO) == 0) {
+            return;
         }
 
         LedgerEntry ledgerEntry = LedgerEntry.builder()

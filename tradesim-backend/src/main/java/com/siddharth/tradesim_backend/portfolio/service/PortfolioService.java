@@ -5,6 +5,7 @@ import com.siddharth.tradesim_backend.exchange.ExchangeException;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.PortfolioSnapshotRepository;
@@ -40,6 +41,7 @@ public class PortfolioService {
     private final LedgerService ledgerService;
     private final ExchangeRepository exchangeRepository;
     private final ForexService forexService;
+    private final FxFeeService fxFeeService;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
         if (!authRepository.existsById(userId)) {
@@ -215,7 +217,7 @@ public class PortfolioService {
         Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
 
         settleBuyer(execution, buyerTradingAccount, buyerTradeValue, stockCurrency, buyerCurrency);
-        settleSeller(execution, sellerTradingAccount, sellerPosition, sellerTradeValue, sellerExecutionPrice);
+        settleSeller(execution, sellerTradingAccount, sellerPosition, sellerTradeValue, sellerExecutionPrice, stockCurrency, sellerCurrency);
         Position buyerPosition = updateBuyerPosition(execution, buyerExecutionPrice);
         positionRepository.save(buyerPosition);
 
@@ -240,20 +242,22 @@ public class PortfolioService {
                     .divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
             BigDecimal reservedMarginInBuyerCurrency = forexService.convert(reservedMarginInStockCurrency, stockCurrency, buyerCurrency);
+            BigDecimal reservedFxFee = fxFeeService.calculateConversionFee(buyerCurrency, stockCurrency, reservedMarginInBuyerCurrency);
+            BigDecimal totalLocked = reservedMarginInBuyerCurrency.add(reservedFxFee);
 
-            buyerTradingAccount.unlockFunds(reservedMarginInBuyerCurrency);
+            buyerTradingAccount.unlockFunds(totalLocked);
 
             if (execution.buyerOrderType() == OrderType.LIMIT) {
                 ledgerService.recordBuyLimitMarginUnlock(
                         buyerTradingAccount,
-                        reservedMarginInBuyerCurrency,
+                        totalLocked,
                         execution.stockId(),
                         execution.buyOrderId()
                 );
             } else {
                 ledgerService.recordBuyOrderMarginUnlock(
                         buyerTradingAccount,
-                        reservedMarginInBuyerCurrency,
+                        totalLocked,
                         execution.stockId(),
                         execution.buyOrderId()
                 );
@@ -261,13 +265,29 @@ public class PortfolioService {
         }
 
         BigDecimal requiredMargin = buyerTradeValue.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal executionFxFee = fxFeeService.calculateConversionFee(buyerCurrency, stockCurrency, requiredMargin);
+
         buyerTradingAccount.debit(requiredMargin);
+        buyerTradingAccount.debit(executionFxFee);
+
         ledgerService.recordTradeMarginDebit(
                 buyerTradingAccount,
                 requiredMargin,
                 execution.stockId(),
                 execution.buyOrderId()
         );
+
+        if (executionFxFee.compareTo(BigDecimal.ZERO) > 0) {
+            ledgerService.recordFxConversionFee(
+                    buyerTradingAccount,
+                    executionFxFee,
+                    execution.stockId(),
+                    execution.buyOrderId(),
+                    null,
+                    buyerCurrency,
+                    stockCurrency
+            );
+        }
 
         BigDecimal loanIncrease = buyerTradeValue.subtract(requiredMargin);
         if (loanIncrease.compareTo(BigDecimal.ZERO) > 0) {
@@ -281,7 +301,7 @@ public class PortfolioService {
         }
     }
 
-    private void settleSeller(TradeExecution execution, TradingAccount sellerTradingAccount, Position sellerPosition, BigDecimal sellerTradeValue, BigDecimal sellerExecutionPrice) {
+    private void settleSeller(TradeExecution execution, TradingAccount sellerTradingAccount, Position sellerPosition, BigDecimal sellerTradeValue, BigDecimal sellerExecutionPrice, String stockCurrency, String sellerCurrency) {
         if (execution.sellerSharesReserved()) {
             sellerPosition.unlockShares(execution.quantity());
         }
@@ -292,8 +312,10 @@ public class PortfolioService {
         sellerPosition.decreaseQuantity(execution.quantity());
         sellerPosition.addRealizedPnl(pnl);
 
-        BigDecimal remainingProceeds = sellerTradeValue;
-        BigDecimal loanToRepay = sellerTradingAccount.getMarginLoan().min(remainingProceeds);
+        BigDecimal executionFxFee = fxFeeService.calculateConversionFee(stockCurrency, sellerCurrency, sellerTradeValue);
+        BigDecimal netProceedsBase = sellerTradeValue.subtract(executionFxFee);
+
+        BigDecimal loanToRepay = sellerTradingAccount.getMarginLoan().min(netProceedsBase);
         if (loanToRepay.compareTo(BigDecimal.ZERO) > 0) {
             sellerTradingAccount.decreaseMarginLoan(loanToRepay);
             ledgerService.recordMarginLoanRepayment(
@@ -302,15 +324,27 @@ public class PortfolioService {
                     execution.stockId(),
                     execution.sellOrderId()
             );
-            remainingProceeds = remainingProceeds.subtract(loanToRepay);
+            netProceedsBase = netProceedsBase.subtract(loanToRepay);
         }
-        if (remainingProceeds.compareTo(BigDecimal.ZERO) > 0) {
-            sellerTradingAccount.credit(remainingProceeds);
+        if (netProceedsBase.compareTo(BigDecimal.ZERO) > 0) {
+            sellerTradingAccount.credit(netProceedsBase);
             ledgerService.recordTradeProceedsCredit(
                     sellerTradingAccount,
-                    remainingProceeds,
+                    netProceedsBase,
                     execution.stockId(),
                     execution.sellOrderId()
+            );
+        }
+
+        if (executionFxFee.compareTo(BigDecimal.ZERO) > 0) {
+            ledgerService.recordFxConversionFee(
+                    sellerTradingAccount,
+                    executionFxFee,
+                    execution.stockId(),
+                    execution.sellOrderId(),
+                    null,
+                    stockCurrency,
+                    sellerCurrency
             );
         }
     }

@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.order.service;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -40,6 +41,7 @@ public class OrderLifecycleService {
     private final StockRepository stockRepository;
     private final ExchangeRepository exchangeRepository;
     private final ForexService forexService;
+    private final FxFeeService fxFeeService;
 
     @Transactional
     public void cancelOrder(Order order) {
@@ -87,21 +89,29 @@ public class OrderLifecycleService {
                 .multiply(BigDecimal.valueOf(remainingQty))
                 .divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-        BigDecimal unlockAmountInAccountCurrency = forexService.convert(
+        BigDecimal unlockMarginInAccountCurrency = forexService.convert(
                 unlockAmountInStockCurrency,
                 exchange.getCurrency(),
                 tradingAccount.getBaseCurrency()
         );
 
-        tradingAccount.unlockFunds(unlockAmountInAccountCurrency);
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(
+                tradingAccount.getBaseCurrency(),
+                exchange.getCurrency(),
+                unlockMarginInAccountCurrency
+        );
+
+        BigDecimal totalUnlockAmount = unlockMarginInAccountCurrency.add(fxFee);
+
+        tradingAccount.unlockFunds(totalUnlockAmount);
         tradingAccountService.saveTradingAccount(tradingAccount);
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            ledgerService.recordBuyLimitMarginUnlock(tradingAccount, unlockAmountInAccountCurrency, order.getStockId(), order.getId());
+            ledgerService.recordBuyLimitMarginUnlock(tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
             return;
         }
 
-        ledgerService.recordBuyOrderMarginUnlock(tradingAccount, unlockAmountInAccountCurrency, order.getStockId(), order.getId());
+        ledgerService.recordBuyOrderMarginUnlock(tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
     }
 
     private void releaseSellReservation(Order order, int remainingQty) {

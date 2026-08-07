@@ -14,6 +14,7 @@ import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
 import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
 import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
 
@@ -58,6 +60,7 @@ public class IpoService {
     private final LedgerService ledgerService;
     private final ExchangeRepository exchangeRepository;
     private final ForexService forexService;
+    private final FxFeeService fxFeeService;
 
     @Transactional
     public IpoOfferResponse submitIpoOffer(UUID companyId, UUID stockId, UUID actingUserId, CreateIpoOfferRequest request) {
@@ -163,14 +166,17 @@ public class IpoService {
         BigDecimal subscriptionAmountInStockCurrency = calculateSubscriptionAmount(ipoOffer);
         BigDecimal subscriptionAmountInUserCurrency = forexService.convert(subscriptionAmountInStockCurrency, stockCurrency, userCurrency);
 
-        tradingAccount.lockFunds(subscriptionAmountInUserCurrency);
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(userCurrency, stockCurrency, subscriptionAmountInUserCurrency);
+        BigDecimal totalLock = subscriptionAmountInUserCurrency.add(fxFee);
+
+        tradingAccount.lockFunds(totalLock);
         tradingAccountService.saveTradingAccount(tradingAccount);
-        ledgerService.recordIpoSubscriptionLock(tradingAccount, subscriptionAmountInUserCurrency, ipoOffer.getStockId(), ipoOffer.getId());
+        ledgerService.recordIpoSubscriptionLock(tradingAccount, totalLock, ipoOffer.getStockId(), ipoOffer.getId());
 
         IpoSubscription ipoSubscription = IpoSubscription.builder()
                 .ipoOfferId(ipoOfferId)
                 .userId(userId)
-                .lockedAmount(subscriptionAmountInUserCurrency)
+                .lockedAmount(totalLock)
                 .allottedShares(0)
                 .status(IpoSubscriptionStatus.SUBMITTED)
                 .build();
@@ -247,12 +253,22 @@ public class IpoService {
             TradingAccount tradingAccount = lockedAccounts.get(winningSubscription.getUserId());
             String userCurrency = tradingAccount.getBaseCurrency();
 
-            BigDecimal issuePriceInUserCurrency = forexService.convert(ipoOffer.getIssuePrice(), stockCurrency, userCurrency);
+            BigDecimal subscriptionAmountInStockCurrency = calculateSubscriptionAmount(ipoOffer);
+            BigDecimal finalSubInUserCurr = forexService.convert(subscriptionAmountInStockCurrency, stockCurrency, userCurrency);
+            BigDecimal finalFxFee = fxFeeService.calculateConversionFee(userCurrency, stockCurrency, finalSubInUserCurr);
 
-            tradingAccount.debitLockedFunds(winningSubscription.getLockedAmount());
+            tradingAccount.unlockFunds(winningSubscription.getLockedAmount());
+            tradingAccount.debit(finalSubInUserCurr);
+            tradingAccount.debit(finalFxFee);
+
             tradingAccountService.saveTradingAccount(tradingAccount);
-            ledgerService.recordIpoAllotmentDebit(tradingAccount, winningSubscription.getLockedAmount(), stock.getId(), ipoOffer.getId());
 
+            ledgerService.recordIpoAllotmentDebit(tradingAccount, finalSubInUserCurr, stock.getId(), ipoOffer.getId());
+            if (finalFxFee.compareTo(BigDecimal.ZERO) > 0) {
+                ledgerService.recordFxConversionFee(tradingAccount, finalFxFee, stock.getId(), null, ipoOffer.getId(), userCurrency, stockCurrency);
+            }
+
+            BigDecimal issuePriceInUserCurrency = finalSubInUserCurr.divide(BigDecimal.valueOf(ipoOffer.getSharesPerAllottee()), 4, RoundingMode.HALF_UP);
             allocateIpoPosition(
                     winningSubscription.getUserId(),
                     stock,
