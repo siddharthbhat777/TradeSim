@@ -2,7 +2,7 @@ package com.siddharth.tradesim_backend.forex.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
-import com.siddharth.tradesim_backend.forex.ExchangeRateRepository;
+import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

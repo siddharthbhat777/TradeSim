@@ -1,4 +1,4 @@
-package com.siddharth.tradesim_backend.forex;
+package com.siddharth.tradesim_backend.forex.repository;
 
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
 import org.springframework.data.jpa.repository.JpaRepository;
