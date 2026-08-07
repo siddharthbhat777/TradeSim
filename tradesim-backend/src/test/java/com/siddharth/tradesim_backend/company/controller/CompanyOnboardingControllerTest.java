@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
@@ -67,7 +68,7 @@ class CompanyOnboardingControllerTest {
 
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
                 new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
-                new com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123")
+                new RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123", "US")
         );
 
         CompanyOnboardingResponse response = new CompanyOnboardingResponse(

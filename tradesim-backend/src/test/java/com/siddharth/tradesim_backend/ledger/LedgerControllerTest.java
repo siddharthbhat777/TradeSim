@@ -62,6 +62,7 @@ class LedgerControllerTest {
                 ipoOfferId,
                 LedgerEntryType.IPO_SUBSCRIPTION_LOCK,
                 BigDecimal.valueOf(5000),
+                "INR",
                 BigDecimal.valueOf(100000),
                 BigDecimal.valueOf(5000),
                 BigDecimal.ZERO,
@@ -76,6 +77,7 @@ class LedgerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].type").value("IPO_SUBSCRIPTION_LOCK"))
                 .andExpect(jsonPath("$[0].amount").value(5000))
+                .andExpect(jsonPath("$[0].currency").value("INR"))
                 .andExpect(jsonPath("$[0].ipoOfferId").value(ipoOfferId.toString()));
     }
 

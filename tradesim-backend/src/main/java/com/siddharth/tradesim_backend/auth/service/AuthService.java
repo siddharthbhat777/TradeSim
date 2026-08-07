@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Currency;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -89,10 +91,13 @@ public class AuthService {
                     .password(passwordEncoder.encode(request.password()))
                     .role(role)
                     .accountStatus(AccountStatus.ACTIVE)
+                    .country(request.countryCode())
                     .build();
 
             User saved = authRepository.save(user);
-            tradingAccountService.createTradingAccountForUser(saved.getId());
+
+            String baseCurrency = resolveCurrencyFromCountryCode(request.countryCode());
+            tradingAccountService.createTradingAccountForUser(saved.getId(), baseCurrency);
 
             return new RegisterResponse(
                     saved.getId(),
@@ -103,6 +108,18 @@ public class AuthService {
             );
         } catch (DataIntegrityViolationException e) {
             throw AuthException.badRequest("Invalid user data");
+        }
+    }
+
+    private String resolveCurrencyFromCountryCode(String countryCode) {
+        if (countryCode == null || countryCode.isBlank()) {
+            return "INR";
+        }
+        try {
+            Locale locale = Locale.of("", countryCode.trim().toUpperCase());
+            return Currency.getInstance(locale).getCurrencyCode();
+        } catch (IllegalArgumentException e) {
+            return "INR";
         }
     }
 

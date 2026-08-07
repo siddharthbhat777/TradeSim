@@ -54,7 +54,8 @@ class AuthServiceTest {
         RegisterRequest request = new RegisterRequest(
                 "representative1",
                 "representative1@example.com",
-                "Representative@123"
+                "Representative@123",
+                "IN"
         );
 
         when(authRepository.existsByEmail(request.email())).thenReturn(false);
@@ -72,7 +73,7 @@ class AuthServiceTest {
         assertEquals(userId, response.id());
         assertEquals(Role.COMPANY_REPRESENTATIVE, response.role());
         assertEquals(AccountStatus.ACTIVE, response.accountStatus());
-        verify(tradingAccountService).createTradingAccountForUser(userId);
+        verify(tradingAccountService).createTradingAccountForUser(userId, "INR");
     }
 
     @Test

@@ -47,7 +47,7 @@ class CompanyOnboardingServiceTest {
         UUID representativeId = UUID.randomUUID();
 
         CreateCompanyRequest companyRequest = new CreateCompanyRequest("Apple Inc", "APPLE", "United States");
-        RegisterRequest representativeRequest = new RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123");
+        RegisterRequest representativeRequest = new RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123", "US");
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(companyRequest, representativeRequest);
 
         CompanyResponse companyResponse = new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE);

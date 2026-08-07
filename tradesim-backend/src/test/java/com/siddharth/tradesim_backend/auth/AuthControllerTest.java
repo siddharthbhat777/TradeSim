@@ -53,7 +53,7 @@ class AuthControllerTest {
 
     @Test
     void shouldRegisterSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest("sid", "sid@test.com", "Password@123");
+        RegisterRequest request = new RegisterRequest("sid", "sid@test.com", "Password@123", "IN");
 
         RegisterResponse response = new RegisterResponse(
                 UUID.randomUUID(),
@@ -92,7 +92,7 @@ class AuthControllerTest {
 
     @Test
     void validationFailureShouldReturnFieldErrors() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "bad-email", "weak");
+        RegisterRequest request = new RegisterRequest("", "bad-email", "weak", "");
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -101,7 +101,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.fieldErrors.username").value("Username is required"))
                 .andExpect(jsonPath("$.fieldErrors.email").value("Invalid email format"))
-                .andExpect(jsonPath("$.fieldErrors.password").exists());
+                .andExpect(jsonPath("$.fieldErrors.password").exists())
+                .andExpect(jsonPath("$.fieldErrors.countryCode").exists());
     }
 
     @Test

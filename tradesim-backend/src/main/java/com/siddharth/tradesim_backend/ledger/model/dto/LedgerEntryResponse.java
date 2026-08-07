@@ -15,6 +15,7 @@ public record LedgerEntryResponse(
         UUID ipoOfferId,
         LedgerEntryType type,
         BigDecimal amount,
+        String currency,
         BigDecimal balanceAfter,
         BigDecimal lockedBalanceAfter,
         BigDecimal marginLoanAfter,

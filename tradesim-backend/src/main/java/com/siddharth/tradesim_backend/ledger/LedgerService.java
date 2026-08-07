@@ -199,6 +199,7 @@ public class LedgerService {
                 .ipoOfferId(ipoOfferId)
                 .type(type)
                 .amount(amount)
+                .currency(tradingAccount.getBaseCurrency())
                 .balanceAfter(tradingAccount.getBalance())
                 .lockedBalanceAfter(tradingAccount.getLockedBalance())
                 .marginLoanAfter(tradingAccount.getMarginLoan())
@@ -218,6 +219,7 @@ public class LedgerService {
                 ledgerEntry.getIpoOfferId(),
                 ledgerEntry.getType(),
                 ledgerEntry.getAmount(),
+                ledgerEntry.getCurrency(),
                 ledgerEntry.getBalanceAfter(),
                 ledgerEntry.getLockedBalanceAfter(),
                 ledgerEntry.getMarginLoanAfter(),

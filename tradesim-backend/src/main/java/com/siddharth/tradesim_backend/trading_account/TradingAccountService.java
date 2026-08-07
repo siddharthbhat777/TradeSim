@@ -22,13 +22,18 @@ public class TradingAccountService {
 
     @Transactional
     public TradingAccount createTradingAccountForUser(UUID userId) {
+        return createTradingAccountForUser(userId, "INR");
+    }
+
+    @Transactional
+    public TradingAccount createTradingAccountForUser(UUID userId, String baseCurrency) {
         if (tradingAccountRepository.existsByUserId(userId)) {
             throw TradingAccountException.conflict("Trading account already exists for this user");
         }
 
         TradingAccount tradingAccount = TradingAccount.builder()
                 .userId(userId)
-                .baseCurrency("INR")
+                .baseCurrency(baseCurrency != null ? baseCurrency : "INR")
                 .balance(DEFAULT_INITIAL_BALANCE)
                 .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.ZERO)
