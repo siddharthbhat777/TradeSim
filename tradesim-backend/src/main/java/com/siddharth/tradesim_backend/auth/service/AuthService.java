@@ -91,7 +91,7 @@ public class AuthService {
                     .password(passwordEncoder.encode(request.password()))
                     .role(role)
                     .accountStatus(AccountStatus.ACTIVE)
-                    .country(request.countryCode())
+                    .countryCode(request.countryCode())
                     .build();
 
             User saved = authRepository.save(user);

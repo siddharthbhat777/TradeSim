@@ -69,10 +69,13 @@ public class PortfolioService {
 
             Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
+            BigDecimal totalValueInStockCurrency = stock.getLastTradedPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal currentValue = forexService.convert(totalValueInStockCurrency, exchange.getCurrency(), tradingAccount.getBaseCurrency());
+
             BigDecimal currentPriceInAccountCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), tradingAccount.getBaseCurrency());
-            BigDecimal currentValue = currentPriceInAccountCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal unrealizedPnl = currentPriceInAccountCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+
             BigDecimal invested = position.getAverageBuyPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal unrealizedPnl = currentValue.subtract(invested);
 
             totalValue = totalValue.add(currentValue);
             totalInvested = totalInvested.add(invested);
@@ -146,8 +149,8 @@ public class PortfolioService {
 
             Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
-            BigDecimal currentPriceInAccountCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), tradingAccount.getBaseCurrency());
-            BigDecimal value = currentPriceInAccountCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal totalValueInStockCurrency = stock.getLastTradedPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal value = forexService.convert(totalValueInStockCurrency, exchange.getCurrency(), tradingAccount.getBaseCurrency());
 
             positionValues.put(position.getStockId(), value);
 

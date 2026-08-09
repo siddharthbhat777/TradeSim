@@ -41,8 +41,8 @@ public class User extends AuditableEntity {
     @Column(nullable = false)
     private AccountStatus accountStatus;
 
-    @Column(length = 60)
-    private String country;
+    @Column(length = 2)
+    private String countryCode;
 
     private Instant lastLogin;
 }

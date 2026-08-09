@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.auth.model.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
         @NotBlank(message = "Username is required")
@@ -20,6 +21,8 @@ public record RegisterRequest(
         String password,
 
         @NotBlank(message = "Country code is required (e.g., IN, US)")
+        @Size(min = 2, max = 2, message = "Country code must be exactly 2 characters")
+        @Pattern(regexp = "^[A-Z]{2}$", message = "Country code must be a valid 2-letter uppercase ISO code")
         String countryCode
 ) {
 }
