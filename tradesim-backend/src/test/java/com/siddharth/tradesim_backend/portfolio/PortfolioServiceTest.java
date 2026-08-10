@@ -90,6 +90,7 @@ class PortfolioServiceTest {
                 .stockId(stockId)
                 .quantity(10)
                 .lockedQuantity(0)
+                .totalInvested(BigDecimal.valueOf(900))
                 .averageBuyPrice(BigDecimal.valueOf(90))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
@@ -132,6 +133,7 @@ class PortfolioServiceTest {
                 .stockId(stockId)
                 .quantity(10)
                 .lockedQuantity(0)
+                .totalInvested(BigDecimal.valueOf(900))
                 .averageBuyPrice(BigDecimal.valueOf(90))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
@@ -199,7 +201,7 @@ class PortfolioServiceTest {
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(5);
-        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+        when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(450));
         when(buyerTradingAccount.getLeverage()).thenReturn(5);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
 
@@ -255,7 +257,7 @@ class PortfolioServiceTest {
         when(buyerTradingAccount.getLeverage()).thenReturn(10);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(sellerPosition.getQuantity()).thenReturn(10);
-        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+        when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(900));
 
         when(buyerTradingAccount.getBaseCurrency()).thenReturn("INR");
         when(sellerTradingAccount.getBaseCurrency()).thenReturn("INR");
@@ -303,8 +305,10 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
-        when(sellerPosition.getQuantity()).thenReturn(0);
-        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+
+        when(sellerPosition.getQuantity()).thenReturn(5, 0);
+        when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(500));
+
         when(buyerTradingAccount.getLeverage()).thenReturn(5);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
 
@@ -340,7 +344,7 @@ class PortfolioServiceTest {
 
         Position sellerPosition = mock(Position.class);
         when(sellerPosition.getQuantity()).thenReturn(5);
-        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+        when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(450));
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -396,7 +400,7 @@ class PortfolioServiceTest {
 
         Position sellerPosition = mock(Position.class);
         when(sellerPosition.getQuantity()).thenReturn(5);
-        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+        when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(450));
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -467,7 +471,7 @@ class PortfolioServiceTest {
         when(buyerTradingAccount.getLeverage()).thenReturn(10);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(sellerPosition.getQuantity()).thenReturn(10);
-        when(sellerPosition.getAverageBuyPrice()).thenReturn(BigDecimal.valueOf(90));
+        when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(900));
 
         when(buyerTradingAccount.getBaseCurrency()).thenReturn("INR");
         when(sellerTradingAccount.getBaseCurrency()).thenReturn("INR");
