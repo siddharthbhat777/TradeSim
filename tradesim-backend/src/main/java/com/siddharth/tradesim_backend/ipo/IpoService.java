@@ -40,7 +40,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
 
@@ -270,11 +269,10 @@ public class IpoService {
                 ledgerService.recordFxConversionFee(tradingAccount, finalFxFee, stock.getId(), null, ipoOffer.getId(), userCurrency, stockCurrency);
             }
 
-            BigDecimal issuePriceInUserCurrency = finalSubInUserCurr.divide(BigDecimal.valueOf(ipoOffer.getSharesPerAllottee()), 4, RoundingMode.HALF_UP);
             allocateIpoPosition(
                     winningSubscription.getUserId(),
                     stock,
-                    issuePriceInUserCurrency,
+                    finalSubInUserCurr,
                     ipoOffer.getSharesPerAllottee()
             );
 
@@ -378,19 +376,19 @@ public class IpoService {
         Collections.shuffle(subscriptions, new Random(seed));
     }
 
-    private void allocateIpoPosition(UUID userId, Stock stock, BigDecimal issuePrice, int shareQuantity) {
+    private void allocateIpoPosition(UUID userId, Stock stock, BigDecimal exactBlockCost, int shareQuantity) {
         Position position = positionRepository.findByUserIdAndStockId(userId, stock.getId())
                 .orElse(Position.builder()
                         .userId(userId)
                         .stockId(stock.getId())
                         .quantity(0)
                         .lockedQuantity(0)
-                        .averageBuyPrice(issuePrice)
+                        .averageBuyPrice(BigDecimal.ZERO)
+                        .totalInvested(BigDecimal.ZERO)
                         .realizedPnl(BigDecimal.ZERO)
                         .build());
 
-        position.updateAverageBuyPrice(issuePrice, shareQuantity);
-        position.increaseQuantity(shareQuantity);
+        position.addInvestment(exactBlockCost, shareQuantity);
         positionRepository.save(position);
     }
 

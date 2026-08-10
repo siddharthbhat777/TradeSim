@@ -85,9 +85,8 @@ public class OrderLifecycleService {
 
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(order.getUserId());
 
-        BigDecimal unlockAmountInStockCurrency = order.getReservationPrice()
-                .multiply(BigDecimal.valueOf(remainingQty))
-                .divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal blockValueInStockCurrency = order.getReservationPrice().multiply(BigDecimal.valueOf(remainingQty));
+        BigDecimal unlockAmountInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
         BigDecimal unlockMarginInAccountCurrency = forexService.convert(
                 unlockAmountInStockCurrency,

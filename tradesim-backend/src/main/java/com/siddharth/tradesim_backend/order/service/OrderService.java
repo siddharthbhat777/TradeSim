@@ -200,7 +200,9 @@ public class OrderService {
     }
 
     private BigDecimal lockLimitBuy(TradingAccount tradingAccount, String stockCurrency, @Valid OrderRequest request) {
-        BigDecimal requiredMarginInStockCurrency = calculateRequiredMargin(request.limitPrice(), request.quantity(), tradingAccount.getLeverage());
+        BigDecimal blockValueInStockCurrency = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
+        BigDecimal requiredMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+
         BigDecimal requiredMarginInAccountCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
         BigDecimal fxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, requiredMarginInAccountCurrency);
         tradingAccount.lockFunds(requiredMarginInAccountCurrency.add(fxFee));
@@ -217,12 +219,13 @@ public class OrderService {
         }
 
         BigDecimal reservationPrice = calculateProtectedMarketBuyPrice(stock);
-        BigDecimal orderValueInStockCurrency = reservationPrice.multiply(BigDecimal.valueOf(request.quantity()));
-        BigDecimal orderValueInAccountCurrency = forexService.convert(orderValueInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
+        BigDecimal blockValueInStockCurrency = reservationPrice.multiply(BigDecimal.valueOf(request.quantity()));
+
+        BigDecimal orderValueInAccountCurrency = forexService.convert(blockValueInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
         BigDecimal totalValueFxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, orderValueInAccountCurrency);
         riskService.validateBuyOrder(tradingAccount, orderValueInAccountCurrency.add(totalValueFxFee));
 
-        BigDecimal requiredMarginInStockCurrency = calculateRequiredMargin(reservationPrice, request.quantity(), tradingAccount.getLeverage());
+        BigDecimal requiredMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
         BigDecimal requiredMarginInAccountCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
         BigDecimal marginFxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, requiredMarginInAccountCurrency);
         tradingAccount.lockFunds(requiredMarginInAccountCurrency.add(marginFxFee));
@@ -258,7 +261,9 @@ public class OrderService {
             return;
         }
 
-        BigDecimal lockedMarginInStockCurrency = calculateRequiredMargin(order.getReservationPrice(), order.getQuantity(), tradingAccount.getLeverage());
+        BigDecimal blockValueInStockCurrency = order.getReservationPrice().multiply(BigDecimal.valueOf(order.getQuantity()));
+        BigDecimal lockedMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+
         BigDecimal lockedMarginInAccountCurrency = forexService.convert(lockedMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
         BigDecimal fxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, lockedMarginInAccountCurrency);
         BigDecimal totalLock = lockedMarginInAccountCurrency.add(fxFee);
@@ -336,9 +341,5 @@ public class OrderService {
         }
 
         return "Price band limit reached. Remaining quantity pending.";
-    }
-
-    private BigDecimal calculateRequiredMargin(BigDecimal price, int quantity, int leverage) {
-        return price.multiply(BigDecimal.valueOf(quantity)).divide(BigDecimal.valueOf(leverage), 4, RoundingMode.HALF_UP);
     }
 }

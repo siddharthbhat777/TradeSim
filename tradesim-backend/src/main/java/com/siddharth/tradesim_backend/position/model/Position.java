@@ -7,6 +7,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 @Entity
@@ -53,6 +54,11 @@ public class Position extends AuditableEntity {
 
     @Column(nullable = false, precision = 19, scale = 4)
     @Setter(AccessLevel.NONE)
+    @Builder.Default
+    private BigDecimal totalInvested = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    @Setter(AccessLevel.NONE)
     private BigDecimal realizedPnl;
 
     public int getAvailableQuantity() {
@@ -83,42 +89,40 @@ public class Position extends AuditableEntity {
         this.lockedQuantity -= quantity;
     }
 
-    public void increaseQuantity(int quantity) {
-        if (quantity <= 0) {
+    public void addInvestment(BigDecimal exactBlockCost, int quantityToAdd) {
+        if (quantityToAdd <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
         }
-        this.quantity += quantity;
+        if (exactBlockCost == null || exactBlockCost.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Cost must be positive");
+        }
+
+        this.totalInvested = this.totalInvested.add(exactBlockCost);
+        this.quantity += quantityToAdd;
+        this.averageBuyPrice = this.totalInvested.divide(BigDecimal.valueOf(this.quantity), 4, RoundingMode.HALF_UP);
     }
 
-    public void decreaseQuantity(int quantity) {
-        if (quantity <= 0) {
+    public void decreaseQuantity(int quantityToSubtract) {
+        if (quantityToSubtract <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
         }
 
-        if (this.quantity < quantity) {
+        if (this.quantity < quantityToSubtract) {
             throw PositionException.conflict("Insufficient shares");
         }
 
-        this.quantity -= quantity;
-    }
+        BigDecimal costReduction = this.totalInvested.multiply(BigDecimal.valueOf(quantityToSubtract))
+                .divide(BigDecimal.valueOf(this.quantity), 4, RoundingMode.HALF_UP);
 
-    public void updateAverageBuyPrice(BigDecimal executionPrice, int executedQuantity) {
-        if (executedQuantity <= 0) {
-            throw new IllegalArgumentException("Executed quantity must be positive");
+        this.totalInvested = this.totalInvested.subtract(costReduction);
+        this.quantity -= quantityToSubtract;
+
+        if (this.quantity == 0) {
+            this.totalInvested = BigDecimal.ZERO;
+            this.averageBuyPrice = BigDecimal.ZERO;
+        } else {
+            this.averageBuyPrice = this.totalInvested.divide(BigDecimal.valueOf(this.quantity), 4, RoundingMode.HALF_UP);
         }
-
-        if (this.quantity == 0 || this.averageBuyPrice == null) {
-            this.averageBuyPrice = executionPrice;
-            return;
-        }
-
-        BigDecimal totalCost = this.averageBuyPrice.multiply(BigDecimal.valueOf(this.quantity));
-        BigDecimal newCost = executionPrice.multiply(BigDecimal.valueOf(executedQuantity));
-
-        BigDecimal newTotalCost = totalCost.add(newCost);
-        int newTotalQuantity = this.quantity + executedQuantity;
-
-        this.averageBuyPrice = newTotalCost.divide(BigDecimal.valueOf(newTotalQuantity), 4, java.math.RoundingMode.HALF_UP).setScale(4, java.math.RoundingMode.HALF_UP);
     }
 
     public void addRealizedPnl(BigDecimal pnl) {
