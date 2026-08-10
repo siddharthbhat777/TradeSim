@@ -114,7 +114,7 @@ public class OrderLifecycleService {
     }
 
     private void releaseSellReservation(Order order, int remainingQty) {
-        boolean sharesWereReserved = order.getOrderType() == OrderType.LIMIT || order.getTimeInForce() == TimeInForce.DAY;
+        boolean sharesWereReserved = order.getOrderType() == OrderType.LIMIT || order.getTimeInForce() == TimeInForce.DAY || order.getTimeInForce() == TimeInForce.GTC;
         if (!sharesWereReserved) {
             return;
         }

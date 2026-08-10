@@ -190,7 +190,7 @@ public class OrderService {
         switch (request.orderType()) {
             case LIMIT -> lockSellPosition(userId, stockId, request.quantity());
             case MARKET -> {
-                if (request.timeInForce() == TimeInForce.DAY) {
+                if (request.timeInForce() == TimeInForce.DAY || request.timeInForce() == TimeInForce.GTC) {
                     lockSellPosition(userId, stockId, request.quantity());
                 } else {
                     validateUserPosition(userId, stockId, request.quantity());
