@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -43,6 +44,10 @@ public class User extends AuditableEntity {
 
     @Column(length = 2)
     private String countryCode;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    @Builder.Default
+    private BigDecimal bankBalance = BigDecimal.ZERO;
 
     private Instant lastLogin;
 }

@@ -35,6 +35,9 @@ import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import com.siddharth.tradesim_backend.stock.service.StockService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -80,6 +83,9 @@ class IpoServiceTest {
 
     @Mock
     private TradingAccountService tradingAccountService;
+
+    @Mock
+    private WalletService walletService;
 
     @Mock
     private PositionRepository positionRepository;
@@ -215,19 +221,21 @@ class IpoServiceTest {
         User user = User.builder()
                 .id(userId)
                 .role(Role.USER)
+                .countryCode("US")
                 .accountStatus(AccountStatus.ACTIVE)
                 .build();
 
         TradingAccount tradingAccount = TradingAccount.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
-                .baseCurrency("INR")
-                .balance(BigDecimal.valueOf(100000))
-                .lockedBalance(BigDecimal.ZERO)
+                .baseCurrency("USD")
                 .marginLoan(BigDecimal.ZERO)
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
+
+        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.valueOf(100000)).lockedBalance(BigDecimal.ZERO).build();
 
         Stock stock = Stock.builder().id(stockId).exchangeId(UUID.randomUUID()).build();
         Exchange exchange = Exchange.builder().currency("USD").build();
@@ -236,6 +244,10 @@ class IpoServiceTest {
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(ipoSubscriptionRepository.existsByIpoOfferIdAndUserId(ipoOfferId, userId)).thenReturn(false);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
+
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
+        when(walletService.getBucketForUpdate(wallet.getId(), "USD")).thenReturn(bucket);
+
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -250,9 +262,8 @@ class IpoServiceTest {
 
         assertThat(response.status()).isEqualTo(IpoSubscriptionStatus.SUBMITTED);
         assertThat(response.lockedAmount()).isEqualByComparingTo(BigDecimal.valueOf(5000));
-        assertThat(tradingAccount.getLockedBalance()).isEqualByComparingTo(BigDecimal.valueOf(5000));
-        verify(tradingAccountService).saveTradingAccount(tradingAccount);
-        verify(ledgerService).recordIpoSubscriptionLock(tradingAccount, BigDecimal.valueOf(5000), stockId, ipoOfferId);
+        assertThat(bucket.getLockedBalance()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        verify(ledgerService).recordIpoSubscriptionLock(bucket, tradingAccount, BigDecimal.valueOf(5000), stockId, ipoOfferId);
     }
 
     @Test
@@ -314,23 +325,26 @@ class IpoServiceTest {
                 .id(UUID.randomUUID())
                 .userId(userOneId)
                 .baseCurrency("INR")
-                .balance(BigDecimal.valueOf(10000))
-                .lockedBalance(BigDecimal.valueOf(5000))
                 .marginLoan(BigDecimal.ZERO)
                 .leverage(5)
-                .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
 
         TradingAccount tradingAccountTwo = TradingAccount.builder()
                 .id(UUID.randomUUID())
                 .userId(userTwoId)
                 .baseCurrency("INR")
-                .balance(BigDecimal.valueOf(12000))
-                .lockedBalance(BigDecimal.valueOf(5000))
                 .marginLoan(BigDecimal.ZERO)
                 .leverage(5)
-                .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
+
+        User user1 = User.builder().id(userOneId).countryCode("US").build();
+        User user2 = User.builder().id(userTwoId).countryCode("US").build();
+
+        Wallet wallet1 = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket bucket1 = WalletBucket.builder().balance(BigDecimal.valueOf(10000)).lockedBalance(BigDecimal.valueOf(5000)).build();
+
+        Wallet wallet2 = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket bucket2 = WalletBucket.builder().balance(BigDecimal.valueOf(12000)).lockedBalance(BigDecimal.valueOf(5000)).build();
 
         Exchange exchange = Exchange.builder().currency("USD").build();
 
@@ -348,8 +362,18 @@ class IpoServiceTest {
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(subscriptionOne, subscriptionTwo));
+
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userOneId)).thenReturn(tradingAccountOne);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userTwoId)).thenReturn(tradingAccountTwo);
+
+        when(authRepository.findById(userOneId)).thenReturn(Optional.of(user1));
+        when(authRepository.findById(userTwoId)).thenReturn(Optional.of(user2));
+
+        when(walletService.getWalletByUserId(userOneId)).thenReturn(wallet1);
+        when(walletService.getWalletByUserId(userTwoId)).thenReturn(wallet2);
+        when(walletService.getBucketForUpdate(wallet1.getId(), "INR")).thenReturn(bucket1);
+        when(walletService.getBucketForUpdate(wallet2.getId(), "INR")).thenReturn(bucket2);
+
         when(positionRepository.findByUserIdAndStockId(userOneId, stockId)).thenReturn(Optional.empty());
         when(positionRepository.findByUserIdAndStockId(userTwoId, stockId)).thenReturn(Optional.empty());
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -361,10 +385,10 @@ class IpoServiceTest {
 
         assertThat(response.status()).isEqualTo(IpoOfferStatus.ALLOTTED);
         assertThat(response.finalizedByUserId()).isEqualTo(adminUserId);
-        assertThat(tradingAccountOne.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(5000));
-        assertThat(tradingAccountOne.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(tradingAccountTwo.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(7000));
-        assertThat(tradingAccountTwo.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(bucket1.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        assertThat(bucket1.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(bucket2.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(7000));
+        assertThat(bucket2.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
 
         ArgumentCaptor<Position> positionCaptor = ArgumentCaptor.forClass(Position.class);
         verify(positionRepository, times(2)).save(positionCaptor.capture());
@@ -374,7 +398,7 @@ class IpoServiceTest {
         assertThat(savedPositions.get(0).getQuantity()).isEqualTo(50);
         assertThat(savedPositions.get(1).getQuantity()).isEqualTo(50);
 
-        verify(ledgerService, times(2)).recordIpoAllotmentDebit(any(TradingAccount.class), eq(BigDecimal.valueOf(5000)), eq(stockId), eq(ipoOfferId));
+        verify(ledgerService, times(2)).recordIpoAllotmentDebit(any(WalletBucket.class), any(TradingAccount.class), eq(BigDecimal.valueOf(5000)), eq(stockId), eq(ipoOfferId));
         verify(stockService).activateStockFromIpoAllotment(stockId, 100, 100);
         verify(ipoSubscriptionRepository).saveAll(anyList());
     }

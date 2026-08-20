@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.auth.service.AuthService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
 import com.siddharth.tradesim_backend.auth.service.RefreshTokenService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,6 +46,9 @@ class AuthServiceTest {
     @Mock
     private TradingAccountService tradingAccountService;
 
+    @Mock
+    private WalletService walletService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -74,6 +78,7 @@ class AuthServiceTest {
         assertEquals(Role.COMPANY_REPRESENTATIVE, response.role());
         assertEquals(AccountStatus.ACTIVE, response.accountStatus());
         verify(tradingAccountService).createTradingAccountForUser(userId, "INR");
+        verify(walletService).createWalletForUser(userId, "INR");
     }
 
     @Test

@@ -35,6 +35,9 @@ import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.user.UserException;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -61,6 +64,7 @@ public class OrderService {
     private final RiskService riskService;
     private final ExchangeService exchangeService;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final LedgerService ledgerService;
     private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
@@ -91,13 +95,16 @@ public class OrderService {
         ReentrantLock orderBookLock = orderBookManager.getLock(stock.getId());
         orderBookLock.lock();
         TradingAccount tradingAccount = null;
+        WalletBucket bucket = null;
         Order order;
         MatchResult result;
         try {
             BigDecimal reservationPrice = null;
             if (request.side() == OrderSide.BUY) {
                 tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
-                reservationPrice = prepareBuyReservation(tradingAccount, stock, exchange, request);
+                Wallet wallet = walletService.getWalletByUserId(userId);
+                bucket = walletService.getBucketForUpdate(wallet.getId(), tradingAccount.getBaseCurrency());
+                reservationPrice = prepareBuyReservation(bucket, tradingAccount, stock, exchange, request);
             } else {
                 prepareSellReservation(userId, stock.getId(), request);
             }
@@ -121,8 +128,8 @@ public class OrderService {
 
             orderRepository.save(order);
 
-            if (tradingAccount != null) {
-                recordLockLedgerIfRequired(order, tradingAccount, exchange.getCurrency());
+            if (tradingAccount != null && bucket != null) {
+                recordLockLedgerIfRequired(order, bucket, tradingAccount, exchange.getCurrency());
             }
 
             if (order.getBookPrice() != null) {
@@ -179,10 +186,10 @@ public class OrderService {
         }
     }
 
-    private BigDecimal prepareBuyReservation(TradingAccount tradingAccount, Stock stock, Exchange exchange, @Valid OrderRequest request) {
+    private BigDecimal prepareBuyReservation(WalletBucket bucket, TradingAccount tradingAccount, Stock stock, Exchange exchange, @Valid OrderRequest request) {
         return switch (request.orderType()) {
-            case LIMIT -> lockLimitBuy(tradingAccount, exchange.getCurrency(), request);
-            case MARKET -> prepareMarketBuy(tradingAccount, stock, exchange.getCurrency(), request);
+            case LIMIT -> lockLimitBuy(bucket, tradingAccount, exchange.getCurrency(), request);
+            case MARKET -> prepareMarketBuy(bucket, tradingAccount, stock, exchange.getCurrency(), request);
         };
     }
 
@@ -199,17 +206,17 @@ public class OrderService {
         }
     }
 
-    private BigDecimal lockLimitBuy(TradingAccount tradingAccount, String stockCurrency, @Valid OrderRequest request) {
+    private BigDecimal lockLimitBuy(WalletBucket bucket, TradingAccount tradingAccount, String stockCurrency, @Valid OrderRequest request) {
         BigDecimal blockValueInStockCurrency = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
         BigDecimal requiredMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
         BigDecimal requiredMarginInAccountCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
         BigDecimal fxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, requiredMarginInAccountCurrency);
-        tradingAccount.lockFunds(requiredMarginInAccountCurrency.add(fxFee));
+        bucket.setLockedBalance(bucket.getLockedBalance().add(requiredMarginInAccountCurrency.add(fxFee)));
         return request.limitPrice();
     }
 
-    private BigDecimal prepareMarketBuy(TradingAccount tradingAccount, Stock stock, String stockCurrency, @Valid OrderRequest request) {
+    private BigDecimal prepareMarketBuy(WalletBucket bucket, TradingAccount tradingAccount, Stock stock, String stockCurrency, @Valid OrderRequest request) {
         if (request.timeInForce() == TimeInForce.IOC) {
             BigDecimal estimatedCostInStockCurrency = estimateMarketBuyCost(stock.getId(), request.quantity());
             BigDecimal estimatedCostInAccountCurrency = forexService.convert(estimatedCostInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
@@ -228,7 +235,7 @@ public class OrderService {
         BigDecimal requiredMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
         BigDecimal requiredMarginInAccountCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
         BigDecimal marginFxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, requiredMarginInAccountCurrency);
-        tradingAccount.lockFunds(requiredMarginInAccountCurrency.add(marginFxFee));
+        bucket.setLockedBalance(bucket.getLockedBalance().add(requiredMarginInAccountCurrency.add(marginFxFee)));
         return reservationPrice;
     }
 
@@ -256,7 +263,7 @@ public class OrderService {
         }
     }
 
-    private void recordLockLedgerIfRequired(Order order, TradingAccount tradingAccount, String stockCurrency) {
+    private void recordLockLedgerIfRequired(Order order, WalletBucket bucket, TradingAccount tradingAccount, String stockCurrency) {
         if (order.getSide() != OrderSide.BUY || order.getReservationPrice() == null) {
             return;
         }
@@ -271,11 +278,11 @@ public class OrderService {
         tradingAccountService.saveTradingAccount(tradingAccount);
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            ledgerService.recordBuyLimitMarginLock(tradingAccount, totalLock, order.getStockId(), order.getId());
+            ledgerService.recordBuyLimitMarginLock(bucket, tradingAccount, totalLock, order.getStockId(), order.getId());
             return;
         }
 
-        ledgerService.recordBuyOrderMarginLock(tradingAccount, totalLock, order.getStockId(), order.getId());
+        ledgerService.recordBuyOrderMarginLock(bucket, tradingAccount, totalLock, order.getStockId(), order.getId());
     }
 
     private void finalizeRemainder(Order order, Stock stock, MatchResult result) {

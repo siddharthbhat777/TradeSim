@@ -16,6 +16,9 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +27,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,6 +56,9 @@ class RiskServiceTest {
     private TradingAccountService tradingAccountService;
 
     @Mock
+    private WalletService walletService;
+
+    @Mock
     private LiquidationService liquidationService;
 
     @Mock
@@ -66,17 +71,23 @@ class RiskServiceTest {
     private RiskService riskService;
 
     private TradingAccount tradingAccount;
+    private Wallet wallet;
+    private WalletBucket bucket;
 
     @BeforeEach
     void setup() {
+        UUID userId = UUID.randomUUID();
         tradingAccount = TradingAccount.builder()
-                .balance(BigDecimal.valueOf(1000))
-                .lockedBalance(BigDecimal.ZERO)
+                .userId(userId)
                 .marginLoan(BigDecimal.ZERO)
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .baseCurrency("INR")
                 .build();
+
+        wallet = Wallet.builder().id(UUID.randomUUID()).userId(userId).build();
+        bucket = WalletBucket.builder().wallet(wallet).currency("INR").balance(BigDecimal.valueOf(1000)).lockedBalance(BigDecimal.ZERO).build();
+        wallet.setBuckets(List.of(bucket));
     }
 
     private void mockExchangeAndForex(Stock stock) {
@@ -88,6 +99,8 @@ class RiskServiceTest {
     @Test
     void shouldAllowBuyWhenMarginSufficient() {
         BigDecimal orderValue = BigDecimal.valueOf(4000);
+        when(walletService.getWalletByUserId(tradingAccount.getUserId())).thenReturn(wallet);
+        when(walletService.getBucket(wallet.getId(), "INR")).thenReturn(bucket);
 
         assertDoesNotThrow(() -> riskService.validateBuyOrder(tradingAccount, orderValue));
     }
@@ -95,6 +108,8 @@ class RiskServiceTest {
     @Test
     void shouldRejectBuyWhenMarginInsufficient() {
         BigDecimal orderValue = BigDecimal.valueOf(6000);
+        when(walletService.getWalletByUserId(tradingAccount.getUserId())).thenReturn(wallet);
+        when(walletService.getBucket(wallet.getId(), "INR")).thenReturn(bucket);
 
         assertThrows(BusinessException.class, () -> riskService.validateBuyOrder(tradingAccount, orderValue));
     }
@@ -102,44 +117,17 @@ class RiskServiceTest {
     @Test
     void shouldAllowExactMarginBoundary() {
         BigDecimal orderValue = BigDecimal.valueOf(5000);
+        when(walletService.getWalletByUserId(tradingAccount.getUserId())).thenReturn(wallet);
+        when(walletService.getBucket(wallet.getId(), "INR")).thenReturn(bucket);
 
         assertDoesNotThrow(() -> riskService.validateBuyOrder(tradingAccount, orderValue));
     }
 
     @Test
-    void shouldLockOnlyMarginNotFullAmount() {
-        BigDecimal orderValue = BigDecimal.valueOf(5000);
-        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
-
-        tradingAccount.lockFunds(requiredMargin);
-
-        assertEquals(0, tradingAccount.getLockedBalance().compareTo(BigDecimal.valueOf(1000)));
-        assertEquals(0, tradingAccount.getAvailableBalance().compareTo(BigDecimal.ZERO));
-    }
-
-    @Test
-    void shouldFailWhenMultipleOrdersExceedBalance() {
-        tradingAccount.lockFunds(BigDecimal.valueOf(600));
-        tradingAccount.lockFunds(BigDecimal.valueOf(300));
-
-        assertThrows(BusinessException.class, () -> tradingAccount.lockFunds(BigDecimal.valueOf(200)));
-    }
-
-    @Test
     void shouldCalculateSafeRiskLevel() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = tradingAccount.getUserId();
 
-        User user = User.builder()
-                .id(userId)
-                .build();
-
-        TradingAccount mockTradingAccount = TradingAccount.builder()
-                .userId(userId)
-                .baseCurrency("INR")
-                .balance(BigDecimal.valueOf(10000))
-                .leverage(5)
-                .maintenanceMarginPercent(BigDecimal.valueOf(25))
-                .build();
+        User user = User.builder().id(userId).build();
 
         Position position = Position.builder()
                 .userId(userId)
@@ -154,8 +142,11 @@ class RiskServiceTest {
                 .lastTradedPrice(BigDecimal.valueOf(120))
                 .build();
 
+        bucket.setBalance(BigDecimal.valueOf(10000));
+
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
@@ -169,20 +160,13 @@ class RiskServiceTest {
 
     @Test
     void shouldTriggerLiquidationWhenEquityBelowMaintenance() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = tradingAccount.getUserId();
 
-        User user = User.builder()
-                .id(userId)
-                .build();
+        User user = User.builder().id(userId).build();
 
-        TradingAccount mockTradingAccount = TradingAccount.builder()
-                .userId(userId)
-                .baseCurrency("INR")
-                .balance(BigDecimal.ZERO)
-                .marginLoan(BigDecimal.valueOf(950))
-                .leverage(5)
-                .maintenanceMarginPercent(BigDecimal.valueOf(50))
-                .build();
+        tradingAccount.increaseMarginLoan(BigDecimal.valueOf(950));
+        tradingAccount.setMaintenanceMarginPercent(BigDecimal.valueOf(50));
+        bucket.setBalance(BigDecimal.ZERO);
 
         Position position = Position.builder()
                 .userId(userId)
@@ -198,7 +182,8 @@ class RiskServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
@@ -211,20 +196,13 @@ class RiskServiceTest {
 
     @Test
     void shouldReturnWarningRiskLevel() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = tradingAccount.getUserId();
 
-        User user = User.builder()
-                .id(userId)
-                .build();
+        User user = User.builder().id(userId).build();
 
-        TradingAccount mockTradingAccount = TradingAccount.builder()
-                .userId(userId)
-                .baseCurrency("INR")
-                .balance(BigDecimal.ZERO)
-                .marginLoan(BigDecimal.valueOf(850))
-                .leverage(5)
-                .maintenanceMarginPercent(BigDecimal.valueOf(50))
-                .build();
+        tradingAccount.increaseMarginLoan(BigDecimal.valueOf(850));
+        tradingAccount.setMaintenanceMarginPercent(BigDecimal.valueOf(50));
+        bucket.setBalance(BigDecimal.ZERO);
 
         Position position = Position.builder()
                 .userId(userId)
@@ -240,7 +218,8 @@ class RiskServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
@@ -253,19 +232,11 @@ class RiskServiceTest {
 
     @Test
     void shouldHandleZeroMaintenanceMargin() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = tradingAccount.getUserId();
 
-        User user = User.builder()
-                .id(userId)
-                .build();
+        User user = User.builder().id(userId).build();
 
-        TradingAccount mockTradingAccount = TradingAccount.builder()
-                .userId(userId)
-                .baseCurrency("INR")
-                .balance(BigDecimal.valueOf(1000))
-                .leverage(5)
-                .maintenanceMarginPercent(BigDecimal.ZERO)
-                .build();
+        tradingAccount.setMaintenanceMarginPercent(BigDecimal.ZERO);
 
         Position position = Position.builder()
                 .userId(userId)
@@ -281,7 +252,8 @@ class RiskServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findById(position.getStockId())).thenReturn(Optional.of(stock));
 
@@ -294,23 +266,16 @@ class RiskServiceTest {
 
     @Test
     void shouldReturnSafeWhenNoPositions() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = tradingAccount.getUserId();
 
-        User user = User.builder()
-                .id(userId)
-                .build();
-
-        TradingAccount mockTradingAccount = TradingAccount.builder()
-                .userId(userId)
-                .baseCurrency("INR")
-                .balance(BigDecimal.valueOf(5000))
-                .leverage(5)
-                .maintenanceMarginPercent(BigDecimal.valueOf(25))
-                .build();
+        User user = User.builder().id(userId).build();
+        bucket.setBalance(BigDecimal.valueOf(5000));
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(mockTradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of());
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         RiskResponse response = riskService.getUserRisk(userId);
 

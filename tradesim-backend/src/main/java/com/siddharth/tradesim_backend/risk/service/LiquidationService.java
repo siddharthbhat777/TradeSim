@@ -20,6 +20,9 @@ import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +39,7 @@ public class LiquidationService {
     private final PositionRepository positionRepository;
     private final StockRepository stockRepository;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final OrderMatchingEngine orderMatchingEngine;
     private final OrderBookManager orderBookManager;
     private final OrderRepository orderRepository;
@@ -140,6 +144,12 @@ public class LiquidationService {
         List<Position> positions = positionRepository.findByUserId(tradingAccount.getUserId());
         String userCurrency = tradingAccount.getBaseCurrency();
 
+        Wallet wallet = walletService.getWalletByUserId(tradingAccount.getUserId());
+        BigDecimal totalCashValue = BigDecimal.ZERO;
+        for (WalletBucket bucket : wallet.getBuckets()) {
+            totalCashValue = totalCashValue.add(forexService.convert(bucket.getBalance(), bucket.getCurrency(), userCurrency));
+        }
+
         BigDecimal totalPositionValue = BigDecimal.ZERO;
 
         for (Position position : positions) {
@@ -152,8 +162,13 @@ public class LiquidationService {
             totalPositionValue = totalPositionValue.add(positionValue);
         }
 
-        BigDecimal equity = tradingAccount.calculateEquity(totalPositionValue);
-        BigDecimal marginUsed = totalPositionValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal equity = totalCashValue.add(totalPositionValue).subtract(tradingAccount.getMarginLoan());
+
+        BigDecimal marginUsed = BigDecimal.ZERO;
+        if (totalPositionValue.compareTo(BigDecimal.ZERO) > 0) {
+            marginUsed = totalPositionValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        }
+
         BigDecimal maintenanceMargin = marginUsed.multiply(tradingAccount.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
 
         return equity.compareTo(maintenanceMargin) < 0;

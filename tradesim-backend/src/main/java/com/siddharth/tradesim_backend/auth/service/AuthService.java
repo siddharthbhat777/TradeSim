@@ -7,12 +7,14 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Currency;
 import java.util.Locale;
@@ -26,6 +28,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final RefreshTokenService refreshTokenService;
 
     @Transactional
@@ -92,12 +95,14 @@ public class AuthService {
                     .role(role)
                     .accountStatus(AccountStatus.ACTIVE)
                     .countryCode(request.countryCode())
+                    .bankBalance(new BigDecimal("10000000.0000"))
                     .build();
 
             User saved = authRepository.save(user);
 
             String baseCurrency = resolveCurrencyFromCountryCode(request.countryCode());
             tradingAccountService.createTradingAccountForUser(saved.getId(), baseCurrency);
+            walletService.createWalletForUser(saved.getId(), baseCurrency);
 
             return new RegisterResponse(
                     saved.getId(),

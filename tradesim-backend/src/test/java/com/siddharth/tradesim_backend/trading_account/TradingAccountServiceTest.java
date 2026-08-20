@@ -1,7 +1,6 @@
 package com.siddharth.tradesim_backend.trading_account;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
-import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.trading_account.model.dto.TradingAccountResponse;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,9 +23,6 @@ class TradingAccountServiceTest {
 
     @Mock
     private TradingAccountRepository tradingAccountRepository;
-
-    @Mock
-    private LedgerService ledgerService;
 
     @InjectMocks
     private TradingAccountService tradingAccountService;
@@ -46,13 +41,10 @@ class TradingAccountServiceTest {
         TradingAccount tradingAccount = tradingAccountService.createTradingAccountForUser(userId);
 
         assertThat(tradingAccount.getUserId()).isEqualTo(userId);
-        assertThat(tradingAccount.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(10000000));
-        assertThat(tradingAccount.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(tradingAccount.getBaseCurrency()).isEqualTo("INR");
         assertThat(tradingAccount.getMarginLoan()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(tradingAccount.getLeverage()).isEqualTo(5);
         assertThat(tradingAccount.getMaintenanceMarginPercent()).isEqualByComparingTo(BigDecimal.valueOf(25));
-
-        verify(ledgerService).recordInitialCredit(tradingAccount, BigDecimal.valueOf(10000000));
     }
 
     @Test
@@ -62,8 +54,7 @@ class TradingAccountServiceTest {
         TradingAccount tradingAccount = TradingAccount.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
-                .balance(BigDecimal.valueOf(10000000))
-                .lockedBalance(BigDecimal.valueOf(5000))
+                .baseCurrency("INR")
                 .marginLoan(BigDecimal.valueOf(25000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
@@ -74,10 +65,9 @@ class TradingAccountServiceTest {
         TradingAccountResponse response = tradingAccountService.fetchMyTradingAccount(userId);
 
         assertThat(response.userId()).isEqualTo(userId);
-        assertThat(response.balance()).isEqualByComparingTo(BigDecimal.valueOf(10000000));
-        assertThat(response.lockedBalance()).isEqualByComparingTo(BigDecimal.valueOf(5000));
-        assertThat(response.availableBalance()).isEqualByComparingTo(BigDecimal.valueOf(9995000));
+        assertThat(response.baseCurrency()).isEqualTo("INR");
         assertThat(response.marginLoan()).isEqualByComparingTo(BigDecimal.valueOf(25000));
+        assertThat(response.leverage()).isEqualTo(5);
     }
 
     @Test

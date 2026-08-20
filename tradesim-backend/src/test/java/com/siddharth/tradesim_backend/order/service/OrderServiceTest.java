@@ -29,6 +29,9 @@ import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +65,7 @@ class OrderServiceTest {
     private RiskService riskService;
     private ExchangeService exchangeService;
     private TradingAccountService tradingAccountService;
+    private WalletService walletService;
     private LedgerService ledgerService;
     private OrderLifecycleService orderLifecycleService;
     private MarketStateService marketStateService;
@@ -83,6 +87,7 @@ class OrderServiceTest {
         riskService = mock(RiskService.class);
         exchangeService = mock(ExchangeService.class);
         tradingAccountService = mock(TradingAccountService.class);
+        walletService = mock(WalletService.class);
         ledgerService = mock(LedgerService.class);
         orderLifecycleService = mock(OrderLifecycleService.class);
         marketStateService = mock(MarketStateService.class);
@@ -100,6 +105,7 @@ class OrderServiceTest {
                 riskService,
                 exchangeService,
                 tradingAccountService,
+                walletService,
                 ledgerService,
                 orderLifecycleService,
                 marketStateService,
@@ -116,13 +122,17 @@ class OrderServiceTest {
         when(fxFeeService.calculateConversionFee(any(), any(), any())).thenReturn(BigDecimal.ZERO);
     }
 
-    private void mockActiveUserAndStock(TradingAccount tradingAccount, Stock stock) {
+    private void mockActiveUserAndStock(TradingAccount tradingAccount, WalletBucket bucket, Stock stock) {
         User user = mock(User.class);
         when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
 
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getBaseCurrency()).thenReturn("INR");
+
+        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).build();
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
+        when(walletService.getBucketForUpdate(wallet.getId(), "INR")).thenReturn(bucket);
 
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
@@ -151,10 +161,11 @@ class OrderServiceTest {
     @Test
     void shouldCreateLimitBuyDayOrder() {
         TradingAccount tradingAccount = mock(TradingAccount.class);
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
         Stock stock = mock(Stock.class);
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
-        mockActiveUserAndStock(tradingAccount, stock);
+        mockActiveUserAndStock(tradingAccount, bucket, stock);
         when(tradingAccount.getLeverage()).thenReturn(5);
         when(exchangeService.resolveDayOrderExpiry(exchangeId)).thenReturn(expiresAt);
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false, false, null));
@@ -162,12 +173,12 @@ class OrderServiceTest {
         OrderRequest request = createLimitBuyDayRequest();
         OrderResponse response = orderService.createOrder(userId, request);
 
-        verify(tradingAccount).lockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0));
+        assertEquals(0, bucket.getLockedBalance().compareTo(BigDecimal.valueOf(200)));
         verify(tradingAccountService).saveTradingAccount(tradingAccount);
         verify(orderRepository, times(2)).save(any(Order.class));
         verify(orderBookManager).addOrder(any(Order.class));
         verify(orderMatchingEngine).match(any(Order.class));
-        verify(ledgerService).recordBuyLimitMarginLock(eq(tradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0), eq(stockId), any());
+        verify(ledgerService).recordBuyLimitMarginLock(eq(bucket), eq(tradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0), eq(stockId), any());
         verify(riskService).checkLiquidation(userId);
 
         assertEquals(TimeInForce.DAY, response.timeInForce());
@@ -178,9 +189,10 @@ class OrderServiceTest {
     @Test
     void shouldCancelLimitIocRemainderAfterPartialFill() {
         TradingAccount tradingAccount = mock(TradingAccount.class);
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
         Stock stock = mock(Stock.class);
 
-        mockActiveUserAndStock(tradingAccount, stock);
+        mockActiveUserAndStock(tradingAccount, bucket, stock);
         when(tradingAccount.getLeverage()).thenReturn(5);
         when(orderMatchingEngine.match(any())).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
@@ -209,12 +221,21 @@ class OrderServiceTest {
 
     @Test
     void shouldConvertMarketDaySellRemainderToRestingOrder() {
-        TradingAccount tradingAccount = mock(TradingAccount.class);
         Stock stock = mock(Stock.class);
         Position position = mock(Position.class);
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
-        mockActiveUserAndStock(tradingAccount, stock);
+        User user = mock(User.class);
+        when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(stock.getExchangeId()).thenReturn(exchangeId);
+        when(stock.getId()).thenReturn(stockId);
+        doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
+        Exchange exchange = mock(Exchange.class);
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
+
         when(positionRepository.findByUserIdAndStockId(userId, stockId)).thenReturn(Optional.of(position));
         when(exchangeService.resolveDayOrderExpiry(exchangeId)).thenReturn(expiresAt);
         when(orderMatchingEngine.match(any())).thenAnswer(invocation -> {
@@ -252,10 +273,11 @@ class OrderServiceTest {
     @Test
     void shouldLockProtectedMarginForMarketDayBuy() {
         TradingAccount tradingAccount = mock(TradingAccount.class);
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
         Stock stock = mock(Stock.class);
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
-        mockActiveUserAndStock(tradingAccount, stock);
+        mockActiveUserAndStock(tradingAccount, bucket, stock);
         when(tradingAccount.getLeverage()).thenReturn(5);
         when(stock.getLastTradedPrice()).thenReturn(BigDecimal.valueOf(100));
         when(stock.getPriceBandPercent()).thenReturn(BigDecimal.TEN);
@@ -274,9 +296,9 @@ class OrderServiceTest {
 
         orderService.createOrder(userId, request);
 
-        verify(tradingAccount).lockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(2200)) == 0));
+        assertEquals(0, bucket.getLockedBalance().compareTo(BigDecimal.valueOf(2200)));
         verify(tradingAccountService).saveTradingAccount(tradingAccount);
-        verify(ledgerService).recordBuyOrderMarginLock(eq(tradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(2200)) == 0), eq(stockId), any());
+        verify(ledgerService).recordBuyOrderMarginLock(eq(bucket), eq(tradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(2200)) == 0), eq(stockId), any());
         verify(marketStateService).calculateIndicativePrice(stockId);
         verify(orderBookManager).addOrder(argThat(order ->
                 order.getOrderType() == OrderType.MARKET
@@ -288,10 +310,16 @@ class OrderServiceTest {
 
     @Test
     void shouldRejectLimitOrderWithoutLimitPrice() {
-        TradingAccount tradingAccount = mock(TradingAccount.class);
         Stock stock = mock(Stock.class);
-
-        mockActiveUserAndStock(tradingAccount, stock);
+        User user = mock(User.class);
+        when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(stock.getExchangeId()).thenReturn(exchangeId);
+        doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
+        Exchange exchange = mock(Exchange.class);
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
 
         OrderRequest request = new OrderRequest(
                 stockId,
@@ -307,10 +335,16 @@ class OrderServiceTest {
 
     @Test
     void shouldRejectMarketOrderWithLimitPrice() {
-        TradingAccount tradingAccount = mock(TradingAccount.class);
         Stock stock = mock(Stock.class);
-
-        mockActiveUserAndStock(tradingAccount, stock);
+        User user = mock(User.class);
+        when(user.getAccountStatus()).thenReturn(AccountStatus.ACTIVE);
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stock.getStatus()).thenReturn(StockStatus.ACTIVE);
+        when(stock.getExchangeId()).thenReturn(exchangeId);
+        doNothing().when(exchangeService).assertTradingAllowed(exchangeId);
+        Exchange exchange = mock(Exchange.class);
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
 
         OrderRequest request = new OrderRequest(
                 stockId,

@@ -19,6 +19,9 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +39,7 @@ public class OrderLifecycleService {
     private final OrderRepository orderRepository;
     private final OrderBookManager orderBookManager;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final PositionRepository positionRepository;
     private final LedgerService ledgerService;
     private final StockRepository stockRepository;
@@ -84,6 +88,8 @@ public class OrderLifecycleService {
         Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> com.siddharth.tradesim_backend.exchange.ExchangeException.notFound("Exchange not found"));
 
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(order.getUserId());
+        Wallet wallet = walletService.getWalletByUserId(order.getUserId());
+        WalletBucket bucket = walletService.getBucketForUpdate(wallet.getId(), tradingAccount.getBaseCurrency());
 
         BigDecimal blockValueInStockCurrency = order.getReservationPrice().multiply(BigDecimal.valueOf(remainingQty));
         BigDecimal unlockAmountInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
@@ -102,15 +108,14 @@ public class OrderLifecycleService {
 
         BigDecimal totalUnlockAmount = unlockMarginInAccountCurrency.add(fxFee);
 
-        tradingAccount.unlockFunds(totalUnlockAmount);
-        tradingAccountService.saveTradingAccount(tradingAccount);
+        bucket.setLockedBalance(bucket.getLockedBalance().subtract(totalUnlockAmount));
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            ledgerService.recordBuyLimitMarginUnlock(tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
+            ledgerService.recordBuyLimitMarginUnlock(bucket, tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
             return;
         }
 
-        ledgerService.recordBuyOrderMarginUnlock(tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
+        ledgerService.recordBuyOrderMarginUnlock(bucket, tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
     }
 
     private void releaseSellReservation(Order order, int remainingQty) {

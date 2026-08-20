@@ -42,18 +42,6 @@ public class TradingAccount extends AuditableEntity {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @Builder.Default
-    private BigDecimal balance = BigDecimal.ZERO;
-
-    @Column(nullable = false, precision = 19, scale = 4)
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @Builder.Default
-    private BigDecimal lockedBalance = BigDecimal.ZERO;
-
-    @Column(nullable = false, precision = 19, scale = 4)
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    @Builder.Default
     private BigDecimal marginLoan = BigDecimal.ZERO;
 
     @Column(nullable = false)
@@ -63,30 +51,6 @@ public class TradingAccount extends AuditableEntity {
     @Column(nullable = false, precision = 5, scale = 2)
     @Builder.Default
     private BigDecimal maintenanceMarginPercent = BigDecimal.valueOf(25);
-
-    public BigDecimal getBalance() {
-        if (balance == null) {
-            return BigDecimal.ZERO;
-        }
-        if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw TradingAccountException.conflict("Balance cannot be negative");
-        }
-        return balance;
-    }
-
-    public BigDecimal getLockedBalance() {
-        if (lockedBalance == null) {
-            return BigDecimal.ZERO;
-        }
-        if (lockedBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw TradingAccountException.conflict("Locked balance cannot be negative");
-        }
-        return lockedBalance;
-    }
-
-    public BigDecimal getAvailableBalance() {
-        return getBalance().subtract(getLockedBalance());
-    }
 
     public BigDecimal getMarginLoan() {
         if (marginLoan == null) {
@@ -113,65 +77,5 @@ public class TradingAccount extends AuditableEntity {
             throw TradingAccountException.conflict("Cannot repay more than margin loan");
         }
         this.marginLoan = getMarginLoan().subtract(amount);
-    }
-
-    public void debit(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Debit amount must be positive");
-        }
-        if (getAvailableBalance().compareTo(amount) < 0) {
-            throw TradingAccountException.conflict("Insufficient available balance");
-        }
-        this.balance = getBalance().subtract(amount);
-    }
-
-    public void credit(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Credit amount must be positive");
-        }
-        this.balance = getBalance().add(amount);
-    }
-
-    public void lockFunds(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Lock amount must be positive");
-        }
-        if (getAvailableBalance().compareTo(amount) < 0) {
-            throw TradingAccountException.conflict("Insufficient available balance");
-        }
-        this.lockedBalance = getLockedBalance().add(amount);
-    }
-
-    public void unlockFunds(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Unlock amount must be positive");
-        }
-
-        if (getLockedBalance().compareTo(amount) < 0) {
-            throw TradingAccountException.conflict("Cannot unlock more than locked balance");
-        }
-
-        this.lockedBalance = getLockedBalance().subtract(amount);
-    }
-
-    public void debitLockedFunds(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Locked debit amount must be positive");
-        }
-
-        if (getLockedBalance().compareTo(amount) < 0) {
-            throw TradingAccountException.conflict("Insufficient locked balance");
-        }
-
-        this.lockedBalance = getLockedBalance().subtract(amount);
-        this.balance = getBalance().subtract(amount);
-    }
-
-    public BigDecimal calculateEquity(BigDecimal totalPositionValue) {
-        if (totalPositionValue == null) {
-            throw new IllegalArgumentException("Total position value cannot be null");
-        }
-
-        return getBalance().add(totalPositionValue).subtract(getMarginLoan());
     }
 }

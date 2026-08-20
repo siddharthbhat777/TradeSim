@@ -15,6 +15,9 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -45,6 +48,9 @@ class LiquidationServiceTest {
 
     @Mock
     private TradingAccountService tradingAccountService;
+
+    @Mock
+    private WalletService walletService;
 
     @Mock
     private OrderMatchingEngine orderMatchingEngine;
@@ -93,11 +99,15 @@ class LiquidationServiceTest {
         TradingAccount tradingAccount = TradingAccount.builder()
                 .userId(userId)
                 .baseCurrency("INR")
-                .balance(BigDecimal.ZERO)
-                .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.valueOf(3000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(50))
+                .build();
+
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .buckets(List.of(WalletBucket.builder().currency("INR").balance(BigDecimal.ZERO).build()))
                 .build();
 
         Exchange exchange = Exchange.builder().currency("USD").build();
@@ -106,6 +116,7 @@ class LiquidationServiceTest {
         when(positionRepository.findById(positionId)).thenReturn(Optional.of(position), Optional.empty());
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
         when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
 

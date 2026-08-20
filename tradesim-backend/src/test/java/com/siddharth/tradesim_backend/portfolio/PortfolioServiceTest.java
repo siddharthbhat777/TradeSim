@@ -17,6 +17,9 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,6 +49,9 @@ class PortfolioServiceTest {
 
     @Mock
     private TradingAccountService tradingAccountService;
+
+    @Mock
+    private WalletService walletService;
 
     @Mock
     private LedgerService ledgerService;
@@ -84,6 +90,7 @@ class PortfolioServiceTest {
         UUID exchangeId = UUID.randomUUID();
 
         TradingAccount tradingAccount = mock(TradingAccount.class);
+        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).userId(userId).buckets(List.of()).build();
 
         Position position = Position.builder()
                 .userId(userId)
@@ -108,11 +115,12 @@ class PortfolioServiceTest {
         when(stockRepository.findAllById(List.of(stockId))).thenReturn(List.of(stock));
         when(authRepository.existsById(userId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
-        when(tradingAccount.calculateEquity(any())).thenReturn(BigDecimal.valueOf(1000));
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
 
         when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
         when(exchange.getCurrency()).thenReturn("USD");
         when(tradingAccount.getBaseCurrency()).thenReturn("INR");
+        when(tradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         PortfolioResponse response = portfolioService.fetchPortfolio(userId);
@@ -127,6 +135,7 @@ class PortfolioServiceTest {
         UUID stockId = UUID.randomUUID();
 
         TradingAccount tradingAccount = mock(TradingAccount.class);
+        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).userId(userId).buckets(List.of()).build();
 
         Position position = Position.builder()
                 .userId(userId)
@@ -140,6 +149,7 @@ class PortfolioServiceTest {
 
         when(authRepository.existsById(userId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
         when(positionRepository.findByUserId(userId)).thenReturn(List.of(position));
         when(stockRepository.findAllById(any())).thenReturn(List.of());
 
@@ -179,6 +189,12 @@ class PortfolioServiceTest {
         TradingAccount sellerTradingAccount = mock(TradingAccount.class);
         Position sellerPosition = mock(Position.class);
 
+        Wallet buyerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket buyerBucket = WalletBucket.builder().wallet(buyerWallet).balance(BigDecimal.valueOf(1000)).build();
+
+        Wallet sellerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket sellerBucket = WalletBucket.builder().wallet(sellerWallet).balance(BigDecimal.valueOf(1000)).build();
+
         TradeExecution execution = new TradeExecution(
                 buyerId,
                 sellerId,
@@ -198,6 +214,12 @@ class PortfolioServiceTest {
         when(authRepository.existsById(sellerId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
+
+        when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
+        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
+        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(5);
@@ -212,15 +234,16 @@ class PortfolioServiceTest {
 
         portfolioService.settleTrade(execution);
 
-        verify(buyerTradingAccount).debit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(100)) == 0));
+        assertThat(buyerBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(900));
         verify(buyerTradingAccount).increaseMarginLoan(argThat(amount -> amount.compareTo(BigDecimal.valueOf(400)) == 0));
-        verify(sellerTradingAccount).credit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(500)) == 0));
+        assertThat(sellerBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(1500));
+
         verify(positionRepository, times(2)).save(any(Position.class));
         verify(tradingAccountService).saveTradingAccount(buyerTradingAccount);
         verify(tradingAccountService).saveTradingAccount(sellerTradingAccount);
-        verify(ledgerService).recordTradeMarginDebit(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(100)) == 0), eq(stockId), any());
-        verify(ledgerService).recordMarginLoanIncrease(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(400)) == 0), eq(stockId), any());
-        verify(ledgerService).recordTradeProceedsCredit(eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(500)) == 0), eq(stockId), any());
+        verify(ledgerService).recordTradeMarginDebit(eq(buyerBucket), eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(100)) == 0), eq(stockId), any());
+        verify(ledgerService).recordMarginLoanIncrease(eq(buyerBucket), eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(400)) == 0), eq(stockId), any());
+        verify(ledgerService).recordTradeProceedsCredit(eq(sellerBucket), eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(500)) == 0), eq(stockId), any());
     }
 
     @Test
@@ -232,6 +255,12 @@ class PortfolioServiceTest {
         TradingAccount buyerTradingAccount = mock(TradingAccount.class);
         TradingAccount sellerTradingAccount = mock(TradingAccount.class);
         Position sellerPosition = mock(Position.class);
+
+        Wallet buyerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket buyerBucket = WalletBucket.builder().wallet(buyerWallet).balance(BigDecimal.valueOf(1000)).lockedBalance(BigDecimal.valueOf(50)).build();
+
+        Wallet sellerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket sellerBucket = WalletBucket.builder().wallet(sellerWallet).balance(BigDecimal.valueOf(1000)).build();
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -252,6 +281,12 @@ class PortfolioServiceTest {
         when(authRepository.existsById(sellerId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
+
+        when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
+        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
+        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(buyerTradingAccount.getLeverage()).thenReturn(10);
@@ -266,12 +301,13 @@ class PortfolioServiceTest {
 
         portfolioService.settleTrade(execution);
 
-        verify(buyerTradingAccount).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(50)) == 0));
-        verify(buyerTradingAccount).debit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(45)) == 0));
+        assertThat(buyerBucket.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(buyerBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(955));
+
         verify(buyerTradingAccount).increaseMarginLoan(argThat(amount -> amount.compareTo(BigDecimal.valueOf(405)) == 0));
-        verify(ledgerService).recordBuyLimitMarginUnlock(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(50)) == 0), eq(stockId), any());
-        verify(ledgerService).recordTradeMarginDebit(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(45)) == 0), eq(stockId), any());
-        verify(ledgerService).recordMarginLoanIncrease(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(405)) == 0), eq(stockId), any());
+        verify(ledgerService).recordBuyLimitMarginUnlock(eq(buyerBucket), eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(50)) == 0), eq(stockId), any());
+        verify(ledgerService).recordTradeMarginDebit(eq(buyerBucket), eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(45)) == 0), eq(stockId), any());
+        verify(ledgerService).recordMarginLoanIncrease(eq(buyerBucket), eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(405)) == 0), eq(stockId), any());
     }
 
     @Test
@@ -283,6 +319,12 @@ class PortfolioServiceTest {
         TradingAccount buyerTradingAccount = mock(TradingAccount.class);
         TradingAccount sellerTradingAccount = mock(TradingAccount.class);
         Position sellerPosition = mock(Position.class);
+
+        Wallet buyerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket buyerBucket = WalletBucket.builder().wallet(buyerWallet).balance(BigDecimal.valueOf(1000)).build();
+
+        Wallet sellerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket sellerBucket = WalletBucket.builder().wallet(sellerWallet).balance(BigDecimal.valueOf(1000)).build();
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -303,6 +345,12 @@ class PortfolioServiceTest {
         when(authRepository.existsById(sellerId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
+
+        when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
+        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
+        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
@@ -332,8 +380,6 @@ class PortfolioServiceTest {
                 .id(UUID.randomUUID())
                 .userId(buyerId)
                 .baseCurrency("INR")
-                .balance(BigDecimal.valueOf(100))
-                .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.ZERO)
                 .leverage(10)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
@@ -341,6 +387,12 @@ class PortfolioServiceTest {
 
         TradingAccount sellerTradingAccount = mock(TradingAccount.class);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
+
+        Wallet buyerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket buyerBucket = WalletBucket.builder().wallet(buyerWallet).balance(BigDecimal.valueOf(100)).build();
+
+        Wallet sellerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket sellerBucket = WalletBucket.builder().wallet(sellerWallet).balance(BigDecimal.valueOf(1000)).build();
 
         Position sellerPosition = mock(Position.class);
         when(sellerPosition.getQuantity()).thenReturn(5);
@@ -365,6 +417,12 @@ class PortfolioServiceTest {
         when(authRepository.existsById(sellerId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
+
+        when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
+        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
+        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
@@ -374,7 +432,7 @@ class PortfolioServiceTest {
 
         portfolioService.settleTrade(execution);
 
-        assertThat(buyerTradingAccount.getAvailableBalance()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
+        assertThat(buyerBucket.getBalance()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
         assertThat(buyerTradingAccount.getMarginLoan()).isEqualByComparingTo(BigDecimal.valueOf(450));
     }
 
@@ -391,12 +449,16 @@ class PortfolioServiceTest {
                 .id(UUID.randomUUID())
                 .userId(sellerId)
                 .baseCurrency("INR")
-                .balance(BigDecimal.ZERO)
-                .lockedBalance(BigDecimal.ZERO)
                 .marginLoan(BigDecimal.valueOf(300))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(25))
                 .build();
+
+        Wallet buyerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket buyerBucket = WalletBucket.builder().wallet(buyerWallet).balance(BigDecimal.valueOf(1000)).build();
+
+        Wallet sellerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket sellerBucket = WalletBucket.builder().wallet(sellerWallet).balance(BigDecimal.ZERO).build();
 
         Position sellerPosition = mock(Position.class);
         when(sellerPosition.getQuantity()).thenReturn(5);
@@ -421,6 +483,12 @@ class PortfolioServiceTest {
         when(authRepository.existsById(sellerId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
+
+        when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
+        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
+        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
@@ -431,10 +499,10 @@ class PortfolioServiceTest {
         portfolioService.settleTrade(execution);
 
         assertThat(sellerTradingAccount.getMarginLoan()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(sellerTradingAccount.getAvailableBalance()).isEqualByComparingTo(BigDecimal.valueOf(200));
+        assertThat(sellerBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(200));
 
-        verify(ledgerService).recordMarginLoanRepayment(eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(300)) == 0), eq(stockId), any());
-        verify(ledgerService).recordTradeProceedsCredit(eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0), eq(stockId), any());
+        verify(ledgerService).recordMarginLoanRepayment(eq(sellerBucket), eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(300)) == 0), eq(stockId), any());
+        verify(ledgerService).recordTradeProceedsCredit(eq(sellerBucket), eq(sellerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(200)) == 0), eq(stockId), any());
     }
 
     @Test
@@ -446,6 +514,12 @@ class PortfolioServiceTest {
         TradingAccount buyerTradingAccount = mock(TradingAccount.class);
         TradingAccount sellerTradingAccount = mock(TradingAccount.class);
         Position sellerPosition = mock(Position.class);
+
+        Wallet buyerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket buyerBucket = WalletBucket.builder().wallet(buyerWallet).balance(BigDecimal.valueOf(1000)).lockedBalance(BigDecimal.valueOf(55)).build();
+
+        Wallet sellerWallet = Wallet.builder().id(UUID.randomUUID()).build();
+        WalletBucket sellerBucket = WalletBucket.builder().wallet(sellerWallet).balance(BigDecimal.valueOf(1000)).build();
 
         TradeExecution execution = new TradeExecution(
                 buyerId,
@@ -466,6 +540,12 @@ class PortfolioServiceTest {
         when(authRepository.existsById(sellerId)).thenReturn(true);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(buyerId)).thenReturn(buyerTradingAccount);
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
+
+        when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
+        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
+        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+
         when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
         when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(buyerTradingAccount.getLeverage()).thenReturn(10);
@@ -480,8 +560,8 @@ class PortfolioServiceTest {
 
         portfolioService.settleTrade(execution);
 
-        verify(buyerTradingAccount).unlockFunds(argThat(amount -> amount.compareTo(BigDecimal.valueOf(55)) == 0));
-        verify(ledgerService).recordBuyOrderMarginUnlock(eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(55)) == 0), eq(stockId), any());
-        verify(buyerTradingAccount).debit(argThat(amount -> amount.compareTo(BigDecimal.valueOf(45)) == 0));
+        assertThat(buyerBucket.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        verify(ledgerService).recordBuyOrderMarginUnlock(eq(buyerBucket), eq(buyerTradingAccount), argThat(amount -> amount.compareTo(BigDecimal.valueOf(55)) == 0), eq(stockId), any());
+        assertThat(buyerBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(955));
     }
 }
