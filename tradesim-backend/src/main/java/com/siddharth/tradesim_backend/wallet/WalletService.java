@@ -8,6 +8,7 @@ import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.enums.MultiCurrencyStatus;
 import com.siddharth.tradesim_backend.wallet.model.Wallet;
 import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
 import com.siddharth.tradesim_backend.wallet.model.dto.CurrencyConversionRequest;
@@ -43,6 +44,7 @@ public class WalletService {
 
         Wallet wallet = Wallet.builder()
                 .userId(userId)
+                .multiCurrencyStatus(MultiCurrencyStatus.UNREQUESTED)
                 .build();
 
         Wallet savedWallet = walletRepository.save(wallet);
@@ -132,12 +134,52 @@ public class WalletService {
     }
 
     @Transactional
+    public WalletResponse requestMultiCurrencyAccess(UUID userId) {
+        Wallet wallet = getWalletByUserId(userId);
+        if (wallet.getMultiCurrencyStatus() == MultiCurrencyStatus.APPROVED) {
+            throw new BusinessException(HttpStatus.CONFLICT, "ALREADY_APPROVED", "Multi-currency access is already approved");
+        }
+        if (wallet.getMultiCurrencyStatus() == MultiCurrencyStatus.PENDING) {
+            throw new BusinessException(HttpStatus.CONFLICT, "ALREADY_PENDING", "A request is already pending approval");
+        }
+
+        wallet.setMultiCurrencyStatus(MultiCurrencyStatus.PENDING);
+        walletRepository.save(wallet);
+        return toResponse(wallet);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WalletResponse> fetchPendingMultiCurrencyRequests() {
+        return walletRepository.findByMultiCurrencyStatusOrderByCreatedAtAsc(MultiCurrencyStatus.PENDING)
+                .stream().map(this::toResponse).toList();
+    }
+
+    @Transactional
+    public WalletResponse approveMultiCurrencyAccess(UUID walletId) {
+        Wallet wallet = walletRepository.findById(walletId).orElseThrow();
+        wallet.setMultiCurrencyStatus(MultiCurrencyStatus.APPROVED);
+        return toResponse(walletRepository.save(wallet));
+    }
+
+    @Transactional
+    public WalletResponse rejectMultiCurrencyAccess(UUID walletId) {
+        Wallet wallet = walletRepository.findById(walletId).orElseThrow();
+        wallet.setMultiCurrencyStatus(MultiCurrencyStatus.REJECTED);
+        return toResponse(walletRepository.save(wallet));
+    }
+
+    @Transactional
     public WalletResponse convertCurrency(UUID userId, CurrencyConversionRequest request) {
+        Wallet wallet = getWalletByUserId(userId);
+
+        if (wallet.getMultiCurrencyStatus() != MultiCurrencyStatus.APPROVED) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "UNAUTHORIZED_CONVERSION", "You must be approved for Multi-Currency access to convert funds");
+        }
+
         if (request.sourceCurrency().equals(request.targetCurrency())) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_CONVERSION", "Source and target currencies must be different");
         }
 
-        Wallet wallet = getWalletByUserId(userId);
         WalletBucket sourceBucket = getBucketForUpdate(wallet.getId(), request.sourceCurrency());
 
         if (sourceBucket.getAvailableBalance().compareTo(request.amount()) < 0) {
@@ -145,12 +187,16 @@ public class WalletService {
         }
 
         WalletBucket targetBucket = walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), request.targetCurrency())
-                .orElseGet(() -> WalletBucket.builder()
-                        .wallet(wallet)
-                        .currency(request.targetCurrency())
-                        .balance(BigDecimal.ZERO)
-                        .lockedBalance(BigDecimal.ZERO)
-                        .build());
+                .orElseGet(() -> {
+                    WalletBucket newBucket = WalletBucket.builder()
+                            .wallet(wallet)
+                            .currency(request.targetCurrency())
+                            .balance(BigDecimal.ZERO)
+                            .lockedBalance(BigDecimal.ZERO)
+                            .build();
+                    wallet.getBuckets().add(newBucket);
+                    return newBucket;
+                });
 
         BigDecimal convertedAmount = forexService.convert(request.amount(), request.sourceCurrency(), request.targetCurrency());
         BigDecimal fxFee = fxFeeService.calculateConversionFee(request.sourceCurrency(), request.targetCurrency(), convertedAmount);
@@ -180,6 +226,6 @@ public class WalletService {
                         bucket.getAvailableBalance()
                 )).toList();
 
-        return new WalletResponse(wallet.getId(), wallet.getUserId(), bucketResponses);
+        return new WalletResponse(wallet.getId(), wallet.getUserId(), wallet.getMultiCurrencyStatus(), bucketResponses);
     }
 }

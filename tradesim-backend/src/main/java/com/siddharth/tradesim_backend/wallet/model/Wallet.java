@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.wallet.model;
 
 import com.siddharth.tradesim_backend.common.auditing.AuditableEntity;
+import com.siddharth.tradesim_backend.wallet.enums.MultiCurrencyStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,11 @@ public class Wallet extends AuditableEntity {
 
     @Column(nullable = false, unique = true)
     private UUID userId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private MultiCurrencyStatus multiCurrencyStatus = MultiCurrencyStatus.UNREQUESTED;
 
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

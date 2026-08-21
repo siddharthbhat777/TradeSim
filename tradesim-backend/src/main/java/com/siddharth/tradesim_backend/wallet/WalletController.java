@@ -11,6 +11,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("wallet")
 @RequiredArgsConstructor
@@ -39,5 +42,29 @@ public class WalletController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<WalletResponse> convertCurrency(@Valid @RequestBody CurrencyConversionRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(walletService.convertCurrency(principal.getUserId(), request));
+    }
+
+    @PostMapping("multi-currency/request")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<WalletResponse> requestMultiCurrencyAccess(@AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(walletService.requestMultiCurrencyAccess(principal.getUserId()));
+    }
+
+    @GetMapping("multi-currency/pending")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<WalletResponse>> getPendingRequests() {
+        return ResponseEntity.ok(walletService.fetchPendingMultiCurrencyRequests());
+    }
+
+    @PutMapping("multi-currency/{walletId}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<WalletResponse> approveMultiCurrency(@PathVariable UUID walletId) {
+        return ResponseEntity.ok(walletService.approveMultiCurrencyAccess(walletId));
+    }
+
+    @PutMapping("multi-currency/{walletId}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<WalletResponse> rejectMultiCurrency(@PathVariable UUID walletId) {
+        return ResponseEntity.ok(walletService.rejectMultiCurrencyAccess(walletId));
     }
 }
