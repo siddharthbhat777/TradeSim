@@ -9,7 +9,7 @@ import com.siddharth.tradesim_backend.auth.service.AuthService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
 import com.siddharth.tradesim_backend.auth.service.RefreshTokenService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
-import com.siddharth.tradesim_backend.wallet.service.WalletService;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

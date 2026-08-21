@@ -19,6 +19,16 @@ public class LedgerService {
     private final LedgerEntryRepository ledgerEntryRepository;
 
     @Transactional
+    public void recordDeposit(WalletBucket bucket, TradingAccount tradingAccount, BigDecimal amount) {
+        saveEntry(bucket, tradingAccount, null, null, null, LedgerEntryType.DEPOSIT, amount, "Deposit from Bank Account");
+    }
+
+    @Transactional
+    public void recordWithdrawal(WalletBucket bucket, TradingAccount tradingAccount, BigDecimal amount) {
+        saveEntry(bucket, tradingAccount, null, null, null, LedgerEntryType.WITHDRAWAL, amount, "Withdrawal to Bank Account");
+    }
+
+    @Transactional
     public void recordBuyLimitMarginLock(WalletBucket bucket, TradingAccount tradingAccount, BigDecimal amount, UUID stockId, UUID orderId) {
         saveEntry(bucket, tradingAccount, stockId, orderId, null, LedgerEntryType.BUY_LIMIT_MARGIN_LOCK, amount, "Locked margin for BUY LIMIT order");
     }
