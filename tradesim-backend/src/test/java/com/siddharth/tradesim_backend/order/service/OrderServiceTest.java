@@ -10,6 +10,7 @@ import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
+import com.siddharth.tradesim_backend.order.enums.FundingStrategy;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
@@ -154,14 +155,15 @@ class OrderServiceTest {
                 OrderSide.BUY,
                 OrderType.LIMIT,
                 TimeInForce.DAY,
-                BigDecimal.valueOf(100)
+                BigDecimal.valueOf(100),
+                FundingStrategy.BASE
         );
     }
 
     @Test
     void shouldCreateLimitBuyDayOrder() {
         TradingAccount tradingAccount = mock(TradingAccount.class);
-        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.valueOf(10000)).lockedBalance(BigDecimal.ZERO).build();
         Stock stock = mock(Stock.class);
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
@@ -189,7 +191,7 @@ class OrderServiceTest {
     @Test
     void shouldCancelLimitIocRemainderAfterPartialFill() {
         TradingAccount tradingAccount = mock(TradingAccount.class);
-        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.valueOf(10000)).lockedBalance(BigDecimal.ZERO).build();
         Stock stock = mock(Stock.class);
 
         mockActiveUserAndStock(tradingAccount, bucket, stock);
@@ -206,7 +208,8 @@ class OrderServiceTest {
                 OrderSide.BUY,
                 OrderType.LIMIT,
                 TimeInForce.IOC,
-                BigDecimal.valueOf(100)
+                BigDecimal.valueOf(100),
+                FundingStrategy.BASE
         );
 
         orderService.createOrder(userId, request);
@@ -250,7 +253,8 @@ class OrderServiceTest {
                 OrderSide.SELL,
                 OrderType.MARKET,
                 TimeInForce.DAY,
-                null
+                null,
+                FundingStrategy.BASE
         );
 
         OrderResponse response = orderService.createOrder(userId, request);
@@ -273,7 +277,7 @@ class OrderServiceTest {
     @Test
     void shouldLockProtectedMarginForMarketDayBuy() {
         TradingAccount tradingAccount = mock(TradingAccount.class);
-        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.valueOf(10000)).lockedBalance(BigDecimal.ZERO).build();
         Stock stock = mock(Stock.class);
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
@@ -291,7 +295,8 @@ class OrderServiceTest {
                 OrderSide.BUY,
                 OrderType.MARKET,
                 TimeInForce.DAY,
-                null
+                null,
+                FundingStrategy.BASE
         );
 
         orderService.createOrder(userId, request);
@@ -327,7 +332,8 @@ class OrderServiceTest {
                 OrderSide.BUY,
                 OrderType.LIMIT,
                 TimeInForce.DAY,
-                null
+                null,
+                FundingStrategy.BASE
         );
 
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
@@ -352,7 +358,8 @@ class OrderServiceTest {
                 OrderSide.BUY,
                 OrderType.MARKET,
                 TimeInForce.IOC,
-                BigDecimal.valueOf(100)
+                BigDecimal.valueOf(100),
+                FundingStrategy.BASE
         );
 
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));

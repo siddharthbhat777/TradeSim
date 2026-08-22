@@ -173,7 +173,8 @@ class PortfolioServiceTest {
                 OrderType.MARKET,
                 null,
                 false,
-                false
+                false,
+                "INR"
         );
 
         assertThrows(BusinessException.class, () -> portfolioService.settleTrade(execution));
@@ -207,7 +208,8 @@ class PortfolioServiceTest {
                 OrderType.MARKET,
                 null,
                 false,
-                false
+                false,
+                "INR"
         );
 
         when(authRepository.existsById(buyerId)).thenReturn(true);
@@ -274,7 +276,8 @@ class PortfolioServiceTest {
                 OrderType.MARKET,
                 BigDecimal.valueOf(100),
                 true,
-                false
+                false,
+                "INR"
         );
 
         when(authRepository.existsById(buyerId)).thenReturn(true);
@@ -338,7 +341,8 @@ class PortfolioServiceTest {
                 OrderType.MARKET,
                 null,
                 false,
-                false
+                false,
+                "INR"
         );
 
         when(authRepository.existsById(buyerId)).thenReturn(true);
@@ -410,7 +414,8 @@ class PortfolioServiceTest {
                 OrderType.MARKET,
                 null,
                 false,
-                false
+                false,
+                "INR"
         );
 
         when(authRepository.existsById(buyerId)).thenReturn(true);
@@ -476,7 +481,8 @@ class PortfolioServiceTest {
                 OrderType.MARKET,
                 null,
                 false,
-                false
+                false,
+                "INR"
         );
 
         when(authRepository.existsById(buyerId)).thenReturn(true);
@@ -533,7 +539,8 @@ class PortfolioServiceTest {
                 OrderType.MARKET,
                 BigDecimal.valueOf(110),
                 true,
-                false
+                false,
+                "INR"
         );
 
         when(authRepository.existsById(buyerId)).thenReturn(true);
