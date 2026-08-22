@@ -218,25 +218,26 @@ public class PortfolioService {
         TradingAccount buyerTradingAccount = execution.buyerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
         TradingAccount sellerTradingAccount = execution.sellerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
 
-        String buyerCurrency = buyerTradingAccount.getBaseCurrency();
+        String buyerFundingCurrency = execution.buyerFundingCurrency() != null ? execution.buyerFundingCurrency() : buyerTradingAccount.getBaseCurrency();
         String sellerCurrency = sellerTradingAccount.getBaseCurrency();
 
         Wallet buyerWallet = walletService.getWalletByUserId(execution.buyerId());
-        WalletBucket buyerBucket = walletService.getBucketForUpdate(buyerWallet.getId(), buyerCurrency);
+        WalletBucket buyerBucket = walletService.getBucketForUpdate(buyerWallet.getId(), buyerFundingCurrency);
 
         Wallet sellerWallet = walletService.getWalletByUserId(execution.sellerId());
         WalletBucket sellerBucket = walletService.getBucketForUpdate(sellerWallet.getId(), sellerCurrency);
 
         BigDecimal tradeValueInStockCurrency = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
 
-        BigDecimal exactBuyerTradeValue = forexService.convert(tradeValueInStockCurrency, stockCurrency, buyerCurrency);
+        BigDecimal exactBuyerTradeValueInFundingCurrency = forexService.convert(tradeValueInStockCurrency, stockCurrency, buyerFundingCurrency);
+        BigDecimal exactBuyerTradeValueInBaseCurrency = forexService.convert(tradeValueInStockCurrency, stockCurrency, buyerTradingAccount.getBaseCurrency());
         BigDecimal exactSellerTradeValue = forexService.convert(tradeValueInStockCurrency, stockCurrency, sellerCurrency);
 
         Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
 
-        settleBuyer(execution, buyerBucket, buyerTradingAccount, exactBuyerTradeValue, stockCurrency, buyerCurrency);
+        settleBuyer(execution, buyerBucket, buyerTradingAccount, exactBuyerTradeValueInFundingCurrency, exactBuyerTradeValueInBaseCurrency, stockCurrency, buyerFundingCurrency);
         settleSeller(execution, sellerBucket, sellerTradingAccount, sellerPosition, exactSellerTradeValue, stockCurrency, sellerCurrency);
-        Position buyerPosition = updateBuyerPosition(execution, exactBuyerTradeValue);
+        Position buyerPosition = updateBuyerPosition(execution, exactBuyerTradeValueInBaseCurrency);
         positionRepository.save(buyerPosition);
 
         tradingAccountService.saveTradingAccount(buyerTradingAccount);
@@ -249,7 +250,7 @@ public class PortfolioService {
         }
     }
 
-    private void settleBuyer(TradeExecution execution, WalletBucket buyerBucket, TradingAccount buyerTradingAccount, BigDecimal exactBuyerTradeValue, String stockCurrency, String buyerCurrency) {
+    private void settleBuyer(TradeExecution execution, WalletBucket buyerBucket, TradingAccount buyerTradingAccount, BigDecimal exactBuyerTradeValueInFundingCurrency, BigDecimal exactBuyerTradeValueInBaseCurrency, String stockCurrency, String buyerFundingCurrency) {
         if (execution.buyerFundsReserved()) {
             if (execution.buyerReservationPrice() == null) {
                 throw PortfolioException.conflict("Missing buyer reservation price");
@@ -259,9 +260,9 @@ public class PortfolioService {
                     .multiply(BigDecimal.valueOf(execution.quantity()))
                     .divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-            BigDecimal reservedMarginInBuyerCurrency = forexService.convert(reservedMarginInStockCurrency, stockCurrency, buyerCurrency);
-            BigDecimal reservedFxFee = fxFeeService.calculateConversionFee(buyerCurrency, stockCurrency, reservedMarginInBuyerCurrency);
-            BigDecimal totalLocked = reservedMarginInBuyerCurrency.add(reservedFxFee);
+            BigDecimal reservedMarginInFundingCurrency = forexService.convert(reservedMarginInStockCurrency, stockCurrency, buyerFundingCurrency);
+            BigDecimal reservedFxFee = fxFeeService.calculateConversionFee(buyerFundingCurrency, stockCurrency, reservedMarginInFundingCurrency);
+            BigDecimal totalLocked = reservedMarginInFundingCurrency.add(reservedFxFee);
 
             buyerBucket.setLockedBalance(buyerBucket.getLockedBalance().subtract(totalLocked));
 
@@ -284,10 +285,10 @@ public class PortfolioService {
             }
         }
 
-        BigDecimal requiredMargin = exactBuyerTradeValue.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
-        BigDecimal executionFxFee = fxFeeService.calculateConversionFee(buyerCurrency, stockCurrency, requiredMargin);
+        BigDecimal requiredMarginInFundingCurrency = exactBuyerTradeValueInFundingCurrency.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal executionFxFee = fxFeeService.calculateConversionFee(buyerFundingCurrency, stockCurrency, requiredMarginInFundingCurrency);
 
-        buyerBucket.setBalance(buyerBucket.getBalance().subtract(requiredMargin));
+        buyerBucket.setBalance(buyerBucket.getBalance().subtract(requiredMarginInFundingCurrency));
         if (executionFxFee.compareTo(BigDecimal.ZERO) > 0) {
             buyerBucket.setBalance(buyerBucket.getBalance().subtract(executionFxFee));
         }
@@ -295,7 +296,7 @@ public class PortfolioService {
         ledgerService.recordTradeMarginDebit(
                 buyerBucket,
                 buyerTradingAccount,
-                requiredMargin,
+                requiredMarginInFundingCurrency,
                 execution.stockId(),
                 execution.buyOrderId()
         );
@@ -308,18 +309,20 @@ public class PortfolioService {
                     execution.stockId(),
                     execution.buyOrderId(),
                     null,
-                    buyerCurrency,
+                    buyerFundingCurrency,
                     stockCurrency
             );
         }
 
-        BigDecimal loanIncrease = exactBuyerTradeValue.subtract(requiredMargin);
-        if (loanIncrease.compareTo(BigDecimal.ZERO) > 0) {
-            buyerTradingAccount.increaseMarginLoan(loanIncrease);
+        BigDecimal requiredMarginInBaseCurrency = exactBuyerTradeValueInBaseCurrency.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal loanIncreaseInBaseCurrency = exactBuyerTradeValueInBaseCurrency.subtract(requiredMarginInBaseCurrency);
+
+        if (loanIncreaseInBaseCurrency.compareTo(BigDecimal.ZERO) > 0) {
+            buyerTradingAccount.increaseMarginLoan(loanIncreaseInBaseCurrency);
             ledgerService.recordMarginLoanIncrease(
                     buyerBucket,
                     buyerTradingAccount,
-                    loanIncrease,
+                    loanIncreaseInBaseCurrency,
                     execution.stockId(),
                     execution.buyOrderId()
             );

@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.order.service;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.exchange.model.Exchange;
@@ -10,6 +11,7 @@ import com.siddharth.tradesim_backend.exchange.ExchangeException;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
+import com.siddharth.tradesim_backend.order.enums.FundingStrategy;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -35,11 +37,13 @@ import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.user.UserException;
+import com.siddharth.tradesim_backend.wallet.enums.MultiCurrencyStatus;
 import com.siddharth.tradesim_backend.wallet.model.Wallet;
 import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
 import com.siddharth.tradesim_backend.wallet.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,6 +100,7 @@ public class OrderService {
         orderBookLock.lock();
         TradingAccount tradingAccount = null;
         WalletBucket bucket = null;
+        String fundingCurrency = null;
         Order order;
         MatchResult result;
         try {
@@ -103,8 +108,9 @@ public class OrderService {
             if (request.side() == OrderSide.BUY) {
                 tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
                 Wallet wallet = walletService.getWalletByUserId(userId);
-                bucket = walletService.getBucketForUpdate(wallet.getId(), tradingAccount.getBaseCurrency());
-                reservationPrice = prepareBuyReservation(bucket, tradingAccount, stock, exchange, request);
+                fundingCurrency = resolveFundingCurrency(wallet, tradingAccount, exchange, request.fundingStrategy());
+                bucket = walletService.getBucketForUpdate(wallet.getId(), fundingCurrency);
+                reservationPrice = prepareBuyReservation(bucket, tradingAccount, stock, exchange, request, fundingCurrency);
             } else {
                 prepareSellReservation(userId, stock.getId(), request);
             }
@@ -122,6 +128,7 @@ public class OrderService {
                     .limitPrice(request.limitPrice())
                     .reservationPrice(reservationPrice)
                     .bookPrice(initialBookPrice)
+                    .fundingCurrency(fundingCurrency)
                     .expiresAt(expiresAt)
                     .status(OrderStatus.OPEN)
                     .build();
@@ -129,7 +136,7 @@ public class OrderService {
             orderRepository.save(order);
 
             if (tradingAccount != null && bucket != null) {
-                recordLockLedgerIfRequired(order, bucket, tradingAccount, exchange.getCurrency());
+                recordLockLedgerIfRequired(order, bucket, tradingAccount, exchange.getCurrency(), fundingCurrency);
             }
 
             if (order.getBookPrice() != null) {
@@ -176,6 +183,19 @@ public class OrderService {
         orderLifecycleService.cancelOrder(order);
     }
 
+    private String resolveFundingCurrency(Wallet wallet, TradingAccount tradingAccount, Exchange exchange, FundingStrategy strategy) {
+        if (strategy == null || strategy == FundingStrategy.BASE) {
+            return tradingAccount.getBaseCurrency();
+        }
+
+        String targetCurrency = exchange.getCurrency();
+        if (!targetCurrency.equalsIgnoreCase(tradingAccount.getBaseCurrency()) && wallet.getMultiCurrencyStatus() != MultiCurrencyStatus.APPROVED) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "UNAUTHORIZED_CURRENCY", "Multi-currency approval is required to fund orders using non-base currencies");
+        }
+
+        return targetCurrency;
+    }
+
     private void validateOrderShape(@Valid OrderRequest request) {
         if (request.orderType() == OrderType.LIMIT && request.limitPrice() == null) {
             throw new OrderException("Limit price missing for LIMIT order");
@@ -186,10 +206,10 @@ public class OrderService {
         }
     }
 
-    private BigDecimal prepareBuyReservation(WalletBucket bucket, TradingAccount tradingAccount, Stock stock, Exchange exchange, @Valid OrderRequest request) {
+    private BigDecimal prepareBuyReservation(WalletBucket bucket, TradingAccount tradingAccount, Stock stock, Exchange exchange, @Valid OrderRequest request, String fundingCurrency) {
         return switch (request.orderType()) {
-            case LIMIT -> lockLimitBuy(bucket, tradingAccount, exchange.getCurrency(), request);
-            case MARKET -> prepareMarketBuy(bucket, tradingAccount, stock, exchange.getCurrency(), request);
+            case LIMIT -> lockLimitBuy(bucket, tradingAccount, exchange.getCurrency(), fundingCurrency, request);
+            case MARKET -> prepareMarketBuy(bucket, tradingAccount, stock, exchange.getCurrency(), fundingCurrency, request);
         };
     }
 
@@ -206,36 +226,47 @@ public class OrderService {
         }
     }
 
-    private BigDecimal lockLimitBuy(WalletBucket bucket, TradingAccount tradingAccount, String stockCurrency, @Valid OrderRequest request) {
+    private BigDecimal lockLimitBuy(WalletBucket bucket, TradingAccount tradingAccount, String stockCurrency, String fundingCurrency, @Valid OrderRequest request) {
         BigDecimal blockValueInStockCurrency = request.limitPrice().multiply(BigDecimal.valueOf(request.quantity()));
         BigDecimal requiredMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-        BigDecimal requiredMarginInAccountCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
-        BigDecimal fxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, requiredMarginInAccountCurrency);
-        bucket.setLockedBalance(bucket.getLockedBalance().add(requiredMarginInAccountCurrency.add(fxFee)));
+        BigDecimal requiredMarginInFundingCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, fundingCurrency);
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(fundingCurrency, stockCurrency, requiredMarginInFundingCurrency);
+        BigDecimal totalLock = requiredMarginInFundingCurrency.add(fxFee);
+
+        if (bucket.getAvailableBalance().compareTo(totalLock) < 0) {
+            throw new BusinessException(HttpStatus.CONFLICT, "INSUFFICIENT_FUNDS", "Insufficient available funds in " + fundingCurrency + " bucket");
+        }
+
+        bucket.setLockedBalance(bucket.getLockedBalance().add(totalLock));
         return request.limitPrice();
     }
 
-    private BigDecimal prepareMarketBuy(WalletBucket bucket, TradingAccount tradingAccount, Stock stock, String stockCurrency, @Valid OrderRequest request) {
+    private BigDecimal prepareMarketBuy(WalletBucket bucket, TradingAccount tradingAccount, Stock stock, String stockCurrency, String fundingCurrency, @Valid OrderRequest request) {
         if (request.timeInForce() == TimeInForce.IOC) {
             BigDecimal estimatedCostInStockCurrency = estimateMarketBuyCost(stock.getId(), request.quantity());
-            BigDecimal estimatedCostInAccountCurrency = forexService.convert(estimatedCostInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
-            BigDecimal fxFeeEst = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, estimatedCostInAccountCurrency);
-            riskService.validateBuyOrder(tradingAccount, estimatedCostInAccountCurrency.add(fxFeeEst));
+            BigDecimal estimatedCostInFundingCurrency = forexService.convert(estimatedCostInStockCurrency, stockCurrency, fundingCurrency);
+            BigDecimal fxFeeEst = fxFeeService.calculateConversionFee(fundingCurrency, stockCurrency, estimatedCostInFundingCurrency);
+            BigDecimal requiredMargin = estimatedCostInFundingCurrency.add(fxFeeEst).divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+            if (bucket.getAvailableBalance().compareTo(requiredMargin) < 0) {
+                throw new BusinessException(HttpStatus.CONFLICT, "INSUFFICIENT_FUNDS", "Insufficient available funds in " + fundingCurrency + " bucket");
+            }
             return null;
         }
 
         BigDecimal reservationPrice = calculateProtectedMarketBuyPrice(stock);
         BigDecimal blockValueInStockCurrency = reservationPrice.multiply(BigDecimal.valueOf(request.quantity()));
 
-        BigDecimal orderValueInAccountCurrency = forexService.convert(blockValueInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
-        BigDecimal totalValueFxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, orderValueInAccountCurrency);
-        riskService.validateBuyOrder(tradingAccount, orderValueInAccountCurrency.add(totalValueFxFee));
-
         BigDecimal requiredMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
-        BigDecimal requiredMarginInAccountCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
-        BigDecimal marginFxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, requiredMarginInAccountCurrency);
-        bucket.setLockedBalance(bucket.getLockedBalance().add(requiredMarginInAccountCurrency.add(marginFxFee)));
+        BigDecimal requiredMarginInFundingCurrency = forexService.convert(requiredMarginInStockCurrency, stockCurrency, fundingCurrency);
+        BigDecimal marginFxFee = fxFeeService.calculateConversionFee(fundingCurrency, stockCurrency, requiredMarginInFundingCurrency);
+        BigDecimal totalLock = requiredMarginInFundingCurrency.add(marginFxFee);
+
+        if (bucket.getAvailableBalance().compareTo(totalLock) < 0) {
+            throw new BusinessException(HttpStatus.CONFLICT, "INSUFFICIENT_FUNDS", "Insufficient available funds in " + fundingCurrency + " bucket");
+        }
+
+        bucket.setLockedBalance(bucket.getLockedBalance().add(totalLock));
         return reservationPrice;
     }
 
@@ -263,7 +294,7 @@ public class OrderService {
         }
     }
 
-    private void recordLockLedgerIfRequired(Order order, WalletBucket bucket, TradingAccount tradingAccount, String stockCurrency) {
+    private void recordLockLedgerIfRequired(Order order, WalletBucket bucket, TradingAccount tradingAccount, String stockCurrency, String fundingCurrency) {
         if (order.getSide() != OrderSide.BUY || order.getReservationPrice() == null) {
             return;
         }
@@ -271,9 +302,9 @@ public class OrderService {
         BigDecimal blockValueInStockCurrency = order.getReservationPrice().multiply(BigDecimal.valueOf(order.getQuantity()));
         BigDecimal lockedMarginInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-        BigDecimal lockedMarginInAccountCurrency = forexService.convert(lockedMarginInStockCurrency, stockCurrency, tradingAccount.getBaseCurrency());
-        BigDecimal fxFee = fxFeeService.calculateConversionFee(tradingAccount.getBaseCurrency(), stockCurrency, lockedMarginInAccountCurrency);
-        BigDecimal totalLock = lockedMarginInAccountCurrency.add(fxFee);
+        BigDecimal lockedMarginInFundingCurrency = forexService.convert(lockedMarginInStockCurrency, stockCurrency, fundingCurrency);
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(fundingCurrency, stockCurrency, lockedMarginInFundingCurrency);
+        BigDecimal totalLock = lockedMarginInFundingCurrency.add(fxFee);
 
         tradingAccountService.saveTradingAccount(tradingAccount);
 

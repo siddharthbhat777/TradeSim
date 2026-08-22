@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.order.model.dto;
 
+import com.siddharth.tradesim_backend.order.enums.FundingStrategy;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
@@ -27,6 +28,8 @@ public record OrderRequest(
         TimeInForce timeInForce,
 
         @DecimalMin("0.01")
-        BigDecimal limitPrice
+        BigDecimal limitPrice,
+
+        FundingStrategy fundingStrategy
 ) {
 }

@@ -103,6 +103,11 @@ public class LedgerService {
             return;
         }
 
+        String entryCurrency = bucket.getCurrency();
+        if (tradingAccount != null && (type == LedgerEntryType.MARGIN_LOAN_INCREASE || type == LedgerEntryType.MARGIN_LOAN_REPAYMENT)) {
+            entryCurrency = tradingAccount.getBaseCurrency();
+        }
+
         LedgerEntry ledgerEntry = LedgerEntry.builder()
                 .tradingAccountId(tradingAccount != null ? tradingAccount.getId() : null)
                 .userId(bucket.getWallet().getUserId())
@@ -111,7 +116,7 @@ public class LedgerService {
                 .ipoOfferId(ipoOfferId)
                 .type(type)
                 .amount(amount)
-                .currency(bucket.getCurrency())
+                .currency(entryCurrency)
                 .balanceAfter(bucket.getBalance())
                 .lockedBalanceAfter(bucket.getLockedBalance())
                 .marginLoanAfter(tradingAccount != null ? tradingAccount.getMarginLoan() : BigDecimal.ZERO)

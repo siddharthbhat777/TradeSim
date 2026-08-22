@@ -220,7 +220,8 @@ public class OrderMatchingEngine {
                 sellOrder.getOrderType(),
                 buyOrder.getReservationPrice(),
                 buyOrder.getReservationPrice() != null,
-                sellOrder.getOrderType() == OrderType.LIMIT || sellOrder.getTimeInForce() == TimeInForce.DAY || sellOrder.getTimeInForce() == TimeInForce.GTC
+                sellOrder.getOrderType() == OrderType.LIMIT || sellOrder.getTimeInForce() == TimeInForce.DAY || sellOrder.getTimeInForce() == TimeInForce.GTC,
+                buyOrder.getFundingCurrency()
         );
 
         portfolioService.settleTrade(execution);

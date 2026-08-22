@@ -89,24 +89,25 @@ public class OrderLifecycleService {
 
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(order.getUserId());
         Wallet wallet = walletService.getWalletByUserId(order.getUserId());
-        WalletBucket bucket = walletService.getBucketForUpdate(wallet.getId(), tradingAccount.getBaseCurrency());
+        String fundingCurrency = order.getFundingCurrency() != null ? order.getFundingCurrency() : tradingAccount.getBaseCurrency();
+        WalletBucket bucket = walletService.getBucketForUpdate(wallet.getId(), fundingCurrency);
 
         BigDecimal blockValueInStockCurrency = order.getReservationPrice().multiply(BigDecimal.valueOf(remainingQty));
         BigDecimal unlockAmountInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-        BigDecimal unlockMarginInAccountCurrency = forexService.convert(
+        BigDecimal unlockMarginInFundingCurrency = forexService.convert(
                 unlockAmountInStockCurrency,
                 exchange.getCurrency(),
-                tradingAccount.getBaseCurrency()
+                fundingCurrency
         );
 
         BigDecimal fxFee = fxFeeService.calculateConversionFee(
-                tradingAccount.getBaseCurrency(),
+                fundingCurrency,
                 exchange.getCurrency(),
-                unlockMarginInAccountCurrency
+                unlockMarginInFundingCurrency
         );
 
-        BigDecimal totalUnlockAmount = unlockMarginInAccountCurrency.add(fxFee);
+        BigDecimal totalUnlockAmount = unlockMarginInFundingCurrency.add(fxFee);
 
         bucket.setLockedBalance(bucket.getLockedBalance().subtract(totalUnlockAmount));
 
