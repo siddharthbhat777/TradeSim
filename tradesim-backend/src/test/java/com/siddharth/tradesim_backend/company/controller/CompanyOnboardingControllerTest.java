@@ -68,7 +68,7 @@ class CompanyOnboardingControllerTest {
 
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
                 new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
-                new RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123", "US")
+                new RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123", "US", null)
         );
 
         CompanyOnboardingResponse response = new CompanyOnboardingResponse(

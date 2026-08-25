@@ -10,7 +10,6 @@ import com.siddharth.tradesim_backend.exchange.model.Exchange;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
-import com.siddharth.tradesim_backend.order.enums.FundingStrategy;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
@@ -156,7 +155,7 @@ class OrderServiceTest {
                 OrderType.LIMIT,
                 TimeInForce.DAY,
                 BigDecimal.valueOf(100),
-                FundingStrategy.BASE
+                null
         );
     }
 
@@ -209,7 +208,7 @@ class OrderServiceTest {
                 OrderType.LIMIT,
                 TimeInForce.IOC,
                 BigDecimal.valueOf(100),
-                FundingStrategy.BASE
+                null
         );
 
         orderService.createOrder(userId, request);
@@ -254,7 +253,7 @@ class OrderServiceTest {
                 OrderType.MARKET,
                 TimeInForce.DAY,
                 null,
-                FundingStrategy.BASE
+                null
         );
 
         OrderResponse response = orderService.createOrder(userId, request);
@@ -296,7 +295,7 @@ class OrderServiceTest {
                 OrderType.MARKET,
                 TimeInForce.DAY,
                 null,
-                FundingStrategy.BASE
+                null
         );
 
         orderService.createOrder(userId, request);
@@ -333,7 +332,7 @@ class OrderServiceTest {
                 OrderType.LIMIT,
                 TimeInForce.DAY,
                 null,
-                FundingStrategy.BASE
+                null
         );
 
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
@@ -359,7 +358,7 @@ class OrderServiceTest {
                 OrderType.MARKET,
                 TimeInForce.IOC,
                 BigDecimal.valueOf(100),
-                FundingStrategy.BASE
+                null
         );
 
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));

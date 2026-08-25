@@ -53,7 +53,7 @@ class AuthControllerTest {
 
     @Test
     void shouldRegisterSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest("sid", "sid@test.com", "Password@123", "IN");
+        RegisterRequest request = new RegisterRequest("sid", "sid@test.com", "Password@123", "IN", null);
 
         RegisterResponse response = new RegisterResponse(
                 UUID.randomUUID(),
@@ -92,7 +92,7 @@ class AuthControllerTest {
 
     @Test
     void validationFailureShouldReturnFieldErrors() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "bad-email", "weak", "");
+        RegisterRequest request = new RegisterRequest("", "bad-email", "weak", "", null);
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

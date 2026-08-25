@@ -23,6 +23,9 @@ public record RegisterRequest(
         @NotBlank(message = "Country code is required (e.g., IN, US)")
         @Size(min = 2, max = 2, message = "Country code must be exactly 2 characters")
         @Pattern(regexp = "^[A-Z]{2}$", message = "Country code must be a valid 2-letter uppercase ISO code")
-        String countryCode
+        String countryCode,
+
+        @Pattern(regexp = "^[A-Z]{3}$", message = "Base currency must be a valid 3-letter ISO code")
+        String baseCurrency
 ) {
 }

@@ -1,12 +1,9 @@
 package com.siddharth.tradesim_backend.order.model.dto;
 
-import com.siddharth.tradesim_backend.order.enums.FundingStrategy;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -30,6 +27,7 @@ public record OrderRequest(
         @DecimalMin("0.01")
         BigDecimal limitPrice,
 
-        FundingStrategy fundingStrategy
+        @Pattern(regexp = "^[A-Z]{3}$", message = "Funding currency must be a valid 3-letter ISO code")
+        String fundingCurrency
 ) {
 }

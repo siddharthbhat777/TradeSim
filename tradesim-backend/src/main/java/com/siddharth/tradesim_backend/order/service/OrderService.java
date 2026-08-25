@@ -11,7 +11,6 @@ import com.siddharth.tradesim_backend.exchange.ExchangeException;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
-import com.siddharth.tradesim_backend.order.enums.FundingStrategy;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -108,7 +107,7 @@ public class OrderService {
             if (request.side() == OrderSide.BUY) {
                 tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
                 Wallet wallet = walletService.getWalletByUserId(userId);
-                fundingCurrency = resolveFundingCurrency(wallet, tradingAccount, exchange, request.fundingStrategy());
+                fundingCurrency = resolveFundingCurrency(wallet, tradingAccount, request.fundingCurrency());
                 bucket = walletService.getBucketForUpdate(wallet.getId(), fundingCurrency);
                 reservationPrice = prepareBuyReservation(bucket, tradingAccount, stock, exchange, request, fundingCurrency);
             } else {
@@ -183,17 +182,17 @@ public class OrderService {
         orderLifecycleService.cancelOrder(order);
     }
 
-    private String resolveFundingCurrency(Wallet wallet, TradingAccount tradingAccount, Exchange exchange, FundingStrategy strategy) {
-        if (strategy == null || strategy == FundingStrategy.BASE) {
+    private String resolveFundingCurrency(Wallet wallet, TradingAccount tradingAccount, String requestedFundingCurrency) {
+        if (requestedFundingCurrency == null || requestedFundingCurrency.isBlank() || requestedFundingCurrency.equalsIgnoreCase(tradingAccount.getBaseCurrency())) {
             return tradingAccount.getBaseCurrency();
         }
 
-        String targetCurrency = exchange.getCurrency();
-        if (!targetCurrency.equalsIgnoreCase(tradingAccount.getBaseCurrency()) && wallet.getMultiCurrencyStatus() != MultiCurrencyStatus.APPROVED) {
+        String normalizedCurrency = requestedFundingCurrency.trim().toUpperCase();
+        if (wallet.getMultiCurrencyStatus() != MultiCurrencyStatus.APPROVED) {
             throw new BusinessException(HttpStatus.FORBIDDEN, "UNAUTHORIZED_CURRENCY", "Multi-currency approval is required to fund orders using non-base currencies");
         }
 
-        return targetCurrency;
+        return normalizedCurrency;
     }
 
     private void validateOrderShape(@Valid OrderRequest request) {

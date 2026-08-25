@@ -6,6 +6,8 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class AuthService {
     private final TradingAccountService tradingAccountService;
     private final WalletService walletService;
     private final RefreshTokenService refreshTokenService;
+    private final SupportedCurrencyRepository supportedCurrencyRepository;
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
@@ -100,7 +103,7 @@ public class AuthService {
 
             User saved = authRepository.save(user);
 
-            String baseCurrency = resolveCurrencyFromCountryCode(request.countryCode());
+            String baseCurrency = resolveBaseCurrency(request.countryCode(), request.baseCurrency());
             tradingAccountService.createTradingAccountForUser(saved.getId(), baseCurrency);
             walletService.createWalletForUser(saved.getId(), baseCurrency);
 
@@ -116,15 +119,43 @@ public class AuthService {
         }
     }
 
-    private String resolveCurrencyFromCountryCode(String countryCode) {
+    private String resolveBaseCurrency(String countryCode, String requestedBaseCurrency) {
+        String countryCurrency = resolveNativeCurrencyFromCountryCode(countryCode);
+
+        if (countryCurrency != null && isSupportedCurrency(countryCurrency)) {
+            return countryCurrency;
+        }
+
+        if (requestedBaseCurrency == null || requestedBaseCurrency.isBlank()) {
+            throw AuthException.badRequest("Base currency is required because your country's native currency is not supported for wallets");
+        }
+
+        String candidate = requestedBaseCurrency.trim().toUpperCase();
+        if (isSupportedCurrency(candidate)) {
+            return candidate;
+        }
+
+        throw AuthException.badRequest("Selected base currency is not supported");
+    }
+
+    private boolean isSupportedCurrency(String countryCurrency) {
+        if (countryCurrency.equalsIgnoreCase("INR")) {
+            return true;
+        }
+        return supportedCurrencyRepository.findById(countryCurrency)
+                .map(SupportedCurrency::isActive)
+                .orElse(false);
+    }
+
+    private String resolveNativeCurrencyFromCountryCode(String countryCode) {
         if (countryCode == null || countryCode.isBlank()) {
-            return "INR";
+            return null;
         }
         try {
             Locale locale = Locale.of("", countryCode.trim().toUpperCase());
             return Currency.getInstance(locale).getCurrencyCode();
         } catch (IllegalArgumentException e) {
-            return "INR";
+            return null;
         }
     }
 

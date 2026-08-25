@@ -3,7 +3,6 @@ package com.siddharth.tradesim_backend.order;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.order.enums.FundingStrategy;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -64,7 +63,7 @@ class OrderControllerTest {
                 OrderType.LIMIT,
                 TimeInForce.DAY,
                 BigDecimal.valueOf(100),
-                FundingStrategy.BASE
+                null
         );
 
         OrderResponse response = new OrderResponse(
