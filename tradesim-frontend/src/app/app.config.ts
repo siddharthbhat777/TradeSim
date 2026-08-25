@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authTokenInterceptor } from './interceptors/auth-token-interceptor';
-import { AuthService } from './services/auth-service/auth-service';
+import { AuthService } from './services/auth/auth-service';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { GlobalErrorHandler } from './services/global-error-handler';
 import { loadingInterceptor } from './interceptors/loading-interceptor';

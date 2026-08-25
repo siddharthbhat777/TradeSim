@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Logo } from '../shared/components/logo/logo';
 import { Tooltip } from '../shared/components/tooltip/tooltip';
-import { AuthService } from '../services/auth-service/auth-service';
+import { AuthService } from '../services/auth/auth-service';
 import { DialogService } from '../shared/components/dialog/dialog.service';
 
 export interface NavItem {
