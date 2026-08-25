@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { PortfolioService } from '../../../services/portfolio/portfolio-service';
 import { WalletService } from '../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
+import { Summary } from './summary/summary';
 
 @Component({
   selector: 'app-dashboard',
+  imports: [Summary],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -26,20 +28,6 @@ export class Dashboard implements OnInit {
     const baseBucket = buckets.find(b => b.currency === baseCurrency);
     return baseBucket ? baseBucket.availableBalance : 0;
   });
-
-  constructor() {
-    effect(() => {
-      console.log('--- Dashboard Data State ---');
-      console.log('Raw Portfolio Data:', this.portfolioService.portfolio());
-      console.log('Raw Wallet Data:', this.walletService.wallet());
-      console.log('Raw Trading Account Data:', this.tradingAccountService.tradingAccount());
-      console.log('Computed Equity:', this.equity());
-      console.log('Computed Total Invested:', this.totalInvested());
-      console.log('Computed Unrealized PnL:', this.unrealizedPnl());
-      console.log('Computed Buying Power:', this.buyingPower());
-      console.log('----------------------------');
-    });
-  }
 
   ngOnInit(): void {
     this.portfolioService.loadPortfolio();
