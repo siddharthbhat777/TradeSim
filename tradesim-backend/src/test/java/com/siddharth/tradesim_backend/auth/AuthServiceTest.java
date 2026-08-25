@@ -8,6 +8,8 @@ import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
 import com.siddharth.tradesim_backend.auth.service.RefreshTokenService;
+import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.wallet.WalletService;
 import org.junit.jupiter.api.Test;
@@ -20,9 +22,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -44,6 +50,9 @@ class AuthServiceTest {
 
     @Mock
     private WalletService walletService;
+
+    @Mock
+    private SupportedCurrencyRepository supportedCurrencyRepository;
 
     @InjectMocks
     private AuthService authService;
@@ -76,6 +85,55 @@ class AuthServiceTest {
         assertEquals(AccountStatus.ACTIVE, response.accountStatus());
         verify(tradingAccountService).createTradingAccountForUser(userId, "INR");
         verify(walletService).createWalletForUser(userId, "INR");
+    }
+
+    @Test
+    void shouldThrowWhenBaseCurrencyMissingForUnsupportedCountry() {
+        RegisterRequest request = new RegisterRequest(
+                "mexico_user",
+                "mx@example.com",
+                "Password@123",
+                "MX",
+                null
+        );
+
+        when(authRepository.existsByEmail(request.email())).thenReturn(false);
+        when(authRepository.existsByUsername(request.username())).thenReturn(false);
+        when(supportedCurrencyRepository.findById("MXN")).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> authService.registerUser(request));
+        assertEquals("Base currency is required because your country's native currency is not supported for wallets", exception.getMessage());
+    }
+
+    @Test
+    void shouldRegisterWithExplicitBaseCurrencyForUnsupportedCountry() {
+        UUID userId = UUID.randomUUID();
+        RegisterRequest request = new RegisterRequest(
+                "mexico_user",
+                "mx@example.com",
+                "Password@123",
+                "MX",
+                "EUR"
+        );
+
+        SupportedCurrency eurCurrency = SupportedCurrency.builder().code("EUR").isActive(true).build();
+
+        when(authRepository.existsByEmail(request.email())).thenReturn(false);
+        when(authRepository.existsByUsername(request.username())).thenReturn(false);
+        when(passwordEncoder.encode(request.password())).thenReturn("encoded-password");
+        when(supportedCurrencyRepository.findById("MXN")).thenReturn(Optional.empty());
+        when(supportedCurrencyRepository.findById("EUR")).thenReturn(Optional.of(eurCurrency));
+        when(authRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(userId);
+            return user;
+        });
+
+        RegisterResponse response = authService.registerUser(request);
+
+        assertNotNull(response);
+        verify(tradingAccountService).createTradingAccountForUser(userId, "EUR");
+        verify(walletService).createWalletForUser(userId, "EUR");
     }
 
     @Test
