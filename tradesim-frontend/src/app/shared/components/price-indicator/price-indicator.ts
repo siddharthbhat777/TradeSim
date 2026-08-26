@@ -16,21 +16,6 @@ export class PriceIndicator {
   readonly currency = input<string>('INR');
   readonly valueDecimals = input<number>(0);
   readonly percentageDecimals = input<number>(2);
-  readonly locale = input<string | undefined>(undefined);
-
-  protected readonly effectiveLocale = computed(() => {
-    const explicit = this.locale();
-    if (explicit !== undefined) {
-      return explicit;
-    }
-    if (this.currency() === 'INR') {
-      return 'en-IN';
-    }
-    throw new Error(
-      `[PriceIndicator] "locale" is required when "currency" is not 'INR' (got currency="${this.currency()}"). ` +
-      `Pass one explicitly, e.g. [locale]="'en-US'".`
-    );
-  });
 
   protected readonly sign = computed<PriceIndicatorSign>(() => {
     const v = this.value();
@@ -40,7 +25,7 @@ export class PriceIndicator {
   });
 
   protected readonly formattedValue = computed(() =>
-    new Intl.NumberFormat(this.effectiveLocale(), {
+    new Intl.NumberFormat(undefined, {
       style: 'currency',
       currency: this.currency(),
       minimumFractionDigits: this.valueDecimals(),
@@ -54,7 +39,7 @@ export class PriceIndicator {
     if (p === undefined) {
       return '';
     }
-    return new Intl.NumberFormat(this.effectiveLocale(), {
+    return new Intl.NumberFormat(undefined, {
       style: 'percent',
       minimumFractionDigits: this.percentageDecimals(),
       maximumFractionDigits: this.percentageDecimals(),

@@ -2287,11 +2287,11 @@ this.dialogService.open(&#123;
                             <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Custom
                                 Currency & Decimals</h3>
                             <div style="display: flex; gap: 2rem; align-items: center;">
-                                <app-price-indicator [value]="4250.75" [valueDecimals]="2" currency="USD" locale="en-US"
+                                <app-price-indicator [value]="4250.75" [valueDecimals]="2" currency="USD"
                                     [showPercentage]="false">
                                 </app-price-indicator>
 
-                                <app-price-indicator [value]="-85.5" [valueDecimals]="2" currency="EUR" locale="de-DE"
+                                <app-price-indicator [value]="-85.5" [valueDecimals]="2" currency="EUR"
                                     [showArrow]="false">
                                 </app-price-indicator>
                             </div>
@@ -2311,12 +2311,11 @@ this.dialogService.open(&#123;
   [percentage]="2.45"&gt;
 &lt;/app-price-indicator&gt;
 
-&lt;!-- Custom Currency (Locale is required if currency != INR) --&gt;
+&lt;!-- Custom Currency (Browser handles locale automatically) --&gt;
 &lt;app-price-indicator 
   [value]="4250.75" 
   [valueDecimals]="2" 
   currency="USD" 
-  locale="en-US" 
   [showPercentage]="false"&gt;
 &lt;/app-price-indicator&gt;
 
@@ -2371,13 +2370,6 @@ this.dialogService.open(&#123;
                                     <td><code>string</code></td>
                                     <td><code>'INR'</code></td>
                                     <td>The ISO 4217 currency code (e.g., 'INR', 'USD', 'EUR').</td>
-                                </tr>
-                                <tr>
-                                    <td><code>[locale]</code></td>
-                                    <td><code>string</code></td>
-                                    <td><code>'en-IN'</code> (if INR)</td>
-                                    <td>The BCP 47 language tag. <strong style="color: var(--danger)">Required if
-                                            currency is not INR.</strong></td>
                                 </tr>
                                 <tr>
                                     <td><code>[valueDecimals]</code></td>
