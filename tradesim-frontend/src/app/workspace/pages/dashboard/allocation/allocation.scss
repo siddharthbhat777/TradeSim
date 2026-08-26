@@ -1,0 +1,22 @@
+.allocation {
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0 0 24px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 280px;
+  }
+
+  &__empty {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+}

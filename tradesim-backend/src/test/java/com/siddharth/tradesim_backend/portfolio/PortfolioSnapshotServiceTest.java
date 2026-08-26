@@ -111,6 +111,8 @@ class PortfolioSnapshotServiceTest {
     private PortfolioResponse portfolioResponse(BigDecimal totalValue) {
         return new PortfolioResponse(
                 List.of(),
+                BigDecimal.valueOf(100),
+                BigDecimal.ZERO,
                 totalValue,
                 BigDecimal.valueOf(400),
                 BigDecimal.valueOf(100),

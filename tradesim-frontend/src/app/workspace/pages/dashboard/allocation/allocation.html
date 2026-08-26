@@ -1,0 +1,15 @@
+<app-card variant="surface">
+    <h3 class="allocation__title">Portfolio Allocation</h3>
+
+    <div class="allocation__content">
+        @if (data().length > 0) {
+        <app-pie-chart-container [data]="data()" shape="full" chartStyle="donut" legendPosition="bottom" [wrap]="true"
+            [size]="240">
+        </app-pie-chart-container>
+        } @else {
+        <div class="allocation__empty">
+            No allocation data available.
+        </div>
+        }
+    </div>
+</app-card>

@@ -109,6 +109,8 @@ public class PortfolioService {
         BigDecimal totalPnl = totalRealizedPnl.add(totalUnrealizedPnl);
         return new PortfolioResponse(
                 responses,
+                totalCashValue,
+                tradingAccount.getMarginLoan(),
                 totalValue,
                 totalInvested,
                 totalUnrealizedPnl,

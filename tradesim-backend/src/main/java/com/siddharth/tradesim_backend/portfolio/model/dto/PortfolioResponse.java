@@ -5,6 +5,8 @@ import java.util.List;
 
 public record PortfolioResponse(
         List<PortfolioHoldingResponse> holdings,
+        BigDecimal totalCashValue,
+        BigDecimal marginLoan,
         BigDecimal totalValue,
         BigDecimal totalInvested,
         BigDecimal totalUnrealizedPnl,

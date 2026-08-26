@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import { vi } from 'vitest';
 import { Dashboard } from './dashboard';
 import { PortfolioService } from '../../../services/portfolio/portfolio-service';
@@ -10,22 +10,34 @@ describe('Dashboard', () => {
   let component: Dashboard;
   let fixture: ComponentFixture<Dashboard>;
 
-  const mockPortfolioService = {
-    portfolio: signal(null),
-    loadPortfolio: vi.fn()
-  };
+  let mockPortfolioSignal: WritableSignal<any>;
+  let mockWalletSignal: WritableSignal<any>;
+  let mockTradingAccountSignal: WritableSignal<any>;
 
-  const mockWalletService = {
-    wallet: signal(null),
-    loadWallet: vi.fn()
-  };
-
-  const mockTradingAccountService = {
-    tradingAccount: signal(null),
-    loadTradingAccount: vi.fn()
-  };
+  let mockPortfolioService: any;
+  let mockWalletService: any;
+  let mockTradingAccountService: any;
 
   beforeEach(async () => {
+    mockPortfolioSignal = signal(null);
+    mockWalletSignal = signal(null);
+    mockTradingAccountSignal = signal(null);
+
+    mockPortfolioService = {
+      portfolio: mockPortfolioSignal,
+      loadPortfolio: vi.fn()
+    };
+
+    mockWalletService = {
+      wallet: mockWalletSignal,
+      loadWallet: vi.fn()
+    };
+
+    mockTradingAccountService = {
+      tradingAccount: mockTradingAccountSignal,
+      loadTradingAccount: vi.fn()
+    };
+
     await TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
@@ -43,5 +55,62 @@ describe('Dashboard', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should initialize services on init', () => {
+    expect(mockPortfolioService.loadPortfolio).toHaveBeenCalled();
+    expect(mockWalletService.loadWallet).toHaveBeenCalled();
+    expect(mockTradingAccountService.loadTradingAccount).toHaveBeenCalled();
+  });
+
+  it('should compute summary metrics correctly', () => {
+    mockTradingAccountSignal.set({ baseCurrency: 'USD' });
+    mockPortfolioSignal.set({
+      equity: 15000,
+      totalInvested: 10000,
+      totalUnrealizedPnl: 500
+    });
+    mockWalletSignal.set({
+      buckets: [{ currency: 'USD', availableBalance: 5000 }]
+    });
+
+    fixture.detectChanges();
+
+    expect(component.baseCurrency()).toBe('USD');
+    expect(component.equity()).toBe(15000);
+    expect(component.totalInvested()).toBe(10000);
+    expect(component.unrealizedPnl()).toBe(500);
+    expect(component.buyingPower()).toBe(5000);
+  });
+
+  it('should compute allocation data with cash and group excess holdings', () => {
+    mockTradingAccountSignal.set({ baseCurrency: 'USD' });
+    mockPortfolioSignal.set({
+      totalCashValue: 6000,
+      marginLoan: 1000,
+      holdings: [
+        { stockId: '1', symbol: 'AAPL', currentValue: 4000 },
+        { stockId: '2', symbol: 'TSLA', currentValue: 3000 },
+        { stockId: '3', symbol: 'MSFT', currentValue: 2000 },
+        { stockId: '4', symbol: 'AMZN', currentValue: 1000 },
+        { stockId: '5', symbol: 'GOOGL', currentValue: 500 },
+        { stockId: '6', symbol: 'META', currentValue: 300 }
+      ]
+    });
+
+    fixture.detectChanges();
+
+    const allocation = component.allocationData();
+
+    expect(allocation.length).toBe(6);
+
+    const cashSlice = allocation.find(s => s.id === 'cash-slice');
+    expect(cashSlice).toBeTruthy();
+    expect(cashSlice?.value).toBe(5000);
+
+    const othersSlice = allocation.find(s => s.id === 'others-slice');
+    expect(othersSlice).toBeTruthy();
+    expect(othersSlice?.value).toBe(800);
+    expect(othersSlice?.label).toBe('Other Assets');
   });
 });

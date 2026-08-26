@@ -1,3 +1,9 @@
-<app-summary [equity]="equity()" [totalInvested]="totalInvested()" [unrealizedPnl]="unrealizedPnl()"
-    [buyingPower]="buyingPower()" [currency]="baseCurrency()">
-</app-summary>
+<div class="dashboard-layout">
+    <app-summary [equity]="equity()" [totalInvested]="totalInvested()" [unrealizedPnl]="unrealizedPnl()"
+        [buyingPower]="buyingPower()" [currency]="baseCurrency()">
+    </app-summary>
+
+    <div class="dashboard-middle-row">
+        <app-allocation [data]="allocationData()"></app-allocation>
+    </div>
+</div>

@@ -10,6 +10,8 @@ export interface PortfolioHoldingResponse {
 
 export interface PortfolioResponse {
     holdings: PortfolioHoldingResponse[];
+    totalCashValue: number;
+    marginLoan: number;
     totalValue: number;
     totalInvested: number;
     totalUnrealizedPnl: number;
