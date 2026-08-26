@@ -1,11 +1,15 @@
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   width: 100%;
 
+  @media (min-width: 768px) {
+    gap: 16px;
+  }
+
   @media (min-width: 1024px) {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 24px;
   }
 }
@@ -16,17 +20,19 @@
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 12px;
+    gap: 8px;
   }
 
   &__title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-secondary);
     margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     position: relative;
     z-index: 1;
+    font-size: 0.75rem;
+    line-height: 1.2;
+
+    @media (min-width: 768px) {
+      font-size: 0.875rem;
+    }
   }
 
   &__icon {
@@ -49,9 +55,10 @@
   }
 
   &__value {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     position: relative;
     z-index: 1;
+    word-break: break-word;
 
     @media (min-width: 768px) {
       font-size: 1.5rem;
