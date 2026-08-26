@@ -15,6 +15,7 @@ export class Dashboard implements OnInit {
   private walletService = inject(WalletService);
   private tradingAccountService = inject(TradingAccountService);
 
+  public baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency ?? 'INR');
   public equity = computed(() => this.portfolioService.portfolio()?.equity ?? 0);
   public totalInvested = computed(() => this.portfolioService.portfolio()?.totalInvested ?? 0);
   public unrealizedPnl = computed(() => this.portfolioService.portfolio()?.totalUnrealizedPnl ?? 0);
