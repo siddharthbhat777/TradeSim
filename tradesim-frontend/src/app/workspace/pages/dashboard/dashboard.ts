@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, inject, computed, effect } from '@angular/core';
 import { PortfolioService } from '../../../services/portfolio/portfolio-service';
 import { WalletService } from '../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
+import { OrderService } from '../../../services/order/order-service';
 import { Summary } from './summary/summary';
 import { Allocation } from './allocation/allocation';
 import { HoldingsTable } from './holdings-table/holdings-table';
@@ -17,6 +18,7 @@ export class Dashboard implements OnInit {
   private portfolioService = inject(PortfolioService);
   private walletService = inject(WalletService);
   private tradingAccountService = inject(TradingAccountService);
+  private orderService = inject(OrderService);
 
   public baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency ?? 'INR');
   public equity = computed(() => this.portfolioService.portfolio()?.equity ?? 0);
@@ -34,6 +36,7 @@ export class Dashboard implements OnInit {
   });
 
   public holdingsData = computed(() => this.portfolioService.portfolio()?.holdings ?? []);
+  public ordersData = computed(() => this.orderService.orders());
 
   public allocationData = computed<PieChartData[]>(() => {
     const portfolio = this.portfolioService.portfolio();
@@ -86,9 +89,16 @@ export class Dashboard implements OnInit {
     return data.sort((a, b) => b.value - a.value);
   });
 
+  constructor() {
+    effect(() => {
+      console.log('Fetched User Orders:', this.ordersData());
+    });
+  }
+
   ngOnInit(): void {
     this.portfolioService.loadPortfolio();
     this.walletService.loadWallet();
     this.tradingAccountService.loadTradingAccount();
+    this.orderService.loadOrders();
   }
 }

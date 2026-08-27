@@ -5,7 +5,7 @@ import { environment } from '../../../environment/environment';
 import { AuthStatus } from '../../constants/auth';
 import { AuthUser } from '../../models/auth-user';
 import { LoginRequest } from '../../models/login-request';
-import { LoginResponse } from '../../models/login-respons';
+import { LoginResponse } from '../../models/login-response';
 import { catchError, finalize, tap, throwError } from 'rxjs';
 import { skipInterceptors } from '../../shared/utils/http-context';
 import { Router } from '@angular/router';
