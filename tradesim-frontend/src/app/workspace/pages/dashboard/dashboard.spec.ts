@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { Dashboard } from './dashboard';
 import { PortfolioService } from '../../../services/portfolio/portfolio-service';
 import { WalletService } from '../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
+import { OrderService } from '../../../services/order/order-service';
 
 describe('Dashboard', () => {
   let component: Dashboard;
@@ -13,10 +15,12 @@ describe('Dashboard', () => {
   let mockPortfolioSignal: WritableSignal<any>;
   let mockWalletSignal: WritableSignal<any>;
   let mockTradingAccountSignal: WritableSignal<any>;
+  let mockOrderSignal: WritableSignal<any>;
 
   let mockPortfolioService: any;
   let mockWalletService: any;
   let mockTradingAccountService: any;
+  let mockOrderService: any;
 
   beforeEach(async () => {
     Object.defineProperty(window, 'matchMedia', {
@@ -36,6 +40,7 @@ describe('Dashboard', () => {
     mockPortfolioSignal = signal(null);
     mockWalletSignal = signal(null);
     mockTradingAccountSignal = signal(null);
+    mockOrderSignal = signal([]);
 
     mockPortfolioService = {
       portfolio: mockPortfolioSignal,
@@ -52,12 +57,19 @@ describe('Dashboard', () => {
       loadTradingAccount: vi.fn()
     };
 
+    mockOrderService = {
+      orders: mockOrderSignal,
+      loadOrders: vi.fn()
+    };
+
     await TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
+        provideRouter([]),
         { provide: PortfolioService, useValue: mockPortfolioService },
         { provide: WalletService, useValue: mockWalletService },
-        { provide: TradingAccountService, useValue: mockTradingAccountService }
+        { provide: TradingAccountService, useValue: mockTradingAccountService },
+        { provide: OrderService, useValue: mockOrderService }
       ]
     }).compileComponents();
 
@@ -75,6 +87,7 @@ describe('Dashboard', () => {
     expect(mockPortfolioService.loadPortfolio).toHaveBeenCalled();
     expect(mockWalletService.loadWallet).toHaveBeenCalled();
     expect(mockTradingAccountService.loadTradingAccount).toHaveBeenCalled();
+    expect(mockOrderService.loadOrders).toHaveBeenCalled();
   });
 
   it('should compute summary metrics correctly', () => {
@@ -126,5 +139,13 @@ describe('Dashboard', () => {
     expect(othersSlice).toBeTruthy();
     expect(othersSlice?.value).toBe(800);
     expect(othersSlice?.label).toBe('Other Assets');
+  });
+
+  it('should compute orders data correctly', () => {
+    const mockOrders = [{ orderId: '123', symbol: 'TSLA' }];
+    mockOrderSignal.set(mockOrders);
+    fixture.detectChanges();
+
+    expect(component.ordersData()).toEqual(mockOrders);
   });
 });

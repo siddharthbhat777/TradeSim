@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -111,7 +116,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .pagination {
     &__range {
       display: none;
@@ -119,7 +124,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@container (max-width: 480px) {
   .pagination {
     flex-wrap: nowrap;
     justify-content: center;

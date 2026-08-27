@@ -19,6 +19,7 @@ import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.orderbook.MatchResult;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
+import com.siddharth.tradesim_backend.order.repository.FillRepository;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
@@ -88,6 +89,7 @@ class OrderServiceTest {
         marketStateService = mock(MarketStateService.class);
         forexService = mock(ForexService.class);
         FxFeeService fxFeeService = mock(FxFeeService.class);
+        FillRepository fillRepository = mock(FillRepository.class);
 
         orderService = new OrderService(
                 authRepository,
@@ -105,7 +107,8 @@ class OrderServiceTest {
                 orderLifecycleService,
                 marketStateService,
                 forexService,
-                fxFeeService
+                fxFeeService,
+                fillRepository
         );
 
         userId = UUID.randomUUID();

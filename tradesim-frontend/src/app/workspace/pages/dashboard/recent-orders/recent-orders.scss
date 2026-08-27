@@ -1,0 +1,80 @@
+.recent-orders {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 16px 0;
+  }
+
+  &__title {
+    margin: 0;
+  }
+
+  &__content {
+    width: 100%;
+  }
+
+  &__date {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+  }
+
+  &__symbol {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__type {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  &__qty {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__market-price {
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+
+    &--buy {
+      background: color-mix(in srgb, var(--success) 15%, transparent);
+      color: var(--success);
+    }
+
+    &--sell {
+      background: color-mix(in srgb, var(--danger) 15%, transparent);
+      color: var(--danger);
+    }
+  }
+
+  &__status {
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &--open {
+      color: var(--primary);
+    }
+
+    &--partially-filled {
+      color: var(--warning);
+    }
+
+    &--filled {
+      color: var(--success);
+    }
+
+    &--cancelled {
+      color: var(--text-muted);
+    }
+  }
+}

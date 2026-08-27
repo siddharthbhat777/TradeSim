@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { PortfolioService } from '../../../services/portfolio/portfolio-service';
 import { WalletService } from '../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
@@ -6,11 +6,12 @@ import { OrderService } from '../../../services/order/order-service';
 import { Summary } from './summary/summary';
 import { Allocation } from './allocation/allocation';
 import { HoldingsTable } from './holdings-table/holdings-table';
+import { RecentOrders } from './recent-orders/recent-orders';
 import { PieChartData } from '../../../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [Summary, Allocation, HoldingsTable],
+  imports: [Summary, Allocation, HoldingsTable, RecentOrders],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -88,12 +89,6 @@ export class Dashboard implements OnInit {
 
     return data.sort((a, b) => b.value - a.value);
   });
-
-  constructor() {
-    effect(() => {
-      console.log('Fetched User Orders:', this.ordersData());
-    });
-  }
 
   ngOnInit(): void {
     this.portfolioService.loadPortfolio();

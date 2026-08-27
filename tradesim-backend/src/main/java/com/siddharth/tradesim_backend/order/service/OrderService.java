@@ -16,6 +16,7 @@ import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.OrderException;
+import com.siddharth.tradesim_backend.order.model.Fill;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.model.dto.OrderHistoryResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
@@ -24,6 +25,7 @@ import com.siddharth.tradesim_backend.order.orderbook.MatchResult;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
+import com.siddharth.tradesim_backend.order.repository.FillRepository;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.PositionException;
@@ -77,6 +79,7 @@ public class OrderService {
     private final MarketStateService marketStateService;
     private final ForexService forexService;
     private final FxFeeService fxFeeService;
+    private final FillRepository fillRepository;
 
     @Transactional(readOnly = true)
     public List<OrderHistoryResponse> fetchUserOrders(UUID userId) {
@@ -89,10 +92,22 @@ public class OrderService {
         Map<UUID, Stock> stockMap = stockRepository.findAllById(stockIds).stream()
                 .collect(Collectors.toMap(Stock::getId, s -> s));
 
+        List<UUID> orderIds = orders.stream().map(Order::getId).toList();
+        List<Fill> fills = fillRepository.findFillsByOrderIds(orderIds);
+
         return orders.stream().map(order -> {
             Stock stock = stockMap.get(order.getStockId());
             String symbol = stock != null ? stock.getSymbol() : "UNKNOWN";
-            int filledQuantity = order.getQuantity() - order.getRemainingQuantity();
+
+            int filledQuantity;
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                filledQuantity = fills.stream()
+                        .filter(f -> f.getBuyOrderId().equals(order.getId()) || f.getSellOrderId().equals(order.getId()))
+                        .mapToInt(Fill::getQuantity)
+                        .sum();
+            } else {
+                filledQuantity = order.getQuantity() - order.getRemainingQuantity();
+            }
 
             return new OrderHistoryResponse(
                     order.getId(),
