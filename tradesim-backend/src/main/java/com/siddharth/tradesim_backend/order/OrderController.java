@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.order;
 
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.order.model.dto.OrderHistoryResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.service.OrderService;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -19,6 +21,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<OrderHistoryResponse>> getMyOrders(@AuthenticationPrincipal UserPrincipal user) {
+        return ResponseEntity.ok(orderService.fetchUserOrders(user.getUserId()));
+    }
 
     @PostMapping("create")
     @PreAuthorize("hasRole('USER')")

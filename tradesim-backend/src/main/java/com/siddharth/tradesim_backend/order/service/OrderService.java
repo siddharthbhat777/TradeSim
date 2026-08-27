@@ -17,6 +17,7 @@ import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.OrderException;
 import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.model.dto.OrderHistoryResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.orderbook.MatchResult;
@@ -49,8 +50,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +77,37 @@ public class OrderService {
     private final MarketStateService marketStateService;
     private final ForexService forexService;
     private final FxFeeService fxFeeService;
+
+    @Transactional(readOnly = true)
+    public List<OrderHistoryResponse> fetchUserOrders(UUID userId) {
+        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        if (orders.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> stockIds = orders.stream().map(Order::getStockId).distinct().toList();
+        Map<UUID, Stock> stockMap = stockRepository.findAllById(stockIds).stream()
+                .collect(Collectors.toMap(Stock::getId, s -> s));
+
+        return orders.stream().map(order -> {
+            Stock stock = stockMap.get(order.getStockId());
+            String symbol = stock != null ? stock.getSymbol() : "UNKNOWN";
+            int filledQuantity = order.getQuantity() - order.getRemainingQuantity();
+
+            return new OrderHistoryResponse(
+                    order.getId(),
+                    order.getStockId(),
+                    symbol,
+                    order.getSide(),
+                    order.getOrderType(),
+                    order.getQuantity(),
+                    filledQuantity,
+                    order.getLimitPrice(),
+                    order.getStatus(),
+                    order.getCreatedAt()
+            );
+        }).toList();
+    }
 
     @Transactional
     public OrderResponse createOrder(UUID userId, @Valid OrderRequest request) {
