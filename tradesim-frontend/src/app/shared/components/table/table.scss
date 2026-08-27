@@ -1,11 +1,17 @@
 .table-wrapper {
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: transparent;
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: visible;
   position: relative;
+}
+
+.table-wrapper > app-empty-state {
+  background: var(--surface);
+  border-radius: 15px;
+  display: block;
 }
 
 .table__content-wrapper {
@@ -13,6 +19,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  background: var(--surface);
+  border-radius: 15px;
 }
 
 .table__overlay {
@@ -41,6 +49,14 @@
   justify-content: center;
   padding: 4rem;
   cursor: wait;
+  background: var(--surface);
+  border-radius: 15px;
+}
+
+.table__scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -48,6 +64,11 @@
   border-collapse: separate;
   border-spacing: 0;
   background: var(--surface);
+
+  th,
+  td {
+    white-space: nowrap;
+  }
 
   th {
     background: var(--surface-secondary);
@@ -113,4 +134,40 @@
 .table--large .table td {
   padding: 18px 20px;
   font-size: 1rem;
+}
+
+.table-wrapper.table--flush {
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+
+  .table__content-wrapper,
+  .table,
+  .table th,
+  .table td,
+  .table__pagination,
+  .table__loading-empty,
+  app-empty-state {
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+
+  .table tbody tr:hover {
+    background: color-mix(in srgb, var(--text-primary) 8%, transparent) !important;
+  }
+
+  .table th {
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .table th:first-child,
+  .table th:last-child {
+    border-radius: 0 !important;
+  }
+
+  .table__pagination {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }

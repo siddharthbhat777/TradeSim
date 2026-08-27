@@ -1,0 +1,14 @@
+.holdings {
+  &__title {
+    margin: 0 0 16px 0;
+  }
+
+  &__content {
+    width: 100%;
+  }
+
+  &__symbol {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}

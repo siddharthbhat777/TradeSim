@@ -118,3 +118,25 @@
     }
   }
 }
+
+@media (max-width: 480px) {
+  .pagination {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 0.5rem;
+
+    &__page-size {
+      &--small {
+        width: 5.5rem;
+      }
+
+      &--medium {
+        width: 6rem;
+      }
+
+      &--large {
+        width: 6.5rem;
+      }
+    }
+  }
+}

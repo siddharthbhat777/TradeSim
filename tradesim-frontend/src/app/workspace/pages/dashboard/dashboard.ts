@@ -4,11 +4,12 @@ import { WalletService } from '../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { Summary } from './summary/summary';
 import { Allocation } from './allocation/allocation';
+import { HoldingsTable } from './holdings-table/holdings-table';
 import { PieChartData } from '../../../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [Summary, Allocation],
+  imports: [Summary, Allocation, HoldingsTable],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -31,6 +32,8 @@ export class Dashboard implements OnInit {
     const baseBucket = buckets.find(b => b.currency === baseCurrency);
     return baseBucket ? baseBucket.availableBalance : 0;
   });
+
+  public holdingsData = computed(() => this.portfolioService.portfolio()?.holdings ?? []);
 
   public allocationData = computed<PieChartData[]>(() => {
     const portfolio = this.portfolioService.portfolio();

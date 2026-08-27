@@ -28,6 +28,8 @@ export interface TableCellContext<T> {
   row: T;
 }
 
+export type TableVariant = 'default' | 'flush';
+
 @Directive({
   selector: 'ng-template[tableCell]'
 })
@@ -48,10 +50,14 @@ export class Table<T = unknown> {
   readonly data = input.required<T[]>();
   readonly rowKey = input<(row: T) => unknown>();
 
+  readonly variant = input<TableVariant>('default');
   readonly paginated = input(true, { transform: booleanAttribute });
   readonly isLoading = input(false, { transform: booleanAttribute });
   readonly pageSizeOptions = input<number[]>([10, 25, 50, 100]);
   readonly size = input<PaginationSize>('medium');
+
+  readonly paginationLabelSuffix = input<string>(' per page');
+  readonly paginationMobileLabelSuffix = input<string>(' / pg');
 
   readonly currentPage = model(1);
   readonly pageSize = model(10);
