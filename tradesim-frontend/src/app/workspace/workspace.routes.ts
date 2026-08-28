@@ -17,9 +17,9 @@ export const workspaceRoutes: Routes = [
                 title: 'Dashboard'
             },
             {
-                path: 'stock',
-                loadComponent: () => import('./pages/stock/stock').then((module) => module.Stock),
-                title: 'Stock Details'
+                path: 'market',
+                loadComponent: () => import('./pages/market/market').then((module) => module.Market),
+                title: 'Market'
             },
             {
                 path: 'portfolio',

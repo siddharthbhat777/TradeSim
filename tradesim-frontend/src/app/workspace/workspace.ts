@@ -13,7 +13,7 @@ export interface NavItem {
 
 const USER_MENU: NavItem[] = [
   { label: 'Dashboard', route: 'dashboard', icon: 'layout-dashboard' },
-  { label: 'Stock Details', route: 'stock', icon: 'line-chart' },
+  { label: 'Market', route: 'market', icon: 'line-chart' },
   { label: 'Portfolio', route: 'portfolio', icon: 'pie-chart' },
   { label: 'Position', route: 'position', icon: 'briefcase' },
   { label: 'IPO Center', route: 'ipo', icon: 'landmark' },
