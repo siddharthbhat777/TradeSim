@@ -6,6 +6,7 @@ import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.market_index.MarketIndexService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,9 @@ class MarketStateServiceTest {
 
     @Mock
     private ExchangeService exchangeService;
+
+    @Mock
+    private MarketIndexService marketIndexService;
 
     @InjectMocks
     private MarketStateService marketStateService;
@@ -130,6 +134,7 @@ class MarketStateServiceTest {
         assertThat(stock.getLastTradedPrice()).isEqualByComparingTo("100");
         assertThat(stock.getTotalVolume()).isEqualTo(10L);
         verify(stockRepository).save(stock);
+        verify(marketIndexService).updateIndicesForStock(stockId);
     }
 
     @Test
@@ -155,6 +160,7 @@ class MarketStateServiceTest {
         assertThat(stock.getDayVolume()).isEqualTo(25L);
         assertThat(stock.getTotalVolume()).isEqualTo(55L);
         verify(stockRepository).save(stock);
+        verify(marketIndexService).updateIndicesForStock(stockId);
     }
 
     @Test

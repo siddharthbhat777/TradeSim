@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.stock.service;
 
+import com.siddharth.tradesim_backend.market_index.MarketIndexService;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookEntry;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
@@ -23,6 +24,7 @@ public class MarketStateService {
     private final StockRepository stockRepository;
     private final OrderBookManager orderBookManager;
     private final ExchangeService exchangeService;
+    private final MarketIndexService marketIndexService;
 
     @Transactional
     public void recordTrade(UUID stockId, BigDecimal executionPrice, int quantity) {
@@ -50,6 +52,8 @@ public class MarketStateService {
         stock.setLastTradedPrice(executionPrice);
         stock.setTotalVolume((stock.getTotalVolume() == null ? 0 : stock.getTotalVolume()) + quantity);
         stockRepository.save(stock);
+
+        marketIndexService.updateIndicesForStock(stockId);
     }
 
     @Transactional(readOnly = true)
