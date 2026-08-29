@@ -29,6 +29,7 @@ import { PieChartContainer } from '../shared/components/charts/pie-chart-contain
 import { TimeAgoPipe } from '../shared/pipes/time-ago-pipe';
 import { CandlestickChart, CandlestickData } from '../shared/components/charts/candlestick-chart/candlestick-chart';
 import { AreaChart, AreaChartData } from '../shared/components/charts/area-chart/area-chart';
+import { Slider } from '../shared/components/slider/slider';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -39,7 +40,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-design-system',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart, Slider],
   templateUrl: './design-system.html',
   styleUrls: ['./design-system.scss']
 })
@@ -138,7 +139,8 @@ export class DesignSystem implements OnInit, OnDestroy {
         { id: 'toggle', name: 'Toggle' },
         { id: 'dropdown', name: 'Dropdown' },
         { id: 'segmented-control', name: 'Segmented Control' },
-        { id: 'number-stepper', name: 'Number Stepper' }
+        { id: 'number-stepper', name: 'Number Stepper' },
+        { id: 'slider', name: 'Slider' }
       ]
     },
     {
@@ -298,6 +300,9 @@ export class DesignSystem implements OnInit, OnDestroy {
   stepperLimited = 5;
   stepperLarge = 10;
   stepperMixed = 0;
+
+  singleSliderValue = 50;
+  rangeSliderValue: [number, number] = [20, 80];
 
   protected pagTotalItems = signal(87);
   protected pagCurrentPage = signal(1);

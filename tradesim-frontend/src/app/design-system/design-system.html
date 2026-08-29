@@ -1322,6 +1322,101 @@
             </div>
         </section>
 
+        <section id="slider" class="doc-section">
+            <div class="section-header">
+                <h2>Slider</h2>
+                <p>A highly customizable slider component supporting both single values and dual-thumb ranges.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 3rem; width: 100%; max-width: 400px;">
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 600; font-size: 0.9rem;">Single Value</span>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">{{ singleSliderValue
+                                    }}</span>
+                            </div>
+                            <app-slider [min]="0" [max]="100" [(ngModel)]="singleSliderValue"></app-slider>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 600; font-size: 0.9rem;">Price Range</span>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                    ${{ rangeSliderValue[0] }} - ${{ rangeSliderValue[1] }}
+                                </span>
+                            </div>
+                            <app-slider [range]="true" [min]="0" [max]="500" [step]="5"
+                                [(ngModel)]="rangeSliderValue"></app-slider>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Slider snippet copied')">Copy</button>
+                            <pre
+                                ngNonBindable><code>&lt;app-slider [min]="0" [max]="100" [(ngModel)]="value"&gt;&lt;/app-slider&gt;
+
+&lt;app-slider [range]="true" [min]="0" [max]="500" [step]="5" [(ngModel)]="rangeArray"&gt;&lt;/app-slider&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Slider Properties <code>&lt;app-slider&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[min]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>0</code></td>
+                                    <td>The minimum allowed value for the slider.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[max]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>100</code></td>
+                                    <td>The maximum allowed value for the slider.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[step]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>1</code></td>
+                                    <td>The granularity of the slider steps.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[range]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, renders a dual-thumb slider and expects an array of two numbers for the
+                                        value.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[(ngModel)]</code></td>
+                                    <td><code>number | [number, number]</code></td>
+                                    <td><code>0</code></td>
+                                    <td>Two-way binds the selected value. Uses an array if range is true.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="alert" class="doc-section">
             <div class="section-header">
                 <h2>Alert</h2>
@@ -2874,7 +2969,8 @@ this.dialogService.open(&#123;
                                     <td><code>AreaChartData[]</code></td>
                                     <td><span style="color: var(--danger);">Required</span></td>
                                     <td>Array of objects containing <code>time</code> and a single numeric
-                                        <code>value</code>.</td>
+                                        <code>value</code>.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>[width]</code></td>
