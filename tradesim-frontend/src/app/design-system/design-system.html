@@ -2147,6 +2147,110 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="drawer" class="doc-section">
+            <div class="section-header">
+                <h2>Drawer</h2>
+                <p>A highly flexible off-canvas panel that slides in from any screen edge. Ideal for mobile navigation,
+                    complex filters, and contextual forms.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <app-button variant="outline" (click)="openDrawer('left')">Open Left</app-button>
+                        <app-button variant="primary" (click)="openDrawer('right')">Open Right</app-button>
+                        <app-button variant="secondary" (click)="openDrawer('top')">Open Top</app-button>
+                        <app-button variant="warning" (click)="openDrawer('bottom')">Open Bottom</app-button>
+                    </div>
+
+                    <app-drawer [(isOpen)]="drawerOpen" [position]="drawerPosition()">
+                        <div style="padding: 2rem 1.5rem;">
+                            <h3 style="margin-top: 0; font-size: 1.5rem; color: var(--text-primary);">Drawer Content
+                            </h3>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">
+                                This is a highly flexible drawer. It automatically locks the background scroll,
+                                traps focus appropriately, and supports rendering from the {{ drawerPosition() }} edge.
+                            </p>
+
+                            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                                <app-input label="Example Field">
+                                    <input appInput type="text" placeholder="Type something..." />
+                                </app-input>
+                                <app-button variant="primary" width="100%" (click)="drawerOpen.set(false)">Confirm &
+                                    Close</app-button>
+                            </div>
+                        </div>
+                    </app-drawer>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Drawer snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;app-button (click)="isOpen.set(true)"&gt;Open Drawer&lt;/app-button&gt;
+
+&lt;app-drawer [(isOpen)]="isOpen" position="right"&gt;
+  &lt;div style="padding: 2rem;"&gt;
+    &lt;h3&gt;Filters&lt;/h3&gt;
+    &lt;!-- Your content here --&gt;
+  &lt;/div&gt;
+&lt;/app-drawer&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Properties <code>&lt;app-drawer&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[(isOpen)]</code></td>
+                                    <td><code>ModelSignal&lt;boolean&gt;</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Two-way binds the visibility state of the drawer.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[position]</code></td>
+                                    <td><code>'left' | 'right' | 'top' | 'bottom'</code></td>
+                                    <td><code>'right'</code></td>
+                                    <td>The edge of the screen the drawer slides out from.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[closeOnBackdrop]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>If true, clicking the dark overlay will close the drawer.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[hideCloseButton]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, hides the default circular close button in the top right.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(closed)</code></td>
+                                    <td><code>EventEmitter&lt;void&gt;</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Emitted whenever the drawer is dismissed (via button, backdrop, or escape key).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="table" class="doc-section">
             <div class="section-header">
                 <h2>Data Table</h2>

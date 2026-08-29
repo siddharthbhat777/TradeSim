@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { Logo } from '../shared/components/logo/logo';
 import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { AuthService } from '../services/auth/auth-service';
 import { DialogService } from '../shared/components/dialog/dialog.service';
+import { Drawer } from '../shared/components/drawer/drawer';
 
 export interface NavItem {
   label: string;
@@ -23,7 +25,7 @@ const USER_MENU: NavItem[] = [
 
 @Component({
   selector: 'app-workspace',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Logo, Tooltip],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Logo, Tooltip, Drawer, NgTemplateOutlet],
   templateUrl: './workspace.html',
   styleUrl: './workspace.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

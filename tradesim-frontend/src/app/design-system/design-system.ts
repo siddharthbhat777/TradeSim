@@ -30,6 +30,7 @@ import { TimeAgoPipe } from '../shared/pipes/time-ago-pipe';
 import { CandlestickChart, CandlestickData } from '../shared/components/charts/candlestick-chart/candlestick-chart';
 import { AreaChart, AreaChartData } from '../shared/components/charts/area-chart/area-chart';
 import { Slider } from '../shared/components/slider/slider';
+import { Drawer, DrawerPosition } from '../shared/components/drawer/drawer';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -40,7 +41,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-design-system',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart, Slider],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart, Slider, Drawer],
   templateUrl: './design-system.html',
   styleUrls: ['./design-system.scss']
 })
@@ -156,7 +157,8 @@ export class DesignSystem implements OnInit, OnDestroy {
       title: 'Overlays & Popups',
       items: [
         { id: 'dialog', name: 'Dialog' },
-        { id: 'tooltip', name: 'Tooltip' }
+        { id: 'tooltip', name: 'Tooltip' },
+        { id: 'drawer', name: 'Drawer' }
       ]
     },
     {
@@ -303,6 +305,9 @@ export class DesignSystem implements OnInit, OnDestroy {
 
   singleSliderValue = 50;
   rangeSliderValue: [number, number] = [20, 80];
+
+  drawerOpen = signal(false);
+  drawerPosition = signal<DrawerPosition>('right');
 
   protected pagTotalItems = signal(87);
   protected pagCurrentPage = signal(1);
@@ -468,5 +473,10 @@ export class DesignSystem implements OnInit, OnDestroy {
       primaryLabel: 'Log In',
       isBlocking: true
     });
+  }
+
+  openDrawer(pos: DrawerPosition) {
+    this.drawerPosition.set(pos);
+    this.drawerOpen.set(true);
   }
 }

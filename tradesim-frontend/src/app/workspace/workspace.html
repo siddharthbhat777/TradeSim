@@ -14,20 +14,7 @@
         </div>
     </header>
 
-    @if (isMobileMenuOpen()) {
-    <div class="workspace__backdrop" (click)="closeMobileMenu()"></div>
-    }
-
-    <aside class="workspace__sidebar" [class.workspace__sidebar--collapsed]="isCollapsed()"
-        [class.workspace__sidebar--mobile-open]="isMobileMenuOpen()">
-
-        <button class="workspace__collapse-icon" (click)="toggleCollapse()" aria-label="Toggle Sidebar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" [style.transform]="isCollapsed() ? 'rotate(180deg)' : 'none'">
-                <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-        </button>
-
+    <ng-template #sidebarContent>
         <div class="workspace__brand">
             <div class="workspace__brand-logo">
                 <app-logo size="small" [showText]="true"></app-logo>
@@ -134,7 +121,24 @@
                 <span class="workspace__nav-label">Logout</span>
             </button>
         </div>
+    </ng-template>
+
+    <aside class="workspace__sidebar" [class.workspace__sidebar--collapsed]="isCollapsed()">
+        <button class="workspace__collapse-icon" (click)="toggleCollapse()" aria-label="Toggle Sidebar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" [style.transform]="isCollapsed() ? 'rotate(180deg)' : 'none'">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+
+        <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
     </aside>
+
+    <app-drawer [(isOpen)]="isMobileMenuOpen" position="left" [hideCloseButton]="true" [closeOnBackdrop]="true">
+        <div class="workspace__mobile-sidebar-content">
+            <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
+        </div>
+    </app-drawer>
 
     <main class="workspace__main">
         <div class="workspace__content">
