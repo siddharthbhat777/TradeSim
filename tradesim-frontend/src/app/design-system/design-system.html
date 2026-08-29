@@ -2734,6 +2734,96 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="candlestick-chart" class="doc-section">
+            <div class="section-header">
+                <h2>Candlestick Chart</h2>
+                <p>A high-performance, native SVG candlestick chart built for displaying OHLC (Open, High, Low, Close)
+                    financial data with interactive crosshairs and tooltips.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); width: 100%; display: flex; justify-content: center; overflow-x: auto;">
+                        <app-candlestick-chart [data]="candlestickDemoData()" [width]="800" [height]="400"
+                            currency="USD">
+                        </app-candlestick-chart>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Candlestick snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Basic Usage --&gt;
+&lt;app-candlestick-chart 
+  [data]="ohlcData()" 
+  [width]="800" 
+  [height]="400" 
+  currency="USD"&gt;
+&lt;/app-candlestick-chart&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Candlestick Chart Properties <code>&lt;app-candlestick-chart&gt;</code>
+                    </h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>CandlestickData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of OHLC objects (time, open, high, low, close).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[width]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>800</code></td>
+                                    <td>The width of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[height]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>400</code></td>
+                                    <td>The height of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[padding]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>20</code></td>
+                                    <td>Internal padding to prevent extreme highs/lows from touching the edges.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[candleWidth]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>8</code></td>
+                                    <td>The visual width of the rectangle body of each candle.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[currency]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>Currency code used for formatting the prices in the interactive tooltip.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="time-ago" class="doc-section">
             <div class="section-header">
                 <h2>Time Ago Pipe</h2>

@@ -1,0 +1,96 @@
+<div class="candlestick-wrapper" [class.is-fullscreen]="isFullScreen()"
+    [style.width.px]="isFullScreen() ? null : width()" [style.height.px]="isFullScreen() ? null : height()">
+
+    <div class="chart-toolbar">
+        <button type="button" class="toolbar-btn" (click)="toggleFullScreen()">
+            @if (isFullScreen()) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2-2v3">
+                </path>
+            </svg>
+            } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                </path>
+            </svg>
+            }
+        </button>
+    </div>
+
+    <div class="chart-body" #chartBody>
+        <div class="y-axis-overlay">
+            @for (tick of yAxisTicks(); track tick.value) {
+            <div class="axis-text-html" [style.top.px]="tick.y">{{ tick.value | number:'1.0-2' }}</div>
+            }
+        </div>
+
+        <svg class="candlestick-svg" [attr.width]="currentSvgWidth()" [attr.height]="currentSvgHeight()"
+            [attr.viewBox]="viewBox()" (mouseleave)="onMouseLeave()">
+
+            @for (tick of yAxisTicks(); track tick.value) {
+            <line class="grid-line" x1="0" [attr.x2]="currentSvgWidth() - 60" [attr.y1]="tick.y" [attr.y2]="tick.y">
+            </line>
+            }
+
+            @for (tick of xAxisTicks(); track tick.x) {
+            <text class="axis-text text-center" [attr.x]="tick.x" [attr.y]="currentSvgHeight() - 8">{{ tick.label |
+                date:'MMM dd' }}</text>
+            }
+
+            @if (hoveredCandle(); as active) {
+            <line class="crosshair" [attr.x1]="active.x" [attr.x2]="active.x" y1="0"
+                [attr.y2]="currentSvgHeight() - 30"></line>
+            <line class="crosshair" x1="0" [attr.x2]="currentSvgWidth() - 60" [attr.y1]="active.bodyY"
+                [attr.y2]="active.bodyY"></line>
+            }
+
+            @for (candle of renderedCandles(); track candle.data.time) {
+            <g class="candle-group" (mousemove)="onMouseMove($event, candle)">
+
+                <line class="candle-wick" [class.bullish]="candle.isBullish" [class.bearish]="!candle.isBullish"
+                    [attr.x1]="candle.x" [attr.x2]="candle.x" [attr.y1]="candle.yHigh" [attr.y2]="candle.topWickY2">
+                </line>
+
+                <line class="candle-wick" [class.bullish]="candle.isBullish" [class.bearish]="!candle.isBullish"
+                    [attr.x1]="candle.x" [attr.x2]="candle.x" [attr.y1]="candle.bottomWickY1" [attr.y2]="candle.yLow">
+                </line>
+
+                <rect class="candle-body" [class.bullish]="candle.isBullish" [class.bearish]="!candle.isBullish"
+                    [class.is-hovered]="hoveredCandle()?.data?.time === candle.data.time"
+                    [attr.x]="candle.x - (candleWidth() / 2)" [attr.y]="candle.bodyY" [attr.width]="candleWidth()"
+                    [attr.height]="candle.bodyHeight">
+                </rect>
+
+                <rect class="hover-target" [attr.x]="candle.x - (candleWidth() * 1.5)" y="0"
+                    [attr.width]="candleWidth() * 3" [attr.height]="currentSvgHeight()">
+                </rect>
+            </g>
+            }
+        </svg>
+    </div>
+
+    <div class="chart-footer">
+        <app-segmented-control [options]="timeframeOptions" [ngModel]="selectedTimeframe()"
+            (ngModelChange)="selectedTimeframe.set($event)" size="small" [fullWidth]="true">
+        </app-segmented-control>
+    </div>
+
+    @if (hoveredCandle(); as active) {
+    <div class="chart-tooltip" [style.left.px]="tooltipX()" [style.top.px]="tooltipY()">
+        <div class="tooltip-header">{{ active.data.time | date:'MMM dd, yyyy - HH:mm' }}</div>
+        <div class="tooltip-grid">
+            <span class="label">O:</span> <span class="value">{{ active.data.open | currency:currency():'symbol':'1.2-2'
+                }}</span>
+            <span class="label">H:</span> <span class="value">{{ active.data.high | currency:currency():'symbol':'1.2-2'
+                }}</span>
+            <span class="label">L:</span> <span class="value">{{ active.data.low | currency:currency():'symbol':'1.2-2'
+                }}</span>
+            <span class="label">C:</span> <span class="value" [class.bullish-text]="active.isBullish"
+                [class.bearish-text]="!active.isBullish">{{ active.data.close | currency:currency():'symbol':'1.2-2'
+                }}</span>
+        </div>
+    </div>
+    }
+</div>

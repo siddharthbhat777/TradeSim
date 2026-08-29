@@ -1,0 +1,222 @@
+.candlestick-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  max-width: 100%;
+
+  &.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw !important;
+    height: 100dvh !important;
+    z-index: 99999;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+.chart-toolbar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: var(--border);
+  }
+}
+
+.chart-body {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+}
+
+.chart-footer {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-secondary);
+  flex-shrink: 0;
+}
+
+.y-axis-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 100%;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.axis-text-html {
+  position: absolute;
+  right: 12px;
+  text-align: right;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  user-select: none;
+}
+
+.candlestick-svg {
+  display: block;
+}
+
+.grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  opacity: 0.6;
+}
+
+.axis-text {
+  fill: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  pointer-events: none;
+  user-select: none;
+
+  &.text-center {
+    text-anchor: middle;
+  }
+}
+
+.crosshair {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.candle-group {
+  cursor: crosshair;
+}
+
+.hover-target {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.candle-wick {
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+
+  &.bullish {
+    stroke: var(--success);
+  }
+
+  &.bearish {
+    stroke: var(--danger);
+  }
+}
+
+.candle-body {
+  stroke-width: 1px;
+  fill: transparent;
+  transition: fill 0.15s ease;
+
+  &.bullish {
+    stroke: var(--success);
+  }
+
+  &.bearish {
+    stroke: var(--danger);
+  }
+
+  &.bullish.is-hovered {
+    fill: var(--success);
+  }
+
+  &.bearish.is-hovered {
+    fill: var(--danger);
+  }
+}
+
+.chart-tooltip {
+  position: fixed;
+  z-index: 999999;
+  pointer-events: none;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  min-width: 160px;
+  animation: tooltipFade 0.15s ease-out;
+
+  .tooltip-header {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  .tooltip-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    font-size: 0.85rem;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+
+    .label {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .value {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .bullish-text {
+      color: var(--success);
+    }
+
+    .bearish-text {
+      color: var(--danger);
+    }
+  }
+}
+
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
