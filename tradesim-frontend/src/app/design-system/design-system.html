@@ -2824,6 +2824,83 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="area-chart" class="doc-section">
+            <div class="section-header">
+                <h2>Area Chart</h2>
+                <p>A native SVG area chart with a gradient fill, perfect for displaying portfolio history or
+                    single-metric performance over time.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); width: 100%; display: flex; justify-content: center; overflow-x: auto;">
+                        <app-area-chart [data]="areaDemoData()" [width]="800" [height]="400" currency="USD">
+                        </app-area-chart>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Area chart snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Basic Usage --&gt;
+&lt;app-area-chart 
+  [data]="portfolioHistory()" 
+  [width]="800" 
+  [height]="400" 
+  currency="USD"&gt;
+&lt;/app-area-chart&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Area Chart Properties <code>&lt;app-area-chart&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>AreaChartData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of objects containing <code>time</code> and a single numeric
+                                        <code>value</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[width]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>800</code></td>
+                                    <td>The width of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[height]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>400</code></td>
+                                    <td>The height of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[currency]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>Currency code used for formatting the prices in the tooltip.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="time-ago" class="doc-section">
             <div class="section-header">
                 <h2>Time Ago Pipe</h2>

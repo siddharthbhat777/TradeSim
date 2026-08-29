@@ -1,0 +1,86 @@
+<div class="area-wrapper" [class.is-fullscreen]="isFullScreen()" [style.width.px]="isFullScreen() ? null : width()"
+    [style.height.px]="isFullScreen() ? null : height()">
+
+    <div class="chart-toolbar">
+        <button type="button" class="toolbar-btn" (click)="toggleFullScreen()">
+            @if (isFullScreen()) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            }
+        </button>
+    </div>
+
+    <div class="chart-body" #chartBody>
+        <div class="y-axis-overlay">
+            @for (tick of yAxisTicks(); track tick.value) {
+            <div class="axis-text-html" [style.top.px]="tick.y">{{ tick.value | number:'1.0-2' }}</div>
+            }
+        </div>
+
+        <svg class="area-svg" [attr.width]="currentSvgWidth()" [attr.height]="currentSvgHeight()"
+            [attr.viewBox]="viewBox()" (mouseleave)="onMouseLeave()">
+
+            <defs>
+                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.35" />
+                    <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.0" />
+                </linearGradient>
+            </defs>
+
+            @for (tick of yAxisTicks(); track tick.value) {
+            <line class="grid-line" x1="0" [attr.x2]="currentSvgWidth() - 85" [attr.y1]="tick.y" [attr.y2]="tick.y">
+            </line>
+            }
+
+            @for (tick of xAxisTicks(); track tick.x) {
+            <text class="axis-text text-center" [attr.x]="tick.x" [attr.y]="currentSvgHeight() - 8">{{ tick.label |
+                date:'MMM dd' }}</text>
+            }
+
+            <path class="area-fill" [attr.d]="pathStrings().area" fill="url(#areaGradient)"></path>
+
+            <path class="area-line" [attr.d]="pathStrings().line"></path>
+
+            @if (hoveredPoint(); as active) {
+            <line class="crosshair" [attr.x1]="active.x" [attr.x2]="active.x" y1="0"
+                [attr.y2]="currentSvgHeight() - 30"></line>
+            <line class="crosshair" x1="0" [attr.x2]="currentSvgWidth() - 85" [attr.y1]="active.y" [attr.y2]="active.y">
+            </line>
+            <circle class="hover-dot" [attr.cx]="active.x" [attr.cy]="active.y" r="5"></circle>
+            }
+
+            @for (point of renderedPoints(); track point.data.time) {
+            <rect class="hover-target" [attr.x]="point.x - (hoverHitboxWidth() / 2)" y="0"
+                [attr.width]="hoverHitboxWidth()" [attr.height]="currentSvgHeight()"
+                (mousemove)="onMouseMove($event, point)">
+            </rect>
+            }
+        </svg>
+    </div>
+
+    <div class="chart-footer">
+        <app-segmented-control [options]="timeframeOptions" [ngModel]="selectedTimeframe()"
+            (ngModelChange)="selectedTimeframe.set($event)" size="small" [fullWidth]="true">
+        </app-segmented-control>
+    </div>
+
+    @if (hoveredPoint(); as active) {
+    <div class="chart-tooltip" [style.left.px]="tooltipX()" [style.top.px]="tooltipY()">
+        <div class="tooltip-header">{{ active.data.time | date:'MMM dd, yyyy - HH:mm' }}</div>
+        <div class="tooltip-value">{{ active.data.value | currency:currency():'symbol':'1.2-2' }}</div>
+    </div>
+    }
+</div>

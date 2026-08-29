@@ -28,6 +28,7 @@ import { Legend } from '../shared/components/charts/legend/legend';
 import { PieChartContainer } from '../shared/components/charts/pie-chart-container/pie-chart-container';
 import { TimeAgoPipe } from '../shared/pipes/time-ago-pipe';
 import { CandlestickChart, CandlestickData } from '../shared/components/charts/candlestick-chart/candlestick-chart';
+import { AreaChart, AreaChartData } from '../shared/components/charts/area-chart/area-chart';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -38,7 +39,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-design-system',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart],
   templateUrl: './design-system.html',
   styleUrls: ['./design-system.scss']
 })
@@ -170,7 +171,8 @@ export class DesignSystem implements OnInit, OnDestroy {
         { id: 'pie-chart', name: 'Pie Chart' },
         { id: 'legend', name: 'Legend' },
         { id: 'pie-chart-container', name: 'Pie Chart Container' },
-        { id: 'candlestick-chart', name: 'Candlestick Chart' }
+        { id: 'candlestick-chart', name: 'Candlestick Chart' },
+        { id: 'area-chart', name: 'Area Chart' }
       ]
     },
     {
@@ -337,6 +339,18 @@ export class DesignSystem implements OnInit, OnDestroy {
         high: base + Math.random() * 5 + 2,
         low: base - Math.random() * 5 - 2,
         close: base + (Math.random() * 6 - 3)
+      };
+    })
+  );
+
+  protected areaDemoData = signal<AreaChartData[]>(
+    Array.from({ length: 100 }).map((_, i) => {
+      const date = new Date('2026-01-01T09:15:00');
+      date.setDate(date.getDate() + i);
+      const base = 50000 + Math.sin(i * 0.1) * 5000 + (i * 200);
+      return {
+        time: date,
+        value: base + (Math.random() * 1000 - 500)
       };
     })
   );

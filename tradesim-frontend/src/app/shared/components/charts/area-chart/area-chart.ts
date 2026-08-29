@@ -3,24 +3,15 @@ import { CurrencyPipe, DatePipe, DecimalPipe, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SegmentedControl, SegmentOption } from '../../segmented-control/segmented-control';
 
-export interface CandlestickData {
+export interface AreaChartData {
   time: number | string | Date;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
+  value: number;
 }
 
-export interface RenderedCandle {
-  data: CandlestickData;
+export interface RenderedPoint {
+  data: AreaChartData;
   x: number;
-  yHigh: number;
-  yLow: number;
-  topWickY2: number;
-  bottomWickY1: number;
-  bodyY: number;
-  bodyHeight: number;
-  isBullish: boolean;
+  y: number;
 }
 
 export interface AxisTick {
@@ -34,23 +25,22 @@ export interface XAxisTick {
 }
 
 @Component({
-  selector: 'app-candlestick-chart',
+  selector: 'app-area-chart',
   imports: [DatePipe, CurrencyPipe, DecimalPipe, FormsModule, SegmentedControl],
-  templateUrl: './candlestick-chart.html',
-  styleUrl: './candlestick-chart.scss',
+  templateUrl: './area-chart.html',
+  styleUrl: './area-chart.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CandlestickChart implements OnDestroy {
+export class AreaChart implements OnDestroy {
   private readonly document = inject(DOCUMENT);
   private readonly el = inject(ElementRef);
   private placeholder?: Comment;
 
   private readonly chartBodyRef = viewChild<ElementRef<HTMLDivElement>>('chartBody');
 
-  readonly data = input.required<CandlestickData[]>();
+  readonly data = input.required<AreaChartData[]>();
   readonly width = input<number>(800);
   readonly height = input<number>(400);
-  readonly candleWidth = input<number>(8);
   readonly currency = input<string>('INR');
 
   private readonly paddingTop = 20;
@@ -62,7 +52,7 @@ export class CandlestickChart implements OnDestroy {
   readonly currentSvgWidth = signal<number>(800);
   readonly currentSvgHeight = signal<number>(400);
 
-  readonly hoveredCandle = signal<RenderedCandle | null>(null);
+  readonly hoveredPoint = signal<RenderedPoint | null>(null);
   readonly tooltipX = signal<number>(0);
   readonly tooltipY = signal<number>(0);
 
@@ -121,15 +111,15 @@ export class CandlestickChart implements OnDestroy {
     const items = this.effectiveData();
     if (items.length === 0) return { min: 0, max: 0, range: 0 };
 
-    let min = items[0].low;
-    let max = items[0].high;
+    let min = items[0].value;
+    let max = items[0].value;
 
     for (const item of items) {
-      if (item.low < min) min = item.low;
-      if (item.high > max) max = item.high;
+      if (item.value < min) min = item.value;
+      if (item.value > max) max = item.value;
     }
 
-    const paddingValue = (max - min) * 0.05;
+    const paddingValue = (max - min) * 0.1;
     min -= paddingValue;
     max += paddingValue;
 
@@ -159,20 +149,20 @@ export class CandlestickChart implements OnDestroy {
     const w = this.currentSvgWidth();
     const drawWidth = w - this.paddingLeft - this.paddingRight;
 
-    if (items.length > 0) {
+    if (items.length > 1) {
       const numTicks = Math.min(items.length, this.isFullScreen() ? Math.floor(w / 100) : 6);
       for (let i = 0; i < numTicks; i++) {
         const dataIndex = Math.floor(i * (items.length - 1) / Math.max(1, numTicks - 1));
         const item = items[dataIndex];
-        const xStep = drawWidth / items.length;
-        const x = this.paddingLeft + (dataIndex * xStep) + (xStep / 2);
+        const xStep = drawWidth / (items.length - 1);
+        const x = this.paddingLeft + (dataIndex * xStep);
         ticks.push({ label: item.time, x });
       }
     }
     return ticks;
   });
 
-  readonly renderedCandles = computed<RenderedCandle[]>(() => {
+  readonly renderedPoints = computed<RenderedPoint[]>(() => {
     const items = this.effectiveData();
     const { min, range } = this.chartExtremes();
     const w = this.currentSvgWidth();
@@ -183,40 +173,41 @@ export class CandlestickChart implements OnDestroy {
 
     if (items.length === 0 || range === 0) return [];
 
-    const xStep = drawWidth / items.length;
-    const dynamicCandleWidth = Math.min(this.candleWidth(), (xStep * 0.6));
+    const xStep = items.length > 1 ? drawWidth / (items.length - 1) : 0;
 
-    return items.map((candle, index) => {
-      const isBullish = candle.close >= candle.open;
-      const scaleY = (value: number) => h - this.paddingBottom - ((value - min) / range) * drawHeight;
-
-      const yHigh = scaleY(candle.high);
-      const yLow = scaleY(candle.low);
-      const yOpen = scaleY(candle.open);
-      const yClose = scaleY(candle.close);
-
-      const bodyY = Math.min(yOpen, yClose);
-      let bodyHeight = Math.abs(yOpen - yClose);
-
-      if (bodyHeight < 1) bodyHeight = 1;
-
+    return items.map((point, index) => {
+      const scaleY = (val: number) => h - this.paddingBottom - ((val - min) / range) * drawHeight;
       return {
-        data: candle,
-        x: this.paddingLeft + (index * xStep) + (xStep / 2),
-        yHigh,
-        topWickY2: bodyY,
-        bottomWickY1: bodyY + bodyHeight,
-        yLow,
-        bodyY,
-        bodyHeight,
-        isBullish
+        data: point,
+        x: this.paddingLeft + (index * xStep),
+        y: scaleY(point.value)
       };
     });
   });
 
+  readonly pathStrings = computed(() => {
+    const points = this.renderedPoints();
+    if (points.length === 0) return { line: '', area: '' };
+
+    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(' ');
+
+    const h = this.currentSvgHeight();
+    const bottomY = h - this.paddingBottom;
+    const areaPath = `${linePath} L ${points[points.length - 1].x},${bottomY} L ${points[0].x},${bottomY} Z`;
+
+    return { line: linePath, area: areaPath };
+  });
+
+  readonly hoverHitboxWidth = computed(() => {
+    const items = this.effectiveData();
+    if (items.length <= 1) return 0;
+    const drawWidth = this.currentSvgWidth() - this.paddingLeft - this.paddingRight;
+    return drawWidth / (items.length - 1);
+  });
+
   toggleFullScreen() {
     this.isFullScreen.update(v => !v);
-    this.hoveredCandle.set(null);
+    this.hoveredPoint.set(null);
 
     if (this.isFullScreen()) {
       this.document.body.style.overflow = 'hidden';
@@ -233,14 +224,14 @@ export class CandlestickChart implements OnDestroy {
     }
   }
 
-  protected onMouseMove(event: MouseEvent, candle: RenderedCandle): void {
-    this.hoveredCandle.set(candle);
+  protected onMouseMove(event: MouseEvent, point: RenderedPoint): void {
+    this.hoveredPoint.set(point);
 
     let tX = event.clientX + 15;
     let tY = event.clientY + 15;
 
-    if (tX + 180 > window.innerWidth) {
-      tX = event.clientX - 195;
+    if (tX + 150 > window.innerWidth) {
+      tX = event.clientX - 165;
     }
 
     this.tooltipX.set(tX);
@@ -248,6 +239,6 @@ export class CandlestickChart implements OnDestroy {
   }
 
   protected onMouseLeave(): void {
-    this.hoveredCandle.set(null);
+    this.hoveredPoint.set(null);
   }
 }
