@@ -48,7 +48,7 @@ export class CandlestickChart implements OnDestroy {
   private readonly chartBodyRef = viewChild<ElementRef<HTMLDivElement>>('chartBody');
 
   readonly data = input.required<CandlestickData[]>();
-  readonly width = input<number>(800);
+  readonly width = input<number | string>('100%');
   readonly height = input<number>(400);
   readonly candleWidth = input<number>(8);
   readonly currency = input<string>('INR');
@@ -65,6 +65,11 @@ export class CandlestickChart implements OnDestroy {
   readonly hoveredCandle = signal<RenderedCandle | null>(null);
   readonly tooltipX = signal<number>(0);
   readonly tooltipY = signal<number>(0);
+
+  readonly containerWidth = computed(() => {
+    const w = this.width();
+    return typeof w === 'number' ? `${w}px` : w;
+  });
 
   readonly timeframeOptions: SegmentOption<number>[] = [
     { label: '1W', value: 7 },

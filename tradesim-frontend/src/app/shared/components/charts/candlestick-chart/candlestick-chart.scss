@@ -6,7 +6,6 @@
   border-radius: 12px;
   border: 1px solid var(--border);
   overflow: hidden;
-  max-width: 100%;
 
   &.is-fullscreen {
     position: fixed;
@@ -142,23 +141,24 @@
 
 .candle-body {
   stroke-width: 1px;
-  fill: transparent;
   transition: fill 0.15s ease;
 
   &.bullish {
+    fill: var(--success);
     stroke: var(--success);
   }
 
   &.bearish {
+    fill: var(--danger);
     stroke: var(--danger);
   }
 
   &.bullish.is-hovered {
-    fill: var(--success);
+    fill: color-mix(in srgb, var(--success) 80%, white);
   }
 
   &.bearish.is-hovered {
-    fill: var(--danger);
+    fill: color-mix(in srgb, var(--danger) 80%, white);
   }
 }
 

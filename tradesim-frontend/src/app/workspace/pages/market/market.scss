@@ -1,0 +1,153 @@
+.market-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.market-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .heading-lg {
+    margin: 0 0 4px 0;
+  }
+}
+
+.market-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+
+  app-dropdown {
+    flex: 0 1 260px;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+.market-chart {
+  width: 100%;
+
+  .chart-placeholder {
+    height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chart-container {
+    width: 100%;
+    display: block;
+  }
+
+  app-candlestick-chart {
+    display: block;
+    width: 100%;
+  }
+}
+
+.market-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.toolbar-search {
+  flex: 1;
+  max-width: 400px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  app-dropdown {
+    width: 200px;
+  }
+}
+
+.filter-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  margin-left: 6px;
+  margin-top: -8px;
+}
+
+.fw-semibold {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.drawer-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+}
+
+.drawer-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  .filter-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .value {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+  }
+}
+
+.drawer-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}

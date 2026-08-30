@@ -4,7 +4,7 @@
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 16px;
-  overflow: visible;
+  overflow: hidden;
   position: relative;
 }
 
@@ -21,6 +21,7 @@
   width: 100%;
   background: var(--surface);
   border-radius: 15px;
+  overflow: hidden;
 }
 
 .table__overlay {

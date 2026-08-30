@@ -1,13 +1,46 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ExchangeService } from '../../../services/exchange/exchange-service';
 import { MarketIndexService } from '../../../services/market-index/market-index-service';
 import { StockService } from '../../../services/stock/stock-service';
 import { Exchange } from '../../../models/exchange';
 import { MarketIndex } from '../../../models/market-index';
 import { Stock } from '../../../models/stock';
+import { Dropdown } from '../../../shared/components/dropdown/dropdown';
+import { Card } from '../../../shared/components/card/card';
+import { EmptyState } from '../../../shared/components/empty-state/empty-state';
+import { CustomInput } from '../../../shared/components/input/input';
+import { InputDirective } from '../../../shared/directives/input';
+import { Button } from '../../../shared/components/button/button';
+import { Table } from '../../../shared/components/table/table';
+import { Badge } from '../../../shared/components/badge/badge';
+import { Drawer } from '../../../shared/components/drawer/drawer';
+import { Slider } from '../../../shared/components/slider/slider';
+import { CheckboxGroup } from '../../../shared/components/checkbox/checkbox-group/checkbox-group';
+import { TableCellDirective } from '../../../shared/components/table/table';
+import { CandlestickChart, CandlestickData } from '../../../shared/components/charts/candlestick-chart/candlestick-chart';
 
 @Component({
   selector: 'app-market',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    Dropdown,
+    Card,
+    EmptyState,
+    CustomInput,
+    InputDirective,
+    Button,
+    Table,
+    TableCellDirective,
+    Badge,
+    Drawer,
+    Slider,
+    CheckboxGroup,
+    CandlestickChart
+  ],
   templateUrl: './market.html',
   styleUrl: './market.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,11 +60,76 @@ export class Market implements OnInit {
   readonly selectedIndexId = signal<string | null>(null);
 
   readonly rawStocks = signal<Stock[]>([]);
+  readonly indexChartData = signal<CandlestickData[]>([]);
 
   readonly searchQuery = signal<string>('');
-  readonly priceRange = signal<[number, number]>([0, 10000]);
-  readonly selectedSectors = signal<string[]>([]);
   readonly sortBy = signal<string>('SYMBOL_ASC');
+
+  readonly appliedPriceRange = signal<[number, number]>([0, 10000]);
+  readonly appliedSectors = signal<string[]>([]);
+  readonly appliedStatuses = signal<string[]>([]);
+
+  readonly draftPriceRange = signal<[number, number]>([0, 10000]);
+  readonly draftSectors = signal<string[]>([]);
+  readonly draftStatuses = signal<string[]>([]);
+
+  readonly exchangeOptions = computed(() =>
+    this.exchanges().map(e => ({ label: e.name, value: e.id }))
+  );
+
+  readonly indexOptions = computed(() =>
+    this.indices().map(i => ({ label: i.name, value: i.id }))
+  );
+
+  readonly sortOptions = [
+    { label: 'Symbol (A-Z)', value: 'SYMBOL_ASC' },
+    { label: 'Company (A-Z)', value: 'NAME_ASC' },
+    { label: 'Price (High to Low)', value: 'PRICE_DESC' },
+    { label: 'Price (Low to High)', value: 'PRICE_ASC' }
+  ];
+
+  readonly sectorOptions = computed(() => {
+    const sectors = new Set(this.rawStocks().map(s => s.sector));
+    return Array.from(sectors).sort().map(sector => ({
+      label: sector.charAt(0) + sector.slice(1).toLowerCase().replace(/_/g, ' '),
+      value: sector
+    }));
+  });
+
+  readonly statusOptions = computed(() => {
+    const statuses = new Set(this.rawStocks().map(s => s.status));
+    return Array.from(statuses).sort().map(status => ({
+      label: status.charAt(0) + status.slice(1).toLowerCase(),
+      value: status
+    }));
+  });
+
+  readonly tableColumns = [
+    { key: 'symbol', header: 'Symbol' },
+    { key: 'companyName', header: 'Company' },
+    { key: 'sector', header: 'Sector' },
+    { key: 'currentPrice', header: 'Price', align: 'right' as const },
+    { key: 'status', header: 'Status', align: 'center' as const }
+  ];
+
+  readonly hasUnsavedFilters = computed(() => {
+    const appliedPrice = this.appliedPriceRange();
+    const draftPrice = this.draftPriceRange();
+
+    if (appliedPrice[0] !== draftPrice[0] || appliedPrice[1] !== draftPrice[1]) return true;
+
+    const checkArraysDifference = (arr1: string[], arr2: string[]) => {
+      if (arr1.length !== arr2.length) return true;
+      const sorted1 = [...arr1].sort();
+      const sorted2 = [...arr2].sort();
+      return sorted1.some((val, i) => val !== sorted2[i]);
+    };
+
+    if (checkArraysDifference(this.appliedSectors(), this.draftSectors())) return true;
+    if (checkArraysDifference(this.appliedStatuses(), this.draftStatuses())) return true;
+
+    return false;
+  });
 
   readonly filteredAndSortedStocks = computed(() => {
     let result = [...this.rawStocks()];
@@ -44,14 +142,19 @@ export class Market implements OnInit {
       );
     }
 
-    const [minPrice, maxPrice] = this.priceRange();
+    const [minPrice, maxPrice] = this.appliedPriceRange();
     if (minPrice > 0 || maxPrice < 10000) {
       result = result.filter(s => s.currentPrice >= minPrice && s.currentPrice <= maxPrice);
     }
 
-    const sectors = this.selectedSectors();
+    const sectors = this.appliedSectors();
     if (sectors.length > 0) {
       result = result.filter(s => sectors.includes(s.sector));
+    }
+
+    const statuses = this.appliedStatuses();
+    if (statuses.length > 0) {
+      result = result.filter(s => statuses.includes(s.status));
     }
 
     const sort = this.sortBy();
@@ -80,6 +183,18 @@ export class Market implements OnInit {
             this.selectedIndexId.set(null);
           }
         });
+      } else {
+        this.indices.set([]);
+        this.selectedIndexId.set(null);
+      }
+    });
+
+    effect(() => {
+      const indexId = this.selectedIndexId();
+      if (indexId) {
+        this.indexChartData.set([]);
+      } else {
+        this.indexChartData.set([]);
       }
     });
   }
@@ -100,12 +215,22 @@ export class Market implements OnInit {
   }
 
   openFilterDrawer(): void {
+    this.draftPriceRange.set([...this.appliedPriceRange()]);
+    this.draftSectors.set([...this.appliedSectors()]);
+    this.draftStatuses.set([...this.appliedStatuses()]);
     this.isFilterDrawerOpen.set(true);
   }
 
-  clearFilters(): void {
-    this.searchQuery.set('');
-    this.priceRange.set([0, 10000]);
-    this.selectedSectors.set([]);
+  resetDraftFilters(): void {
+    this.draftPriceRange.set([0, 10000]);
+    this.draftSectors.set([]);
+    this.draftStatuses.set([]);
+  }
+
+  applyFilters(): void {
+    this.appliedPriceRange.set([...this.draftPriceRange()]);
+    this.appliedSectors.set([...this.draftSectors()]);
+    this.appliedStatuses.set([...this.draftStatuses()]);
+    this.isFilterDrawerOpen.set(false);
   }
 }

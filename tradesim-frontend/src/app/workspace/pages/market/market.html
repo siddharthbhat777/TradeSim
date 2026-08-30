@@ -1,1 +1,122 @@
-<p>market works!</p>
+<div class="market-page">
+    <header class="market-header">
+        <div>
+            <h1 class="heading-lg">Market Overview</h1>
+            <p class="text-muted">Track and analyze real-time market data.</p>
+        </div>
+
+        <div class="market-selectors">
+            <app-dropdown [options]="exchangeOptions()" [(ngModel)]="selectedExchangeId" placeholder="Select Exchange"
+                size="medium">
+            </app-dropdown>
+
+            <app-dropdown [options]="indexOptions()" [(ngModel)]="selectedIndexId" placeholder="Select Index"
+                size="medium" [disabled]="indices().length === 0">
+            </app-dropdown>
+        </div>
+    </header>
+
+    <section class="market-chart">
+        @if (indexChartData().length > 0) {
+        <div class="chart-container">
+            <app-candlestick-chart [data]="indexChartData()" width="100%" [height]="350"
+                currency="USD"></app-candlestick-chart>
+        </div>
+        } @else {
+        <app-card>
+            <div class="chart-placeholder">
+                <app-empty-state text="Chart Data Unavailable"
+                    subtext="Historical candlestick data is not yet supported by the exchange API.">
+                    <svg icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 9l-5 5-4-4-3 3" />
+                    </svg>
+                </app-empty-state>
+            </div>
+        </app-card>
+        }
+    </section>
+
+    <section class="market-toolbar">
+        <div class="toolbar-search">
+            <app-input>
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search symbol or company..." [(ngModel)]="searchQuery" />
+            </app-input>
+        </div>
+
+        <div class="toolbar-actions">
+            <app-dropdown [options]="sortOptions" [(ngModel)]="sortBy" size="medium"></app-dropdown>
+
+            <app-button variant="secondary" (click)="openFilterDrawer()">
+                <svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filters
+                @if(appliedSectors().length > 0 || appliedStatuses().length > 0 || appliedPriceRange()[0] > 0 ||
+                appliedPriceRange()[1] < 10000) { <span class="filter-badge"></span>
+                    }
+            </app-button>
+        </div>
+    </section>
+
+    <section class="market-data">
+        <app-table [data]="filteredAndSortedStocks()" [columns]="tableColumns" [isLoading]="isLoadingStocks()"
+            emptyText="No stocks found" emptySubtext="Try adjusting your filters or search query.">
+
+            <ng-template tableCell="currentPrice" let-val>
+                <span class="fw-semibold">{{ val | currency:'INR':'symbol':'1.2-2' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge [color]="val === 'ACTIVE' ? 'success' : val === 'HALTED' ? 'warning' : 'danger'">
+                    {{ val }}
+                </app-badge>
+            </ng-template>
+        </app-table>
+    </section>
+
+    <app-drawer [(isOpen)]="isFilterDrawerOpen" position="right">
+        <div class="drawer-header">
+            <h3>Filters</h3>
+        </div>
+
+        <div class="drawer-body">
+            <div class="filter-group">
+                <div class="filter-label-row">
+                    <span class="label">Price Range</span>
+                    <span class="value">{{ draftPriceRange()[0] | currency:'INR':'symbol':'1.0-0' }} - {{
+                        draftPriceRange()[1] | currency:'INR':'symbol':'1.0-0' }}</span>
+                </div>
+                <app-slider [range]="true" [min]="0" [max]="10000" [step]="50"
+                    [(ngModel)]="draftPriceRange"></app-slider>
+            </div>
+
+            <div class="filter-group">
+                <span class="label">Sectors</span>
+                <app-checkbox-group [options]="sectorOptions()" displayKey="label" valueKey="value"
+                    [(selectedValues)]="draftSectors">
+                </app-checkbox-group>
+            </div>
+
+            <div class="filter-group">
+                <span class="label">Status</span>
+                <app-checkbox-group [options]="statusOptions()" displayKey="label" valueKey="value"
+                    [(selectedValues)]="draftStatuses">
+                </app-checkbox-group>
+            </div>
+        </div>
+
+        <div class="drawer-footer">
+            <app-button variant="outline" width="100%" (click)="resetDraftFilters()">Reset</app-button>
+            <app-button variant="primary" width="100%" [disabled]="!hasUnsavedFilters()" (click)="applyFilters()">Apply
+                Filters</app-button>
+        </div>
+    </app-drawer>
+</div>

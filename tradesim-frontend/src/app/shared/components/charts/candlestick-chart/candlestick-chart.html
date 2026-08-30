@@ -1,5 +1,5 @@
 <div class="candlestick-wrapper" [class.is-fullscreen]="isFullScreen()"
-    [style.width.px]="isFullScreen() ? null : width()" [style.height.px]="isFullScreen() ? null : height()">
+    [style.width]="isFullScreen() ? null : containerWidth()" [style.height.px]="isFullScreen() ? null : height()">
 
     <div class="chart-toolbar">
         <button type="button" class="toolbar-btn" (click)="toggleFullScreen()">
