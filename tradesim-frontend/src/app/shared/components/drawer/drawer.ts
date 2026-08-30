@@ -45,7 +45,7 @@ export class Drawer implements OnDestroy {
 
         onCleanup(() => clearTimeout(timer));
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   @HostListener('document:keydown.escape')
