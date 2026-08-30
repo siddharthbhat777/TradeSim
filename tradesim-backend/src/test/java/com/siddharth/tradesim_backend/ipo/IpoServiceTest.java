@@ -28,6 +28,7 @@ import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.MarketCapCategory;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.Stock;
@@ -354,7 +355,10 @@ class IpoServiceTest {
                 "TradeSim Motors Limited",
                 BigDecimal.valueOf(250.50),
                 Sector.INDUSTRIALS,
-                StockStatus.ACTIVE
+                StockStatus.ACTIVE,
+                0L,
+                BigDecimal.ZERO,
+                MarketCapCategory.UNKNOWN
         );
 
         when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));

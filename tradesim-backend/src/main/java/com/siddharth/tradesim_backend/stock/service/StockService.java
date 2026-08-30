@@ -11,6 +11,7 @@ import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.enums.MarketCapCategory;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.StockException;
@@ -40,14 +41,10 @@ public class StockService {
     public List<StockResponse> fetchStocks() {
         return stockRepository.findAll()
                 .stream()
-                .map(stock -> new StockResponse(
-                        stock.getId(),
-                        stock.getSymbol(),
-                        stock.getCompanyName(),
-                        marketStateService.calculateIndicativePrice(stock.getId()),
-                        stock.getSector(),
-                        stock.getStatus()
-                ))
+                .map(stock -> {
+                    BigDecimal currentPrice = marketStateService.calculateIndicativePrice(stock.getId());
+                    return buildStockResponse(stock, currentPrice);
+                })
                 .toList();
     }
 
@@ -115,14 +112,7 @@ public class StockService {
             }
             stock.setStatus(status);
             Stock saved = stockRepository.save(stock);
-            return new StockResponse(
-                    saved.getId(),
-                    saved.getSymbol(),
-                    saved.getCompanyName(),
-                    saved.getLastTradedPrice(),
-                    saved.getSector(),
-                    saved.getStatus()
-            );
+            return toResponse(saved);
         } catch (DataIntegrityViolationException e) {
             throw StockException.badRequest("Invalid status data");
         }
@@ -181,13 +171,35 @@ public class StockService {
     }
 
     private StockResponse toResponse(Stock stock) {
+        return buildStockResponse(stock, stock.getLastTradedPrice());
+    }
+
+    private StockResponse buildStockResponse(Stock stock, BigDecimal currentPrice) {
+        BigDecimal marketCap = BigDecimal.ZERO;
+        MarketCapCategory category = MarketCapCategory.UNKNOWN;
+
+        if (currentPrice != null && stock.getTotalIssuedShares() != null) {
+            marketCap = currentPrice.multiply(BigDecimal.valueOf(stock.getTotalIssuedShares()));
+
+            if (marketCap.compareTo(new BigDecimal("10000000000")) >= 0) {
+                category = MarketCapCategory.LARGE;
+            } else if (marketCap.compareTo(new BigDecimal("2000000000")) >= 0) {
+                category = MarketCapCategory.MID;
+            } else {
+                category = MarketCapCategory.SMALL;
+            }
+        }
+
         return new StockResponse(
                 stock.getId(),
                 stock.getSymbol(),
                 stock.getCompanyName(),
-                stock.getLastTradedPrice(),
+                currentPrice,
                 stock.getSector(),
-                stock.getStatus()
+                stock.getStatus(),
+                stock.getDayVolume() != null ? stock.getDayVolume() : 0L,
+                marketCap,
+                category
         );
     }
 }

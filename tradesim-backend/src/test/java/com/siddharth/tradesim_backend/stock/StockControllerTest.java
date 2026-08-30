@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.stock;
 
+import com.siddharth.tradesim_backend.stock.enums.MarketCapCategory;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
@@ -40,7 +41,10 @@ class StockControllerTest {
                 "Apple Inc",
                 BigDecimal.valueOf(150.25),
                 Sector.TECHNOLOGY,
-                StockStatus.ACTIVE
+                StockStatus.ACTIVE,
+                0L,
+                BigDecimal.ZERO,
+                MarketCapCategory.UNKNOWN
         );
 
         when(stockService.fetchStocks()).thenReturn(List.of(stock));

@@ -65,13 +65,22 @@ export class Market implements OnInit {
   readonly searchQuery = signal<string>('');
   readonly sortBy = signal<string>('SYMBOL_ASC');
 
+  readonly maxStockPrice = computed(() => {
+    const stocks = this.rawStocks();
+    if (stocks.length === 0) return 10000;
+    const max = Math.max(...stocks.map(s => s.currentPrice));
+    return max > 0 ? Math.ceil(max / 100) * 100 : 10000;
+  });
+
   readonly appliedPriceRange = signal<[number, number]>([0, 10000]);
   readonly appliedSectors = signal<string[]>([]);
   readonly appliedStatuses = signal<string[]>([]);
+  readonly appliedMarketCapCategories = signal<string[]>([]);
 
   readonly draftPriceRange = signal<[number, number]>([0, 10000]);
   readonly draftSectors = signal<string[]>([]);
   readonly draftStatuses = signal<string[]>([]);
+  readonly draftMarketCapCategories = signal<string[]>([]);
 
   readonly exchangeOptions = computed(() =>
     this.exchanges().map(e => ({ label: e.name, value: e.id }))
@@ -104,19 +113,41 @@ export class Market implements OnInit {
     }));
   });
 
+  readonly marketCapOptions = computed(() => {
+    const categories = new Set(
+      this.rawStocks()
+        .map(s => s.marketCapCategory)
+        .filter(cat => !!cat && cat !== 'UNKNOWN')
+    );
+    const order: Record<string, number> = { LARGE: 1, MID: 2, SMALL: 3 };
+    return Array.from(categories)
+      .sort((a, b) => (order[a] ?? 99) - (order[b] ?? 99))
+      .map(category => ({
+        label: category.charAt(0) + category.slice(1).toLowerCase() + ' Cap',
+        value: category
+      }));
+  });
+
   readonly tableColumns = [
     { key: 'symbol', header: 'Symbol' },
     { key: 'companyName', header: 'Company' },
     { key: 'sector', header: 'Sector' },
     { key: 'currentPrice', header: 'Price', align: 'right' as const },
+    { key: 'marketCap', header: 'Market Cap', align: 'right' as const },
+    { key: 'dayVolume', header: 'Volume', align: 'right' as const },
     { key: 'status', header: 'Status', align: 'center' as const }
   ];
 
   readonly hasUnsavedFilters = computed(() => {
-    const appliedPrice = this.appliedPriceRange();
-    const draftPrice = this.draftPriceRange();
+    const [a1, a2] = this.appliedPriceRange();
+    const [d1, d2] = this.draftPriceRange();
 
-    if (appliedPrice[0] !== draftPrice[0] || appliedPrice[1] !== draftPrice[1]) return true;
+    const appliedMin = Math.min(a1, a2);
+    const appliedMax = Math.max(a1, a2);
+    const draftMin = Math.min(d1, d2);
+    const draftMax = Math.max(d1, d2);
+
+    if (appliedMin !== draftMin || appliedMax !== draftMax) return true;
 
     const checkArraysDifference = (arr1: string[], arr2: string[]) => {
       if (arr1.length !== arr2.length) return true;
@@ -127,6 +158,7 @@ export class Market implements OnInit {
 
     if (checkArraysDifference(this.appliedSectors(), this.draftSectors())) return true;
     if (checkArraysDifference(this.appliedStatuses(), this.draftStatuses())) return true;
+    if (checkArraysDifference(this.appliedMarketCapCategories(), this.draftMarketCapCategories())) return true;
 
     return false;
   });
@@ -142,8 +174,12 @@ export class Market implements OnInit {
       );
     }
 
-    const [minPrice, maxPrice] = this.appliedPriceRange();
-    if (minPrice > 0 || maxPrice < 10000) {
+    const [p1, p2] = this.appliedPriceRange();
+    const minPrice = Math.min(p1, p2);
+    const maxPrice = Math.max(p1, p2);
+    const ceiling = this.maxStockPrice();
+
+    if (minPrice > 0 || maxPrice < ceiling) {
       result = result.filter(s => s.currentPrice >= minPrice && s.currentPrice <= maxPrice);
     }
 
@@ -155,6 +191,11 @@ export class Market implements OnInit {
     const statuses = this.appliedStatuses();
     if (statuses.length > 0) {
       result = result.filter(s => statuses.includes(s.status));
+    }
+
+    const marketCaps = this.appliedMarketCapCategories();
+    if (marketCaps.length > 0) {
+      result = result.filter(s => marketCaps.includes(s.marketCapCategory));
     }
 
     const sort = this.sortBy();
@@ -211,26 +252,35 @@ export class Market implements OnInit {
     this.stockService.getStocks().subscribe(data => {
       this.rawStocks.set(data);
       this.isLoadingStocks.set(false);
+
+      const maxPrice = this.maxStockPrice();
+      this.appliedPriceRange.set([0, maxPrice]);
+      this.draftPriceRange.set([0, maxPrice]);
     });
   }
 
   openFilterDrawer(): void {
-    this.draftPriceRange.set([...this.appliedPriceRange()]);
+    const [min, max] = this.appliedPriceRange();
+    this.draftPriceRange.set([Math.min(min, max), Math.max(min, max)]);
     this.draftSectors.set([...this.appliedSectors()]);
     this.draftStatuses.set([...this.appliedStatuses()]);
+    this.draftMarketCapCategories.set([...this.appliedMarketCapCategories()]);
     this.isFilterDrawerOpen.set(true);
   }
 
   resetDraftFilters(): void {
-    this.draftPriceRange.set([0, 10000]);
+    this.draftPriceRange.set([0, this.maxStockPrice()]);
     this.draftSectors.set([]);
     this.draftStatuses.set([]);
+    this.draftMarketCapCategories.set([]);
   }
 
   applyFilters(): void {
-    this.appliedPriceRange.set([...this.draftPriceRange()]);
+    const [min, max] = this.draftPriceRange();
+    this.appliedPriceRange.set([Math.min(min, max), Math.max(min, max)]);
     this.appliedSectors.set([...this.draftSectors()]);
     this.appliedStatuses.set([...this.draftStatuses()]);
+    this.appliedMarketCapCategories.set([...this.draftMarketCapCategories()]);
     this.isFilterDrawerOpen.set(false);
   }
 }

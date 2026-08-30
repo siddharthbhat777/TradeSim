@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.stock.model.dto;
 
+import com.siddharth.tradesim_backend.stock.enums.MarketCapCategory;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 
@@ -12,6 +13,9 @@ public record StockResponse(
         String companyName,
         BigDecimal currentPrice,
         Sector sector,
-        StockStatus status
+        StockStatus status,
+        Long dayVolume,
+        BigDecimal marketCap,
+        MarketCapCategory marketCapCategory
 ) {
 }

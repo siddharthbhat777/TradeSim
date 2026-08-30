@@ -12,6 +12,7 @@ import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
 import com.siddharth.tradesim_backend.listing.model.dto.CreateListingRequest;
 import com.siddharth.tradesim_backend.listing.model.dto.ListingRequestResponse;
+import com.siddharth.tradesim_backend.stock.enums.MarketCapCategory;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
@@ -156,7 +157,10 @@ class ListingServiceTest {
                 "Infosys",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
-                StockStatus.HALTED
+                StockStatus.HALTED,
+                0L,
+                BigDecimal.ZERO,
+                MarketCapCategory.UNKNOWN
         );
 
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));

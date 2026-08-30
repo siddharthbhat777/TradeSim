@@ -59,8 +59,9 @@
                     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                 </svg>
                 Filters
-                @if(appliedSectors().length > 0 || appliedStatuses().length > 0 || appliedPriceRange()[0] > 0 ||
-                appliedPriceRange()[1] < 10000) { <span class="filter-badge"></span>
+                @if(appliedSectors().length > 0 || appliedStatuses().length > 0 || appliedMarketCapCategories().length >
+                0 || appliedPriceRange()[0] > 0 || appliedPriceRange()[1] < maxStockPrice()) { <span
+                    class="filter-badge"></span>
                     }
             </app-button>
         </div>
@@ -72,6 +73,14 @@
 
             <ng-template tableCell="currentPrice" let-val>
                 <span class="fw-semibold">{{ val | currency:'INR':'symbol':'1.2-2' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="marketCap" let-val>
+                <span class="fw-semibold">{{ val | currency:'INR':'symbol':'1.0-0' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="dayVolume" let-val>
+                <span class="fw-semibold">{{ val | number }}</span>
             </ng-template>
 
             <ng-template tableCell="status" let-val>
@@ -91,26 +100,42 @@
             <div class="filter-group">
                 <div class="filter-label-row">
                     <span class="label">Price Range</span>
-                    <span class="value">{{ draftPriceRange()[0] | currency:'INR':'symbol':'1.0-0' }} - {{
-                        draftPriceRange()[1] | currency:'INR':'symbol':'1.0-0' }}</span>
+                    <span class="value">
+                        {{ (draftPriceRange()[0] < draftPriceRange()[1] ? draftPriceRange()[0] : draftPriceRange()[1]) |
+                            currency:'INR':'symbol':'1.0-0' }} - {{ (draftPriceRange()[0]> draftPriceRange()[1] ?
+                            draftPriceRange()[0] : draftPriceRange()[1]) | currency:'INR':'symbol':'1.0-0' }}
+                    </span>
                 </div>
-                <app-slider [range]="true" [min]="0" [max]="10000" [step]="50"
+                <app-slider [range]="true" [min]="0" [max]="maxStockPrice()" [step]="10"
                     [(ngModel)]="draftPriceRange"></app-slider>
             </div>
 
+            @if (marketCapOptions().length > 0) {
+            <div class="filter-group">
+                <span class="label">Market Cap</span>
+                <app-checkbox-group [options]="marketCapOptions()" displayKey="label" valueKey="value"
+                    [(selectedValues)]="draftMarketCapCategories">
+                </app-checkbox-group>
+            </div>
+            }
+
+            @if (sectorOptions().length > 0) {
             <div class="filter-group">
                 <span class="label">Sectors</span>
                 <app-checkbox-group [options]="sectorOptions()" displayKey="label" valueKey="value"
                     [(selectedValues)]="draftSectors">
                 </app-checkbox-group>
             </div>
+            }
 
+            @if (statusOptions().length > 0) {
             <div class="filter-group">
                 <span class="label">Status</span>
                 <app-checkbox-group [options]="statusOptions()" displayKey="label" valueKey="value"
                     [(selectedValues)]="draftStatuses">
                 </app-checkbox-group>
             </div>
+            }
         </div>
 
         <div class="drawer-footer">
