@@ -957,7 +957,6 @@
             </div>
 
             <div class="doc-card">
-
                 <div class="doc-card__preview">
                     <div
                         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; width: 100%;">
@@ -970,6 +969,18 @@
                         <app-dropdown label="Country" placeholder="Select a country" [searchable]="true"
                             searchPlaceholder="Find country..." [options]="countryOptions"
                             [(ngModel)]="selectedCountry">
+                        </app-dropdown>
+
+                        <app-dropdown label="Exchange (Custom Template)" placeholder="Select Exchange"
+                            [options]="countryOptions" [(ngModel)]="selectedCountry">
+                            <ng-template #optionTemplate let-option>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <span style="font-weight: 600;">{{ option.label }}</span>
+                                    <span
+                                        style="font-size: 0.75rem; color: var(--success); font-weight: 700;">ACTIVE</span>
+                                </div>
+                            </ng-template>
                         </app-dropdown>
 
                         <app-dropdown label="Assignee" [loading]="true" placeholder="Loading users..." [options]="[]">
@@ -987,15 +998,7 @@
                         <div class="code-content">
                             <button class="copy-btn"
                                 (click)="copyCode('<app-dropdown [options]=\'opts\' [(ngModel)]=\'val\'></app-dropdown>')">Copy</button>
-                            <pre><code>&lt;app-dropdown 
-  label="Framework" 
-  placeholder="Select a framework" 
-  helperText="Solid is currently disabled."
-  [options]="frameworkOptions" 
-  [(ngModel)]="selectedFramework"&gt;
-&lt;/app-dropdown&gt;
-
-&lt;app-dropdown 
+                            <pre ngNonBindable><code>&lt;app-dropdown 
   label="Country" 
   placeholder="Select a country" 
   [searchable]="true"
@@ -1004,10 +1007,14 @@
   [(ngModel)]="selectedCountry"&gt;
 &lt;/app-dropdown&gt;
 
-&lt;app-dropdown 
-  label="Assignee" 
-  [loading]="true"
-  [options]="[]"&gt;
+&lt;!-- Custom Option Template --&gt;
+&lt;app-dropdown label="Exchange" [options]="exchangeOptions" [(ngModel)]="selectedExchange"&gt;
+  &lt;ng-template #optionTemplate let-option&gt;
+    &lt;div style="display: flex; justify-content: space-between; width: 100%;"&gt;
+      &lt;span&gt;&#123;&#123; option.label &#125;&#125;&lt;/span&gt;
+      &lt;span style="color: var(--success);"&gt;&#123;&#123; option.status &#125;&#125;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/ng-template&gt;
 &lt;/app-dropdown&gt;</code></pre>
                         </div>
                     </details>
@@ -1019,7 +1026,7 @@
                         <table class="api-table">
                             <thead>
                                 <tr>
-                                    <th>Property</th>
+                                    <th>Property / Slot</th>
                                     <th>Type</th>
                                     <th>Default</th>
                                     <th>Description</th>
@@ -1049,7 +1056,7 @@
                                     <td><code>size</code></td>
                                     <td><code>'small' | 'medium' | 'large'</code></td>
                                     <td><code>'large'</code></td>
-                                    <td>Controls the padding, font size, and height of the trigger element.</td>
+                                    <td>Controls padding, font size, and height of the trigger element.</td>
                                 </tr>
                                 <tr>
                                     <td><code>loading</code></td>
@@ -1061,13 +1068,21 @@
                                     <td><code>panelLoading</code></td>
                                     <td><code>boolean</code></td>
                                     <td><code>false</code></td>
-                                    <td>Shows an inline loader inside the open panel (useful for async searching).</td>
+                                    <td>Shows an inline loader inside the open panel.</td>
                                 </tr>
                                 <tr>
                                     <td><code>fullWidth</code></td>
                                     <td><code>boolean</code></td>
                                     <td><code>false</code></td>
                                     <td>Removes the default 400px max-width restriction.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>#optionTemplate</code></td>
+                                    <td><code>TemplateRef&lt;unknown&gt;</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Custom template for rendering list items. Exposes the option object as
+                                        <code>$implicit</code>.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

@@ -70,10 +70,14 @@
                 [class.dropdown__option--disabled]="option.disabled" [attr.aria-selected]="option === selected()"
                 [attr.aria-disabled]="option.disabled ? 'true' : null" (click)="selectOption(option)"
                 (mouseenter)="activeIndex.set(i)">
+                @if (optionTemplate()) {
+                <ng-container *ngTemplateOutlet="optionTemplate()!; context: { $implicit: option }"></ng-container>
+                } @else {
                 @if (option.icon) {
                 <span class="dropdown__option-icon" [innerHTML]="option.icon"></span>
                 }
                 <span class="dropdown__option-label">{{ option.label }}</span>
+                }
             </li>
             }
             }

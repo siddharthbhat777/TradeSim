@@ -3,15 +3,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  contentChild,
   ElementRef,
   effect,
   inject,
   input,
   output,
   signal,
+  TemplateRef,
   viewChild,
 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import type { ControlValueAccessor } from '@angular/forms';
 import { NgControl } from '@angular/forms';
 import { CustomInput } from '../input/input';
@@ -24,6 +26,7 @@ export interface DropdownOption<T = unknown> {
   value: T;
   icon?: string;
   disabled?: boolean;
+  [key: string]: unknown;
 }
 
 export type DropdownSize = 'small' | 'medium' | 'large';
@@ -37,7 +40,7 @@ const booleanAttributeOrNull = (value: unknown): boolean | null => {
 
 @Component({
   selector: 'app-dropdown',
-  imports: [CustomInput, InputDirective, InlineLoader],
+  imports: [CommonModule, CustomInput, InputDirective, InlineLoader],
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -72,6 +75,8 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   readonly reserveMessageSpace = input<boolean | null>(null, {
     transform: booleanAttributeOrNull,
   });
+
+  readonly optionTemplate = contentChild<TemplateRef<unknown>>('optionTemplate');
 
   readonly opened = output<void>();
 
