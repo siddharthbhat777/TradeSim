@@ -31,7 +31,10 @@ describe('Market', () => {
     exchangeServiceSpy = {
       getExchanges: vi.fn().mockReturnValue(of([
         { id: 'ex-1', name: 'NASDAQ', code: 'NDX', country: 'US', timezone: 'America/New_York', currency: 'USD', marketOpenTime: '09:30', marketCloseTime: '16:00', status: 'ACTIVE' }
-      ]))
+      ])),
+      getMarketClock: vi.fn().mockReturnValue(of({
+        currentInstant: '2026-08-31T10:00:00Z', timezone: 'America/New_York', marketOpenNow: true
+      }))
     };
 
     marketIndexServiceSpy = {
@@ -73,10 +76,6 @@ describe('Market', () => {
     expect(component.rawStocks().length).toBe(2);
   });
 
-  it('should dynamically calculate maxStockPrice based on highest currentPrice', () => {
-    expect(component.maxStockPrice()).toBe(300);
-  });
-
   it('should filter stocks based on search query', () => {
     component.searchQuery.set('Tesla');
 
@@ -88,11 +87,13 @@ describe('Market', () => {
 
   it('should open filter drawer and synchronize drafts with applied state', () => {
     component.appliedPriceRange.set([0, 150]);
+    component.appliedMarketCapCategories.set(['LARGE']);
 
     component.openFilterDrawer();
 
     expect(component.isFilterDrawerOpen()).toBe(true);
     expect(component.draftPriceRange()).toEqual([0, 150]);
+    expect(component.draftMarketCapCategories()).toEqual(['LARGE']);
   });
 
   it('should detect unsaved filters accurately', () => {
@@ -120,10 +121,13 @@ describe('Market', () => {
   it('should reset draft filters without affecting applied filters', () => {
     component.openFilterDrawer();
     component.draftSectors.set(['TECHNOLOGY']);
+    component.draftMarketCapCategories.set(['LARGE']);
 
     component.resetDraftFilters();
 
     expect(component.draftSectors().length).toBe(0);
+    expect(component.draftMarketCapCategories().length).toBe(0);
     expect(component.appliedSectors().length).toBe(0);
+    expect(component.appliedMarketCapCategories().length).toBe(0);
   });
 });

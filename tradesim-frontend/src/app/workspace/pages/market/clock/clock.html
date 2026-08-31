@@ -1,0 +1,11 @@
+@if (isLoaded() && currentTime()) {
+<div class="clock">
+    <div class="clock__time">
+        {{ currentTime() | date:'HH:mm:ss':timezone() }}
+        <span class="clock__tz">{{ timezone() }}</span>
+    </div>
+    <app-badge [color]="isOpen() ? 'success' : 'danger'">
+        {{ isOpen() ? 'MARKET OPEN' : 'MARKET CLOSED' }}
+    </app-badge>
+</div>
+}
