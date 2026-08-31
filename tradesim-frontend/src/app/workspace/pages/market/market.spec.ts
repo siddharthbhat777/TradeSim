@@ -7,6 +7,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
 describe('Market', () => {
   let component: Market;
   let fixture: ComponentFixture<Market>;
@@ -17,24 +23,26 @@ describe('Market', () => {
   let routeSpy: any;
 
   beforeEach(async () => {
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      value: vi.fn().mockImplementation(query => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })),
-    });
+    vi.stubGlobal('matchMedia', vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })));
+
+    vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
     exchangeServiceSpy = {
       getExchanges: vi.fn().mockReturnValue(of([
         { id: 'ex-1', name: 'NASDAQ', code: 'NDX', country: 'US', timezone: 'America/New_York', currency: 'USD', marketOpenTime: '09:30', marketCloseTime: '16:00', status: 'ACTIVE' }
-      ]))
+      ])),
+      getMarketClock: vi.fn().mockReturnValue(of({
+        currentInstant: '2026-08-31T10:00:00Z', timezone: 'America/New_York', marketOpenNow: true
+      }))
     };
 
     marketIndexServiceSpy = {
