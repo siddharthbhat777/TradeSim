@@ -1,0 +1,124 @@
+<div class="stock-details">
+    <div class="stock-details__sticky-header">
+        <div class="stock-details__nav">
+            <app-button variant="outline" size="small" (buttonClick)="onBack()">
+                <svg button-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Market
+            </app-button>
+        </div>
+
+        <header class="stock-details__header">
+            <div class="stock-details__title-group">
+                <div class="stock-details__symbol-row">
+                    <h1 class="stock-details__symbol">{{ stock().symbol }}</h1>
+                    <app-badge
+                        [color]="stock().status === 'ACTIVE' ? 'success' : stock().status === 'HALTED' ? 'warning' : 'danger'">
+                        {{ stock().status }}
+                    </app-badge>
+                    <app-badge color="secondary">
+                        {{ stock().marketCapCategory }} CAP
+                    </app-badge>
+                </div>
+                <p class="stock-details__company">{{ stock().companyName }} &bull; {{ stock().sector }}</p>
+            </div>
+
+            <div class="stock-details__price-group">
+                <span class="stock-details__price-label">Current Price</span>
+                <div class="stock-details__price-value">
+                    <app-price-indicator [value]="stock().currentPrice" [showArrow]="false" currency="INR"
+                        [valueDecimals]="2"></app-price-indicator>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <div class="stock-details__layout">
+        <div class="stock-details__main">
+            <div class="stock-details__chart-card">
+                <app-candlestick-chart [data]="chartData()" width="100%" [height]="420"
+                    currency="INR"></app-candlestick-chart>
+            </div>
+
+            <div class="stock-details__stats-grid">
+                <app-card variant="surface">
+                    <span class="stat-label">Sector</span>
+                    <strong class="stat-value">{{ stock().sector }}</strong>
+                </app-card>
+
+                <app-card variant="surface">
+                    <span class="stat-label">Market Cap</span>
+                    <strong class="stat-value">{{ stock().marketCap | currency:'INR':'symbol':'1.0-0' }}</strong>
+                </app-card>
+
+                <app-card variant="surface">
+                    <span class="stat-label">Day Volume</span>
+                    <strong class="stat-value">{{ stock().dayVolume | number }}</strong>
+                </app-card>
+
+                <app-card variant="surface">
+                    <span class="stat-label">Classification</span>
+                    <strong class="stat-value">{{ stock().marketCapCategory }}</strong>
+                </app-card>
+            </div>
+        </div>
+
+        <aside class="stock-details__order-panel">
+            <app-card>
+                <h2 class="order-panel__title">Place Order</h2>
+
+                <div class="order-panel__form">
+                    <div class="order-panel__field">
+                        <app-segmented-control [options]="sideOptions" [(ngModel)]="orderSide"
+                            [fullWidth]="true"></app-segmented-control>
+                    </div>
+
+                    <div class="order-panel__field">
+                        <span class="field-label">Order Type</span>
+                        <app-segmented-control [options]="typeOptions" [(ngModel)]="orderType" size="small"
+                            [fullWidth]="true"></app-segmented-control>
+                    </div>
+
+                    <div class="order-panel__field">
+                        <span class="field-label">Time In Force</span>
+                        <app-segmented-control [options]="tifOptions" [(ngModel)]="timeInForce" size="small"
+                            [fullWidth]="true"></app-segmented-control>
+                    </div>
+
+                    <div class="order-panel__field">
+                        <div class="field-label-row">
+                            <span class="field-label">Quantity</span>
+                        </div>
+                        <app-number-stepper [(value)]="orderQuantity" [min]="1" [max]="100000"
+                            size="medium"></app-number-stepper>
+                    </div>
+
+                    @if (orderType() === 'LIMIT') {
+                    <div class="order-panel__field">
+                        <app-input label="Limit Price">
+                            <input appInput type="number" step="0.05" [(ngModel)]="limitPrice"
+                                placeholder="Enter limit price" />
+                            <span suffix>INR</span>
+                        </app-input>
+                    </div>
+                    }
+
+                    <div class="order-panel__summary">
+                        <div class="summary-row">
+                            <span>Estimated Total</span>
+                            <strong>{{ estimatedTotal() | currency:'INR':'symbol':'1.2-2' }}</strong>
+                        </div>
+                    </div>
+
+                    <app-button [variant]="orderSide() === 'BUY' ? 'success' : 'danger'"
+                        [isLoading]="isSubmittingOrder()" width="100%" size="large" (buttonClick)="placeOrder()">
+                        {{ orderSide() }} {{ stock().symbol }}
+                    </app-button>
+                </div>
+            </app-card>
+        </aside>
+    </div>
+</div>

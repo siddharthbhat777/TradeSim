@@ -1,3 +1,6 @@
+@if (selectedStock(); as activeStock) {
+<app-stock-details [stock]="activeStock" (back)="onBackToMarket()"></app-stock-details>
+} @else {
 <div class="market-page">
     <header class="market-header">
         <div>
@@ -77,7 +80,8 @@
                 </svg>
                 Filters
                 @if(appliedSectors().length > 0 || appliedStatuses().length > 0 || appliedMarketCapCategories().length >
-                0 || appliedPriceRange()[0] > 0 || appliedPriceRange()[1] < 10000) { <span class="filter-badge"></span>
+                0 || appliedPriceRange()[0] > 0 || appliedPriceRange()[1] < maxStockPrice()) { <span
+                    class="filter-badge"></span>
                     }
             </app-button>
         </div>
@@ -85,7 +89,16 @@
 
     <section class="market-data">
         <app-table [data]="filteredAndSortedStocks()" [columns]="tableColumns" [isLoading]="isLoadingStocks()"
-            emptyText="No stocks found" emptySubtext="Try adjusting your filters or search query.">
+            emptyText="No stocks found" emptySubtext="Try adjusting your filters or search query."
+            [interactiveRows]="true" (rowClick)="onSelectStock($event)">
+
+            <ng-template tableCell="symbol" let-val>
+                <span class="fw-semibold" style="color: var(--primary);">{{ val }}</span>
+            </ng-template>
+
+            <ng-template tableCell="companyName" let-val>
+                <span class="stock-company-name">{{ val }}</span>
+            </ng-template>
 
             <ng-template tableCell="currentPrice" let-val>
                 <span class="fw-semibold">{{ val | currency:'INR':'symbol':'1.2-2' }}</span>
@@ -112,10 +125,13 @@
             <div class="filter-group">
                 <div class="filter-label-row">
                     <span class="label">Price Range</span>
-                    <span class="value">{{ draftPriceRange()[0] | currency:'INR':'symbol':'1.0-0' }} - {{
-                        draftPriceRange()[1] | currency:'INR':'symbol':'1.0-0' }}</span>
+                    <span class="value">
+                        {{ (draftPriceRange()[0] < draftPriceRange()[1] ? draftPriceRange()[0] : draftPriceRange()[1]) |
+                            currency:'INR':'symbol':'1.0-0' }} - {{ (draftPriceRange()[0]> draftPriceRange()[1] ?
+                            draftPriceRange()[0] : draftPriceRange()[1]) | currency:'INR':'symbol':'1.0-0' }}
+                    </span>
                 </div>
-                <app-slider [range]="true" [min]="0" [max]="10000" [step]="50"
+                <app-slider [range]="true" [min]="0" [max]="maxStockPrice()" [step]="10"
                     [(ngModel)]="draftPriceRange"></app-slider>
             </div>
 
@@ -154,3 +170,4 @@
         </div>
     </app-drawer>
 </div>
+}

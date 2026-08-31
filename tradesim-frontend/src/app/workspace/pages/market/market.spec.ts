@@ -3,6 +3,7 @@ import { Market } from './market';
 import { ExchangeService } from '../../../services/exchange/exchange-service';
 import { MarketIndexService } from '../../../services/market-index/market-index-service';
 import { StockService } from '../../../services/stock/stock-service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
@@ -12,6 +13,8 @@ describe('Market', () => {
   let exchangeServiceSpy: any;
   let marketIndexServiceSpy: any;
   let stockServiceSpy: any;
+  let routerSpy: any;
+  let routeSpy: any;
 
   beforeEach(async () => {
     Object.defineProperty(window, 'matchMedia', {
@@ -31,10 +34,7 @@ describe('Market', () => {
     exchangeServiceSpy = {
       getExchanges: vi.fn().mockReturnValue(of([
         { id: 'ex-1', name: 'NASDAQ', code: 'NDX', country: 'US', timezone: 'America/New_York', currency: 'USD', marketOpenTime: '09:30', marketCloseTime: '16:00', status: 'ACTIVE' }
-      ])),
-      getMarketClock: vi.fn().mockReturnValue(of({
-        currentInstant: '2026-08-31T10:00:00Z', timezone: 'America/New_York', marketOpenNow: true
-      }))
+      ]))
     };
 
     marketIndexServiceSpy = {
@@ -50,12 +50,23 @@ describe('Market', () => {
       ]))
     };
 
+    routerSpy = {
+      navigate: vi.fn()
+    };
+
+    routeSpy = {
+      snapshot: { queryParamMap: { get: vi.fn().mockReturnValue(null) } },
+      queryParamMap: of({ get: vi.fn().mockReturnValue(null) })
+    };
+
     await TestBed.configureTestingModule({
       imports: [Market],
       providers: [
         { provide: ExchangeService, useValue: exchangeServiceSpy },
         { provide: MarketIndexService, useValue: marketIndexServiceSpy },
-        { provide: StockService, useValue: stockServiceSpy }
+        { provide: StockService, useValue: stockServiceSpy },
+        { provide: Router, useValue: routerSpy },
+        { provide: ActivatedRoute, useValue: routeSpy }
       ]
     }).compileComponents();
 
@@ -74,6 +85,10 @@ describe('Market', () => {
     expect(stockServiceSpy.getStocks).toHaveBeenCalled();
     expect(component.exchanges().length).toBe(1);
     expect(component.rawStocks().length).toBe(2);
+  });
+
+  it('should dynamically calculate maxStockPrice based on highest currentPrice', () => {
+    expect(component.maxStockPrice()).toBe(300);
   });
 
   it('should filter stocks based on search query', () => {
@@ -129,5 +144,28 @@ describe('Market', () => {
     expect(component.draftMarketCapCategories().length).toBe(0);
     expect(component.appliedSectors().length).toBe(0);
     expect(component.appliedMarketCapCategories().length).toBe(0);
+  });
+
+  it('should navigate and set selectedStock when onSelectStock is called', () => {
+    const stock = component.rawStocks()[0];
+    component.onSelectStock(stock);
+
+    expect(component.selectedStock()).toEqual(stock);
+    expect(routerSpy.navigate).toHaveBeenCalledWith([], {
+      relativeTo: routeSpy,
+      queryParams: { stockId: stock.id },
+      queryParamsHandling: 'merge'
+    });
+  });
+
+  it('should clear selectedStock and update URL when onBackToMarket is called', () => {
+    component.onBackToMarket();
+
+    expect(component.selectedStock()).toBeNull();
+    expect(routerSpy.navigate).toHaveBeenCalledWith([], {
+      relativeTo: routeSpy,
+      queryParams: { stockId: null },
+      queryParamsHandling: 'merge'
+    });
   });
 });

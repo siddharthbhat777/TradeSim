@@ -36,7 +36,8 @@
 
                 <tbody>
                     @for (row of pagedData(); track trackRow($index, row)) {
-                    <tr>
+                    <tr [class.is-interactive]="interactiveRows()"
+                        (click)="interactiveRows() ? rowClick.emit(row) : null">
                         @for (column of columns(); track column.key) {
                         <td [class.table__cell--left]="column.align !== 'center' && column.align !== 'right'"
                             [class.table__cell--center]="column.align === 'center'"

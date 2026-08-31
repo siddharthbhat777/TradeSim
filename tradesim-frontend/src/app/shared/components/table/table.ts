@@ -7,6 +7,7 @@ import {
   input,
   model,
   ChangeDetectionStrategy,
+  output
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Directive, inject } from '@angular/core';
@@ -59,11 +60,15 @@ export class Table<T = unknown> {
   readonly paginationLabelSuffix = input<string>(' per page');
   readonly paginationMobileLabelSuffix = input<string>(' / pg');
 
+  readonly interactiveRows = input(false, { transform: booleanAttribute });
+
   readonly currentPage = model(1);
   readonly pageSize = model(10);
 
   readonly emptyText = input('No data to display');
   readonly emptySubtext = input('');
+
+  readonly rowClick = output<T>();
 
   private readonly cellTemplates = contentChildren(TableCellDirective);
 

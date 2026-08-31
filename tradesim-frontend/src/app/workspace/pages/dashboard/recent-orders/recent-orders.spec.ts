@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { RecentOrders } from './recent-orders';
-import { OrderHistoryResponse } from '../../../../models/order-response';
+import { OrderHistoryResponse } from '../../../../models/order';
 
 describe('RecentOrders', () => {
   let component: RecentOrders;

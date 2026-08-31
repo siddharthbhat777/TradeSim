@@ -1,3 +1,13 @@
+export interface OrderRequest {
+    stockId: string;
+    quantity: number;
+    side: 'BUY' | 'SELL';
+    orderType: 'MARKET' | 'LIMIT';
+    timeInForce: 'DAY' | 'IOC' | 'GTC';
+    limitPrice?: number | null;
+    fundingCurrency?: string;
+}
+
 export interface OrderHistoryResponse {
     orderId: string;
     stockId: string;

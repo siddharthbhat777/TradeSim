@@ -2,7 +2,8 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environment/environment';
 import { skipInterceptors } from '../../shared/utils/http-context';
-import { OrderHistoryResponse } from '../../models/order-response';
+import { Observable } from 'rxjs';
+import { OrderHistoryResponse, OrderRequest } from '../../models/order';
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,12 @@ export class OrderService {
     }).subscribe({
       next: (data) => this.orderState.set(data),
       error: () => this.orderState.set([])
+    });
+  }
+
+  createOrder(request: OrderRequest): Observable<unknown> {
+    return this.http.post(`${this.apiBaseURL}/create`, request, {
+      context: skipInterceptors({ loader: true })
     });
   }
 }

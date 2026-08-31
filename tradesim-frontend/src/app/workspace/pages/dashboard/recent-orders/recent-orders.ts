@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { Table, TableColumn, TableCellDirective } from '../../../../shared/components/table/table';
 import { Card } from '../../../../shared/components/card/card';
 import { Button } from '../../../../shared/components/button/button';
-import { OrderHistoryResponse } from '../../../../models/order-response';
+import { OrderHistoryResponse } from '../../../../models/order';
 
 @Component({
   selector: 'app-recent-orders',

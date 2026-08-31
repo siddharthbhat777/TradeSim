@@ -96,6 +96,14 @@
     &:hover {
       background: var(--surface-secondary);
     }
+
+    &.is-interactive {
+      cursor: pointer;
+
+      &:active {
+        background: color-mix(in srgb, var(--surface-secondary) 80%, var(--text-primary) 20%);
+      }
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ExchangeService } from '../../../services/exchange/exchange-service';
 import { MarketIndexService } from '../../../services/market-index/market-index-service';
 import { StockService } from '../../../services/stock/stock-service';
@@ -13,14 +14,14 @@ import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { CustomInput } from '../../../shared/components/input/input';
 import { InputDirective } from '../../../shared/directives/input';
 import { Button } from '../../../shared/components/button/button';
-import { Table } from '../../../shared/components/table/table';
+import { Table, TableCellDirective } from '../../../shared/components/table/table';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Drawer } from '../../../shared/components/drawer/drawer';
 import { Slider } from '../../../shared/components/slider/slider';
 import { CheckboxGroup } from '../../../shared/components/checkbox/checkbox-group/checkbox-group';
-import { TableCellDirective } from '../../../shared/components/table/table';
 import { CandlestickChart, CandlestickData } from '../../../shared/components/charts/candlestick-chart/candlestick-chart';
 import { Clock } from './clock/clock';
+import { StockDetails } from './stock-details/stock-details';
 
 @Component({
   selector: 'app-market',
@@ -40,7 +41,8 @@ import { Clock } from './clock/clock';
     Slider,
     CheckboxGroup,
     CandlestickChart,
-    Clock
+    Clock,
+    StockDetails
   ],
   templateUrl: './market.html',
   styleUrl: './market.scss',
@@ -50,6 +52,8 @@ export class Market implements OnInit {
   private readonly exchangeService = inject(ExchangeService);
   private readonly marketIndexService = inject(MarketIndexService);
   private readonly stockService = inject(StockService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly isFilterDrawerOpen = signal<boolean>(false);
   readonly isLoadingStocks = signal<boolean>(false);
@@ -61,10 +65,18 @@ export class Market implements OnInit {
   readonly selectedIndexId = signal<string | null>(null);
 
   readonly rawStocks = signal<Stock[]>([]);
+  readonly selectedStock = signal<Stock | null>(null);
   readonly indexChartData = signal<CandlestickData[]>([]);
 
   readonly searchQuery = signal<string>('');
   readonly sortBy = signal<string>('SYMBOL_ASC');
+
+  readonly maxStockPrice = computed(() => {
+    const stocks = this.rawStocks();
+    if (stocks.length === 0) return 10000;
+    const max = Math.max(...stocks.map(s => s.currentPrice));
+    return max > 0 ? Math.ceil(max / 100) * 100 : 10000;
+  });
 
   readonly appliedPriceRange = signal<[number, number]>([0, 10000]);
   readonly appliedSectors = signal<string[]>([]);
@@ -162,8 +174,12 @@ export class Market implements OnInit {
       );
     }
 
-    const [minPrice, maxPrice] = this.appliedPriceRange();
-    if (minPrice > 0 || maxPrice < 10000) {
+    const [p1, p2] = this.appliedPriceRange();
+    const minPrice = Math.min(p1, p2);
+    const maxPrice = Math.max(p1, p2);
+    const ceiling = this.maxStockPrice();
+
+    if (minPrice > 0 || maxPrice < ceiling) {
       result = result.filter(s => s.currentPrice >= minPrice && s.currentPrice <= maxPrice);
     }
 
@@ -222,6 +238,18 @@ export class Market implements OnInit {
         this.indexChartData.set([]);
       }
     });
+
+    this.route.queryParamMap.subscribe(params => {
+      const stockId = params.get('stockId');
+      if (stockId) {
+        const found = this.rawStocks().find(s => s.id === stockId);
+        if (found) {
+          this.selectedStock.set(found);
+        }
+      } else {
+        this.selectedStock.set(null);
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -236,11 +264,42 @@ export class Market implements OnInit {
     this.stockService.getStocks().subscribe(data => {
       this.rawStocks.set(data);
       this.isLoadingStocks.set(false);
+
+      const maxPrice = this.maxStockPrice();
+      this.appliedPriceRange.set([0, maxPrice]);
+      this.draftPriceRange.set([0, maxPrice]);
+
+      const targetStockId = this.route.snapshot.queryParamMap.get('stockId');
+      if (targetStockId) {
+        const found = data.find(s => s.id === targetStockId);
+        if (found) {
+          this.selectedStock.set(found);
+        }
+      }
+    });
+  }
+
+  onSelectStock(stock: Stock): void {
+    this.selectedStock.set(stock);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { stockId: stock.id },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  onBackToMarket(): void {
+    this.selectedStock.set(null);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { stockId: null },
+      queryParamsHandling: 'merge'
     });
   }
 
   openFilterDrawer(): void {
-    this.draftPriceRange.set([...this.appliedPriceRange()]);
+    const [min, max] = this.appliedPriceRange();
+    this.draftPriceRange.set([Math.min(min, max), Math.max(min, max)]);
     this.draftSectors.set([...this.appliedSectors()]);
     this.draftStatuses.set([...this.appliedStatuses()]);
     this.draftMarketCapCategories.set([...this.appliedMarketCapCategories()]);
@@ -248,14 +307,15 @@ export class Market implements OnInit {
   }
 
   resetDraftFilters(): void {
-    this.draftPriceRange.set([0, 10000]);
+    this.draftPriceRange.set([0, this.maxStockPrice()]);
     this.draftSectors.set([]);
     this.draftStatuses.set([]);
     this.draftMarketCapCategories.set([]);
   }
 
   applyFilters(): void {
-    this.appliedPriceRange.set([...this.draftPriceRange()]);
+    const [min, max] = this.draftPriceRange();
+    this.appliedPriceRange.set([Math.min(min, max), Math.max(min, max)]);
     this.appliedSectors.set([...this.draftSectors()]);
     this.appliedStatuses.set([...this.draftStatuses()]);
     this.appliedMarketCapCategories.set([...this.draftMarketCapCategories()]);
