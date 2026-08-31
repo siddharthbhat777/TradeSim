@@ -2,7 +2,7 @@ export interface Exchange {
     id: string;
     name: string;
     code: string;
-    country: string;
+    countryCode: string;
     timezone: string;
     currency: string;
     marketOpenTime: string;

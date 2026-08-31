@@ -36,7 +36,7 @@ public class Exchange extends AuditableEntity {
     private String code;
 
     @Column(nullable = false, length = 60)
-    private String country;
+    private String countryCode;
 
     @Column(nullable = false, length = 50)
     private String timezone;
