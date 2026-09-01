@@ -18,6 +18,8 @@ import { CustomInput } from '../../../../shared/components/input/input';
 import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Modal } from '../../../../shared/components/modal/modal';
+import { Skeleton } from '../../../../shared/components/loaders/skeleton/skeleton';
+import { OrderEstimateResponse } from '../../../../models/order';
 
 @Component({
   selector: 'app-stock-details',
@@ -34,7 +36,8 @@ import { Modal } from '../../../../shared/components/modal/modal';
     CustomInput,
     InputDirective,
     Dropdown,
-    Modal
+    Modal,
+    Skeleton
   ],
   templateUrl: './stock-details.html',
   styleUrl: './stock-details.scss',
@@ -63,7 +66,9 @@ export class StockDetails implements OnInit {
   readonly customCurrency = signal<string | null>(null);
 
   readonly showReviewModal = signal<boolean>(false);
+  readonly isEstimatingOrder = signal<boolean>(false);
   readonly isSubmittingOrder = signal<boolean>(false);
+  readonly orderEstimate = signal<OrderEstimateResponse | null>(null);
 
   readonly sideOptions: SegmentOption<'BUY' | 'SELL'>[] = [
     { label: 'Buy', value: 'BUY' },
@@ -92,12 +97,12 @@ export class StockDetails implements OnInit {
 
   readonly walletBucketOptions = computed<DropdownOption<string>[]>(() => {
     const wallet = this.walletService.wallet();
-    return this.supportedCurrencies().map(currency => {
-      const bucket = wallet?.buckets.find(bucket => bucket.currency === currency);
+    return this.supportedCurrencies().map(curr => {
+      const bucket = wallet?.buckets.find(b => b.currency === curr);
       const balance = bucket ? bucket.availableBalance : 0;
       return {
-        label: `${currency} (Available: ${balance.toFixed(2)})`,
-        value: currency
+        label: `${curr} (Available: ${balance.toFixed(2)})`,
+        value: curr
       };
     });
   });
@@ -109,11 +114,11 @@ export class StockDetails implements OnInit {
   });
 
   readonly financials = computed(() => {
-    const quantity = this.orderQuantity();
+    const qty = this.orderQuantity();
     const type = this.orderType();
     const price = type === 'LIMIT' ? (this.limitPrice() ?? 0) : this.stock().currentPrice;
 
-    const subtotalInStockCurrency = quantity * price;
+    const subtotalInStockCurrency = qty * price;
     const fundingCurrency = this.resolvedFundingCurrency();
     const wallet = this.walletService.wallet();
 
@@ -175,6 +180,29 @@ export class StockDetails implements OnInit {
     }
 
     this.showReviewModal.set(true);
+    this.isEstimatingOrder.set(true);
+    this.orderEstimate.set(null);
+
+    const s = this.stock();
+
+    this.orderService.estimateOrder({
+      stockId: s.id,
+      quantity: this.orderQuantity(),
+      side: this.orderSide(),
+      orderType: this.orderType(),
+      timeInForce: this.timeInForce(),
+      limitPrice: this.orderType() === 'LIMIT' ? this.limitPrice() : null,
+      fundingCurrency: this.resolvedFundingCurrency()
+    }).subscribe({
+      next: (estimate) => {
+        this.orderEstimate.set(estimate);
+        this.isEstimatingOrder.set(false);
+      },
+      error: () => {
+        this.isEstimatingOrder.set(false);
+        this.showReviewModal.set(false);
+      }
+    });
   }
 
   executeOrder(): void {

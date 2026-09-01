@@ -200,20 +200,66 @@
 
             <div class="review-divider"></div>
 
+            @if (isEstimatingOrder()) {
+            <div class="review-skeleton-wrapper">
+                <div class="skeleton-row">
+                    <app-skeleton shape="text" width="40%"></app-skeleton>
+                    <app-skeleton shape="text" width="30%"></app-skeleton>
+                </div>
+                <div class="skeleton-row">
+                    <app-skeleton shape="text" width="35%"></app-skeleton>
+                    <app-skeleton shape="text" width="25%"></app-skeleton>
+                </div>
+                <div class="skeleton-row total-skeleton">
+                    <app-skeleton shape="text" width="50%"></app-skeleton>
+                    <app-skeleton shape="text" width="35%"></app-skeleton>
+                </div>
+            </div>
+            } @else if (orderEstimate(); as estimate) {
             <div class="review-row">
                 <span class="review-label">Estimated Subtotal</span>
-                <strong>{{ financials().subtotalInStockCurrency | number:'1.2-2' }} USD</strong>
+                <strong>{{ estimate.subtotalInFundingCurrency | number:'1.2-2' }} {{ estimate.fundingCurrency
+                    }}</strong>
             </div>
 
-            <div class="review-row total-row">
-                <span class="disclaimer-text">* Final charges including margin locks and FX conversions will be applied
-                    by the exchange.</span>
+            @if (estimate.fxFee > 0) {
+            <div class="review-row">
+                <span class="review-label">Estimated FX Fee</span>
+                <strong>{{ estimate.fxFee | number:'1.2-2' }} {{ estimate.fundingCurrency }}</strong>
             </div>
+            }
+
+            <div class="review-row total-row">
+                <span class="total-label">Estimated Total {{ orderSide() === 'BUY' ? 'Cost' : 'Credit' }}</span>
+                <strong class="total-value" [class.text-success]="orderSide() === 'BUY'"
+                    [class.text-danger]="orderSide() === 'SELL'">
+                    {{ estimate.finalTotal | number:'1.2-2' }} {{ estimate.fundingCurrency }}
+                </strong>
+            </div>
+            }
         </div>
+
+        @if (!isEstimatingOrder() && orderEstimate(); as estimate) {
+        @if (!estimate.hasFunds) {
+        <div class="review-warning">
+            <div class="warning-text">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>Insufficient {{ estimate.fundingCurrency }} Balance</span>
+            </div>
+            <app-button variant="outline" size="small" (buttonClick)="openDeposit()">Deposit</app-button>
+        </div>
+        }
+        }
 
         <div class="review-modal__actions">
             <app-button variant="outline" (buttonClick)="showReviewModal.set(false)">Cancel</app-button>
-            <app-button [variant]="orderSide() === 'BUY' ? 'success' : 'danger'" [isLoading]="isSubmittingOrder()"
+            <app-button [variant]="orderSide() === 'BUY' ? 'success' : 'danger'"
+                [disabled]="isEstimatingOrder() || !orderEstimate()?.hasFunds" [isLoading]="isSubmittingOrder()"
                 (buttonClick)="executeOrder()">Submit Order</app-button>
         </div>
     </div>

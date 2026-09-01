@@ -20,3 +20,11 @@ export interface OrderHistoryResponse {
     status: 'OPEN' | 'PARTIALLY_FILLED' | 'FILLED' | 'CANCELLED';
     createdAt: string;
 }
+
+export interface OrderEstimateResponse {
+    subtotalInFundingCurrency: number;
+    fxFee: number;
+    finalTotal: number;
+    hasFunds: boolean;
+    fundingCurrency: string;
+}

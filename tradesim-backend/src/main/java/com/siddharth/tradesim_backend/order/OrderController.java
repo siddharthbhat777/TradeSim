@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.order;
 
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.order.model.dto.OrderEstimateResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderHistoryResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
@@ -26,6 +27,12 @@ public class OrderController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<OrderHistoryResponse>> getMyOrders(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(orderService.fetchUserOrders(user.getUserId()));
+    }
+
+    @PostMapping("estimate")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<OrderEstimateResponse> estimateOrder(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody OrderRequest request) {
+        return ResponseEntity.ok(orderService.estimateOrder(user.getUserId(), request));
     }
 
     @PostMapping("create")

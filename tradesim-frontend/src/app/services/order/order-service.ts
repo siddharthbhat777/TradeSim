@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environment/environment';
 import { skipInterceptors } from '../../shared/utils/http-context';
 import { Observable } from 'rxjs';
-import { OrderHistoryResponse, OrderRequest } from '../../models/order';
+import { OrderHistoryResponse, OrderRequest, OrderEstimateResponse } from '../../models/order';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +21,12 @@ export class OrderService {
     }).subscribe({
       next: (data) => this.orderState.set(data),
       error: () => this.orderState.set([])
+    });
+  }
+
+  estimateOrder(request: OrderRequest): Observable<OrderEstimateResponse> {
+    return this.http.post<OrderEstimateResponse>(`${this.apiBaseURL}/estimate`, request, {
+      context: skipInterceptors({ loader: true, toast: true })
     });
   }
 

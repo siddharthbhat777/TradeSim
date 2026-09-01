@@ -18,6 +18,7 @@ import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.OrderException;
 import com.siddharth.tradesim_backend.order.model.Fill;
 import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.model.dto.OrderEstimateResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderHistoryResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
@@ -122,6 +123,49 @@ public class OrderService {
                     order.getCreatedAt()
             );
         }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public OrderEstimateResponse estimateOrder(UUID userId, @Valid OrderRequest request) {
+        Stock stock = stockRepository.findById(request.stockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+        Wallet wallet = walletService.getWalletByUserId(userId);
+
+        String fundingCurrency = resolveFundingCurrency(wallet, tradingAccount, request.fundingCurrency());
+        WalletBucket bucket = wallet.getBuckets().stream()
+                .filter(b -> b.getCurrency().equalsIgnoreCase(fundingCurrency))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST, "BUCKET_NOT_FOUND", "Wallet bucket not found"));
+
+        BigDecimal pricePerShare = request.orderType() == OrderType.LIMIT ? request.limitPrice() : marketStateService.calculateIndicativePrice(stock.getId());
+        if (pricePerShare == null) {
+            pricePerShare = stock.getLastTradedPrice();
+        }
+
+        BigDecimal subtotalInStockCurrency = pricePerShare.multiply(BigDecimal.valueOf(request.quantity()));
+        BigDecimal subtotalInFundingCurrency = forexService.convert(subtotalInStockCurrency, exchange.getCurrency(), fundingCurrency);
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(fundingCurrency, exchange.getCurrency(), subtotalInFundingCurrency);
+
+        BigDecimal finalTotal;
+        boolean hasFunds;
+        if (request.side() == OrderSide.BUY) {
+            BigDecimal marginRequired = subtotalInFundingCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+            finalTotal = marginRequired.add(fxFee);
+            hasFunds = bucket.getAvailableBalance().compareTo(finalTotal) >= 0;
+        } else {
+            finalTotal = subtotalInFundingCurrency.subtract(fxFee);
+            Position position = positionRepository.findByUserIdAndStockId(userId, stock.getId()).orElse(null);
+            hasFunds = position != null && position.getAvailableQuantity() >= request.quantity();
+        }
+
+        return new OrderEstimateResponse(
+                subtotalInFundingCurrency,
+                fxFee,
+                finalTotal,
+                hasFunds,
+                fundingCurrency
+        );
     }
 
     @Transactional
@@ -258,7 +302,8 @@ public class OrderService {
     private BigDecimal prepareBuyReservation(WalletBucket bucket, TradingAccount tradingAccount, Stock stock, Exchange exchange, @Valid OrderRequest request, String fundingCurrency) {
         return switch (request.orderType()) {
             case LIMIT -> lockLimitBuy(bucket, tradingAccount, exchange.getCurrency(), fundingCurrency, request);
-            case MARKET -> prepareMarketBuy(bucket, tradingAccount, stock, exchange.getCurrency(), fundingCurrency, request);
+            case MARKET ->
+                    prepareMarketBuy(bucket, tradingAccount, stock, exchange.getCurrency(), fundingCurrency, request);
         };
     }
 
