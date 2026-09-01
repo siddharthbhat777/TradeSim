@@ -1,8 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Stock } from '../../../../models/stock';
 import { OrderService } from '../../../../services/order/order-service';
+import { WalletService } from '../../../../services/wallet/wallet-service';
+import { TradingAccountService } from '../../../../services/trading-account/trading-account-service';
+import { ForexService } from '../../../../services/forex/forex-service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { Button } from '../../../../shared/components/button/button';
 import { Badge } from '../../../../shared/components/badge/badge';
@@ -13,6 +16,8 @@ import { SegmentedControl, SegmentOption } from '../../../../shared/components/s
 import { NumberStepper } from '../../../../shared/components/number-stepper/number-stepper';
 import { CustomInput } from '../../../../shared/components/input/input';
 import { InputDirective } from '../../../../shared/directives/input';
+import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
+import { Modal } from '../../../../shared/components/modal/modal';
 
 @Component({
   selector: 'app-stock-details',
@@ -27,25 +32,37 @@ import { InputDirective } from '../../../../shared/directives/input';
     SegmentedControl,
     NumberStepper,
     CustomInput,
-    InputDirective
+    InputDirective,
+    Dropdown,
+    Modal
   ],
   templateUrl: './stock-details.html',
   styleUrl: './stock-details.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StockDetails {
+export class StockDetails implements OnInit {
   readonly stock = input.required<Stock>();
   readonly back = output<void>();
 
   private readonly orderService = inject(OrderService);
+  private readonly walletService = inject(WalletService);
+  private readonly tradingAccountService = inject(TradingAccountService);
+  private readonly forexService = inject(ForexService);
   private readonly toastService = inject(ToastService);
 
+  readonly supportedCurrencies = signal<string[]>([]);
   readonly chartData = signal<CandlestickData[]>([]);
+
   readonly orderSide = signal<'BUY' | 'SELL'>('BUY');
   readonly orderType = signal<'MARKET' | 'LIMIT'>('MARKET');
   readonly timeInForce = signal<'DAY' | 'IOC' | 'GTC'>('DAY');
   readonly orderQuantity = signal<number>(1);
   readonly limitPrice = signal<number | null>(null);
+
+  readonly fundingMethod = signal<'BASE' | 'CUSTOM'>('BASE');
+  readonly customCurrency = signal<string | null>(null);
+
+  readonly showReviewModal = signal<boolean>(false);
   readonly isSubmittingOrder = signal<boolean>(false);
 
   readonly sideOptions: SegmentOption<'BUY' | 'SELL'>[] = [
@@ -64,11 +81,54 @@ export class StockDetails {
     { label: 'GTC', value: 'GTC' }
   ];
 
-  readonly estimatedTotal = computed(() => {
-    const qty = this.orderQuantity();
+  readonly fundingMethodOptions = computed<SegmentOption<'BASE' | 'CUSTOM'>[]>(() => {
+    const base = this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR';
+    const isApproved = this.walletService.wallet()?.multiCurrencyStatus === 'APPROVED';
+    return [
+      { label: `Base (${base})`, value: 'BASE' },
+      { label: 'Other Wallet', value: 'CUSTOM', disabled: !isApproved }
+    ];
+  });
+
+  readonly walletBucketOptions = computed<DropdownOption<string>[]>(() => {
+    const wallet = this.walletService.wallet();
+    return this.supportedCurrencies().map(currency => {
+      const bucket = wallet?.buckets.find(bucket => bucket.currency === currency);
+      const balance = bucket ? bucket.availableBalance : 0;
+      return {
+        label: `${currency} (Available: ${balance.toFixed(2)})`,
+        value: currency
+      };
+    });
+  });
+
+  readonly resolvedFundingCurrency = computed(() => {
+    const base = this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR';
+    if (this.fundingMethod() === 'BASE') return base;
+    return this.customCurrency() || base;
+  });
+
+  readonly financials = computed(() => {
+    const quantity = this.orderQuantity();
     const type = this.orderType();
     const price = type === 'LIMIT' ? (this.limitPrice() ?? 0) : this.stock().currentPrice;
-    return qty * price;
+
+    const subtotalInStockCurrency = quantity * price;
+    const fundingCurrency = this.resolvedFundingCurrency();
+    const wallet = this.walletService.wallet();
+
+    let available = 0;
+    if (wallet) {
+      const bucket = wallet.buckets.find(b => b.currency === fundingCurrency);
+      if (bucket) available = bucket.availableBalance;
+    }
+
+    const hasFunds = this.orderSide() === 'SELL' || available > 0;
+
+    return {
+      subtotalInStockCurrency,
+      hasFunds
+    };
   });
 
   constructor() {
@@ -79,12 +139,28 @@ export class StockDetails {
     });
   }
 
+  ngOnInit(): void {
+    if (!this.walletService.wallet()) {
+      this.walletService.loadWallet();
+    }
+    if (!this.tradingAccountService.tradingAccount()) {
+      this.tradingAccountService.loadTradingAccount();
+    }
+
+    this.forexService.getSupportedCurrencies().subscribe(currencies => {
+      this.supportedCurrencies.set(currencies);
+    });
+  }
+
   onBack(): void {
     this.back.emit();
   }
 
-  placeOrder(): void {
-    const s = this.stock();
+  openDeposit(): void {
+    this.toastService.info(`Deposit flow for ${this.resolvedFundingCurrency()} triggered.`);
+  }
+
+  reviewOrder(): void {
     const type = this.orderType();
     const lPrice = this.limitPrice();
 
@@ -98,19 +174,28 @@ export class StockDetails {
       return;
     }
 
+    this.showReviewModal.set(true);
+  }
+
+  executeOrder(): void {
+    const s = this.stock();
     this.isSubmittingOrder.set(true);
 
     this.orderService.createOrder({
       stockId: s.id,
       quantity: this.orderQuantity(),
       side: this.orderSide(),
-      orderType: type,
+      orderType: this.orderType(),
       timeInForce: this.timeInForce(),
-      limitPrice: type === 'LIMIT' ? lPrice : null
+      limitPrice: this.orderType() === 'LIMIT' ? this.limitPrice() : null,
+      fundingCurrency: this.resolvedFundingCurrency()
     }).subscribe({
       next: () => {
         this.toastService.success(`${this.orderSide()} order for ${s.symbol} placed successfully!`);
+        this.walletService.loadWallet();
         this.isSubmittingOrder.set(false);
+        this.showReviewModal.set(false);
+        this.onBack();
       },
       error: () => {
         this.isSubmittingOrder.set(false);

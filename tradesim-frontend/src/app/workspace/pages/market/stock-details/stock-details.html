@@ -19,7 +19,7 @@
                         [color]="stock().status === 'ACTIVE' ? 'success' : stock().status === 'HALTED' ? 'warning' : 'danger'">
                         {{ stock().status }}
                     </app-badge>
-                    <app-badge color="secondary">
+                    <app-badge color="accent">
                         {{ stock().marketCapCategory }} CAP
                     </app-badge>
                 </div>
@@ -29,7 +29,7 @@
             <div class="stock-details__price-group">
                 <span class="stock-details__price-label">Current Price</span>
                 <div class="stock-details__price-value">
-                    <app-price-indicator [value]="stock().currentPrice" [showArrow]="false" currency="INR"
+                    <app-price-indicator [value]="stock().currentPrice" [showArrow]="false" currency="USD"
                         [valueDecimals]="2"></app-price-indicator>
                 </div>
             </div>
@@ -40,7 +40,7 @@
         <div class="stock-details__main">
             <div class="stock-details__chart-card">
                 <app-candlestick-chart [data]="chartData()" width="100%" [height]="420"
-                    currency="INR"></app-candlestick-chart>
+                    currency="USD"></app-candlestick-chart>
             </div>
 
             <div class="stock-details__stats-grid">
@@ -51,7 +51,7 @@
 
                 <app-card variant="surface">
                     <span class="stat-label">Market Cap</span>
-                    <strong class="stat-value">{{ stock().marketCap | currency:'INR':'symbol':'1.0-0' }}</strong>
+                    <strong class="stat-value">{{ stock().marketCap | currency:'USD':'symbol':'1.0-0' }}</strong>
                 </app-card>
 
                 <app-card variant="surface">
@@ -68,7 +68,7 @@
 
         <aside class="stock-details__order-panel">
             <app-card>
-                <h2 class="order-panel__title">Place Order</h2>
+                <h2 class="order-panel__title">Order Ticket</h2>
 
                 <div class="order-panel__form">
                     <div class="order-panel__field">
@@ -101,24 +101,121 @@
                         <app-input label="Limit Price">
                             <input appInput type="number" step="0.05" [(ngModel)]="limitPrice"
                                 placeholder="Enter limit price" />
-                            <span suffix>INR</span>
+                            <span suffix>USD</span>
                         </app-input>
+                    </div>
+                    }
+
+                    <div class="order-panel__field">
+                        <div class="field-label-row">
+                            <span class="field-label">Funding Source</span>
+                        </div>
+                        <app-segmented-control [options]="fundingMethodOptions()" [(ngModel)]="fundingMethod"
+                            size="small" [fullWidth]="true"></app-segmented-control>
+                    </div>
+
+                    @if (fundingMethod() === 'CUSTOM') {
+                    <div class="order-panel__field">
+                        <app-dropdown [options]="walletBucketOptions()" [(ngModel)]="customCurrency"
+                            placeholder="Select currency bucket" size="medium"></app-dropdown>
+                    </div>
+                    }
+
+                    @if (!financials().hasFunds) {
+                    <div class="order-panel__warning">
+                        <div class="warning-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span>Insufficient {{ resolvedFundingCurrency() }} Balance</span>
+                        </div>
+                        <app-button variant="outline" size="small" (buttonClick)="openDeposit()">Deposit</app-button>
                     </div>
                     }
 
                     <div class="order-panel__summary">
                         <div class="summary-row">
-                            <span>Estimated Total</span>
-                            <strong>{{ estimatedTotal() | currency:'INR':'symbol':'1.2-2' }}</strong>
+                            <span>Estimated Subtotal</span>
+                            <strong>{{ financials().subtotalInStockCurrency | number:'1.2-2' }} USD</strong>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span class="disclaimer-text">* FX conversions and final fees will be calculated securely
+                                during execution.</span>
                         </div>
                     </div>
 
                     <app-button [variant]="orderSide() === 'BUY' ? 'success' : 'danger'"
-                        [isLoading]="isSubmittingOrder()" width="100%" size="large" (buttonClick)="placeOrder()">
-                        {{ orderSide() }} {{ stock().symbol }}
+                        [disabled]="!financials().hasFunds" width="100%" size="large" (buttonClick)="reviewOrder()">
+                        Review Order
                     </app-button>
                 </div>
             </app-card>
         </aside>
     </div>
 </div>
+
+@if (showReviewModal()) {
+<app-modal (closed)="showReviewModal.set(false)" ariaLabel="Confirm Order Details">
+    <div class="review-modal">
+        <h3 class="review-modal__title">Confirm Order Details</h3>
+
+        <div class="review-modal__receipt">
+            <div class="review-row action-row">
+                <span class="review-label">Action</span>
+                <div class="action-text">
+                    <span [class]="orderSide() === 'BUY' ? 'text-success' : 'text-danger'">{{ orderSide() }}</span>
+                    <strong>{{ orderQuantity() }} {{ orderQuantity() === 1 ? 'share' : 'shares' }}</strong> of
+                    <span class="text-accent">{{ stock().symbol }}</span>
+                </div>
+            </div>
+
+            <div class="review-row">
+                <span class="review-label">Order Type</span>
+                <div class="badge-group">
+                    <app-badge [color]="orderType() === 'MARKET' ? 'primary' : 'warning'">{{ orderType() }}</app-badge>
+                    <app-badge color="accent">{{ timeInForce() }}</app-badge>
+                </div>
+            </div>
+
+            @if (orderType() === 'LIMIT') {
+            <div class="review-row">
+                <span class="review-label">Limit Price</span>
+                <strong>{{ limitPrice() | number:'1.2-2' }} USD</strong>
+            </div>
+            }
+
+            <div class="review-row">
+                <span class="review-label">Funding Source</span>
+                <strong class="funding-highlight">
+                    @if (fundingMethod() === 'BASE') {
+                    Base Wallet ({{ resolvedFundingCurrency() }})
+                    } @else {
+                    {{ resolvedFundingCurrency() }} Wallet
+                    }
+                </strong>
+            </div>
+
+            <div class="review-divider"></div>
+
+            <div class="review-row">
+                <span class="review-label">Estimated Subtotal</span>
+                <strong>{{ financials().subtotalInStockCurrency | number:'1.2-2' }} USD</strong>
+            </div>
+
+            <div class="review-row total-row">
+                <span class="disclaimer-text">* Final charges including margin locks and FX conversions will be applied
+                    by the exchange.</span>
+            </div>
+        </div>
+
+        <div class="review-modal__actions">
+            <app-button variant="outline" (buttonClick)="showReviewModal.set(false)">Cancel</app-button>
+            <app-button [variant]="orderSide() === 'BUY' ? 'success' : 'danger'" [isLoading]="isSubmittingOrder()"
+                (buttonClick)="executeOrder()">Submit Order</app-button>
+        </div>
+    </div>
+</app-modal>
+}

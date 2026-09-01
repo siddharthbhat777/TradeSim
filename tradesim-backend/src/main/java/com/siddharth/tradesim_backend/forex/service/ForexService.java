@@ -2,7 +2,9 @@ package com.siddharth.tradesim_backend.forex.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
+import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
 import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
+import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -10,11 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ForexService {
     private final ExchangeRateRepository exchangeRateRepository;
+    private final SupportedCurrencyRepository supportedCurrencyRepository;
 
     @Transactional(readOnly = true)
     public BigDecimal convert(BigDecimal amount, String fromCurrency, String toCurrency) {
@@ -27,6 +32,22 @@ public class ForexService {
 
         BigDecimal amountInInr = amount.divide(sourceFromInrRate, 8, RoundingMode.HALF_UP);
         return amountInInr.multiply(targetFromInrRate).setScale(4, RoundingMode.HALF_UP);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> fetchActiveSupportedCurrencies() {
+        List<String> currencies = new ArrayList<>(
+                supportedCurrencyRepository.findAll().stream()
+                        .filter(SupportedCurrency::isActive)
+                        .map(SupportedCurrency::getCode)
+                        .toList()
+        );
+
+        if (!currencies.contains("INR")) {
+            currencies.add("INR");
+        }
+
+        return currencies;
     }
 
     private BigDecimal getInrRate(String currency) {
