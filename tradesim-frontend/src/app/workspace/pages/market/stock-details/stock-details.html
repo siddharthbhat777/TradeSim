@@ -200,57 +200,59 @@
 
             <div class="review-divider"></div>
 
-            @if (isEstimatingOrder()) {
-            <div class="review-skeleton-wrapper">
-                <div class="skeleton-row">
-                    <app-skeleton shape="text" width="40%"></app-skeleton>
-                    <app-skeleton shape="text" width="30%"></app-skeleton>
-                </div>
-                <div class="skeleton-row">
-                    <app-skeleton shape="text" width="35%"></app-skeleton>
-                    <app-skeleton shape="text" width="25%"></app-skeleton>
-                </div>
-                <div class="skeleton-row total-skeleton">
-                    <app-skeleton shape="text" width="50%"></app-skeleton>
-                    <app-skeleton shape="text" width="35%"></app-skeleton>
-                </div>
-            </div>
-            } @else if (orderEstimate(); as estimate) {
             <div class="review-row">
                 <span class="review-label">Estimated Subtotal</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="text" width="100px" height="18px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
                 <strong>{{ estimate.subtotalInFundingCurrency | number:'1.2-2' }} {{ estimate.fundingCurrency
                     }}</strong>
+                }
             </div>
 
-            @if (estimate.safetyBufferInFundingCurrency > 0) {
+            @if (isEstimatingOrder() ? (orderType() === 'MARKET' && orderSide() === 'BUY') :
+            ((orderEstimate()?.safetyBufferInFundingCurrency ?? 0) > 0)) {
             <div class="review-row">
                 <span class="review-label">Market Safety Buffer</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="text" width="80px" height="18px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
                 <strong>{{ estimate.safetyBufferInFundingCurrency | number:'1.2-2' }} {{ estimate.fundingCurrency
                     }}</strong>
+                }
             </div>
             }
 
-            @if (estimate.fxFee > 0) {
+            @if (isEstimatingOrder() ? (resolvedFundingCurrency() !== baseCurrency()) : ((orderEstimate()?.fxFee ?? 0) >
+            0)) {
             <div class="review-row">
                 <span class="review-label">Estimated FX Fee</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="text" width="80px" height="18px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
                 <strong>{{ estimate.fxFee | number:'1.2-2' }} {{ estimate.fundingCurrency }}</strong>
+                }
             </div>
             }
 
             <div class="review-row total-row">
                 <span class="total-label">Estimated Total {{ orderSide() === 'BUY' ? 'Lock' : 'Credit' }}</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="rect" width="120px" height="24px" rounded="4px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
                 <strong class="total-value" [class.text-success]="orderSide() === 'BUY'"
                     [class.text-danger]="orderSide() === 'SELL'">
                     {{ estimate.finalTotal | number:'1.2-2' }} {{ estimate.fundingCurrency }}
                 </strong>
+                }
             </div>
 
-            @if (estimate.safetyBufferInFundingCurrency > 0) {
-            <span class="disclaimer-text" style="margin-top: 8px; text-align: left;">
+            @if (isEstimatingOrder() ? (orderType() === 'MARKET' && orderSide() === 'BUY') :
+            ((orderEstimate()?.safetyBufferInFundingCurrency ?? 0) > 0)) {
+            <span class="disclaimer-text" style="margin-top: 8px;">
                 * A safety buffer is temporarily locked to protect against price slippage. Unused funds are refunded
                 instantly.
             </span>
-            }
             }
         </div>
 
@@ -274,8 +276,8 @@
         <div class="review-modal__actions">
             <app-button variant="outline" (buttonClick)="showReviewModal.set(false)">Cancel</app-button>
             <app-button [variant]="orderSide() === 'BUY' ? 'success' : 'danger'"
-                [disabled]="isEstimatingOrder() || !orderEstimate()?.hasFunds" [isLoading]="isSubmittingOrder()"
-                (buttonClick)="executeOrder()">Submit Order</app-button>
+                [disabled]="isEstimatingOrder() || !(orderEstimate()?.hasFunds ?? false)"
+                [isLoading]="isSubmittingOrder()" (buttonClick)="executeOrder()">Submit Order</app-button>
         </div>
     </div>
 </app-modal>
@@ -290,27 +292,7 @@
             [required]="true"></app-segmented-control>
 
         <div class="fund-modal__content">
-            @if (isFetchingRate()) {
-            <div class="fund-skeleton-wrapper">
-                <div class="skeleton-row">
-                    <app-skeleton shape="text" width="30%"></app-skeleton>
-                    <app-skeleton shape="text" width="40%"></app-skeleton>
-                </div>
-                <div class="skeleton-row">
-                    <app-skeleton shape="text" width="30%"></app-skeleton>
-                    <app-skeleton shape="text" width="40%"></app-skeleton>
-                </div>
-                <div class="fund-field" style="margin-top: 0">
-                    <app-skeleton shape="text" width="25%"></app-skeleton>
-                    <app-skeleton shape="rect" height="46px"></app-skeleton>
-                </div>
-                <div class="fund-modal__actions">
-                    <app-skeleton shape="rect" height="42px" width="80px"></app-skeleton>
-                    <app-skeleton shape="rect" height="42px" width="130px"></app-skeleton>
-                </div>
-            </div>
-            } @else {
-            @if (requiredFundingAmount() > 0) {
+            @if (requiredFundingAmount() > 0 && !isFetchingRate()) {
             <div class="fund-notice">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -330,18 +312,23 @@
             </div>
             <div class="fund-row">
                 <span class="fund-label">Available Balance</span>
+                @if (isFetchingRate()) {
+                <app-skeleton shape="text" width="80px" height="18px"></app-skeleton>
+                } @else {
                 <strong>{{ baseBalance() | number:'1.2-2' }} {{ baseCurrency() }}</strong>
+                }
             </div>
             <div class="fund-field">
                 <app-input label="Deposit Amount">
-                    <input appInput type="number" [(ngModel)]="depositAmount" placeholder="0.00" />
+                    <input appInput type="number" [(ngModel)]="depositAmount" placeholder="0.00"
+                        [disabled]="isFetchingRate()" />
                     <span suffix>{{ baseCurrency() }}</span>
                 </app-input>
             </div>
             <div class="fund-modal__actions">
                 <app-button variant="outline" (buttonClick)="showFundModal.set(false)">Cancel</app-button>
                 <app-button variant="primary" [isLoading]="isProcessingFund()"
-                    [disabled]="!depositAmount() || (depositAmount() || 0) <= 0"
+                    [disabled]="!depositAmount() || (depositAmount() || 0) <= 0 || isFetchingRate()"
                     (buttonClick)="processDeposit()">Deposit Funds</app-button>
             </div>
             } @else {
@@ -351,14 +338,34 @@
             </div>
             <div class="fund-row">
                 <span class="fund-label">To</span>
+                @if (isFetchingRate()) {
+                <app-skeleton shape="text" width="120px" height="18px"></app-skeleton>
+                } @else {
                 <strong>{{ resolvedFundingCurrency() }} (Avail: {{ targetBalance() | number:'1.2-2' }})</strong>
+                }
             </div>
             <div class="fund-field">
                 <app-input label="Amount to Convert">
-                    <input appInput type="number" [(ngModel)]="convertAmount" placeholder="0.00" />
+                    <input appInput type="number" [(ngModel)]="convertAmount" placeholder="0.00"
+                        [disabled]="isFetchingRate()" />
                     <span suffix>{{ baseCurrency() }}</span>
                 </app-input>
-                @if (convertAmount() && convertAmount()! > 0) {
+                @if (isFetchingRate()) {
+                <div class="conversion-preview">
+                    <div class="preview-row">
+                        <span>Estimated Target</span>
+                        <app-skeleton shape="text" width="90px" height="16px"></app-skeleton>
+                    </div>
+                    <div class="preview-row">
+                        <span>Est. FX Fee (~1%)</span>
+                        <app-skeleton shape="text" width="70px" height="16px"></app-skeleton>
+                    </div>
+                    <div class="preview-row total-row">
+                        <span>Net Received</span>
+                        <app-skeleton shape="text" width="110px" height="18px"></app-skeleton>
+                    </div>
+                </div>
+                } @else if (convertAmount() && convertAmount()! > 0) {
                 <div class="conversion-preview">
                     <div class="preview-row">
                         <span>Estimated Target</span>
@@ -385,10 +392,9 @@
             <div class="fund-modal__actions">
                 <app-button variant="outline" (buttonClick)="showFundModal.set(false)">Cancel</app-button>
                 <app-button variant="primary" [isLoading]="isProcessingFund()"
-                    [disabled]="!convertAmount() || (convertAmount() || 0) <= 0 || (convertAmount() || 0) > baseBalance()"
+                    [disabled]="!convertAmount() || (convertAmount() || 0) <= 0 || (convertAmount() || 0) > baseBalance() || isFetchingRate()"
                     (buttonClick)="processConversion()">Convert Funds</app-button>
             </div>
-            }
             }
         </div>
     </div>
