@@ -132,7 +132,8 @@
                             </svg>
                             <span>Insufficient {{ resolvedFundingCurrency() }} Balance</span>
                         </div>
-                        <app-button variant="outline" size="small" (buttonClick)="openDeposit()">Deposit</app-button>
+                        <app-button variant="outline" size="small" [isLoading]="isFetchingRate()"
+                            (buttonClick)="openDeposit()">Deposit</app-button>
                     </div>
                     }
 
@@ -266,7 +267,8 @@
                 </svg>
                 <span>Insufficient {{ estimate.fundingCurrency }} Balance</span>
             </div>
-            <app-button variant="outline" size="small" (buttonClick)="openDeposit()">Deposit</app-button>
+            <app-button variant="outline" size="small" [isLoading]="isFetchingRate()"
+                (buttonClick)="openDeposit()">Deposit</app-button>
         </div>
         }
         }
@@ -394,3 +396,24 @@
     </div>
 </app-modal>
 }
+
+<app-drawer [(isOpen)]="showSuccessDrawer" position="bottom" (closed)="onSuccessDrawerClosed()">
+    <div class="success-drawer-content">
+        <div class="success-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="success-icon">
+                <path class="success-circle" d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline class="success-check" points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <h3 class="success-title">Order Placed Successfully</h3>
+        <p class="success-message">
+            Your {{ orderSide() === 'BUY' ? 'buy' : 'sell' }} order for <strong>{{ orderQuantity() }}</strong> share(s)
+            of <strong>{{ stock().symbol }}</strong> has been submitted.
+        </p>
+        <div class="success-actions">
+            <app-button variant="primary" size="large" width="100%" (buttonClick)="onBackToMarket()">Back to
+                Market</app-button>
+        </div>
+    </div>
+</app-drawer>

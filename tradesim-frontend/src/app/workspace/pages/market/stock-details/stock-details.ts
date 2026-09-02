@@ -19,6 +19,7 @@ import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Modal } from '../../../../shared/components/modal/modal';
 import { Skeleton } from '../../../../shared/components/loaders/skeleton/skeleton';
+import { Drawer } from '../../../../shared/components/drawer/drawer';
 import { OrderEstimateResponse } from '../../../../models/order';
 
 @Component({
@@ -37,7 +38,8 @@ import { OrderEstimateResponse } from '../../../../models/order';
     InputDirective,
     Dropdown,
     Modal,
-    Skeleton
+    Skeleton,
+    Drawer
   ],
   templateUrl: './stock-details.html',
   styleUrl: './stock-details.scss',
@@ -66,6 +68,7 @@ export class StockDetails implements OnInit {
   readonly customCurrency = signal<string | null>(null);
 
   readonly showReviewModal = signal<boolean>(false);
+  readonly showSuccessDrawer = signal<boolean>(false);
   readonly isEstimatingOrder = signal<boolean>(false);
   readonly isSubmittingOrder = signal<boolean>(false);
   readonly isFetchingRate = signal<boolean>(false);
@@ -380,16 +383,24 @@ export class StockDetails implements OnInit {
       fundingCurrency: this.resolvedFundingCurrency()
     }).subscribe({
       next: () => {
-        this.toastService.success(`${this.orderSide()} order for ${s.symbol} placed successfully!`);
         this.walletService.loadWallet();
         this.isSubmittingOrder.set(false);
         this.showReviewModal.set(false);
-        this.onBack();
+        this.showSuccessDrawer.set(true);
       },
       error: () => {
         this.isSubmittingOrder.set(false);
       }
     });
+  }
+
+  onSuccessDrawerClosed(): void {
+    this.showSuccessDrawer.set(false);
+  }
+
+  onBackToMarket(): void {
+    this.showSuccessDrawer.set(false);
+    this.onBack();
   }
 
   private generateHistoricalData(basePrice: number): void {
