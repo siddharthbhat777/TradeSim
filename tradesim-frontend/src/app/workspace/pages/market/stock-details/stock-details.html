@@ -72,20 +72,20 @@
 
                 <div class="order-panel__form">
                     <div class="order-panel__field">
-                        <app-segmented-control [options]="sideOptions" [(ngModel)]="orderSide"
-                            [fullWidth]="true"></app-segmented-control>
+                        <app-segmented-control [options]="sideOptions" [(ngModel)]="orderSide" [fullWidth]="true"
+                            [required]="true"></app-segmented-control>
                     </div>
 
                     <div class="order-panel__field">
                         <span class="field-label">Order Type</span>
                         <app-segmented-control [options]="typeOptions" [(ngModel)]="orderType" size="small"
-                            [fullWidth]="true"></app-segmented-control>
+                            [fullWidth]="true" [required]="true"></app-segmented-control>
                     </div>
 
                     <div class="order-panel__field">
                         <span class="field-label">Time In Force</span>
                         <app-segmented-control [options]="tifOptions" [(ngModel)]="timeInForce" size="small"
-                            [fullWidth]="true"></app-segmented-control>
+                            [fullWidth]="true" [required]="true"></app-segmented-control>
                     </div>
 
                     <div class="order-panel__field">
@@ -111,7 +111,7 @@
                             <span class="field-label">Funding Source</span>
                         </div>
                         <app-segmented-control [options]="fundingMethodOptions()" [(ngModel)]="fundingMethod"
-                            size="small" [fullWidth]="true"></app-segmented-control>
+                            size="small" [fullWidth]="true" [required]="true"></app-segmented-control>
                     </div>
 
                     @if (fundingMethod() === 'CUSTOM') {
@@ -132,8 +132,7 @@
                             </svg>
                             <span>Insufficient {{ resolvedFundingCurrency() }} Balance</span>
                         </div>
-                        <app-button variant="outline" size="small" [isLoading]="isFetchingRate()"
-                            (buttonClick)="openDeposit()">Deposit</app-button>
+                        <app-button variant="outline" size="small" (buttonClick)="openDeposit()">Deposit</app-button>
                     </div>
                     }
 
@@ -267,8 +266,7 @@
                 </svg>
                 <span>Insufficient {{ estimate.fundingCurrency }} Balance</span>
             </div>
-            <app-button variant="outline" size="small" [isLoading]="isFetchingRate()"
-                (buttonClick)="openDeposit()">Deposit</app-button>
+            <app-button variant="outline" size="small" (buttonClick)="openDeposit()">Deposit</app-button>
         </div>
         }
         }
@@ -288,8 +286,8 @@
     <div class="fund-modal">
         <h3 class="fund-modal__title">Manage Funds</h3>
 
-        <app-segmented-control [options]="fundTabs()" [(ngModel)]="activeFundTab"
-            [fullWidth]="true"></app-segmented-control>
+        <app-segmented-control [options]="fundTabs()" [(ngModel)]="activeFundTab" [fullWidth]="true"
+            [required]="true"></app-segmented-control>
 
         <div class="fund-modal__content">
             @if (isFetchingRate()) {
@@ -400,10 +398,9 @@
 <app-drawer [(isOpen)]="showSuccessDrawer" position="bottom" (closed)="onSuccessDrawerClosed()">
     <div class="success-drawer-content">
         <div class="success-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" class="success-icon">
-                <path class="success-circle" d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline class="success-check" points="22 4 12 14.01 9 11.01"></polyline>
+            <svg class="success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="success-circle" cx="26" cy="26" r="24" fill="none" />
+                <path class="success-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
             </svg>
         </div>
         <h3 class="success-title">Order Placed Successfully</h3>

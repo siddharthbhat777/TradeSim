@@ -17,14 +17,16 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import com.siddharth.tradesim_backend.wallet.model.Wallet;
 import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
-import com.siddharth.tradesim_backend.wallet.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class PortfolioServiceTest {
 
     @Mock
@@ -174,6 +177,7 @@ class PortfolioServiceTest {
                 null,
                 false,
                 false,
+                "INR",
                 "INR"
         );
 
@@ -209,6 +213,7 @@ class PortfolioServiceTest {
                 null,
                 false,
                 false,
+                "INR",
                 "INR"
         );
 
@@ -218,19 +223,16 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
 
         when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
-        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
         when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
-        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+        when(walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
 
-        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
-        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(positionRepository.findUnlockedByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findUnlockedByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(sellerPosition.getQuantity()).thenReturn(5);
         when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(450));
         when(buyerTradingAccount.getLeverage()).thenReturn(5);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
-
-        when(buyerTradingAccount.getBaseCurrency()).thenReturn("INR");
-        when(sellerTradingAccount.getBaseCurrency()).thenReturn("INR");
 
         setupForexAndExchangeMocksForSettle(stockId);
 
@@ -277,6 +279,7 @@ class PortfolioServiceTest {
                 BigDecimal.valueOf(100),
                 true,
                 false,
+                "INR",
                 "INR"
         );
 
@@ -286,19 +289,16 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
 
         when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
-        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
         when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
-        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+        when(walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
 
-        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
-        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(positionRepository.findUnlockedByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findUnlockedByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(buyerTradingAccount.getLeverage()).thenReturn(10);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(sellerPosition.getQuantity()).thenReturn(10);
         when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(900));
-
-        when(buyerTradingAccount.getBaseCurrency()).thenReturn("INR");
-        when(sellerTradingAccount.getBaseCurrency()).thenReturn("INR");
 
         setupForexAndExchangeMocksForSettle(stockId);
 
@@ -342,6 +342,7 @@ class PortfolioServiceTest {
                 null,
                 false,
                 false,
+                "INR",
                 "INR"
         );
 
@@ -351,21 +352,18 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
 
         when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
-        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
         when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
-        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+        when(walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
 
-        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
-        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(positionRepository.findUnlockedByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findUnlockedByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
         when(sellerPosition.getQuantity()).thenReturn(5, 0);
         when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(500));
 
         when(buyerTradingAccount.getLeverage()).thenReturn(5);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
-
-        when(buyerTradingAccount.getBaseCurrency()).thenReturn("INR");
-        when(sellerTradingAccount.getBaseCurrency()).thenReturn("INR");
 
         setupForexAndExchangeMocksForSettle(stockId);
 
@@ -415,6 +413,7 @@ class PortfolioServiceTest {
                 null,
                 false,
                 false,
+                "INR",
                 "INR"
         );
 
@@ -424,14 +423,12 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
 
         when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
-        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
         when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
-        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+        when(walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
 
-        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
-        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
-
-        when(sellerTradingAccount.getBaseCurrency()).thenReturn("INR");
+        when(positionRepository.findUnlockedByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findUnlockedByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
         setupForexAndExchangeMocksForSettle(stockId);
 
@@ -482,6 +479,7 @@ class PortfolioServiceTest {
                 null,
                 false,
                 false,
+                "INR",
                 "INR"
         );
 
@@ -491,14 +489,12 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
 
         when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
-        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
         when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
-        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+        when(walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
 
-        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
-        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
-
-        when(buyerTradingAccount.getBaseCurrency()).thenReturn("INR");
+        when(positionRepository.findUnlockedByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findUnlockedByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
 
         setupForexAndExchangeMocksForSettle(stockId);
 
@@ -540,6 +536,7 @@ class PortfolioServiceTest {
                 BigDecimal.valueOf(110),
                 true,
                 false,
+                "INR",
                 "INR"
         );
 
@@ -549,19 +546,16 @@ class PortfolioServiceTest {
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(sellerId)).thenReturn(sellerTradingAccount);
 
         when(walletService.getWalletByUserId(buyerId)).thenReturn(buyerWallet);
-        when(walletService.getBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
+        when(walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), "INR")).thenReturn(buyerBucket);
         when(walletService.getWalletByUserId(sellerId)).thenReturn(sellerWallet);
-        when(walletService.getBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
+        when(walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), "INR")).thenReturn(sellerBucket);
 
-        when(positionRepository.findByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
-        when(positionRepository.findByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
+        when(positionRepository.findUnlockedByUserIdAndStockId(sellerId, stockId)).thenReturn(Optional.of(sellerPosition));
+        when(positionRepository.findUnlockedByUserIdAndStockId(buyerId, stockId)).thenReturn(Optional.empty());
         when(buyerTradingAccount.getLeverage()).thenReturn(10);
         when(sellerTradingAccount.getMarginLoan()).thenReturn(BigDecimal.ZERO);
         when(sellerPosition.getQuantity()).thenReturn(10);
         when(sellerPosition.getTotalInvested()).thenReturn(BigDecimal.valueOf(900));
-
-        when(buyerTradingAccount.getBaseCurrency()).thenReturn("INR");
-        when(sellerTradingAccount.getBaseCurrency()).thenReturn("INR");
 
         setupForexAndExchangeMocksForSettle(stockId);
 

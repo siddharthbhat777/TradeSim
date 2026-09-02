@@ -1,12 +1,18 @@
 .number-stepper {
   display: inline-flex;
   align-items: center;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow:
-    0 0 0 1px var(--border),
-    0 1px 2px rgba(15, 23, 42, 0.04);
+  border-radius: 8px;
+  border: 1px solid var(--border);
   background: var(--surface);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  overflow: hidden;
+
+  &:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
 
   &--small {
     height: 38px;
@@ -15,7 +21,6 @@
     }
     .number-stepper__input {
       font-size: 0.9rem;
-      width: 44px;
     }
   }
 
@@ -25,8 +30,7 @@
       width: 42px;
     }
     .number-stepper__input {
-      font-size: 1rem;
-      width: 50px;
+      font-size: 0.95rem;
     }
   }
 
@@ -37,7 +41,6 @@
     }
     .number-stepper__input {
       font-size: 1.05rem;
-      width: 56px;
     }
   }
 
@@ -47,90 +50,82 @@
     justify-content: center;
     height: 100%;
     border: none;
+    background: transparent;
     cursor: pointer;
     transition:
-      background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      filter 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.15s ease;
-    margin: 0;
+      background-color 0.15s ease,
+      color 0.15s ease;
     padding: 0;
-
-    &:active:not(:disabled) {
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
-    }
+    margin: 0;
 
     &:disabled {
-      opacity: 0.55;
+      opacity: 0.35;
       cursor: not-allowed;
     }
 
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
     &--primary {
-      background: var(--primary);
-      color: white;
+      color: var(--primary);
       &:hover:not(:disabled) {
-        background: var(--primary-hover);
+        background: color-mix(in srgb, var(--primary) 10%, transparent);
       }
       &:active:not(:disabled) {
-        filter: brightness(0.9);
+        background: color-mix(in srgb, var(--primary) 20%, transparent);
       }
     }
 
     &--secondary {
-      background: var(--secondary);
-      color: white;
+      color: var(--secondary);
       &:hover:not(:disabled) {
-        background: var(--secondary-hover);
+        background: color-mix(in srgb, var(--secondary) 10%, transparent);
       }
       &:active:not(:disabled) {
-        filter: brightness(0.9);
+        background: color-mix(in srgb, var(--secondary) 20%, transparent);
       }
     }
 
     &--success {
-      background: var(--success);
-      color: white;
+      color: var(--success);
       &:hover:not(:disabled) {
-        filter: brightness(0.94);
+        background: color-mix(in srgb, var(--success) 10%, transparent);
       }
       &:active:not(:disabled) {
-        filter: brightness(0.85);
+        background: color-mix(in srgb, var(--success) 20%, transparent);
       }
     }
 
     &--danger {
-      background: var(--danger);
-      color: white;
+      color: var(--danger);
       &:hover:not(:disabled) {
-        filter: brightness(0.94);
+        background: color-mix(in srgb, var(--danger) 10%, transparent);
       }
       &:active:not(:disabled) {
-        filter: brightness(0.85);
+        background: color-mix(in srgb, var(--danger) 20%, transparent);
       }
     }
 
     &--warning {
-      background: var(--warning);
-      color: #0f172a;
+      color: var(--warning);
       &:hover:not(:disabled) {
-        filter: brightness(0.94);
+        background: color-mix(in srgb, var(--warning) 15%, transparent);
       }
       &:active:not(:disabled) {
-        filter: brightness(0.85);
+        background: color-mix(in srgb, var(--warning) 30%, transparent);
       }
     }
 
     &--outline {
-      background: transparent;
-      color: var(--text-primary);
-
+      color: var(--text-secondary);
       &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+        background: var(--surface-secondary);
+        color: var(--text-primary);
       }
-
       &:active:not(:disabled) {
-        background: color-mix(in srgb, var(--text-primary) 9%, transparent);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        background: var(--border);
       }
     }
   }
@@ -138,18 +133,20 @@
   &__input {
     flex: 1;
     height: 100%;
+    min-width: 64px;
     border: none;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
     background: transparent;
     color: var(--text-primary);
     font: inherit;
     font-weight: 600;
     text-align: center;
     outline: none;
-    padding: 0;
-    margin: 0;
+    padding: 0 8px;
     -moz-appearance: textfield;
     appearance: textfield;
-    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease;
 
     &::-webkit-inner-spin-button,
     &::-webkit-outer-spin-button {
@@ -158,8 +155,8 @@
       margin: 0;
     }
 
-    &:focus-visible {
-      background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+    &:focus {
+      background: color-mix(in srgb, var(--text-primary) 3%, transparent);
     }
   }
 }

@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -128,5 +129,38 @@ class WalletServiceTest {
         assertThat(inrBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(2000));
         assertThat(usdBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(98));
         verify(ledgerService).recordFxConversionFee(eq(usdBucket), any(), eq(BigDecimal.valueOf(2)), any(), any(), any(), eq("INR"), eq("USD"));
+    }
+
+    @Test
+    void shouldReturnExistingBucketWhenCallingGetOrCreate() {
+        UUID walletId = UUID.randomUUID();
+        WalletBucket existingBucket = WalletBucket.builder().currency("USD").balance(BigDecimal.TEN).build();
+
+        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(walletId, "USD"))
+                .thenReturn(Optional.of(existingBucket));
+
+        WalletBucket result = walletService.getOrCreateBucketForUpdate(walletId, "USD");
+
+        assertThat(result).isEqualTo(existingBucket);
+        verify(walletBucketRepository, never()).save(any());
+        verify(walletRepository, never()).findById(any());
+    }
+
+    @Test
+    void shouldCreateNewBucketWhenCallingGetOrCreateAndItDoesNotExist() {
+        UUID walletId = UUID.randomUUID();
+        Wallet wallet = Wallet.builder().id(walletId).build();
+
+        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(walletId, "JPY"))
+                .thenReturn(Optional.empty());
+        when(walletRepository.findById(walletId)).thenReturn(Optional.of(wallet));
+        when(walletBucketRepository.save(any(WalletBucket.class))).thenAnswer(i -> i.getArgument(0));
+
+        WalletBucket result = walletService.getOrCreateBucketForUpdate(walletId, "JPY");
+
+        assertThat(result.getCurrency()).isEqualTo("JPY");
+        assertThat(result.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(result.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        verify(walletBucketRepository).save(any(WalletBucket.class));
     }
 }

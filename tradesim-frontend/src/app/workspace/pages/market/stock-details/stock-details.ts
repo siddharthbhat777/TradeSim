@@ -400,7 +400,9 @@ export class StockDetails implements OnInit {
 
   onBackToMarket(): void {
     this.showSuccessDrawer.set(false);
-    this.onBack();
+    setTimeout(() => {
+      this.onBack();
+    }, 300);
   }
 
   private generateHistoricalData(basePrice: number): void {

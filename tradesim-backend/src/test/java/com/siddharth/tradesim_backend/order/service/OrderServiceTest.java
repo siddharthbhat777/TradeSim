@@ -14,6 +14,7 @@ import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.order.enums.TimeInForce;
 import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.model.dto.OrderEstimateResponse;
 import com.siddharth.tradesim_backend.order.model.dto.OrderRequest;
 import com.siddharth.tradesim_backend.order.model.dto.OrderResponse;
 import com.siddharth.tradesim_backend.order.orderbook.MatchResult;
@@ -36,6 +37,10 @@ import com.siddharth.tradesim_backend.wallet.model.Wallet;
 import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -43,11 +48,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class OrderServiceTest {
     private OrderService orderService;
 
@@ -126,6 +134,7 @@ class OrderServiceTest {
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
 
         when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
         when(tradingAccount.getBaseCurrency()).thenReturn("INR");
 
         Wallet wallet = Wallet.builder().id(UUID.randomUUID()).multiCurrencyStatus(status).build();
@@ -173,7 +182,7 @@ class OrderServiceTest {
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
         mockActiveUserAndStock(tradingAccount, stock, MultiCurrencyStatus.APPROVED);
-        when(walletService.getBucketForUpdate(any(UUID.class), eq("USD"))).thenReturn(usdBucket);
+        when(walletService.getOrCreateBucketForUpdate(any(UUID.class), eq("USD"))).thenReturn(usdBucket);
         when(tradingAccount.getLeverage()).thenReturn(5);
         when(exchangeService.resolveDayOrderExpiry(exchangeId)).thenReturn(expiresAt);
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false, false, null));
@@ -201,7 +210,7 @@ class OrderServiceTest {
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
         mockActiveUserAndStock(tradingAccount, stock, MultiCurrencyStatus.UNREQUESTED);
-        when(walletService.getBucketForUpdate(any(UUID.class), eq("INR"))).thenReturn(bucket);
+        when(walletService.getOrCreateBucketForUpdate(any(UUID.class), eq("INR"))).thenReturn(bucket);
         when(tradingAccount.getLeverage()).thenReturn(5);
         when(exchangeService.resolveDayOrderExpiry(exchangeId)).thenReturn(expiresAt);
         when(orderMatchingEngine.match(any())).thenReturn(new MatchResult(false, false, null));
@@ -237,7 +246,7 @@ class OrderServiceTest {
         Stock stock = mock(Stock.class);
 
         mockActiveUserAndStock(tradingAccount, stock, MultiCurrencyStatus.UNREQUESTED);
-        when(walletService.getBucketForUpdate(any(UUID.class), eq("INR"))).thenReturn(bucket);
+        when(walletService.getOrCreateBucketForUpdate(any(UUID.class), eq("INR"))).thenReturn(bucket);
         when(tradingAccount.getLeverage()).thenReturn(5);
         when(orderMatchingEngine.match(any())).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
@@ -290,6 +299,16 @@ class OrderServiceTest {
             return new MatchResult(false, true, BigDecimal.valueOf(100));
         });
 
+        TradingAccount tradingAccount = mock(TradingAccount.class);
+        when(tradingAccount.getBaseCurrency()).thenReturn("INR");
+        when(tradingAccountService.getTradingAccountByUserIdForUpdate(userId)).thenReturn(tradingAccount);
+
+        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).multiCurrencyStatus(MultiCurrencyStatus.APPROVED).build();
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
+
+        WalletBucket bucket = WalletBucket.builder().balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
+        when(walletService.getOrCreateBucketForUpdate(wallet.getId(), "INR")).thenReturn(bucket);
+
         OrderRequest request = new OrderRequest(
                 stockId,
                 100,
@@ -325,7 +344,7 @@ class OrderServiceTest {
         Instant expiresAt = Instant.parse("2026-04-12T10:00:00Z");
 
         mockActiveUserAndStock(tradingAccount, stock, MultiCurrencyStatus.UNREQUESTED);
-        when(walletService.getBucketForUpdate(any(UUID.class), eq("INR"))).thenReturn(bucket);
+        when(walletService.getOrCreateBucketForUpdate(any(UUID.class), eq("INR"))).thenReturn(bucket);
         when(tradingAccount.getLeverage()).thenReturn(5);
         when(stock.getLastTradedPrice()).thenReturn(BigDecimal.valueOf(100));
         when(stock.getPriceBandPercent()).thenReturn(BigDecimal.TEN);
@@ -407,5 +426,32 @@ class OrderServiceTest {
         );
 
         assertThrows(BusinessException.class, () -> orderService.createOrder(userId, request));
+    }
+
+    @Test
+    void shouldEstimateOrderSafelyWhenFundingBucketDoesNotExistYet() {
+        TradingAccount tradingAccount = mock(TradingAccount.class);
+        Stock stock = mock(Stock.class);
+
+        mockActiveUserAndStock(tradingAccount, stock, MultiCurrencyStatus.APPROVED);
+        when(tradingAccount.getLeverage()).thenReturn(5);
+        when(marketStateService.calculateIndicativePrice(stockId)).thenReturn(BigDecimal.valueOf(100));
+        when(stock.getPriceBandPercent()).thenReturn(BigDecimal.TEN);
+
+        OrderRequest request = new OrderRequest(
+                stockId,
+                10,
+                OrderSide.BUY,
+                OrderType.MARKET,
+                TimeInForce.DAY,
+                null,
+                "JPY"
+        );
+
+        OrderEstimateResponse response = orderService.estimateOrder(userId, request);
+
+        assertThat(response.hasFunds()).isFalse();
+        assertThat(response.fundingCurrency()).isEqualTo("JPY");
+        assertThat(response.finalTotal()).isGreaterThan(BigDecimal.ZERO);
     }
 }

@@ -1,18 +1,7 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  OnDestroy,
-  computed,
-  inject,
-  input,
-  signal,
-  viewChildren,
-} from '@angular/core';
-import type { ControlValueAccessor } from '@angular/forms';
-import { NgControl } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, signal, viewChildren } from '@angular/core';
+import { ControlValueAccessor, NgControl } from '@angular/forms';
 import { generateUniqueId } from '../../utils/id-generator';
+import { booleanAttribute } from '@angular/core';
 
 export interface SegmentOption<T = unknown> {
   label: string;
@@ -20,77 +9,57 @@ export interface SegmentOption<T = unknown> {
   disabled?: boolean;
 }
 
-export type SegmentedControlSize = 'small' | 'medium' | 'large';
-
 @Component({
   selector: 'app-segmented-control',
   templateUrl: './segmented-control.html',
   styleUrl: './segmented-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[style.--segment-count]': 'options().length',
-    '[style.--active-index]': 'selectedIndex()',
     '[attr.data-size]': 'size()',
-    '[class.segmented--full-width]': 'fullWidth()',
-    '[class.segmented--disabled]': 'disabledState()'
+    '[class.full-width]': 'fullWidth()'
   }
 })
-export class SegmentedControl<T = unknown> implements ControlValueAccessor, OnDestroy {
+export class SegmentedControl<T = unknown> implements ControlValueAccessor {
   private readonly ngControl = inject(NgControl, { optional: true, self: true });
-
-  private readonly segmentRefs = viewChildren<ElementRef<HTMLButtonElement>>('segmentButton');
-
   private readonly uid = generateUniqueId('seg');
-  protected readonly labelId = `app-segmented-label-${this.uid}`;
-  protected readonly errorId = `app-segmented-error-${this.uid}`;
 
   readonly options = input.required<SegmentOption<T>[]>();
-  readonly label = input('');
-  readonly ariaLabel = input<string | null>(null);
-  readonly size = input<SegmentedControlSize>('medium');
+  readonly label = input<string>('');
+  readonly size = input<'small' | 'medium' | 'large'>('medium');
   readonly fullWidth = input(false, { transform: booleanAttribute });
   readonly required = input(false, { transform: booleanAttribute });
-  readonly errorMessage = input('Please select an option.');
-  readonly reserveMessageSpace = input<boolean | null>(null);
+  readonly ariaLabel = input<string>('Segmented Control');
+  readonly errorMessage = input<string>('Please select an option.');
 
-  protected readonly value = signal<T | null>(null);
-  protected readonly disabledState = signal(false);
-  protected readonly localTouched = signal(false);
+  readonly labelId = `seg-label-${this.uid}`;
+  readonly errorId = `seg-error-${this.uid}`;
 
-  private cvaInitialized = false;
-  protected readonly deselectable = signal(false);
-
+  protected readonly selectedIndex = signal<number>(-1);
+  protected readonly focusIndex = signal<number>(0);
+  protected readonly cvaDisabled = signal(false);
+  protected readonly touched = signal(false);
   protected readonly justSelected = signal(false);
-  private popTimeout?: ReturnType<typeof setTimeout>;
-
-  protected readonly selectedIndex = computed(() =>
-    this.options().findIndex((option) => option.value === this.value())
-  );
-
-  protected readonly focusIndex = computed(() => {
-    const selected = this.selectedIndex();
-
-    if (selected !== -1) {
-      return selected;
-    }
-
-    return this.options().findIndex((option) => !option.disabled);
-  });
-
-  protected readonly showError = computed(
-    () => this.required() && this.localTouched() && this.selectedIndex() === -1
-  );
-
-  protected readonly shouldReserveMessageSpace = computed(() => {
-    if (this.reserveMessageSpace() !== null) {
-      return this.reserveMessageSpace() as boolean;
-    }
-
-    return this.required();
-  });
 
   private onChange: (value: T | null) => void = () => { };
   private onTouched: () => void = () => { };
+
+  readonly segmentButtons = viewChildren<ElementRef<HTMLButtonElement>>('segmentButton');
+
+  protected readonly disabledState = computed(() => this.cvaDisabled());
+
+  protected readonly showError = computed(() => {
+    if (!this.required()) return false;
+    const control = this.ngControl?.control;
+    if (control) {
+      return control.invalid && (control.touched || control.dirty);
+    }
+    return this.touched() && this.selectedIndex() === -1;
+  });
+
+  protected readonly shouldReserveMessageSpace = computed(() => {
+    const control = this.ngControl?.control;
+    return this.required() || (control?.validator || control?.asyncValidator);
+  });
 
   constructor() {
     if (this.ngControl) {
@@ -98,119 +67,16 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor, OnDe
     }
   }
 
-  ngOnDestroy(): void {
-    clearTimeout(this.popTimeout);
-  }
-
-  protected selectIndex(index: number): void {
-    const option = this.options()[index];
-
-    if (!option || option.disabled || this.disabledState()) {
-      return;
-    }
-
-    const currentIndex = this.selectedIndex();
-
-    if (index === currentIndex) {
-      if (this.deselectable()) {
-        this.commitValue(null);
-      }
-      this.markTouched();
-      return;
-    }
-
-    this.commitValue(option.value, currentIndex === -1);
-    this.markTouched();
-  }
-
-  protected onKeydown(event: KeyboardEvent): void {
-    if (this.disabledState()) {
-      return;
-    }
-
-    const enabled = this.enabledIndices();
-
-    if (!enabled.length) {
-      return;
-    }
-
-    let target: number;
-
-    switch (event.key) {
-      case 'ArrowRight':
-      case 'ArrowDown':
-        event.preventDefault();
-        target = this.stepEnabled(enabled, 1);
-        break;
-      case 'ArrowLeft':
-      case 'ArrowUp':
-        event.preventDefault();
-        target = this.stepEnabled(enabled, -1);
-        break;
-      case 'Home':
-        event.preventDefault();
-        target = enabled[0];
-        break;
-      case 'End':
-        event.preventDefault();
-        target = enabled[enabled.length - 1];
-        break;
-      default:
-        return;
-    }
-
-    this.selectIndex(target);
-    this.segmentRefs()[target]?.nativeElement.focus();
-  }
-
-  protected markTouched(): void {
-    if (!this.localTouched()) {
-      this.localTouched.set(true);
-    }
-    this.onTouched();
-  }
-
-  markAsTouched(): void {
-    this.markTouched();
-  }
-
-  private commitValue(value: T | null, isFirstSelection = false): void {
-    if (isFirstSelection && value !== null) {
-      this.triggerPop();
-    }
-
-    this.value.set(value);
-    this.onChange(value);
-  }
-
-  private triggerPop(): void {
-    this.justSelected.set(true);
-    clearTimeout(this.popTimeout);
-    this.popTimeout = setTimeout(() => this.justSelected.set(false), 220);
-  }
-
-  private enabledIndices(): number[] {
-    return this.options().reduce<number[]>((acc, option, index) => {
-      if (!option.disabled) {
-        acc.push(index);
-      }
-      return acc;
-    }, []);
-  }
-
-  private stepEnabled(enabled: number[], delta: number): number {
-    const currentPos = enabled.indexOf(this.focusIndex());
-    const basePos = currentPos === -1 ? 0 : currentPos;
-    const nextPos = (basePos + delta + enabled.length) % enabled.length;
-    return enabled[nextPos];
-  }
-
   writeValue(value: T | null | undefined): void {
-    if (!this.cvaInitialized) {
-      this.cvaInitialized = true;
-      this.deselectable.set(value === null || value === undefined);
+    if (value === null || value === undefined) {
+      this.selectedIndex.set(-1);
+      return;
     }
-    this.value.set(value ?? null);
+    const index = this.options().findIndex(opt => opt.value === value);
+    this.selectedIndex.set(index);
+    if (index !== -1) {
+      this.focusIndex.set(index);
+    }
   }
 
   registerOnChange(fn: (value: T | null) => void): void {
@@ -222,6 +88,85 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor, OnDe
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabledState.set(isDisabled);
+    this.cvaDisabled.set(isDisabled);
+  }
+
+  selectIndex(index: number) {
+    if (this.disabledState() || this.options()[index].disabled) return;
+
+    if (this.selectedIndex() === index) {
+      if (this.required()) return;
+      this.selectedIndex.set(-1);
+      this.onChange(null);
+    } else {
+      this.selectedIndex.set(index);
+      this.onChange(this.options()[index].value);
+    }
+    this.markTouched();
+    this.focusIndex.set(index);
+
+    this.justSelected.set(true);
+    setTimeout(() => this.justSelected.set(false), 300);
+  }
+
+  markTouched() {
+    if (!this.touched()) {
+      this.touched.set(true);
+      this.onTouched();
+    }
+  }
+
+  onKeydown(event: KeyboardEvent) {
+    if (this.disabledState()) return;
+
+    const options = this.options();
+    let newIndex = this.focusIndex();
+
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        event.preventDefault();
+        do {
+          newIndex = (newIndex + 1) % options.length;
+        } while (options[newIndex].disabled);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        event.preventDefault();
+        do {
+          newIndex = (newIndex - 1 + options.length) % options.length;
+        } while (options[newIndex].disabled);
+        break;
+      case 'Home':
+        event.preventDefault();
+        newIndex = options.findIndex(o => !o.disabled);
+        break;
+      case 'End':
+        event.preventDefault();
+        for (let i = options.length - 1; i >= 0; i--) {
+          if (!options[i].disabled) {
+            newIndex = i;
+            break;
+          }
+        }
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectIndex(newIndex);
+        return;
+      default:
+        return;
+    }
+
+    this.focusIndex.set(newIndex);
+    this.focusButton(newIndex);
+  }
+
+  private focusButton(index: number) {
+    const buttons = this.segmentButtons();
+    if (buttons && buttons[index]) {
+      buttons[index].nativeElement.focus();
+    }
   }
 }
