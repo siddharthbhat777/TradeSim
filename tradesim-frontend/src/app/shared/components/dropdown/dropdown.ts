@@ -132,7 +132,14 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
 
     effect(() => {
       const opts = this.options();
-      if (!this.placeholder() && this.selected() === null && opts.length > 0) {
+      const currentSel = this.selected();
+
+      if (currentSel) {
+        const updatedSel = opts.find((option) => option.value === currentSel.value);
+        if (updatedSel && updatedSel !== currentSel) {
+          this.selected.set(updatedSel);
+        }
+      } else if (!this.placeholder() && opts.length > 0) {
         const first = opts.find((option) => !option.disabled) ?? opts[0];
         this.selected.set(first);
         this.onChange(first.value);

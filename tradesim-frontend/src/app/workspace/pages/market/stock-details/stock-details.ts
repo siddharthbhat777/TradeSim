@@ -68,7 +68,15 @@ export class StockDetails implements OnInit {
   readonly showReviewModal = signal<boolean>(false);
   readonly isEstimatingOrder = signal<boolean>(false);
   readonly isSubmittingOrder = signal<boolean>(false);
+  readonly isFetchingRate = signal<boolean>(false);
   readonly orderEstimate = signal<OrderEstimateResponse | null>(null);
+  readonly liveConversionRate = signal<number>(1);
+
+  readonly showFundModal = signal<boolean>(false);
+  readonly activeFundTab = signal<'DEPOSIT' | 'CONVERT'>('DEPOSIT');
+  readonly depositAmount = signal<number | null>(null);
+  readonly convertAmount = signal<number | null>(null);
+  readonly isProcessingFund = signal<boolean>(false);
 
   readonly sideOptions: SegmentOption<'BUY' | 'SELL'>[] = [
     { label: 'Buy', value: 'BUY' },
@@ -107,10 +115,53 @@ export class StockDetails implements OnInit {
     });
   });
 
+  readonly baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR');
+
   readonly resolvedFundingCurrency = computed(() => {
-    const base = this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR';
-    if (this.fundingMethod() === 'BASE') return base;
-    return this.customCurrency() || base;
+    if (this.fundingMethod() === 'BASE') return this.baseCurrency();
+    return this.customCurrency() || this.baseCurrency();
+  });
+
+  readonly baseBalance = computed(() => {
+    const wallet = this.walletService.wallet();
+    const bucket = wallet?.buckets.find(b => b.currency === this.baseCurrency());
+    return bucket ? bucket.availableBalance : 0;
+  });
+
+  readonly targetBalance = computed(() => {
+    const wallet = this.walletService.wallet();
+    const bucket = wallet?.buckets.find(b => b.currency === this.resolvedFundingCurrency());
+    return bucket ? bucket.availableBalance : 0;
+  });
+
+  readonly requiredFundingAmount = computed(() => {
+    const subtotalStock = this.financials().subtotalInStockCurrency;
+    const rate = this.liveConversionRate();
+    const estFxFee = (subtotalStock * rate) * 0.01;
+    const estTotal = (subtotalStock * rate) + estFxFee;
+    const shortfall = estTotal - this.targetBalance();
+    return shortfall > 0 ? shortfall : 0;
+  });
+
+  readonly fundTabs = computed<SegmentOption<'DEPOSIT' | 'CONVERT'>[]>(() => {
+    const tabs: SegmentOption<'DEPOSIT' | 'CONVERT'>[] = [
+      { label: 'Deposit', value: 'DEPOSIT' }
+    ];
+    if (this.resolvedFundingCurrency() !== this.baseCurrency()) {
+      tabs.push({ label: 'Convert', value: 'CONVERT' });
+    }
+    return tabs;
+  });
+
+  readonly estimatedConvertedAmount = computed(() => {
+    const amt = this.convertAmount();
+    if (!amt || amt <= 0) return 0;
+    return amt * this.liveConversionRate();
+  });
+
+  readonly estimatedConversionFxFee = computed(() => {
+    const converted = this.estimatedConvertedAmount();
+    return converted * 0.01;
   });
 
   readonly financials = computed(() => {
@@ -142,6 +193,13 @@ export class StockDetails implements OnInit {
       this.limitPrice.set(currentStock.currentPrice);
       this.generateHistoricalData(currentStock.currentPrice);
     });
+
+    effect(() => {
+      if (this.fundingMethod() === 'CUSTOM' && !this.customCurrency()) {
+        const firstOther = this.supportedCurrencies().find(c => c !== this.baseCurrency());
+        if (firstOther) this.customCurrency.set(firstOther);
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -162,7 +220,110 @@ export class StockDetails implements OnInit {
   }
 
   openDeposit(): void {
-    this.toastService.info(`Deposit flow for ${this.resolvedFundingCurrency()} triggered.`);
+    this.depositAmount.set(null);
+    this.convertAmount.set(null);
+
+    const target = this.resolvedFundingCurrency();
+    const base = this.baseCurrency();
+
+    this.activeFundTab.set(this.baseBalance() > 0 && target !== base ? 'CONVERT' : 'DEPOSIT');
+    this.showFundModal.set(true);
+
+    if (target !== base) {
+      this.isFetchingRate.set(true);
+      this.forexService.getExchangeRate(base, target).subscribe({
+        next: (rate) => {
+          this.liveConversionRate.set(rate);
+          this.isFetchingRate.set(false);
+        },
+        error: () => {
+          this.isFetchingRate.set(false);
+          this.toastService.danger('Failed to fetch live exchange rate.');
+        }
+      });
+    } else {
+      this.liveConversionRate.set(1);
+    }
+  }
+
+  processDeposit(): void {
+    const rawAmt = this.depositAmount();
+    const amt = Number(rawAmt);
+
+    if (!rawAmt || isNaN(amt) || amt <= 0) return;
+
+    this.isProcessingFund.set(true);
+    this.walletService.deposit({ amount: amt }).subscribe({
+      next: () => {
+        this.toastService.success(`Successfully deposited ${amt} ${this.baseCurrency()}`);
+        this.depositAmount.set(null);
+        this.walletService.loadWallet();
+
+        if (this.resolvedFundingCurrency() !== this.baseCurrency()) {
+          this.activeFundTab.set('CONVERT');
+          this.isProcessingFund.set(false);
+        } else {
+          this.refreshEstimateAfterFunding();
+        }
+      },
+      error: () => {
+        this.isProcessingFund.set(false);
+      }
+    });
+  }
+
+  processConversion(): void {
+    const rawAmt = this.convertAmount();
+    const amt = Number(rawAmt);
+
+    if (!rawAmt || isNaN(amt) || amt <= 0) return;
+
+    this.isProcessingFund.set(true);
+    this.walletService.convert({
+      sourceCurrencyCode: this.baseCurrency(),
+      targetCurrencyCode: this.resolvedFundingCurrency(),
+      amountToConvert: amt
+    }).subscribe({
+      next: () => {
+        this.toastService.success('Conversion successful');
+        this.convertAmount.set(null);
+        this.walletService.loadWallet();
+        this.refreshEstimateAfterFunding();
+      },
+      error: () => {
+        this.isProcessingFund.set(false);
+      }
+    });
+  }
+
+  private refreshEstimateAfterFunding(): void {
+    if (!this.orderEstimate()) {
+      this.showFundModal.set(false);
+      this.isProcessingFund.set(false);
+      return;
+    }
+
+    const s = this.stock();
+    this.orderService.estimateOrder({
+      stockId: s.id,
+      quantity: this.orderQuantity(),
+      side: this.orderSide(),
+      orderType: this.orderType(),
+      timeInForce: this.timeInForce(),
+      limitPrice: this.orderType() === 'LIMIT' ? this.limitPrice() : null,
+      fundingCurrency: this.resolvedFundingCurrency()
+    }).subscribe({
+      next: (estimate) => {
+        this.orderEstimate.set(estimate);
+        if (estimate.hasFunds) {
+          this.showFundModal.set(false);
+        }
+        this.isProcessingFund.set(false);
+      },
+      error: () => {
+        this.isProcessingFund.set(false);
+      }
+    });
   }
 
   reviewOrder(): void {

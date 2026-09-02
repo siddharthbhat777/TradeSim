@@ -84,6 +84,22 @@ public class WalletService {
     }
 
     @Transactional
+    public WalletBucket getOrCreateBucketForUpdate(UUID walletId, String currency) {
+        return walletBucketRepository.findByWalletIdAndCurrencyForUpdate(walletId, currency)
+                .orElseGet(() -> {
+                    Wallet wallet = walletRepository.findById(walletId)
+                            .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "WALLET_NOT_FOUND", "Wallet not found"));
+                    WalletBucket newBucket = WalletBucket.builder()
+                            .wallet(wallet)
+                            .currency(currency)
+                            .balance(BigDecimal.ZERO)
+                            .lockedBalance(BigDecimal.ZERO)
+                            .build();
+                    return walletBucketRepository.save(newBucket);
+                });
+    }
+
+    @Transactional
     public WalletResponse depositFromBank(UUID userId, BigDecimal amount) {
         User user = authRepository.findById(userId).orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found"));
         if (user.getBankBalance().compareTo(amount) < 0) {
@@ -175,21 +191,21 @@ public class WalletService {
             throw new BusinessException(HttpStatus.FORBIDDEN, "UNAUTHORIZED_CONVERSION", "You must be approved for Multi-Currency access to convert funds");
         }
 
-        if (request.sourceCurrency().equals(request.targetCurrency())) {
+        if (request.sourceCurrencyCode().equals(request.targetCurrencyCode())) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_CONVERSION", "Source and target currencies must be different");
         }
 
-        WalletBucket sourceBucket = getBucketForUpdate(wallet.getId(), request.sourceCurrency());
+        WalletBucket sourceBucket = getBucketForUpdate(wallet.getId(), request.sourceCurrencyCode());
 
-        if (sourceBucket.getAvailableBalance().compareTo(request.amount()) < 0) {
+        if (sourceBucket.getAvailableBalance().compareTo(request.amountToConvert()) < 0) {
             throw new BusinessException(HttpStatus.CONFLICT, "INSUFFICIENT_FUNDS", "Insufficient available funds in source currency");
         }
 
-        WalletBucket targetBucket = walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), request.targetCurrency())
+        WalletBucket targetBucket = walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), request.targetCurrencyCode())
                 .orElseGet(() -> {
                     WalletBucket newBucket = WalletBucket.builder()
                             .wallet(wallet)
-                            .currency(request.targetCurrency())
+                            .currency(request.targetCurrencyCode())
                             .balance(BigDecimal.ZERO)
                             .lockedBalance(BigDecimal.ZERO)
                             .build();
@@ -197,11 +213,11 @@ public class WalletService {
                     return newBucket;
                 });
 
-        BigDecimal convertedAmount = forexService.convert(request.amount(), request.sourceCurrency(), request.targetCurrency());
-        BigDecimal fxFee = fxFeeService.calculateConversionFee(request.sourceCurrency(), request.targetCurrency(), convertedAmount);
+        BigDecimal convertedAmount = forexService.convert(request.amountToConvert(), request.sourceCurrencyCode(), request.targetCurrencyCode());
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(request.sourceCurrencyCode(), request.targetCurrencyCode(), convertedAmount);
         BigDecimal netAmount = convertedAmount.subtract(fxFee);
 
-        sourceBucket.setBalance(sourceBucket.getBalance().subtract(request.amount()));
+        sourceBucket.setBalance(sourceBucket.getBalance().subtract(request.amountToConvert()));
         walletBucketRepository.save(sourceBucket);
 
         targetBucket.setBalance(targetBucket.getBalance().add(netAmount));
@@ -209,7 +225,7 @@ public class WalletService {
 
         if (fxFee.compareTo(BigDecimal.ZERO) > 0) {
             TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
-            ledgerService.recordFxConversionFee(targetBucket, tradingAccount, fxFee, null, null, null, request.sourceCurrency(), request.targetCurrency());
+            ledgerService.recordFxConversionFee(targetBucket, tradingAccount, fxFee, null, null, null, request.sourceCurrencyCode(), request.targetCurrencyCode());
         }
 
         return fetchMyWallet(userId);

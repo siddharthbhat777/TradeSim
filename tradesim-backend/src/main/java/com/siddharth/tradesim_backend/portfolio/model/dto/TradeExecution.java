@@ -18,6 +18,7 @@ public record TradeExecution(
         BigDecimal buyerReservationPrice,
         boolean buyerFundsReserved,
         boolean sellerSharesReserved,
-        String buyerFundingCurrency
+        String buyerFundingCurrency,
+        String sellerFundingCurrency
 ) {
 }

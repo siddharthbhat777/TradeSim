@@ -221,13 +221,13 @@ public class PortfolioService {
         TradingAccount sellerTradingAccount = execution.sellerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
 
         String buyerFundingCurrency = execution.buyerFundingCurrency() != null ? execution.buyerFundingCurrency() : buyerTradingAccount.getBaseCurrency();
-        String sellerCurrency = sellerTradingAccount.getBaseCurrency();
+        String sellerCurrency = execution.sellerFundingCurrency() != null ? execution.sellerFundingCurrency() : sellerTradingAccount.getBaseCurrency();
 
         Wallet buyerWallet = walletService.getWalletByUserId(execution.buyerId());
-        WalletBucket buyerBucket = walletService.getBucketForUpdate(buyerWallet.getId(), buyerFundingCurrency);
+        WalletBucket buyerBucket = walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), buyerFundingCurrency);
 
         Wallet sellerWallet = walletService.getWalletByUserId(execution.sellerId());
-        WalletBucket sellerBucket = walletService.getBucketForUpdate(sellerWallet.getId(), sellerCurrency);
+        WalletBucket sellerBucket = walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), sellerCurrency);
 
         BigDecimal tradeValueInStockCurrency = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
 
@@ -235,7 +235,7 @@ public class PortfolioService {
         BigDecimal exactBuyerTradeValueInBaseCurrency = forexService.convert(tradeValueInStockCurrency, stockCurrency, buyerTradingAccount.getBaseCurrency());
         BigDecimal exactSellerTradeValue = forexService.convert(tradeValueInStockCurrency, stockCurrency, sellerCurrency);
 
-        Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
+        Position sellerPosition = positionRepository.findUnlockedByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
 
         settleBuyer(execution, buyerBucket, buyerTradingAccount, exactBuyerTradeValueInFundingCurrency, exactBuyerTradeValueInBaseCurrency, stockCurrency, buyerFundingCurrency);
         settleSeller(execution, sellerBucket, sellerTradingAccount, sellerPosition, exactSellerTradeValue, stockCurrency, sellerCurrency);
@@ -386,7 +386,7 @@ public class PortfolioService {
     }
 
     private Position updateBuyerPosition(TradeExecution execution, BigDecimal exactBuyerTradeValue) {
-        Position buyerPosition = positionRepository.findByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
+        Position buyerPosition = positionRepository.findUnlockedByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
 
         if (buyerPosition == null) {
             buyerPosition = Position.builder()

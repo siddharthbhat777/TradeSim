@@ -136,31 +136,41 @@ public class OrderService {
         WalletBucket bucket = wallet.getBuckets().stream()
                 .filter(b -> b.getCurrency().equalsIgnoreCase(fundingCurrency))
                 .findFirst()
-                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST, "BUCKET_NOT_FOUND", "Wallet bucket not found"));
+                .orElse(null);
 
-        BigDecimal pricePerShare = request.orderType() == OrderType.LIMIT ? request.limitPrice() : marketStateService.calculateIndicativePrice(stock.getId());
-        if (pricePerShare == null) {
-            pricePerShare = stock.getLastTradedPrice();
+        BigDecimal basePricePerShare = request.orderType() == OrderType.LIMIT ? request.limitPrice() : (stock.getLastTradedPrice() != null ? stock.getLastTradedPrice() : marketStateService.calculateIndicativePrice(stock.getId()));
+        if (basePricePerShare == null) {
+            basePricePerShare = BigDecimal.ZERO;
         }
 
-        BigDecimal subtotalInStockCurrency = pricePerShare.multiply(BigDecimal.valueOf(request.quantity()));
+        BigDecimal reservationPrice = request.orderType() == OrderType.LIMIT ? request.limitPrice() : calculateProtectedMarketBuyPrice(stock);
+
+        BigDecimal subtotalInStockCurrency = basePricePerShare.multiply(BigDecimal.valueOf(request.quantity()));
+        BigDecimal reservationInStockCurrency = reservationPrice.multiply(BigDecimal.valueOf(request.quantity()));
+
         BigDecimal subtotalInFundingCurrency = forexService.convert(subtotalInStockCurrency, exchange.getCurrency(), fundingCurrency);
-        BigDecimal fxFee = fxFeeService.calculateConversionFee(fundingCurrency, exchange.getCurrency(), subtotalInFundingCurrency);
+        BigDecimal reservationInFundingCurrency = forexService.convert(reservationInStockCurrency, exchange.getCurrency(), fundingCurrency);
+
+        BigDecimal bufferInFundingCurrency = request.side() == OrderSide.BUY ? reservationInFundingCurrency.subtract(subtotalInFundingCurrency) : BigDecimal.ZERO;
 
         BigDecimal finalTotal;
+        BigDecimal fxFee;
         boolean hasFunds;
         if (request.side() == OrderSide.BUY) {
-            BigDecimal marginRequired = subtotalInFundingCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+            BigDecimal marginRequired = reservationInFundingCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+            fxFee = fxFeeService.calculateConversionFee(fundingCurrency, exchange.getCurrency(), marginRequired);
             finalTotal = marginRequired.add(fxFee);
-            hasFunds = bucket.getAvailableBalance().compareTo(finalTotal) >= 0;
+            hasFunds = bucket != null && bucket.getAvailableBalance().compareTo(finalTotal) >= 0;
         } else {
+            fxFee = fxFeeService.calculateConversionFee(fundingCurrency, exchange.getCurrency(), subtotalInFundingCurrency);
             finalTotal = subtotalInFundingCurrency.subtract(fxFee);
-            Position position = positionRepository.findByUserIdAndStockId(userId, stock.getId()).orElse(null);
+            Position position = positionRepository.findUnlockedByUserIdAndStockId(userId, stock.getId()).orElse(null);
             hasFunds = position != null && position.getAvailableQuantity() >= request.quantity();
         }
 
         return new OrderEstimateResponse(
                 subtotalInFundingCurrency,
+                bufferInFundingCurrency,
                 fxFee,
                 finalTotal,
                 hasFunds,
@@ -191,18 +201,20 @@ public class OrderService {
         Instant expiresAt = request.timeInForce() == TimeInForce.DAY ? exchangeService.resolveDayOrderExpiry(stock.getExchangeId()) : null;
         ReentrantLock orderBookLock = orderBookManager.getLock(stock.getId());
         orderBookLock.lock();
-        TradingAccount tradingAccount = null;
-        WalletBucket bucket = null;
-        String fundingCurrency = null;
+        TradingAccount tradingAccount;
+        WalletBucket bucket;
+        String fundingCurrency;
         Order order;
         MatchResult result;
         try {
             BigDecimal reservationPrice = null;
+            tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
+            Wallet wallet = walletService.getWalletByUserId(userId);
+            fundingCurrency = resolveFundingCurrency(wallet, tradingAccount, request.fundingCurrency());
+
+            bucket = walletService.getOrCreateBucketForUpdate(wallet.getId(), fundingCurrency);
+
             if (request.side() == OrderSide.BUY) {
-                tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
-                Wallet wallet = walletService.getWalletByUserId(userId);
-                fundingCurrency = resolveFundingCurrency(wallet, tradingAccount, request.fundingCurrency());
-                bucket = walletService.getBucketForUpdate(wallet.getId(), fundingCurrency);
                 reservationPrice = prepareBuyReservation(bucket, tradingAccount, stock, exchange, request, fundingCurrency);
             } else {
                 prepareSellReservation(userId, stock.getId(), request);
@@ -382,7 +394,7 @@ public class OrderService {
     }
 
     private void validateUserPosition(UUID userId, UUID stockId, int quantity) {
-        Position position = positionRepository.findByUserIdAndStockId(userId, stockId).orElseThrow(() -> PositionException.conflict("No shares to sell"));
+        Position position = positionRepository.findUnlockedByUserIdAndStockId(userId, stockId).orElseThrow(() -> PositionException.conflict("No shares to sell"));
         if (position.getAvailableQuantity() < quantity) {
             throw PositionException.conflict("Insufficient shares to sell");
         }

@@ -23,6 +23,7 @@ export interface OrderHistoryResponse {
 
 export interface OrderEstimateResponse {
     subtotalInFundingCurrency: number;
+    safetyBufferInFundingCurrency: number;
     fxFee: number;
     finalTotal: number;
     hasFunds: boolean;

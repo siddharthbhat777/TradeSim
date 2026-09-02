@@ -5,6 +5,7 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,6 +19,6 @@ public interface WalletBucketRepository extends JpaRepository<WalletBucket, UUID
     Optional<WalletBucket> findByWalletIdAndCurrency(UUID walletId, String currency);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT wb FROM WalletBucket wb WHERE wb.wallet.id = :walletId AND wb.currency = :currency")
-    Optional<WalletBucket> findByWalletIdAndCurrencyForUpdate(UUID walletId, String currency);
+    @Query("SELECT b FROM WalletBucket b WHERE b.wallet.id = :walletId AND b.currency = :currency")
+    Optional<WalletBucket> findByWalletIdAndCurrencyForUpdate(@Param("walletId") UUID walletId, @Param("currency") String currency);
 }

@@ -1,4 +1,4 @@
-export interface WalletBucketResponse {
+export interface WalletBucket {
     id: string;
     currency: string;
     balance: number;
@@ -6,9 +6,19 @@ export interface WalletBucketResponse {
     availableBalance: number;
 }
 
-export interface WalletResponse {
+export interface Wallet {
     id: string;
     userId: string;
-    multiCurrencyStatus: string;
-    buckets: WalletBucketResponse[];
+    multiCurrencyStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'UNREQUESTED';
+    buckets: WalletBucket[];
+}
+
+export interface WalletTransactionRequest {
+    amount: number;
+}
+
+export interface CurrencyConversionRequest {
+    sourceCurrencyCode: string;
+    targetCurrencyCode: string;
+    amountToConvert: number;
 }
