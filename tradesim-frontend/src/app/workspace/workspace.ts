@@ -16,8 +16,8 @@ export interface NavItem {
 const USER_MENU: NavItem[] = [
   { label: 'Portfolio', route: 'portfolio', icon: 'pie-chart' },
   { label: 'Market', route: 'market', icon: 'line-chart' },
-  { label: 'IPO Center', route: 'ipo', icon: 'landmark' },
   { label: 'Order', route: 'order', icon: 'shopping-cart' },
+  { label: 'IPO Center', route: 'ipo', icon: 'landmark' },
   { label: 'Wallet', route: 'wallet', icon: 'wallet' },
   { label: 'Account', route: 'account', icon: 'user' }
 ];

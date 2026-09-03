@@ -36,13 +36,19 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         @switch (item.icon) {
+                        @case ('pie-chart') {
+                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                        <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                        }
                         @case ('line-chart') {
                         <path d="M3 3v18h18"></path>
                         <path d="m19 9-5 5-4-4-3 3"></path>
                         }
-                        @case ('pie-chart') {
-                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-                        <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                        @case ('shopping-cart') {
+                        <path d="m16 3 4 4-4 4"></path>
+                        <path d="M20 7H4"></path>
+                        <path d="m8 21-4-4 4-4"></path>
+                        <path d="M4 17h16"></path>
                         }
                         @case ('landmark') {
                         <polygon points="12 2 2 7 22 7 12 2"></polygon>
@@ -53,19 +59,10 @@
                         <line x1="14" y1="17" x2="14" y2="7"></line>
                         <line x1="18" y1="17" x2="18" y2="7"></line>
                         }
-                        @case ('shopping-cart') {
-                        <path d="m16 3 4 4-4 4"></path>
-                        <path d="M20 7H4"></path>
-                        <path d="m8 21-4-4 4-4"></path>
-                        <path d="M4 17h16"></path>
-                        }
                         @case ('wallet') {
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5">
-                            </path>
-                            <path d="M16 10h5v4h-5z"></path>
-                        </svg>
+                        <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5">
+                        </path>
+                        <path d="M16 10h5v4h-5z"></path>
                         }
                         @case ('user') {
                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>

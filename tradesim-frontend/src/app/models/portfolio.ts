@@ -19,3 +19,18 @@ export interface PortfolioResponse {
     totalPnl: number;
     equity: number;
 }
+
+export interface PortfolioHistoryResponse {
+    snapshotDate: string;
+    totalValue: number;
+    unrealizedPnl: number;
+    realizedPnl: number;
+    equity: number;
+}
+
+export interface PortfolioExposureResponse {
+    stockId: string;
+    symbol: string;
+    positionValue: number;
+    exposurePercent: number;
+}

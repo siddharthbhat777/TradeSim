@@ -1,14 +1,23 @@
-.holdings {
-  &__title {
-    margin: 0 0 16px 0;
-  }
+.holdings-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
 
-  &__content {
-    width: 100%;
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
+}
 
-  &__symbol {
-    font-weight: 600;
-    color: var(--text-primary);
-  }
+.holdings-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.holdings-search {
+  width: 100%;
+  max-width: 320px;
 }

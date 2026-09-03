@@ -1,67 +1,84 @@
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
 
-  @media (min-width: 768px) {
-    gap: 16px;
+.summary-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.summary-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.health-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+
+  &--safe {
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    color: var(--success);
   }
 
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 24px;
+  &--warning {
+    background: color-mix(in srgb, var(--warning) 15%, transparent);
+    color: var(--warning);
+  }
+
+  &--liquidation {
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    color: var(--danger);
   }
 }
 
-.summary-card {
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-    gap: 8px;
+.health-bar-container {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.health-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+
+  &--safe {
+    background: var(--success);
   }
 
-  &__title {
-    margin: 0;
-    position: relative;
-    z-index: 1;
-    font-size: 0.75rem;
-    line-height: 1.2;
-
-    @media (min-width: 768px) {
-      font-size: 0.875rem;
-    }
+  &--warning {
+    background: var(--warning);
   }
 
-  &__icon {
-    width: 20px;
-    height: 20px;
-    color: var(--text-muted);
-    opacity: 0.7;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-
-    @media (min-width: 768px) {
-      position: absolute;
-      top: 24px;
-      right: 24px;
-      width: 28px;
-      height: 28px;
-      opacity: 0.4;
-      z-index: 0;
-    }
+  &--liquidation {
+    background: var(--danger);
   }
+}
 
-  &__value {
-    font-size: 1.125rem;
-    position: relative;
-    z-index: 1;
-    word-break: break-word;
-
-    @media (min-width: 768px) {
-      font-size: 1.5rem;
-    }
-  }
+.health-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }

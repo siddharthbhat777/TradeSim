@@ -1,56 +1,38 @@
 <div class="summary-grid">
-    <app-card variant="surface" [hoverable]="true">
-        <div class="summary-card__header">
-            <h3 class="text-label summary-card__title">Total Equity</h3>
-            <svg class="summary-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-        </div>
-        <app-price-indicator class="summary-card__value" [value]="equity()" [currency]="currency()" [showArrow]="false"
-            [showPercentage]="false">
-        </app-price-indicator>
+    <app-card>
+        <span class="summary-label">Total Equity</span>
+        <h2 class="summary-value">{{ portfolio()?.equity || 0 | currency:baseCurrency():'symbol':'1.2-2' }}</h2>
     </app-card>
 
-    <app-card variant="surface" [hoverable]="true">
-        <div class="summary-card__header">
-            <h3 class="text-label summary-card__title">Total Invested</h3>
-            <svg class="summary-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23"></line>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-            </svg>
+    <app-card>
+        <span class="summary-label">Realized P&L</span>
+        <div class="summary-value">
+            <app-price-indicator [value]="portfolio()?.totalRealizedPnl || 0" [currency]="baseCurrency()"
+                [showPercentage]="false" [valueDecimals]="2"></app-price-indicator>
         </div>
-        <app-price-indicator class="summary-card__value" [value]="totalInvested()" [currency]="currency()"
-            [showArrow]="false" [showPercentage]="false">
-        </app-price-indicator>
     </app-card>
 
-    <app-card variant="surface" [hoverable]="true">
-        <div class="summary-card__header">
-            <h3 class="text-label summary-card__title">Unrealized PnL</h3>
-            <svg class="summary-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-                <polyline points="16 7 22 7 22 13"></polyline>
-            </svg>
+    <app-card>
+        <span class="summary-label">Unrealized P&L</span>
+        <div class="summary-value">
+            <app-price-indicator [value]="portfolio()?.totalUnrealizedPnl || 0" [currency]="baseCurrency()"
+                [showPercentage]="false" [valueDecimals]="2"></app-price-indicator>
         </div>
-        <app-price-indicator class="summary-card__value" [value]="unrealizedPnl()" [currency]="currency()"
-            [showPercentage]="false">
-        </app-price-indicator>
     </app-card>
 
-    <app-card variant="surface" [hoverable]="true">
-        <div class="summary-card__header">
-            <h3 class="text-label summary-card__title">Buying Power</h3>
-            <svg class="summary-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg>
+    <app-card>
+        <div class="health-header">
+            <span class="summary-label">Margin Health</span>
+            <span class="health-status" [class]="'health-status--' + (risk()?.riskLevel | lowercase)">{{
+                risk()?.riskLevel || 'SAFE' }}</span>
         </div>
-        <app-price-indicator class="summary-card__value" [value]="buyingPower()" [currency]="currency()"
-            [showArrow]="false" [showPercentage]="false">
-        </app-price-indicator>
+        <div class="health-bar-container">
+            <div class="health-bar" [class]="'health-bar--' + (risk()?.riskLevel | lowercase)"
+                [style.width.%]="marginUsedPercent()"></div>
+        </div>
+        <div class="health-footer">
+            <span>Used: {{ risk()?.marginUsed || 0 | currency:baseCurrency():'symbol':'1.0-0' }}</span>
+            <span>Maint: {{ risk()?.maintenanceMargin || 0 | currency:baseCurrency():'symbol':'1.0-0' }}</span>
+        </div>
     </app-card>
 </div>

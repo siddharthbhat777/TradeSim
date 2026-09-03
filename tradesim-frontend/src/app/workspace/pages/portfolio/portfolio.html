@@ -1,15 +1,18 @@
-<div class="portfolio-layout">
-    <app-summary [equity]="equity()" [totalInvested]="totalInvested()" [unrealizedPnl]="unrealizedPnl()"
-        [buyingPower]="buyingPower()" [currency]="baseCurrency()">
-    </app-summary>
-
-    <div class="portfolio-middle-row">
-        <app-allocation [data]="allocationData()"></app-allocation>
-
-        <app-holdings-table [holdings]="holdingsData()" [currency]="baseCurrency()">
-        </app-holdings-table>
+<div class="portfolio-page">
+    <div class="portfolio-header">
+        <h1>Portfolio</h1>
     </div>
 
-    <app-recent-orders [orders]="ordersData()" [currency]="baseCurrency()">
-    </app-recent-orders>
+    <app-summary [portfolio]="portfolio()" [risk]="riskData()" [baseCurrency]="baseCurrency()"></app-summary>
+
+    <div class="portfolio-middle">
+        <div class="portfolio-middle__history">
+            <app-history-chart [data]="historyData()" [baseCurrency]="baseCurrency()"></app-history-chart>
+        </div>
+        <div class="portfolio-middle__allocation">
+            <app-allocation [data]="exposureData()"></app-allocation>
+        </div>
+    </div>
+
+    <app-holdings-table [holdings]="portfolio()?.holdings || []" [baseCurrency]="baseCurrency()"></app-holdings-table>
 </div>

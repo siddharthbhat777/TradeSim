@@ -2,25 +2,22 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
+import { of } from 'rxjs';
 import { Portfolio } from './portfolio';
 import { PortfolioService } from '../../../services/portfolio/portfolio-service';
-import { WalletService } from '../../../services/wallet/wallet-service';
+import { RiskService } from '../../../services/risk/risk-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
-import { OrderService } from '../../../services/order/order-service';
 
 describe('Portfolio', () => {
   let component: Portfolio;
   let fixture: ComponentFixture<Portfolio>;
 
   let mockPortfolioSignal: WritableSignal<any>;
-  let mockWalletSignal: WritableSignal<any>;
   let mockTradingAccountSignal: WritableSignal<any>;
-  let mockOrderSignal: WritableSignal<any>;
 
   let mockPortfolioService: any;
-  let mockWalletService: any;
+  let mockRiskService: any;
   let mockTradingAccountService: any;
-  let mockOrderService: any;
 
   beforeEach(async () => {
     Object.defineProperty(window, 'matchMedia', {
@@ -37,19 +34,37 @@ describe('Portfolio', () => {
       })),
     });
 
+    Object.defineProperty(window, 'ResizeObserver', {
+      writable: true,
+      value: vi.fn().mockImplementation(() => ({
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+    });
+
     mockPortfolioSignal = signal(null);
-    mockWalletSignal = signal(null);
     mockTradingAccountSignal = signal(null);
-    mockOrderSignal = signal([]);
 
     mockPortfolioService = {
       portfolio: mockPortfolioSignal,
-      loadPortfolio: vi.fn()
+      loadPortfolio: vi.fn(),
+      getPortfolioHistory: vi.fn().mockReturnValue(of([
+        { snapshotDate: '2026-09-01', equity: 1412000 },
+        { snapshotDate: '2026-09-02', equity: 1415000 }
+      ]))
     };
 
-    mockWalletService = {
-      wallet: mockWalletSignal,
-      loadWallet: vi.fn()
+    mockRiskService = {
+      getMyRisk: vi.fn().mockReturnValue(of({
+        equity: 15000,
+        marginUsed: 5000,
+        maintenanceMargin: 2000,
+        unrealizedPnl: 500,
+        marginRatio: 1.5,
+        riskLevel: 'SAFE',
+        isUnderLiquidation: false
+      }))
     };
 
     mockTradingAccountService = {
@@ -57,19 +72,13 @@ describe('Portfolio', () => {
       loadTradingAccount: vi.fn()
     };
 
-    mockOrderService = {
-      orders: mockOrderSignal,
-      loadOrders: vi.fn()
-    };
-
     await TestBed.configureTestingModule({
       imports: [Portfolio],
       providers: [
         provideRouter([]),
         { provide: PortfolioService, useValue: mockPortfolioService },
-        { provide: WalletService, useValue: mockWalletService },
-        { provide: TradingAccountService, useValue: mockTradingAccountService },
-        { provide: OrderService, useValue: mockOrderService }
+        { provide: RiskService, useValue: mockRiskService },
+        { provide: TradingAccountService, useValue: mockTradingAccountService }
       ]
     }).compileComponents();
 
@@ -84,68 +93,43 @@ describe('Portfolio', () => {
   });
 
   it('should initialize services on init', () => {
-    expect(mockPortfolioService.loadPortfolio).toHaveBeenCalled();
-    expect(mockWalletService.loadWallet).toHaveBeenCalled();
     expect(mockTradingAccountService.loadTradingAccount).toHaveBeenCalled();
-    expect(mockOrderService.loadOrders).toHaveBeenCalled();
+    expect(mockPortfolioService.loadPortfolio).toHaveBeenCalled();
+    expect(mockPortfolioService.getPortfolioHistory).toHaveBeenCalled();
+    expect(mockRiskService.getMyRisk).toHaveBeenCalled();
   });
 
-  it('should compute summary metrics correctly', () => {
+  it('should compute baseCurrency correctly', () => {
     mockTradingAccountSignal.set({ baseCurrency: 'USD' });
-    mockPortfolioSignal.set({
-      equity: 15000,
-      totalInvested: 10000,
-      totalUnrealizedPnl: 500
-    });
-    mockWalletSignal.set({
-      buckets: [{ currency: 'USD', availableBalance: 5000 }]
-    });
-
     fixture.detectChanges();
-
     expect(component.baseCurrency()).toBe('USD');
-    expect(component.equity()).toBe(15000);
-    expect(component.totalInvested()).toBe(10000);
-    expect(component.unrealizedPnl()).toBe(500);
-    expect(component.buyingPower()).toBe(5000);
   });
 
-  it('should compute allocation data with cash and group excess holdings', () => {
-    mockTradingAccountSignal.set({ baseCurrency: 'USD' });
+  it('should compute exposureData correctly including cash balance', () => {
     mockPortfolioSignal.set({
-      totalCashValue: 6000,
-      marginLoan: 1000,
+      totalCashValue: 5000,
       holdings: [
         { stockId: '1', symbol: 'AAPL', currentValue: 4000 },
-        { stockId: '2', symbol: 'TSLA', currentValue: 3000 },
-        { stockId: '3', symbol: 'MSFT', currentValue: 2000 },
-        { stockId: '4', symbol: 'AMZN', currentValue: 1000 },
-        { stockId: '5', symbol: 'GOOGL', currentValue: 500 },
-        { stockId: '6', symbol: 'META', currentValue: 300 }
+        { stockId: '2', symbol: 'TSLA', currentValue: 1000 }
       ]
     });
 
     fixture.detectChanges();
 
-    const allocation = component.allocationData();
+    const exposure = component.exposureData();
 
-    expect(allocation.length).toBe(6);
+    expect(exposure.length).toBe(3);
 
-    const cashSlice = allocation.find(s => s.id === 'cash-slice');
-    expect(cashSlice).toBeTruthy();
-    expect(cashSlice?.value).toBe(5000);
+    expect(exposure[0].id).toBe('cash');
+    expect(exposure[0].value).toBe(5000);
+    expect(exposure[0].color).toBe('var(--success)');
 
-    const othersSlice = allocation.find(s => s.id === 'others-slice');
-    expect(othersSlice).toBeTruthy();
-    expect(othersSlice?.value).toBe(800);
-    expect(othersSlice?.label).toBe('Other Assets');
-  });
+    expect(exposure[1].id).toBe('1');
+    expect(exposure[1].label).toBe('AAPL');
+    expect(exposure[1].value).toBe(4000);
 
-  it('should compute orders data correctly', () => {
-    const mockOrders = [{ orderId: '123', symbol: 'TSLA' }];
-    mockOrderSignal.set(mockOrders);
-    fixture.detectChanges();
-
-    expect(component.ordersData()).toEqual(mockOrders);
+    expect(exposure[2].id).toBe('2');
+    expect(exposure[2].label).toBe('TSLA');
+    expect(exposure[2].value).toBe(1000);
   });
 });

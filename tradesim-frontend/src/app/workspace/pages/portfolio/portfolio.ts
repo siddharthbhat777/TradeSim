@@ -1,99 +1,85 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
-import { PortfolioService } from '../../../services/portfolio/portfolio-service';
-import { WalletService } from '../../../services/wallet/wallet-service';
-import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
-import { OrderService } from '../../../services/order/order-service';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Summary } from './summary/summary';
+import { HistoryChart } from './history-chart/history-chart';
 import { Allocation } from './allocation/allocation';
 import { HoldingsTable } from './holdings-table/holdings-table';
-import { RecentOrders } from './recent-orders/recent-orders';
+import { PortfolioService } from '../../../services/portfolio/portfolio-service';
+import { RiskService } from '../../../services/risk/risk-service';
+import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
+import { AreaChartData } from '../../../shared/components/charts/area-chart/area-chart';
 import { PieChartData } from '../../../shared/components/charts/pie-chart-container/pie-chart/pie-chart';
+import { RiskResponse } from '../../../models/risk';
 
 @Component({
   selector: 'app-portfolio',
-  imports: [Summary, Allocation, HoldingsTable, RecentOrders],
+  imports: [CommonModule, Summary, HistoryChart, Allocation, HoldingsTable],
   templateUrl: './portfolio.html',
-  styleUrl: './portfolio.scss'
+  styleUrl: './portfolio.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Portfolio implements OnInit {
-  private portfolioService = inject(PortfolioService);
-  private walletService = inject(WalletService);
-  private tradingAccountService = inject(TradingAccountService);
-  private orderService = inject(OrderService);
+  private readonly portfolioService = inject(PortfolioService);
+  private readonly riskService = inject(RiskService);
+  private readonly tradingAccountService = inject(TradingAccountService);
 
-  public baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency ?? 'INR');
-  public equity = computed(() => this.portfolioService.portfolio()?.equity ?? 0);
-  public totalInvested = computed(() => this.portfolioService.portfolio()?.totalInvested ?? 0);
-  public unrealizedPnl = computed(() => this.portfolioService.portfolio()?.totalUnrealizedPnl ?? 0);
+  readonly portfolio = this.portfolioService.portfolio;
+  readonly historyData = signal<AreaChartData[]>([]);
+  readonly riskData = signal<RiskResponse | null>(null);
 
-  public buyingPower = computed(() => {
-    const baseCurrency = this.tradingAccountService.tradingAccount()?.baseCurrency;
-    const buckets = this.walletService.wallet()?.buckets ?? [];
+  readonly baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR');
 
-    if (!baseCurrency || buckets.length === 0) return 0;
+  private readonly COLORS = [
+    'var(--chart-1)',
+    'var(--chart-2)',
+    'var(--chart-3)',
+    'var(--chart-4)',
+    'var(--chart-5)'
+  ];
 
-    const baseBucket = buckets.find(b => b.currency === baseCurrency);
-    return baseBucket ? baseBucket.availableBalance : 0;
-  });
-
-  public holdingsData = computed(() => this.portfolioService.portfolio()?.holdings ?? []);
-  public ordersData = computed(() => this.orderService.orders());
-
-  public allocationData = computed<PieChartData[]>(() => {
-    const portfolio = this.portfolioService.portfolio();
-    const baseCurrency = this.baseCurrency();
+  readonly exposureData = computed<PieChartData[]>(() => {
+    const port = this.portfolio();
+    if (!port) return [];
 
     const data: PieChartData[] = [];
 
-    if (!portfolio) return data;
-
-    const netCash = portfolio.totalCashValue - portfolio.marginLoan;
-
-    if (netCash > 0) {
+    if (port.totalCashValue > 0) {
       data.push({
-        id: 'cash-slice',
-        label: `Cash (${baseCurrency})`,
-        value: netCash,
-        color: 'var(--text-muted)'
+        id: 'cash',
+        label: 'Cash Balance',
+        value: port.totalCashValue,
+        color: 'var(--success)'
       });
     }
 
-    if (!portfolio.holdings) return data;
-
-    const sortedHoldings = [...portfolio.holdings].sort((a, b) => b.currentValue - a.currentValue);
-
-    const topHoldings = sortedHoldings.slice(0, 4);
-    const remainingHoldings = sortedHoldings.slice(4);
-    const chartColors = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)'];
-
-    topHoldings.forEach((holding, index) => {
-      if (holding.currentValue > 0) {
-        data.push({
-          id: holding.stockId,
-          label: holding.symbol,
-          value: holding.currentValue,
-          color: chartColors[index]
-        });
-      }
+    port.holdings.forEach((h, index) => {
+      data.push({
+        id: h.stockId,
+        label: h.symbol,
+        value: h.currentValue,
+        color: this.COLORS[(index + 1) % this.COLORS.length]
+      });
     });
 
-    if (remainingHoldings.length > 0) {
-      const othersValue = remainingHoldings.reduce((sum, h) => sum + h.currentValue, 0);
-      data.push({
-        id: 'others-slice',
-        label: 'Other Assets',
-        value: othersValue,
-        color: 'var(--chart-5)'
-      });
-    }
-
-    return data.sort((a, b) => b.value - a.value);
+    return data;
   });
 
   ngOnInit(): void {
+    if (!this.tradingAccountService.tradingAccount()) {
+      this.tradingAccountService.loadTradingAccount();
+    }
+
     this.portfolioService.loadPortfolio();
-    this.walletService.loadWallet();
-    this.tradingAccountService.loadTradingAccount();
-    this.orderService.loadOrders();
+
+    this.portfolioService.getPortfolioHistory().subscribe(history => {
+      this.historyData.set(history.map(item => ({
+        time: item.snapshotDate,
+        value: item.equity
+      })));
+    });
+
+    this.riskService.getMyRisk().subscribe(risk => {
+      this.riskData.set(risk);
+    });
   }
 }

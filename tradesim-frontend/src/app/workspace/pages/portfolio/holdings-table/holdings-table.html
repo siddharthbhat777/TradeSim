@@ -1,36 +1,43 @@
-<app-card variant="surface">
-    <h3 class="text-label holdings__title">Open Positions</h3>
-
-    <div class="holdings__content">
-        <app-table variant="flush" [data]="holdings()" [columns]="columns" [paginated]="true"
-            [pageSizeOptions]="[5, 10]" [(pageSize)]="pageSize" size="small" emptyText="No open positions"
-            emptySubtext="Your purchased stocks will appear here.">
-
-            <ng-template tableCell="symbol" let-value>
-                <span class="holdings__symbol">{{ value }}</span>
-            </ng-template>
-
-            <ng-template tableCell="quantity" let-value>
-                {{ value | number }}
-            </ng-template>
-
-            <ng-template tableCell="averageBuyPrice" let-value>
-                {{ value | currency:currency():'symbol':'1.2-2' }}
-            </ng-template>
-
-            <ng-template tableCell="currentPrice" let-value>
-                {{ value | currency:currency():'symbol':'1.2-2' }}
-            </ng-template>
-
-            <ng-template tableCell="currentValue" let-value>
-                {{ value | currency:currency():'symbol':'1.2-2' }}
-            </ng-template>
-
-            <ng-template tableCell="unrealizedPnl" let-value>
-                <app-price-indicator [value]="value" [currency]="currency()" [showPercentage]="false">
-                </app-price-indicator>
-            </ng-template>
-
-        </app-table>
+<app-card>
+    <div class="holdings-header">
+        <h2 class="holdings-title">Active Positions</h2>
+        <div class="holdings-search">
+            <app-input [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search symbol..." [(ngModel)]="searchQuery" />
+            </app-input>
+        </div>
     </div>
+
+    <app-table variant="flush" [columns]="columns" [data]="filteredHoldings()" [(currentPage)]="currentPage"
+        [(pageSize)]="pageSize">
+        <ng-template tableCell="symbol" let-val>
+            <strong>{{ val }}</strong>
+        </ng-template>
+
+        <ng-template tableCell="quantity" let-val>
+            {{ val | number }}
+        </ng-template>
+
+        <ng-template tableCell="averageBuyPrice" let-val>
+            {{ val | currency:baseCurrency():'symbol':'1.2-2' }}
+        </ng-template>
+
+        <ng-template tableCell="currentPrice" let-val>
+            {{ val | currency:baseCurrency():'symbol':'1.2-2' }}
+        </ng-template>
+
+        <ng-template tableCell="currentValue" let-val>
+            {{ val | currency:baseCurrency():'symbol':'1.2-2' }}
+        </ng-template>
+
+        <ng-template tableCell="unrealizedPnl" let-val>
+            <app-price-indicator [value]="val" [currency]="baseCurrency()" [showPercentage]="false"
+                [valueDecimals]="2"></app-price-indicator>
+        </ng-template>
+    </app-table>
 </app-card>

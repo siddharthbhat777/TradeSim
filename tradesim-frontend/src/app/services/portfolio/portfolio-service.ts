@@ -1,8 +1,9 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { PortfolioResponse } from '../../models/portfolio';
+import { PortfolioExposureResponse, PortfolioHistoryResponse, PortfolioResponse } from '../../models/portfolio';
 import { environment } from '../../../environment/environment';
 import { skipInterceptors } from '../../shared/utils/http-context';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,18 @@ export class PortfolioService {
     }).subscribe({
       next: (data) => this.portfolioState.set(data),
       error: () => this.portfolioState.set(null)
+    });
+  }
+
+  getPortfolioHistory(): Observable<PortfolioHistoryResponse[]> {
+    return this.http.get<PortfolioHistoryResponse[]>(`${this.apiBaseURL}/history`, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  getExposure(): Observable<PortfolioExposureResponse[]> {
+    return this.http.get<PortfolioExposureResponse[]>(`${this.apiBaseURL}/exposure`, {
+      context: skipInterceptors({ loader: true })
     });
   }
 }

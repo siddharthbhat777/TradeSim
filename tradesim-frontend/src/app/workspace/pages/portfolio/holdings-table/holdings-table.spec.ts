@@ -51,7 +51,7 @@ describe('HoldingsTable', () => {
     component = fixture.componentInstance;
 
     fixture.componentRef.setInput('holdings', []);
-    fixture.componentRef.setInput('currency', 'USD');
+    fixture.componentRef.setInput('baseCurrency', 'USD');
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -62,7 +62,7 @@ describe('HoldingsTable', () => {
   });
 
   it('should initialize with correct default page size and columns', () => {
-    expect(component.pageSize()).toBe(5);
+    expect(component.pageSize()).toBe(10);
     expect(component.columns.length).toBe(6);
     expect(component.columns.map(c => c.key)).toEqual([
       'symbol',
@@ -94,5 +94,14 @@ describe('HoldingsTable', () => {
 
     const firstRowCells = rows[0].queryAll(By.css('td'));
     expect(firstRowCells[0].nativeElement.textContent.trim()).toBe('AAPL');
+  });
+
+  it('should filter holdings when search query is entered', () => {
+    fixture.componentRef.setInput('holdings', mockHoldings);
+    component.searchQuery.set('TSLA');
+    fixture.detectChanges();
+
+    expect(component.filteredHoldings().length).toBe(1);
+    expect(component.filteredHoldings()[0].symbol).toBe('TSLA');
   });
 });
