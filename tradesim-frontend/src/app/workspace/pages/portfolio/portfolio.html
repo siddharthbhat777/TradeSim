@@ -1,1 +1,15 @@
-<p>portfolio works!</p>
+<div class="portfolio-layout">
+    <app-summary [equity]="equity()" [totalInvested]="totalInvested()" [unrealizedPnl]="unrealizedPnl()"
+        [buyingPower]="buyingPower()" [currency]="baseCurrency()">
+    </app-summary>
+
+    <div class="portfolio-middle-row">
+        <app-allocation [data]="allocationData()"></app-allocation>
+
+        <app-holdings-table [holdings]="holdingsData()" [currency]="baseCurrency()">
+        </app-holdings-table>
+    </div>
+
+    <app-recent-orders [orders]="ordersData()" [currency]="baseCurrency()">
+    </app-recent-orders>
+</div>

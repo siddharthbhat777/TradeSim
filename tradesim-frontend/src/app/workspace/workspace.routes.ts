@@ -9,17 +9,7 @@ export const workspaceRoutes: Routes = [
             {
                 path: '',
                 pathMatch: 'full',
-                redirectTo: 'dashboard'
-            },
-            {
-                path: 'dashboard',
-                loadComponent: () => import('./pages/dashboard/dashboard').then((module) => module.Dashboard),
-                title: 'Dashboard'
-            },
-            {
-                path: 'market',
-                loadComponent: () => import('./pages/market/market').then((module) => module.Market),
-                title: 'Market'
+                redirectTo: 'portfolio'
             },
             {
                 path: 'portfolio',
@@ -27,9 +17,9 @@ export const workspaceRoutes: Routes = [
                 title: 'Portfolio'
             },
             {
-                path: 'position',
-                loadComponent: () => import('./pages/position/position').then((module) => module.Position),
-                title: 'Position'
+                path: 'market',
+                loadComponent: () => import('./pages/market/market').then((module) => module.Market),
+                title: 'Market'
             },
             {
                 path: 'ipo',
@@ -37,14 +27,19 @@ export const workspaceRoutes: Routes = [
                 title: 'IPO Center'
             },
             {
-                path: 'account',
-                loadComponent: () => import('./pages/account/account').then((module) => module.Account),
-                title: 'Account'
-            },
-            {
                 path: 'order',
                 loadComponent: () => import('./pages/order/order').then((module) => module.Order),
                 title: 'Order'
+            },
+            {
+                path: 'wallet',
+                loadComponent: () => import('./pages/wallet/wallet').then((module) => module.Wallet),
+                title: 'Wallet'
+            },
+            {
+                path: 'account',
+                loadComponent: () => import('./pages/account/account').then((module) => module.Account),
+                title: 'Account'
             },
             {
                 path: '**',
