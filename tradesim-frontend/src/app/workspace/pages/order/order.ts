@@ -15,6 +15,7 @@ import { SegmentedControl } from '../../../shared/components/segmented-control/s
 import { Dropdown, DropdownOption } from '../../../shared/components/dropdown/dropdown';
 import { Slider } from '../../../shared/components/slider/slider';
 import { ToastService } from '../../../shared/components/toast/toast.service';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 
 export interface OrderRow extends OrderHistoryResponse {
   displayQuantity: string;
@@ -47,6 +48,7 @@ export class Order implements OnInit {
   private readonly orderService = inject(OrderService);
   private readonly toastService = inject(ToastService);
   private readonly tradingAccountService = inject(TradingAccountService);
+  private readonly dialogService = inject(DialogService);
 
   readonly baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR');
   readonly allOrders = this.orderService.orders;
@@ -248,15 +250,24 @@ export class Order implements OnInit {
   }
 
   cancelOrder(orderId: string): void {
-    this.isCancelling.set(orderId);
-    this.orderService.cancelOrder(orderId).subscribe({
-      next: () => {
-        this.toastService.success('Order cancelled successfully.');
-        this.orderService.loadOrders();
-        this.isCancelling.set(null);
-      },
-      error: () => {
-        this.isCancelling.set(null);
+    this.dialogService.open({
+      title: 'Cancel Order',
+      message: 'Are you sure you want to cancel this order? This will immediately remove any unfilled quantity from the market.',
+      primaryLabel: 'Yes, Cancel',
+      secondaryLabel: 'Go Back',
+      primaryVariant: 'danger',
+      onPrimary: () => {
+        this.isCancelling.set(orderId);
+        this.orderService.cancelOrder(orderId).subscribe({
+          next: () => {
+            this.toastService.success('Order cancelled successfully.');
+            this.orderService.loadOrders();
+            this.isCancelling.set(null);
+          },
+          error: () => {
+            this.isCancelling.set(null);
+          }
+        });
       }
     });
   }

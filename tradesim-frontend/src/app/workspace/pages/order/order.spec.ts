@@ -3,6 +3,7 @@ import { Order } from './order';
 import { OrderService } from '../../../services/order/order-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { signal } from '@angular/core';
 
 describe('Order', () => {
@@ -34,12 +35,18 @@ describe('Order', () => {
       success: () => { }
     };
 
+    const mockDialogService = {
+      open: () => { },
+      close: () => { }
+    };
+
     await TestBed.configureTestingModule({
       imports: [Order],
       providers: [
         { provide: OrderService, useValue: mockOrderService },
         { provide: TradingAccountService, useValue: mockTradingAccountService },
-        { provide: ToastService, useValue: mockToastService }
+        { provide: ToastService, useValue: mockToastService },
+        { provide: DialogService, useValue: mockDialogService }
       ]
     }).compileComponents();
 
