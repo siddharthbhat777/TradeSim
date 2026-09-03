@@ -36,7 +36,6 @@ export interface OrderRow extends OrderHistoryResponse {
     Dropdown,
     Slider,
     DatePipe,
-    DecimalPipe,
     CurrencyPipe
   ],
   templateUrl: './order.html',

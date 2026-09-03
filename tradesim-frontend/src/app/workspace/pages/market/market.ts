@@ -298,11 +298,6 @@ export class Market implements OnInit {
   }
 
   openFilterDrawer(): void {
-    const [min, max] = this.appliedPriceRange();
-    this.draftPriceRange.set([Math.min(min, max), Math.max(min, max)]);
-    this.draftSectors.set([...this.appliedSectors()]);
-    this.draftStatuses.set([...this.appliedStatuses()]);
-    this.draftMarketCapCategories.set([...this.appliedMarketCapCategories()]);
     this.isFilterDrawerOpen.set(true);
   }
 
