@@ -1,1 +1,127 @@
-<p>order works!</p>
+<div class="order-page">
+    <div class="order-header">
+        <h1>Orders</h1>
+        <div class="order-controls">
+            <div class="order-search">
+                <app-input [reserveMessageSpace]="false">
+                    <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input appInput type="text" placeholder="Search orders by symbol..." [(ngModel)]="searchQuery" />
+                </app-input>
+            </div>
+
+            <div class="order-sort">
+                <app-dropdown [options]="sortOptions" [(ngModel)]="activeSort" size="medium"
+                    [reserveMessageSpace]="false"></app-dropdown>
+            </div>
+
+            <app-button variant="secondary" (buttonClick)="openFilterDrawer()">
+                <svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filters
+                @if (hasActiveFilters()) {
+                <span class="filter-badge"></span>
+                }
+            </app-button>
+        </div>
+    </div>
+
+    <app-card>
+        <app-table variant="flush" [columns]="columns" [data]="processedOrders()" [(currentPage)]="currentPage"
+            [(pageSize)]="pageSize">
+
+            <ng-template tableCell="symbol" let-row="row">
+                <span class="fw-semibold" style="color: var(--primary);">{{ row.symbol }}</span>
+            </ng-template>
+
+            <ng-template tableCell="side" let-row="row">
+                <div class="type-container">
+                    <span [class]="'side-text side-text--' + (row.side | lowercase)">{{ row.side }}</span>
+                    <span class="type-separator">&bull;</span>
+                    <span class="type-text">{{ row.orderType }}</span>
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="limitPrice" let-row="row">
+                @if (row.limitPrice) {
+                {{ row.limitPrice | currency:baseCurrency():'symbol':'1.2-4' }}
+                } @else {
+                <span class="text-muted">Market</span>
+                }
+            </ng-template>
+
+            <ng-template tableCell="displayQuantity" let-row="row">
+                <span class="fw-semibold">{{ row.displayQuantity }}</span>
+            </ng-template>
+
+            <ng-template tableCell="status" let-row="row">
+                <app-badge
+                    [color]="row.status === 'FILLED' ? 'success' : row.status === 'CANCELLED' ? 'secondary' : row.status === 'PARTIALLY_FILLED' ? 'warning' : 'primary'">
+                    {{ row.status.replace('_', ' ') }}
+                </app-badge>
+            </ng-template>
+
+            <ng-template tableCell="createdAt" let-row="row">
+                <span class="date-text">{{ row.createdAt | date:'MMM dd, yyyy - hh:mm a' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="actions" let-row="row">
+                @if (row.status === 'OPEN' || row.status === 'PARTIALLY_FILLED') {
+                <app-button variant="danger" size="small" [isLoading]="isCancelling() === row.orderId"
+                    (buttonClick)="cancelOrder(row.orderId)">
+                    Cancel
+                </app-button>
+                }
+            </ng-template>
+
+        </app-table>
+    </app-card>
+</div>
+
+<app-drawer [(isOpen)]="isFilterDrawerOpen" position="right">
+    <div class="drawer-header">
+        <h3>Filter Orders</h3>
+    </div>
+
+    <div class="drawer-body">
+        <div class="filter-group">
+            <span class="label">Side</span>
+            <app-segmented-control [options]="sideOptions" [(ngModel)]="draftSide" [required]="true"
+                [fullWidth]="true"></app-segmented-control>
+        </div>
+
+        <div class="filter-group">
+            <span class="label">Type</span>
+            <app-segmented-control [options]="typeOptions" [(ngModel)]="draftType" [required]="true"
+                [fullWidth]="true"></app-segmented-control>
+        </div>
+
+        <div class="filter-group">
+            <app-dropdown label="Status" [options]="statusOptions" [(ngModel)]="draftStatus"
+                [fullWidth]="true"></app-dropdown>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-label-row">
+                <span class="label">Price Range</span>
+                <span class="value">
+                    {{ draftMinPrice() | currency:baseCurrency():'symbol':'1.0-0' }} - {{ draftMaxPrice() |
+                    currency:baseCurrency():'symbol':'1.0-0' }}
+                </span>
+            </div>
+            <app-slider [range]="true" [min]="priceRangeBounds().min" [max]="priceRangeBounds().max" [step]="1"
+                [ngModel]="draftPriceRange()" (ngModelChange)="onPriceSliderChange($event)"></app-slider>
+        </div>
+    </div>
+
+    <div class="drawer-footer">
+        <app-button variant="outline" width="100%" (buttonClick)="resetDraftFilters()">Reset</app-button>
+        <app-button variant="primary" width="100%" [disabled]="isApplyDisabled()" (buttonClick)="applyFilters()">Apply
+            Filters</app-button>
+    </div>
+</app-drawer>

@@ -35,4 +35,10 @@ export class OrderService {
       context: skipInterceptors({ loader: true })
     });
   }
+
+  cancelOrder(orderId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiBaseURL}/${orderId}/cancel`, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
 }
