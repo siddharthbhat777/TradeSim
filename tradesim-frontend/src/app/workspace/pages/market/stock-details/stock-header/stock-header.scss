@@ -1,0 +1,76 @@
+.stock-header-wrapper {
+  padding: 0 0 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.stock-header {
+  &__nav {
+    display: flex;
+    align-items: center;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+  }
+
+  &__title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__symbol-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__symbol {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+
+  &__company {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  &__price-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    @media (min-width: 768px) {
+      align-items: flex-end;
+    }
+  }
+
+  &__price-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  &__price-value {
+    font-size: 1.5rem;
+  }
+}

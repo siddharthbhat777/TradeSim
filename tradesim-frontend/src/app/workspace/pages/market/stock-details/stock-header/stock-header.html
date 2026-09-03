@@ -1,0 +1,36 @@
+<div class="stock-header-wrapper">
+    <div class="stock-header__nav">
+        <app-button variant="outline" size="small" (buttonClick)="onBack()">
+            <svg button-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Market
+        </app-button>
+    </div>
+
+    <header class="stock-header__header">
+        <div class="stock-header__title-group">
+            <div class="stock-header__symbol-row">
+                <h1 class="stock-header__symbol">{{ stock().symbol }}</h1>
+                <app-badge
+                    [color]="stock().status === 'ACTIVE' ? 'success' : stock().status === 'HALTED' ? 'warning' : 'danger'">
+                    {{ stock().status }}
+                </app-badge>
+                <app-badge color="accent">
+                    {{ stock().marketCapCategory }} CAP
+                </app-badge>
+            </div>
+            <p class="stock-header__company">{{ stock().companyName }} &bull; {{ stock().sector }}</p>
+        </div>
+
+        <div class="stock-header__price-group">
+            <span class="stock-header__price-label">Current Price</span>
+            <div class="stock-header__price-value">
+                <app-price-indicator [value]="stock().currentPrice" [showArrow]="false" currency="USD"
+                    [valueDecimals]="2"></app-price-indicator>
+            </div>
+        </div>
+    </header>
+</div>

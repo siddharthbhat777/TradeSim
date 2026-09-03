@@ -1,0 +1,126 @@
+@if (isOpen()) {
+@if (payload(); as p) {
+<app-modal (closed)="isOpen.set(false)" ariaLabel="Confirm Order Details">
+    <div class="review-modal">
+        <h3 class="review-modal__title">Confirm Order Details</h3>
+
+        <div class="review-modal__receipt">
+            <div class="review-row action-row">
+                <span class="review-label">Action</span>
+                <div class="action-text">
+                    <span [class]="p.orderSide === 'BUY' ? 'text-success' : 'text-danger'">{{ p.orderSide }}</span>
+                    <strong>{{ p.orderQuantity }} {{ p.orderQuantity === 1 ? 'share' : 'shares' }}</strong> of
+                    <span class="text-accent">{{ stockSymbol() }}</span>
+                </div>
+            </div>
+
+            <div class="review-row">
+                <span class="review-label">Order Type</span>
+                <div class="badge-group">
+                    <app-badge [color]="p.orderType === 'MARKET' ? 'primary' : 'warning'">{{ p.orderType }}</app-badge>
+                    <app-badge color="accent">{{ p.timeInForce }}</app-badge>
+                </div>
+            </div>
+
+            @if (p.orderType === 'LIMIT') {
+            <div class="review-row">
+                <span class="review-label">Limit Price</span>
+                <strong>{{ p.limitPrice | number:'1.2-2' }} USD</strong>
+            </div>
+            }
+
+            <div class="review-row">
+                <span class="review-label">Funding Source</span>
+                <strong class="funding-highlight">
+                    @if (p.fundingCurrency === baseCurrency()) {
+                    Base Wallet ({{ p.fundingCurrency }})
+                    } @else {
+                    {{ p.fundingCurrency }} Wallet
+                    }
+                </strong>
+            </div>
+
+            <div class="review-divider"></div>
+
+            <div class="review-row">
+                <span class="review-label">Estimated Subtotal</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="text" width="100px" height="18px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
+                <strong>{{ estimate.subtotalInFundingCurrency | number:'1.2-2' }} {{ estimate.fundingCurrency
+                    }}</strong>
+                }
+            </div>
+
+            @if (isEstimatingOrder() ? (p.orderType === 'MARKET' && p.orderSide === 'BUY') :
+            ((orderEstimate()?.safetyBufferInFundingCurrency ?? 0) > 0)) {
+            <div class="review-row">
+                <span class="review-label">Market Safety Buffer</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="text" width="80px" height="18px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
+                <strong>{{ estimate.safetyBufferInFundingCurrency | number:'1.2-2' }} {{ estimate.fundingCurrency
+                    }}</strong>
+                }
+            </div>
+            }
+
+            @if (isEstimatingOrder() ? (p.fundingCurrency !== baseCurrency()) : ((orderEstimate()?.fxFee ?? 0) > 0)) {
+            <div class="review-row">
+                <span class="review-label">Estimated FX Fee</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="text" width="80px" height="18px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
+                <strong>{{ estimate.fxFee | number:'1.2-2' }} {{ estimate.fundingCurrency }}</strong>
+                }
+            </div>
+            }
+
+            <div class="review-row total-row">
+                <span class="total-label">Estimated Total {{ p.orderSide === 'BUY' ? 'Lock' : 'Credit' }}</span>
+                @if (isEstimatingOrder()) {
+                <app-skeleton shape="rect" width="120px" height="24px" rounded="4px"></app-skeleton>
+                } @else if (orderEstimate(); as estimate) {
+                <strong class="total-value" [class.text-success]="p.orderSide === 'BUY'"
+                    [class.text-danger]="p.orderSide === 'SELL'">
+                    {{ estimate.finalTotal | number:'1.2-2' }} {{ estimate.fundingCurrency }}
+                </strong>
+                }
+            </div>
+
+            @if (isEstimatingOrder() ? (p.orderType === 'MARKET' && p.orderSide === 'BUY') :
+            ((orderEstimate()?.safetyBufferInFundingCurrency ?? 0) > 0)) {
+            <span class="disclaimer-text" style="margin-top: 8px;">
+                * A safety buffer is temporarily locked to protect against price slippage. Unused funds are refunded
+                instantly.
+            </span>
+            }
+        </div>
+
+        @if (!isEstimatingOrder() && orderEstimate(); as estimate) {
+        @if (!estimate.hasFunds) {
+        <div class="review-warning">
+            <div class="warning-text">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>Insufficient {{ estimate.fundingCurrency }} Balance</span>
+            </div>
+            <app-button variant="outline" size="small" (buttonClick)="openDeposit.emit()">Deposit</app-button>
+        </div>
+        }
+        }
+
+        <div class="review-modal__actions">
+            <app-button variant="outline" (buttonClick)="isOpen.set(false)">Cancel</app-button>
+            <app-button [variant]="p.orderSide === 'BUY' ? 'success' : 'danger'"
+                [disabled]="isEstimatingOrder() || !(orderEstimate()?.hasFunds ?? false)"
+                [isLoading]="isSubmittingOrder()" (buttonClick)="executeOrder.emit()">Submit Order</app-button>
+        </div>
+    </div>
+</app-modal>
+}
+}

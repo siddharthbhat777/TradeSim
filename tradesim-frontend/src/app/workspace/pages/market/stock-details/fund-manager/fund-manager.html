@@ -1,0 +1,117 @@
+@if (isOpen()) {
+<app-modal (closed)="isOpen.set(false)" ariaLabel="Manage Funds">
+    <div class="fund-modal">
+        <h3 class="fund-modal__title">Manage Funds</h3>
+
+        <app-segmented-control [options]="fundTabs()" [(ngModel)]="activeTab" [fullWidth]="true"
+            [required]="true"></app-segmented-control>
+
+        <div class="fund-modal__content">
+            @if (requiredAmount() > 0 && !isFetchingRate()) {
+            <div class="fund-notice">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>You need approx. <strong>{{ requiredAmount() | number:'1.2-2' }} {{ targetCurrency() }}</strong>
+                    more to place this order.</span>
+            </div>
+            }
+
+            @if (activeTab() === 'DEPOSIT') {
+            <div class="fund-row">
+                <span class="fund-label">Base Currency</span>
+                <strong>{{ baseCurrency() }}</strong>
+            </div>
+            <div class="fund-row">
+                <span class="fund-label">Available Balance</span>
+                @if (isFetchingRate()) {
+                <app-skeleton shape="text" width="80px" height="18px"></app-skeleton>
+                } @else {
+                <strong>{{ baseBalance() | number:'1.2-2' }} {{ baseCurrency() }}</strong>
+                }
+            </div>
+            <div class="fund-field">
+                <app-input label="Deposit Amount">
+                    <input appInput type="number" [(ngModel)]="depositAmount" placeholder="0.00"
+                        [disabled]="isFetchingRate()" />
+                    <span suffix>{{ baseCurrency() }}</span>
+                </app-input>
+            </div>
+            <div class="fund-modal__actions">
+                <app-button variant="outline" (buttonClick)="isOpen.set(false)">Cancel</app-button>
+                <app-button variant="primary" [isLoading]="isProcessingFund()"
+                    [disabled]="!depositAmount() || (depositAmount() || 0) <= 0 || isFetchingRate()"
+                    (buttonClick)="onDeposit()">Deposit Funds</app-button>
+            </div>
+            } @else {
+            <div class="fund-row">
+                <span class="fund-label">From</span>
+                <strong>{{ baseCurrency() }} (Avail: {{ baseBalance() | number:'1.2-2' }})</strong>
+            </div>
+            <div class="fund-row">
+                <span class="fund-label">To</span>
+                @if (isFetchingRate()) {
+                <app-skeleton shape="text" width="120px" height="18px"></app-skeleton>
+                } @else {
+                <strong>{{ targetCurrency() }} (Avail: {{ targetBalance() | number:'1.2-2' }})</strong>
+                }
+            </div>
+            <div class="fund-field">
+                <app-input label="Amount to Convert">
+                    <input appInput type="number" [(ngModel)]="convertAmount" placeholder="0.00"
+                        [disabled]="isFetchingRate()" />
+                    <span suffix>{{ baseCurrency() }}</span>
+                </app-input>
+                @if (isFetchingRate()) {
+                <div class="conversion-preview">
+                    <div class="preview-row">
+                        <span>Estimated Target</span>
+                        <app-skeleton shape="text" width="90px" height="16px"></app-skeleton>
+                    </div>
+                    <div class="preview-row">
+                        <span>Est. FX Fee (~1%)</span>
+                        <app-skeleton shape="text" width="70px" height="16px"></app-skeleton>
+                    </div>
+                    <div class="preview-row total-row">
+                        <span>Net Received</span>
+                        <app-skeleton shape="text" width="110px" height="18px"></app-skeleton>
+                    </div>
+                </div>
+                } @else if (convertAmount() && convertAmount()! > 0) {
+                <div class="conversion-preview">
+                    <div class="preview-row">
+                        <span>Estimated Target</span>
+                        <span>{{ estimatedConvertedAmount() | number:'1.2-2' }} {{ targetCurrency() }}</span>
+                    </div>
+                    <div class="preview-row">
+                        <span>Est. FX Fee (~1%)</span>
+                        <span>-{{ estimatedConversionFxFee() | number:'1.2-2' }} {{ targetCurrency() }}</span>
+                    </div>
+                    <div class="preview-row total-row">
+                        <span>Net Received</span>
+                        <span>&asymp; {{ (estimatedConvertedAmount() - estimatedConversionFxFee()) | number:'1.2-2' }}
+                            {{ targetCurrency() }}</span>
+                    </div>
+                    <span class="rate-hint">(Est. Rate: 1 {{ baseCurrency() }} = {{ liveConversionRate() |
+                        number:'1.4-4' }} {{ targetCurrency() }})</span>
+                </div>
+                }
+                <div class="disclaimer-text fund-disclaimer">
+                    * Final conversion rates and fees (approx. 1%) are calculated securely by the backend during the
+                    transaction.
+                </div>
+            </div>
+            <div class="fund-modal__actions">
+                <app-button variant="outline" (buttonClick)="isOpen.set(false)">Cancel</app-button>
+                <app-button variant="primary" [isLoading]="isProcessingFund()"
+                    [disabled]="!convertAmount() || (convertAmount() || 0) <= 0 || (convertAmount() || 0) > baseBalance() || isFetchingRate()"
+                    (buttonClick)="onConvert()">Convert Funds</app-button>
+            </div>
+            }
+        </div>
+    </div>
+</app-modal>
+}

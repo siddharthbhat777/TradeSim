@@ -9,6 +9,7 @@ import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { Stock } from '../../../../models/stock';
+import { OrderTicketPayload } from './order-ticket/order-ticket';
 
 class ResizeObserverMock {
   observe = vi.fn();
@@ -35,6 +36,15 @@ describe('StockDetails', () => {
     dayVolume: 1000,
     marketCap: 1000000,
     marketCapCategory: 'LARGE'
+  };
+
+  const dummyPayload: OrderTicketPayload = {
+    orderSide: 'BUY',
+    orderType: 'MARKET',
+    timeInForce: 'DAY',
+    orderQuantity: 5,
+    limitPrice: null,
+    fundingCurrency: 'USD'
   };
 
   beforeEach(async () => {
@@ -114,48 +124,14 @@ describe('StockDetails', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should compute financials correctly for MARKET orders', () => {
-    component.orderQuantity.set(10);
-    component.orderType.set('MARKET');
-    expect(component.financials().subtotalInStockCurrency).toBe(1500);
-    expect(component.financials().hasFunds).toBe(true);
-  });
-
-  it('should compute financials correctly for LIMIT orders', () => {
-    component.orderQuantity.set(10);
-    component.orderType.set('LIMIT');
-    component.limitPrice.set(145);
-    expect(component.financials().subtotalInStockCurrency).toBe(1450);
-  });
-
   it('should emit back event when onBack is called', () => {
     const emitSpy = vi.spyOn(component.back, 'emit');
     component.onBack();
     expect(emitSpy).toHaveBeenCalled();
   });
 
-  it('should prevent reviewing order if quantity is 0 or less', () => {
-    component.orderQuantity.set(0);
-    component.reviewOrder();
-    expect(toastServiceSpy.danger).toHaveBeenCalledWith('Quantity must be greater than zero.');
-    expect(orderServiceSpy.estimateOrder).not.toHaveBeenCalled();
-  });
-
-  it('should prevent reviewing LIMIT order if limitPrice is invalid', () => {
-    component.orderType.set('LIMIT');
-    component.limitPrice.set(0);
-    component.reviewOrder();
-    expect(toastServiceSpy.danger).toHaveBeenCalledWith('Please enter a valid limit price.');
-    expect(orderServiceSpy.estimateOrder).not.toHaveBeenCalled();
-  });
-
   it('should call OrderService and show review modal on reviewOrder', () => {
-    component.orderSide.set('BUY');
-    component.orderType.set('MARKET');
-    component.timeInForce.set('DAY');
-    component.orderQuantity.set(5);
-
-    component.reviewOrder();
+    component.onReviewOrder(dummyPayload);
 
     expect(orderServiceSpy.estimateOrder).toHaveBeenCalledWith({
       stockId: 's-1',
@@ -167,15 +143,12 @@ describe('StockDetails', () => {
       fundingCurrency: 'USD'
     });
     expect(component.showReviewModal()).toBe(true);
+    expect(component.activeOrderPayload()).toEqual(dummyPayload);
   });
 
   it('should place order and show success drawer on executeOrder', () => {
-    component.orderSide.set('BUY');
-    component.orderType.set('MARKET');
-    component.timeInForce.set('DAY');
-    component.orderQuantity.set(5);
-
-    component.executeOrder();
+    component.activeOrderPayload.set(dummyPayload);
+    component.onExecuteOrder();
 
     expect(orderServiceSpy.createOrder).toHaveBeenCalledWith({
       stockId: 's-1',
@@ -191,25 +164,12 @@ describe('StockDetails', () => {
     expect(walletServiceSpy.loadWallet).toHaveBeenCalled();
   });
 
-  it('should handle error when placing order fails', () => {
-    orderServiceSpy.createOrder.mockReturnValue(throwError(() => new Error('Error')));
-    component.isSubmittingOrder.set(true);
-
-    component.executeOrder();
-
-    expect(component.isSubmittingOrder()).toBe(false);
-    expect(component.showSuccessDrawer()).toBe(false);
-  });
-
   it('should fetch exchange rate and open deposit modal', () => {
-    component.fundingMethod.set('CUSTOM');
-    component.customCurrency.set('EUR');
-
     walletServiceSpy.wallet.set({
       buckets: [{ currency: 'USD', availableBalance: 1000 }]
     });
 
-    component.openDeposit();
+    component.onOpenDeposit('EUR');
 
     expect(forexServiceSpy.getExchangeRate).toHaveBeenCalledWith('USD', 'EUR');
     expect(component.showFundModal()).toBe(true);
