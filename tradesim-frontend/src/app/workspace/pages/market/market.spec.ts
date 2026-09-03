@@ -108,9 +108,9 @@ describe('Market', () => {
     expect(filtered[0].symbol).toBe('TSLA');
   });
 
-  it('should open filter drawer and synchronize drafts with applied state', () => {
-    component.appliedPriceRange.set([0, 150]);
-    component.appliedMarketCapCategories.set(['LARGE']);
+  it('should preserve draft states when filter drawer is opened', () => {
+    component.draftPriceRange.set([0, 150]);
+    component.draftMarketCapCategories.set(['LARGE']);
 
     component.openFilterDrawer();
 

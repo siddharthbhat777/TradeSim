@@ -8,6 +8,12 @@ import { PortfolioService } from '../../../services/portfolio/portfolio-service'
 import { RiskService } from '../../../services/risk/risk-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
 describe('Portfolio', () => {
   let component: Portfolio;
   let fixture: ComponentFixture<Portfolio>;
@@ -20,28 +26,18 @@ describe('Portfolio', () => {
   let mockTradingAccountService: any;
 
   beforeEach(async () => {
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      value: vi.fn().mockImplementation(query => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })),
-    });
+    vi.stubGlobal('matchMedia', vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })));
 
-    Object.defineProperty(window, 'ResizeObserver', {
-      writable: true,
-      value: vi.fn().mockImplementation(() => ({
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-      })),
-    });
+    vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
     mockPortfolioSignal = signal(null);
     mockTradingAccountSignal = signal(null);
