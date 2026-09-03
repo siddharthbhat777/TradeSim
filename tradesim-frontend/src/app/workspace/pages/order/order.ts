@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, DatePipe, DecimalPipe, CurrencyPipe } from '@angular/common';
+import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../services/order/order-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { OrderHistoryResponse } from '../../../models/order';
 import { Card } from '../../../shared/components/card/card';
-import { Table, TableColumn } from '../../../shared/components/table/table';
+import { Table, TableColumn, TableCellDirective } from '../../../shared/components/table/table';
 import { CustomInput } from '../../../shared/components/input/input';
 import { InputDirective } from '../../../shared/directives/input';
 import { Button } from '../../../shared/components/button/button';
@@ -27,6 +27,7 @@ export interface OrderRow extends OrderHistoryResponse {
     FormsModule,
     Card,
     Table,
+    TableCellDirective,
     CustomInput,
     InputDirective,
     Button,
