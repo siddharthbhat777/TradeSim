@@ -52,7 +52,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   private readonly document = inject(DOCUMENT);
   private readonly window = this.document.defaultView;
 
-  private readonly uid = generateUniqueId('dd');
+  readonly uid = generateUniqueId('dd');
 
   protected readonly triggerId = `app-dropdown-trigger-${this.uid}`;
   protected readonly labelId = `app-dropdown-label-${this.uid}`;
@@ -72,6 +72,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   readonly emptyText = input('No options available');
   readonly loading = input(false, { transform: booleanAttribute });
   readonly panelLoading = input(false, { transform: booleanAttribute });
+  readonly direction = input<'auto' | 'up' | 'down'>('auto');
   readonly reserveMessageSpace = input<boolean | null>(null, {
     transform: booleanAttributeOrNull,
   });
@@ -86,6 +87,11 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   protected readonly activeIndex = signal(-1);
   protected readonly cvaDisabled = signal(false);
   protected readonly searchQuery = signal('');
+
+  protected readonly panelTop = signal<number | null>(null);
+  protected readonly panelBottom = signal<number | null>(null);
+  protected readonly panelLeft = signal<number>(0);
+  protected readonly panelMinWidth = signal<number>(0);
 
   protected readonly disabledState = computed(() => this.disabled() || this.cvaDisabled());
 
@@ -150,12 +156,12 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
       if (this.isOpen()) {
         this.calculatePosition();
         this.window?.addEventListener('click', this.onWindowClick, { capture: true });
-        this.window?.addEventListener('scroll', this.calculatePosition, { capture: true, passive: true });
+        this.window?.addEventListener('scroll', this.onWindowScroll, { capture: true, passive: true });
         this.window?.addEventListener('resize', this.calculatePosition, { passive: true });
 
         onCleanup(() => {
           this.window?.removeEventListener('click', this.onWindowClick, { capture: true });
-          this.window?.removeEventListener('scroll', this.calculatePosition, { capture: true });
+          this.window?.removeEventListener('scroll', this.onWindowScroll, { capture: true });
           this.window?.removeEventListener('resize', this.calculatePosition);
         });
       }
@@ -189,18 +195,52 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   }
 
   private calculatePosition = (): void => {
-    if (!this.isOpen()) {
+    if (!this.isOpen() || !this.window) {
       return;
     }
     const rect = this.hostRef.nativeElement.getBoundingClientRect();
-    const viewportHeight = this.window?.innerHeight || 0;
+    const viewportHeight = this.window.innerHeight;
     const spaceBelow = viewportHeight - rect.bottom;
-    this.openUpwards.set(spaceBelow < 320 && rect.top > spaceBelow);
+
+    const dir = this.direction();
+    let up = false;
+    if (dir === 'up') {
+      up = true;
+    } else if (dir === 'down') {
+      up = false;
+    } else {
+      up = spaceBelow < 320 && rect.top > spaceBelow;
+    }
+    this.openUpwards.set(up);
+
+    this.panelMinWidth.set(rect.width);
+    this.panelLeft.set(rect.left);
+
+    if (up) {
+      this.panelBottom.set(viewportHeight - rect.top + 6);
+      this.panelTop.set(null);
+    } else {
+      this.panelTop.set(rect.bottom + 6);
+      this.panelBottom.set(null);
+    }
+  };
+
+  private onWindowScroll = (event: Event): void => {
+    const target = event.target as Node | null;
+    const panel = this.document.getElementById(`app-dropdown-panel-${this.uid}`);
+    if (panel && target && panel.contains(target)) {
+      return;
+    }
+    this.calculatePosition();
   };
 
   private onWindowClick = (event: MouseEvent): void => {
     const target = event.target as Node | null;
     if (target && !this.hostRef.nativeElement.contains(target)) {
+      const panel = this.document.getElementById(`app-dropdown-panel-${this.uid}`);
+      if (panel && panel.contains(target)) {
+        return;
+      }
       this.isOpen.set(false);
       this.onTouched();
     }

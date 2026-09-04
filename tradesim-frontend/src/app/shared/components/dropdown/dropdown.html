@@ -41,7 +41,9 @@
     </button>
 
     @if (isOpen()) {
-    <div class="dropdown__panel" [class.dropdown__panel--up]="openUpwards()">
+    <div [id]="'app-dropdown-panel-' + uid" class="dropdown__panel" [class.dropdown__panel--up]="openUpwards()"
+        [style.top.px]="panelTop()" [style.bottom.px]="panelBottom()" [style.left.px]="panelLeft()"
+        [style.min-width.px]="panelMinWidth()">
         @if (searchable()) {
         <app-input class="dropdown__search" [reserveMessageSpace]="false">
             <input #searchInput appInput [appInputSize]="size()" type="text" autocomplete="off"

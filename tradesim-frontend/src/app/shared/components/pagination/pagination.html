@@ -32,7 +32,8 @@
         <app-dropdown class="pagination__page-size" [class.pagination__page-size--small]="size() === 'small'"
             [class.pagination__page-size--medium]="size() === 'medium'"
             [class.pagination__page-size--large]="size() === 'large'" [size]="size()"
-            [options]="pageSizeDropdownOptions()" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)" />
+            [options]="pageSizeDropdownOptions()" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)"
+            direction="up" />
 
         <span class="pagination__range" [class.pagination__range--small]="size() === 'small'"
             [class.pagination__range--medium]="size() === 'medium'"
