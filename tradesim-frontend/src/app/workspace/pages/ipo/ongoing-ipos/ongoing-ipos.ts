@@ -14,6 +14,7 @@ import { CustomInput } from '../../../../shared/components/input/input';
 import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Button } from '../../../../shared/components/button/button';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 export interface MappedIpoOffer extends IpoOfferResponse {
   symbol: string;
@@ -33,6 +34,7 @@ export interface MappedIpoOffer extends IpoOfferResponse {
     InputDirective,
     Dropdown,
     Button,
+    EmptyState,
     CurrencyPipe,
     DatePipe
   ],

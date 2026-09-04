@@ -12,6 +12,7 @@ import { CustomInput } from '../../../../shared/components/input/input';
 import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Badge } from '../../../../shared/components/badge/badge';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 export interface MappedIpoSubscription extends IpoSubscriptionResponse {
   symbol: string;
@@ -29,6 +30,7 @@ export interface MappedIpoSubscription extends IpoSubscriptionResponse {
     InputDirective,
     Dropdown,
     Badge,
+    EmptyState,
     CurrencyPipe,
     DatePipe
   ],

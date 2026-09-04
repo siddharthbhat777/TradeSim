@@ -11,6 +11,7 @@ import { Table, TableCellDirective, TableColumn } from '../../../../shared/compo
 import { CustomInput } from '../../../../shared/components/input/input';
 import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 export interface MappedUpcomingOffer extends IpoOfferResponse {
   symbol: string;
@@ -29,6 +30,7 @@ export interface MappedUpcomingOffer extends IpoOfferResponse {
     CustomInput,
     InputDirective,
     Dropdown,
+    EmptyState,
     CurrencyPipe,
     DatePipe
   ],
