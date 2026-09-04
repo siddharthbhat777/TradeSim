@@ -1,0 +1,52 @@
+<div class="applied-ipos">
+    <div class="applied-ipos-toolbar">
+        <div class="applied-search">
+            <app-input [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search by symbol..." [(ngModel)]="searchQuery" />
+            </app-input>
+        </div>
+        <div class="applied-filter">
+            <app-dropdown [options]="statusOptions" [(ngModel)]="selectedStatus" size="medium"
+                [reserveMessageSpace]="false"></app-dropdown>
+        </div>
+    </div>
+
+    <app-card [isLoading]="isLoading()">
+        <app-table variant="flush" [columns]="columns" [data]="processedSubscriptions()" [(currentPage)]="currentPage"
+            [(pageSize)]="pageSize" emptyText="You haven't applied for any IPOs yet.">
+
+            <ng-template tableCell="symbol" let-row="row">
+                <span class="fw-semibold" style="color: var(--primary);">{{ row.symbol }}</span>
+            </ng-template>
+
+            <ng-template tableCell="issuePrice" let-row="row">
+                <span>{{ row.issuePrice | currency:baseCurrency():'symbol':'1.2-4' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="lockedAmount" let-row="row">
+                <span class="fw-semibold">{{ row.lockedAmount | currency:baseCurrency():'symbol':'1.2-2' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="allottedShares" let-row="row">
+                <span [class.text-muted]="row.allottedShares === 0">{{ row.allottedShares }}</span>
+            </ng-template>
+
+            <ng-template tableCell="status" let-row="row">
+                <app-badge
+                    [color]="row.status === 'ALLOTTED' ? 'success' : row.status === 'NOT_ALLOTTED' ? 'secondary' : 'primary'">
+                    {{ row.status.replace('_', ' ') }}
+                </app-badge>
+            </ng-template>
+
+            <ng-template tableCell="createdAt" let-row="row">
+                <span class="date-text">{{ row.createdAt | date:'MMM dd, yyyy - h:mm a' }}</span>
+            </ng-template>
+
+        </app-table>
+    </app-card>
+</div>

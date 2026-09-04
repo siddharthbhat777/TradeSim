@@ -1,0 +1,52 @@
+<div class="ongoing-ipos">
+    <div class="ongoing-ipos-toolbar">
+        <div class="ongoing-search">
+            <app-input [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search by symbol..." [(ngModel)]="searchQuery" />
+            </app-input>
+        </div>
+        <div class="ongoing-filter">
+            <app-dropdown [options]="categoryOptions" [(ngModel)]="selectedCategory" size="medium"
+                [reserveMessageSpace]="false"></app-dropdown>
+        </div>
+    </div>
+
+    <app-card [isLoading]="isLoading()">
+        <app-table variant="flush" [columns]="columns" [data]="processedOffers()" [(currentPage)]="currentPage"
+            [(pageSize)]="pageSize" emptyText="No ongoing IPOs available right now.">
+
+            <ng-template tableCell="symbol" let-row="row">
+                <span class="fw-semibold" style="color: var(--primary);">{{ row.symbol }}</span>
+            </ng-template>
+
+            <ng-template tableCell="marketCapCategory" let-row="row">
+                <span class="category-text">{{ row.marketCapCategory | titlecase }} Cap</span>
+            </ng-template>
+
+            <ng-template tableCell="issuePrice" let-row="row">
+                <span class="fw-semibold">{{ row.issuePrice | currency:baseCurrency():'symbol':'1.2-4' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="sharesPerAllottee" let-row="row">
+                <span>{{ row.sharesPerAllottee }} Shares</span>
+            </ng-template>
+
+            <ng-template tableCell="subscriptionEndAt" let-row="row">
+                <span class="date-text">{{ row.subscriptionEndAt | date:'MMM dd, yyyy - h:mm a' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="actions" let-row="row">
+                <app-button variant="primary" size="small" [isLoading]="isSubmitting() === row.id"
+                    (buttonClick)="subscribe(row)">
+                    Apply
+                </app-button>
+            </ng-template>
+
+        </app-table>
+    </app-card>
+</div>

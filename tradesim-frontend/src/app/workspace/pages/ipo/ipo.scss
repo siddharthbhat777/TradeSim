@@ -1,0 +1,48 @@
+.ipo-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.ipo-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h1 {
+    margin: 0 0 4px 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+}
+
+.ipo-controls {
+  width: 100%;
+
+  @media (min-width: 1024px) {
+    width: 550px;
+  }
+
+  app-segmented-control {
+    width: 100%;
+    display: block;
+  }
+}
+
+.ipo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}

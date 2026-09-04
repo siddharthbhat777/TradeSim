@@ -1,0 +1,48 @@
+.applied-ipos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.applied-ipos-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.applied-search {
+  flex: 1;
+
+  @media (min-width: 768px) {
+    max-width: 320px;
+  }
+}
+
+.applied-filter {
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: 200px;
+  }
+}
+
+.fw-semibold {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.date-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
