@@ -4,7 +4,8 @@ export type DialogVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'wa
 
 export interface DialogOptions {
     title?: string;
-    message: string;
+    message?: string;
+    messageHtml?: string;
     primaryLabel?: string;
     secondaryLabel?: string;
     primaryVariant?: DialogVariant;

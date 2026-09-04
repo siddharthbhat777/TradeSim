@@ -17,7 +17,11 @@
         <div class="dialog-divider"></div>
 
         <div class="dialog-body">
+            @if (options.messageHtml) {
+            <div [innerHTML]="options.messageHtml"></div>
+            } @else if (options.message) {
             <p>{{ options.message }}</p>
+            }
         </div>
 
         <div class="dialog-footer">

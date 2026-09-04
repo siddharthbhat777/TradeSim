@@ -457,12 +457,9 @@ export class DesignSystem implements OnInit, OnDestroy {
 
   triggerConfirmDialog() {
     this.dialogService.open({
-      title: 'Delete Workspace?',
-      message: 'Are you sure you want to delete this workspace? All data will be permanently removed. This action cannot be undone.',
-      primaryLabel: 'Delete',
-      secondaryLabel: 'Cancel',
-      onPrimary: () => console.log('User clicked Delete!'),
-      onSecondary: () => console.log('User clicked Cancel')
+      title: 'Rich Text Dialog',
+      messageHtml: 'A total of <strong>30,000.00 INR</strong> will be locked securely.',
+      primaryLabel: 'Confirm'
     });
   }
 

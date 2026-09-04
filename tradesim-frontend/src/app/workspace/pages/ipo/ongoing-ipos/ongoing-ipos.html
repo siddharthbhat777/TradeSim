@@ -53,10 +53,20 @@
             </ng-template>
 
             <ng-template tableCell="actions" let-row="row">
+                @if (row.hasApplied) {
+                <span class="applied-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Applied
+                </span>
+                } @else {
                 <app-button variant="primary" size="small" [isLoading]="isSubmitting() === row.id"
                     (buttonClick)="subscribe(row)">
                     Apply
                 </app-button>
+                }
             </ng-template>
 
         </app-table>

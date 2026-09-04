@@ -2000,8 +2000,16 @@ this.dialogService.open(&#123;
                                 <tr>
                                     <td><code>message</code></td>
                                     <td><code>string</code></td>
-                                    <td><span style="color: var(--danger);">Required</span></td>
-                                    <td>The main body text of the dialog.</td>
+                                    <td><code>undefined</code></td>
+                                    <td>The main body plain text. Required if <code>messageHtml</code> is not provided.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>messageHtml</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Optional HTML-formatted body text. Takes precedence over <code>message</code> if
+                                        provided.</td>
                                 </tr>
                                 <tr>
                                     <td><code>title</code></td>
