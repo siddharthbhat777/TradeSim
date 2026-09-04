@@ -147,6 +147,17 @@ public class IpoService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<IpoOfferResponse> fetchUpcomingIpoOffers() {
+        Instant now = Instant.now();
+
+        return ipoOfferRepository.findByStatusOrderByCreatedAtAsc(IpoOfferStatus.SUBSCRIPTION_OPEN)
+                .stream()
+                .filter(offer -> now.isBefore(offer.getSubscriptionStartAt()))
+                .map(this::toOfferResponse)
+                .toList();
+    }
+
     @Transactional
     public IpoSubscriptionResponse subscribeToIpo(UUID ipoOfferId, UUID userId) {
         IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));

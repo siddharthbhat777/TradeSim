@@ -52,6 +52,12 @@ public class IpoController {
         return ResponseEntity.ok(ipoService.fetchOpenIpoOffers());
     }
 
+    @GetMapping("upcoming")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<IpoOfferResponse>> getUpcomingIpoOffers() {
+        return ResponseEntity.ok(ipoService.fetchUpcomingIpoOffers());
+    }
+
     @PostMapping("{ipoOfferId}/subscriptions")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<IpoSubscriptionResponse> subscribeToIpo(@PathVariable UUID ipoOfferId, @AuthenticationPrincipal UserPrincipal principal) {
