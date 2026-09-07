@@ -1,0 +1,146 @@
+<div class="fund-manager">
+    @if (showHeader()) {
+    <div class="fund-manager__header">
+        <h2 class="fund-manager__title">Fund Manager</h2>
+        <p class="fund-manager__subtitle">Deposit funds or convert between currency buckets</p>
+    </div>
+    }
+
+    <div class="fund-manager__segmented">
+        <app-segmented-control [options]="modeOptions" [ngModel]="activeMode()" (ngModelChange)="setMode($event)"
+            [fullWidth]="true" [required]="true">
+        </app-segmented-control>
+    </div>
+
+    @if (activeMode() === 'deposit') {
+    <div class="fund-manager__view">
+        <div class="fund-manager__balance-overview">
+            <span class="fund-manager__balance-label">Current Available Cash</span>
+            <strong class="fund-manager__balance-value">
+                {{ baseBucket()?.availableBalance ?? 0 | currency:baseCurrency():'symbol':'1.2-2' }}
+            </strong>
+        </div>
+
+        <div class="fund-manager__field">
+            <app-input label="Deposit Amount" helperText="Funds are credited directly to your base wallet.">
+                <input appInput type="number" min="1" placeholder="Enter amount..." [(ngModel)]="depositAmount" />
+                <span suffix>{{ baseCurrency() }}</span>
+            </app-input>
+        </div>
+
+        <div class="fund-manager__presets">
+            @for (amount of quickDepositAmounts; track amount) {
+            <button type="button" class="fund-manager__preset-btn" (click)="addDepositPreset(amount)">
+                +{{ amount | number }}
+            </button>
+            }
+        </div>
+
+        <div class="fund-manager__actions">
+            <app-button variant="primary" size="large" width="100%"
+                [disabled]="!depositAmount() || depositAmount()! <= 0" [isLoading]="isSubmitting()"
+                (buttonClick)="submitDeposit()">
+                Deposit Cash
+            </app-button>
+        </div>
+    </div>
+    } @else {
+    <div class="fund-manager__view">
+        @if (!isMultiCurrencyApproved()) {
+        <app-alert variant="warning" title="Multi-Currency Access Required">
+            Currency conversion is reserved for multi-currency approved trading accounts. Please submit a verification
+            request in the Wallet hub to unlock foreign currency buckets.
+        </app-alert>
+        } @else {
+        <div class="fund-manager__currency-row">
+            <div class="fund-manager__col">
+                <app-dropdown label="Source Currency" placeholder="Select source..." [options]="sourceCurrencyOptions()"
+                    [(ngModel)]="sourceCurrency" size="medium" [fullWidth]="true" [reserveMessageSpace]="false">
+                    <ng-template #optionTemplate let-option>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span style="font-weight: 600;">{{ option.label }}</span>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                Avail: {{ option.availableBalance | number:'1.2-2' }}
+                            </span>
+                        </div>
+                    </ng-template>
+                </app-dropdown>
+            </div>
+
+            <button type="button" class="fund-manager__swap-btn" (click)="swapCurrencies()"
+                aria-label="Swap source and target currencies">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+            </button>
+
+            <div class="fund-manager__col">
+                <app-dropdown label="Target Currency" placeholder="Select target..." [options]="targetCurrencyOptions()"
+                    [(ngModel)]="targetCurrency" size="medium" [fullWidth]="true" [reserveMessageSpace]="false">
+                    <ng-template #optionTemplate let-option>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span style="font-weight: 600;">{{ option.label }}</span>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                Avail: {{ option.availableBalance | number:'1.2-2' }}
+                            </span>
+                        </div>
+                    </ng-template>
+                </app-dropdown>
+            </div>
+        </div>
+
+        <div class="fund-manager__field">
+            <app-input label="Amount to Convert" [errorText]="amountExceedsError()">
+                <input appInput type="number" min="0.01" placeholder="Enter amount to convert..."
+                    [(ngModel)]="convertAmount" [appInputInvalid]="!!amountExceedsError()" />
+                <span suffix>{{ sourceCurrency() }}</span>
+            </app-input>
+            <div class="fund-manager__source-meta">
+                <span>Available: {{ activeSourceBucket()?.availableBalance ?? 0 | number:'1.2-2' }} {{ sourceCurrency()
+                    }}</span>
+                <button type="button" class="fund-manager__max-btn" (click)="setFullSourceBalance()">MAX</button>
+            </div>
+        </div>
+
+        <div class="fund-manager__conversion-summary">
+            <div class="fund-manager__summary-line">
+                <span>Exchange Rate</span>
+                @if (isLoadingRate()) {
+                <app-inline-loader size="small" variant="muted"></app-inline-loader>
+                } @else if (currentRate()) {
+                <strong>1 {{ sourceCurrency() }} = {{ currentRate() | number:'1.2-4' }} {{ targetCurrency() }}</strong>
+                } @else {
+                <span class="text-muted">Unavailable</span>
+                }
+            </div>
+
+            <div class="fund-manager__summary-line">
+                <span>Estimated FX Fee (~1%)</span>
+                <span>{{ estimatedFxFee() | number:'1.2-2' }} {{ sourceCurrency() }}</span>
+            </div>
+
+            <div class="fund-manager__divider"></div>
+
+            <div class="fund-manager__summary-line highlight">
+                <span>Estimated Received</span>
+                <strong class="target-amount">
+                    {{ estimatedTargetAmount() | number:'1.2-2' }} {{ targetCurrency() }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="fund-manager__actions">
+            <app-button variant="primary" size="large" width="100%"
+                [disabled]="!convertAmount() || convertAmount()! <= 0 || !!amountExceedsError() || !currentRate()"
+                [isLoading]="isSubmitting()" (buttonClick)="submitConversion()">
+                Convert Now
+            </app-button>
+        </div>
+        }
+    </div>
+    }
+</div>

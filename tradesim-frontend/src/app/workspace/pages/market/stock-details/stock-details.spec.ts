@@ -5,7 +5,7 @@ import { WalletService } from '../../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../../services/trading-account/trading-account-service';
 import { ForexService } from '../../../../services/forex/forex-service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { Stock } from '../../../../models/stock';
@@ -78,9 +78,7 @@ describe('StockDetails', () => {
         multiCurrencyStatus: 'APPROVED',
         buckets: [{ currency: 'USD', availableBalance: 1000 }]
       }),
-      loadWallet: vi.fn(),
-      deposit: vi.fn().mockReturnValue(of({})),
-      convert: vi.fn().mockReturnValue(of({}))
+      loadWallet: vi.fn()
     };
 
     tradingAccountServiceSpy = {
@@ -91,8 +89,7 @@ describe('StockDetails', () => {
     };
 
     forexServiceSpy = {
-      getSupportedCurrencies: vi.fn().mockReturnValue(of(['USD', 'EUR'])),
-      getExchangeRate: vi.fn().mockReturnValue(of(1.1))
+      getSupportedCurrencies: vi.fn().mockReturnValue(of(['USD', 'EUR']))
     };
 
     toastServiceSpy = {
@@ -164,15 +161,15 @@ describe('StockDetails', () => {
     expect(walletServiceSpy.loadWallet).toHaveBeenCalled();
   });
 
-  it('should fetch exchange rate and open deposit modal', () => {
+  it('should set mode and open fund manager modal on onOpenDeposit', () => {
     walletServiceSpy.wallet.set({
       buckets: [{ currency: 'USD', availableBalance: 1000 }]
     });
 
     component.onOpenDeposit('EUR');
 
-    expect(forexServiceSpy.getExchangeRate).toHaveBeenCalledWith('USD', 'EUR');
+    expect(component.fundTargetCurrency()).toBe('EUR');
+    expect(component.fundManagerMode()).toBe('convert');
     expect(component.showFundModal()).toBe(true);
-    expect(component.liveConversionRate()).toBe(1.1);
   });
 });

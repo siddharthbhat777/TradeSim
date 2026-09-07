@@ -93,6 +93,8 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   protected readonly panelLeft = signal<number>(0);
   protected readonly panelMinWidth = signal<number>(0);
 
+  protected pendingValue: T | null = null;
+
   protected readonly disabledState = computed(() => this.disabled() || this.cvaDisabled());
 
   protected readonly filteredOptions = computed(() => {
@@ -140,7 +142,13 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
       const opts = this.options();
       const currentSel = this.selected();
 
-      if (currentSel) {
+      if (this.pendingValue !== null && opts.length > 0) {
+        const found = opts.find((option) => option.value === this.pendingValue);
+        if (found) {
+          this.selected.set(found);
+          this.pendingValue = null;
+        }
+      } else if (currentSel) {
         const updatedSel = opts.find((option) => option.value === currentSel.value);
         if (updatedSel && updatedSel !== currentSel) {
           this.selected.set(updatedSel);
@@ -150,7 +158,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
         this.selected.set(first);
         this.onChange(first.value);
       }
-    });
+    }, { allowSignalWrites: true });
 
     effect((onCleanup) => {
       if (this.isOpen()) {
@@ -414,9 +422,18 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   writeValue(value: T | null | undefined): void {
     if (value === null || value === undefined) {
       this.selected.set(null);
+      this.pendingValue = null;
       return;
     }
-    this.selected.set(this.options().find((option) => option.value === value) ?? null);
+
+    const found = this.options().find((option) => option.value === value);
+    if (found) {
+      this.selected.set(found);
+      this.pendingValue = null;
+    } else {
+      this.selected.set(null);
+      this.pendingValue = value;
+    }
   }
 
   registerOnChange(fn: (value: T | null) => void): void {

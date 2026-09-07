@@ -44,12 +44,11 @@
     (executeOrder)="onExecuteOrder()">
 </app-order-review-modal>
 
-<app-fund-manager [(isOpen)]="showFundModal" [(activeTab)]="activeFundTab" [baseCurrency]="baseCurrency()"
-    [targetCurrency]="fundTargetCurrency()" [baseBalance]="baseBalance()" [targetBalance]="targetBalance()"
-    [requiredAmount]="requiredFundingAmount()" [liveConversionRate]="liveConversionRate()"
-    [isFetchingRate]="isFetchingRate()" [isProcessingFund]="isProcessingFund()"
-    (processDeposit)="onProcessDeposit($event)" (processConversion)="onProcessConversion($event)">
-</app-fund-manager>
+@if (showFundModal()) {
+<app-fund-manager-modal [activeMode]="fundManagerMode()" [targetCurrency]="fundTargetCurrency()"
+    (closed)="onFundModalClosed()">
+</app-fund-manager-modal>
+}
 
 <app-drawer [(isOpen)]="showSuccessDrawer" position="bottom" (closed)="onSuccessDrawerClosed()">
     <div class="success-drawer-content">

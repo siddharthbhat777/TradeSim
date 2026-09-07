@@ -14,8 +14,9 @@ import { OrderEstimateResponse } from '../../../../models/order';
 
 import { StockHeader } from './stock-header/stock-header';
 import { OrderTicket, OrderTicketPayload } from './order-ticket/order-ticket';
-import { FundManager } from './fund-manager/fund-manager';
+import { FundManagerMode } from '../../../components/fund-manager/fund-manager';
 import { OrderReviewModal } from './order-review-modal/order-review-modal';
+import { FundManagerModal } from './fund-manager-modal/fund-manager-modal';
 
 @Component({
   selector: 'app-stock-details',
@@ -27,7 +28,7 @@ import { OrderReviewModal } from './order-review-modal/order-review-modal';
     Button,
     StockHeader,
     OrderTicket,
-    FundManager,
+    FundManagerModal,
     OrderReviewModal
   ],
   templateUrl: './stock-details.html',
@@ -53,16 +54,14 @@ export class StockDetails implements OnInit {
   readonly showSuccessDrawer = signal<boolean>(false);
   readonly showFundModal = signal<boolean>(false);
 
-  readonly activeFundTab = signal<'DEPOSIT' | 'CONVERT'>('DEPOSIT');
+  readonly fundManagerMode = signal<FundManagerMode>('deposit');
   readonly fundTargetCurrency = signal<string>('INR');
 
   readonly isEstimatingOrder = signal<boolean>(false);
   readonly isSubmittingOrder = signal<boolean>(false);
   readonly isFetchingRate = signal<boolean>(false);
-  readonly isProcessingFund = signal<boolean>(false);
 
   readonly orderEstimate = signal<OrderEstimateResponse | null>(null);
-  readonly liveConversionRate = signal<number>(1);
 
   readonly baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR');
 
@@ -70,19 +69,6 @@ export class StockDetails implements OnInit {
     const wallet = this.walletService.wallet();
     const bucket = wallet?.buckets.find(b => b.currency === this.baseCurrency());
     return bucket ? bucket.availableBalance : 0;
-  });
-
-  readonly targetBalance = computed(() => {
-    const wallet = this.walletService.wallet();
-    const bucket = wallet?.buckets.find(b => b.currency === this.fundTargetCurrency());
-    return bucket ? bucket.availableBalance : 0;
-  });
-
-  readonly requiredFundingAmount = computed(() => {
-    const estimate = this.orderEstimate();
-    if (!estimate || estimate.hasFunds) return 0;
-    const shortfall = estimate.finalTotal - this.targetBalance();
-    return shortfall > 0 ? shortfall : 0;
   });
 
   constructor() {
@@ -176,72 +162,23 @@ export class StockDetails implements OnInit {
     this.fundTargetCurrency.set(target);
 
     const base = this.baseCurrency();
-    this.activeFundTab.set(this.baseBalance() > 0 && target !== base ? 'CONVERT' : 'DEPOSIT');
+    this.fundManagerMode.set(this.baseBalance() > 0 && target !== base ? 'convert' : 'deposit');
     this.showFundModal.set(true);
-
-    if (target !== base) {
-      this.isFetchingRate.set(true);
-      this.forexService.getExchangeRate(base, target).subscribe({
-        next: (rate) => {
-          this.liveConversionRate.set(rate);
-          this.isFetchingRate.set(false);
-        },
-        error: () => {
-          this.isFetchingRate.set(false);
-          this.toastService.danger('Failed to fetch live exchange rate.');
-        }
-      });
-    } else {
-      this.liveConversionRate.set(1);
-    }
   }
 
-  onProcessDeposit(amt: number): void {
-    this.isProcessingFund.set(true);
-    this.walletService.deposit({ amount: amt }).subscribe({
-      next: () => {
-        this.toastService.success(`Successfully deposited ${amt} ${this.baseCurrency()}`);
-        this.walletService.loadWallet();
-
-        if (this.fundTargetCurrency() !== this.baseCurrency()) {
-          this.activeFundTab.set('CONVERT');
-          this.isProcessingFund.set(false);
-        } else {
-          this.refreshEstimateAfterFunding();
-        }
-      },
-      error: () => {
-        this.isProcessingFund.set(false);
-      }
-    });
-  }
-
-  onProcessConversion(amt: number): void {
-    this.isProcessingFund.set(true);
-    this.walletService.convert({
-      sourceCurrencyCode: this.baseCurrency(),
-      targetCurrencyCode: this.fundTargetCurrency(),
-      amountToConvert: amt
-    }).subscribe({
-      next: () => {
-        this.toastService.success('Conversion successful');
-        this.walletService.loadWallet();
-        this.refreshEstimateAfterFunding();
-      },
-      error: () => {
-        this.isProcessingFund.set(false);
-      }
-    });
+  onFundModalClosed(): void {
+    this.showFundModal.set(false);
+    this.refreshEstimateAfterFunding();
   }
 
   private refreshEstimateAfterFunding(): void {
     if (!this.orderEstimate() || !this.activeOrderPayload()) {
-      this.showFundModal.set(false);
-      this.isProcessingFund.set(false);
       return;
     }
 
     const p = this.activeOrderPayload()!;
+    this.isEstimatingOrder.set(true);
+
     this.orderService.estimateOrder({
       stockId: this.stock().id,
       quantity: p.orderQuantity,
@@ -253,13 +190,10 @@ export class StockDetails implements OnInit {
     }).subscribe({
       next: (estimate) => {
         this.orderEstimate.set(estimate);
-        if (estimate.hasFunds) {
-          this.showFundModal.set(false);
-        }
-        this.isProcessingFund.set(false);
+        this.isEstimatingOrder.set(false);
       },
       error: () => {
-        this.isProcessingFund.set(false);
+        this.isEstimatingOrder.set(false);
       }
     });
   }

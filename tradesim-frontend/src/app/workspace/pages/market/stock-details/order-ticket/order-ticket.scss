@@ -18,18 +18,6 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-
-    input[type='number'] {
-      -moz-appearance: textfield;
-      appearance: textfield;
-
-      &::-webkit-outer-spin-button,
-      &::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        appearance: none;
-        margin: 0;
-      }
-    }
   }
 
   &__warning {

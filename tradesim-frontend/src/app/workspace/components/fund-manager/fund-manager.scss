@@ -1,0 +1,198 @@
+.fund-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.fund-manager__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fund-manager__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.fund-manager__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.fund-manager__segmented {
+  width: 100%;
+}
+
+.fund-manager__view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fund-manager__balance-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+}
+
+.fund-manager__balance-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.fund-manager__balance-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.fund-manager__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+
+  app-input {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.fund-manager__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fund-manager__preset-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--surface-secondary);
+    color: var(--text-primary);
+    border-color: var(--primary);
+  }
+}
+
+.fund-manager__currency-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+.fund-manager__col {
+  flex: 1;
+  min-width: 0;
+}
+
+.fund-manager__swap-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--primary);
+  }
+}
+
+.fund-manager__source-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 0 4px;
+}
+
+.fund-manager__max-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.fund-manager__conversion-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+}
+
+.fund-manager__summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+
+  &.highlight {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .target-amount {
+    color: var(--success);
+    font-size: 1.15rem;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+  }
+}
+
+.fund-manager__divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.fund-manager__actions {
+  margin-top: 8px;
+
+  app-button {
+    width: 100%;
+    display: block;
+  }
+}
