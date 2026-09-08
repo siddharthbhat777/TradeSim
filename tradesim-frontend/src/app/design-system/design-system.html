@@ -2326,7 +2326,9 @@ this.dialogService.open(&#123;
   [paginationLabelSuffix]="' per page'"
   [paginationMobileLabelSuffix]="' / pg'"
   [(currentPage)]="currentPage"
-  [(pageSize)]="pageSize"&gt;
+  [(pageSize)]="pageSize"
+  [interactiveRows]="true"
+  (rowClick)="onRowSelected($event)"&gt;
 
   &lt;ng-template tableCell="status" let-val&gt;
     &lt;span class="status-badge"&gt;&#123;&#123; val &#125;&#125;&lt;/span&gt;
@@ -2334,6 +2336,12 @@ this.dialogService.open(&#123;
 
   &lt;ng-template tableCell="actions" let-row="row"&gt;
     &lt;app-button variant="outline" size="small"&gt;Edit &#123;&#123; row.name &#125;&#125;&lt;/app-button&gt;
+  &lt;/ng-template&gt;
+
+  &lt;ng-template tableExpandedRow let-row="row"&gt;
+    &lt;div class="expanded-details"&gt;
+      &lt;span&gt;Additional details for &#123;&#123; row.name &#125;&#125;&lt;/span&gt;
+    &lt;/div&gt;
   &lt;/ng-template&gt;
 
 &lt;/app-table&gt;</code></pre>
@@ -2413,6 +2421,26 @@ this.dialogService.open(&#123;
                                     <td><code>string</code></td>
                                     <td><code>'No data to display'</code></td>
                                     <td>Main text displayed when the data array is empty.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[interactiveRows]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Applies hover and pointer styles indicating the row is clickable.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(rowClick)</code></td>
+                                    <td><code>EventEmitter&lt;T&gt;</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Fired when a user clicks on a table row. Returns the row's data object.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>*tableExpandedRow</code></td>
+                                    <td><code>TemplateRef</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Structural directive to render an expandable accordion row beneath the main row.
+                                        Generates a left-aligned chevron toggle automatically. Exposes the row data as
+                                        <code>$implicit</code> or <code>row</code>.</td>
                                 </tr>
                             </tbody>
                         </table>

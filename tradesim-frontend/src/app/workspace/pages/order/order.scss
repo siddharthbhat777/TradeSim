@@ -71,11 +71,22 @@
   }
 }
 
+.order-filter-btn {
+  ::ng-deep .button {
+    background: var(--surface-secondary);
+    border-color: transparent;
+    color: var(--text-primary);
+
+    &:hover {
+      background: var(--border);
+    }
+  }
+}
+
 .filter-btn-content {
-  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 
   svg {
     width: 16px;
@@ -83,15 +94,12 @@
   }
 }
 
-.filter-badge {
-  position: absolute;
-  top: -4px;
-  right: -8px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.filter-dot {
+  width: 6px;
+  height: 6px;
   background-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--surface);
+  border-radius: 50%;
+  margin-left: 2px;
 }
 
 .fw-semibold {

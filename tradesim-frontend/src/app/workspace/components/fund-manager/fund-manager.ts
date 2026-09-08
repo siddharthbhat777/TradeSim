@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit, OnDestroy, output, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WalletService } from '../../../services/wallet/wallet-service';
@@ -34,7 +34,7 @@ export type FundManagerMode = 'deposit' | 'convert';
   styleUrl: './fund-manager.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FundManager implements OnInit {
+export class FundManager implements OnInit, OnDestroy {
   private readonly walletService = inject(WalletService);
   private readonly forexService = inject(ForexService);
   private readonly tradingAccountService = inject(TradingAccountService);
@@ -59,10 +59,13 @@ export class FundManager implements OnInit {
   readonly currentRate = signal<number | null>(null);
   readonly supportedCurrencies = signal<string[]>([]);
 
-  readonly modeOptions: SegmentOption<FundManagerMode>[] = [
-    { label: 'Deposit Cash', value: 'deposit' },
-    { label: 'Convert Currency', value: 'convert' }
-  ];
+  private mediaQueryList: MediaQueryList | null = null;
+  readonly isMobile = signal<boolean>(false);
+
+  readonly modeOptions = computed<SegmentOption<FundManagerMode>[]>(() => [
+    { label: this.isMobile() ? 'Deposit' : 'Deposit Cash', value: 'deposit' },
+    { label: this.isMobile() ? 'Convert' : 'Convert Currency', value: 'convert' }
+  ]);
 
   readonly quickDepositAmounts = [5000, 10000, 25000, 50000, 100000];
 
@@ -164,7 +167,23 @@ export class FundManager implements OnInit {
       this.walletService.loadWallet();
     }
     this.fetchSupportedCurrencies();
+
+    if (typeof window !== 'undefined') {
+      this.mediaQueryList = window.matchMedia('(max-width: 640px)');
+      this.isMobile.set(this.mediaQueryList.matches);
+      this.mediaQueryList.addEventListener('change', this.handleMediaQueryChange);
+    }
   }
+
+  ngOnDestroy(): void {
+    if (this.mediaQueryList) {
+      this.mediaQueryList.removeEventListener('change', this.handleMediaQueryChange);
+    }
+  }
+
+  private handleMediaQueryChange = (e: MediaQueryListEvent): void => {
+    this.isMobile.set(e.matches);
+  };
 
   setMode(mode: FundManagerMode): void {
     this.activeMode.set(mode);

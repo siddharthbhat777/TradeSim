@@ -1,105 +1,85 @@
-import {
-  booleanAttribute,
-  Component,
-  TemplateRef,
-  computed,
-  contentChildren,
-  input,
-  model,
-  ChangeDetectionStrategy,
-  output
-} from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
-import { Directive, inject } from '@angular/core';
-
-import { Pagination, type PaginationSize } from '../pagination/pagination';
-import { EmptyState } from '../empty-state/empty-state';
+import { ChangeDetectionStrategy, Component, computed, contentChild, contentChildren, Directive, EventEmitter, inject, input, model, Output, signal, TemplateRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Pagination } from '../pagination/pagination';
 import { InlineLoader } from '../loaders/inline-loader/inline-loader';
+import { EmptyState } from '../empty-state/empty-state';
 
-export interface TableColumn<T> {
+@Directive({ selector: '[tableCell]' })
+export class TableCellDirective {
+  readonly name = input.required<string>({ alias: 'tableCell' });
+  readonly template = inject(TemplateRef);
+}
+
+@Directive({ selector: '[tableExpandedRow]' })
+export class TableExpandedRowDirective {
+  readonly template = inject(TemplateRef);
+}
+
+export interface TableColumn<T = any> {
   key: string;
   header: string;
   align?: 'left' | 'center' | 'right';
   width?: string;
-  accessor?: (row: T) => unknown;
-}
-
-export interface TableCellContext<T> {
-  $implicit: unknown;
-  row: T;
-}
-
-export type TableVariant = 'default' | 'flush';
-
-@Directive({
-  selector: 'ng-template[tableCell]'
-})
-export class TableCellDirective<T = unknown> {
-  readonly tableCell = input.required<string>();
-  readonly templateRef = inject(TemplateRef<TableCellContext<T>>);
 }
 
 @Component({
   selector: 'app-table',
-  imports: [Pagination, EmptyState, NgTemplateOutlet, InlineLoader],
+  imports: [CommonModule, Pagination, InlineLoader, EmptyState],
   templateUrl: './table.html',
   styleUrl: './table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Table<T = unknown> {
+export class Table<T = any> {
   readonly columns = input.required<TableColumn<T>[]>();
   readonly data = input.required<T[]>();
-  readonly rowKey = input<(row: T) => unknown>();
-
-  readonly variant = input<TableVariant>('default');
-  readonly paginated = input(true, { transform: booleanAttribute });
-  readonly isLoading = input(false, { transform: booleanAttribute });
-  readonly pageSizeOptions = input<number[]>([10, 25, 50, 100]);
-  readonly size = input<PaginationSize>('medium');
-
+  readonly variant = input<'default' | 'flush'>('default');
+  readonly paginated = input<boolean>(true);
+  readonly isLoading = input<boolean>(false);
   readonly paginationLabelSuffix = input<string>(' per page');
   readonly paginationMobileLabelSuffix = input<string>(' / pg');
+  readonly pageSizeOptions = input<number[]>([10, 25, 50, 100]);
+  readonly emptyText = input<string>('No data to display');
+  readonly interactiveRows = input<boolean>(false);
 
-  readonly interactiveRows = input(false, { transform: booleanAttribute });
+  readonly currentPage = model<number>(1);
+  readonly pageSize = model<number>(10);
 
-  readonly currentPage = model(1);
-  readonly pageSize = model(10);
+  @Output() rowClick = new EventEmitter<T>();
 
-  readonly emptyText = input('No data to display');
-  readonly emptySubtext = input('');
+  readonly cells = contentChildren(TableCellDirective);
+  readonly expandedRowTemplate = contentChild(TableExpandedRowDirective);
 
-  readonly rowClick = output<T>();
+  readonly expandedRows = signal<Set<T>>(new Set());
 
-  private readonly cellTemplates = contentChildren(TableCellDirective);
-
-  protected readonly templateMap = computed(() => {
-    const map = new Map<string, TemplateRef<TableCellContext<T>>>();
-
-    for (const directive of this.cellTemplates()) {
-      map.set(directive.tableCell(), directive.templateRef as TemplateRef<TableCellContext<T>>);
+  handleRowClick(row: T): void {
+    if (this.expandedRowTemplate()) {
+      const current = new Set(this.expandedRows());
+      if (current.has(row)) {
+        current.delete(row);
+      } else {
+        current.add(row);
+      }
+      this.expandedRows.set(current);
     }
 
-    return map;
-  });
-
-  protected readonly pagedData = computed(() => {
-    if (!this.paginated()) {
-      return this.data();
-    }
-
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return this.data().slice(start, start + this.pageSize());
-  });
-
-  protected getValue(row: T, column: TableColumn<T>): unknown {
-    if (column.accessor) {
-      return column.accessor(row);
-    }
-
-    return (row as Record<string, unknown>)[column.key];
+    this.rowClick.emit(row);
   }
 
-  protected trackRow = (index: number, row: T): unknown => {
-    return this.rowKey()?.(row) ?? index;
-  };
+  isExpanded(row: T): boolean {
+    return this.expandedRows().has(row);
+  }
+
+  getCellTemplate(key: string): TemplateRef<any> | null {
+    const cell = this.cells().find(c => c.name() === key);
+    return cell ? cell.template : null;
+  }
+
+  readonly paginatedData = computed(() => {
+    const allData = this.data();
+    if (!this.paginated()) return allData;
+    const size = this.pageSize();
+    const page = this.currentPage();
+    const start = (page - 1) * size;
+    return allData.slice(start, start + size);
+  });
 }

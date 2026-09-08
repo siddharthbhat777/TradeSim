@@ -1,66 +1,75 @@
-<div class="table-wrapper" [class.table--flush]="variant() === 'flush'" [class.table--small]="size() === 'small'"
-    [class.table--medium]="size() === 'medium'" [class.table--large]="size() === 'large'">
-
-    @if (data().length === 0 && !isLoading()) {
-    <app-empty-state [text]="emptyText()" [subtext]="emptySubtext()"></app-empty-state>
-    }
-
-    @if (data().length === 0 && isLoading()) {
-    <div class="table__loading-empty">
-        <app-inline-loader size="medium" variant="primary"></app-inline-loader>
+<div class="table-container" [class.table-container--flush]="variant() === 'flush'">
+    @if (isLoading() && data().length === 0) {
+    <div class="table-loader-overlay">
+        <app-inline-loader size="large" variant="primary"></app-inline-loader>
     </div>
-    }
-
-    @if (data().length > 0) {
-    <div class="table__content-wrapper">
-        @if (isLoading()) {
-        <div class="table__overlay">
-            <app-inline-loader size="medium" variant="primary"></app-inline-loader>
-        </div>
-        }
-
-        <div class="table__scroll-container">
-            <table class="table">
-                <thead>
-                    <tr>
-                        @for (column of columns(); track column.key) {
-                        <th [style.width]="column.width"
-                            [class.table__cell--left]="column.align !== 'center' && column.align !== 'right'"
-                            [class.table__cell--center]="column.align === 'center'"
-                            [class.table__cell--right]="column.align === 'right'">
-                            {{ column.header }}
-                        </th>
-                        }
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @for (row of pagedData(); track trackRow($index, row)) {
-                    <tr [class.is-interactive]="interactiveRows()"
-                        (click)="interactiveRows() ? rowClick.emit(row) : null">
-                        @for (column of columns(); track column.key) {
-                        <td [class.table__cell--left]="column.align !== 'center' && column.align !== 'right'"
-                            [class.table__cell--center]="column.align === 'center'"
-                            [class.table__cell--right]="column.align === 'right'">
-                            @if (templateMap().get(column.key); as template) {
-                            <ng-container
-                                *ngTemplateOutlet="template; context: { $implicit: getValue(row, column), row: row }"></ng-container>
-                            } @else {
-                            {{ getValue(row, column) }}
-                            }
-                        </td>
-                        }
-                    </tr>
+    } @else if (data().length === 0) {
+    <app-empty-state [text]="emptyText()"></app-empty-state>
+    } @else {
+    <div class="table-wrapper">
+        <table class="app-table">
+            <thead>
+                <tr>
+                    @if (expandedRowTemplate()) {
+                    <th class="app-table__th app-table__th--expand">
+                        <span class="visually-hidden">Expand</span>
+                    </th>
                     }
-                </tbody>
-            </table>
-        </div>
+                    @for (col of columns(); track col.key) {
+                    <th class="app-table__th" [style.width]="col.width" [style.text-align]="col.align || 'left'">
+                        {{ col.header }}
+                    </th>
+                    }
+                </tr>
+            </thead>
+            <tbody [class.is-loading]="isLoading()">
+                @for (row of paginatedData(); track $index) {
+                <tr class="app-table__row" [class.app-table__row--expandable]="!!expandedRowTemplate()"
+                    [class.app-table__row--expanded]="isExpanded(row)"
+                    [class.app-table__row--clickable]="interactiveRows()" (click)="handleRowClick(row)">
 
-        @if (paginated()) {
-        <app-pagination class="table__pagination" [totalItems]="data().length" [pageSizeOptions]="pageSizeOptions()"
-            [size]="size()" [labelSuffix]="paginationLabelSuffix()" [mobileLabelSuffix]="paginationMobileLabelSuffix()"
-            [(currentPage)]="currentPage" [(pageSize)]="pageSize"></app-pagination>
-        }
+                    @if (expandedRowTemplate()) {
+                    <td class="app-table__td app-table__td--expand">
+                        <svg class="expand-icon" [class.is-expanded]="isExpanded(row)" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </td>
+                    }
+
+                    @for (col of columns(); track col.key) {
+                    <td class="app-table__td" [style.text-align]="col.align || 'left'">
+                        @if (getCellTemplate(col.key); as tpl) {
+                        <ng-container *ngTemplateOutlet="tpl; context: { $implicit: $any(row)[col.key], row: row }">
+                        </ng-container>
+                        } @else {
+                        {{ $any(row)[col.key] }}
+                        }
+                    </td>
+                    }
+                </tr>
+                @if (isExpanded(row) && expandedRowTemplate()) {
+                <tr class="app-table__expanded-row">
+                    <td [attr.colspan]="columns().length + 1" class="app-table__expanded-td">
+                        <div class="app-table__expanded-content">
+                            <ng-container
+                                *ngTemplateOutlet="expandedRowTemplate()!.template; context: { $implicit: row, row: row }">
+                            </ng-container>
+                        </div>
+                    </td>
+                </tr>
+                }
+                }
+            </tbody>
+        </table>
     </div>
+    @if (paginated() && data().length > 0) {
+    <div class="table-pagination">
+        <app-pagination [totalItems]="data().length" [pageSizeOptions]="pageSizeOptions()"
+            [labelSuffix]="paginationLabelSuffix()" [mobileLabelSuffix]="paginationMobileLabelSuffix()"
+            [(currentPage)]="currentPage" [(pageSize)]="pageSize">
+        </app-pagination>
+    </div>
+    }
     }
 </div>

@@ -1,1 +1,215 @@
-<p>wallet works!</p>
+<div class="wallet-layout">
+    <aside class="wallet-sidebar">
+        <app-card variant="surface" class="hero-card">
+            <div class="hero-card__header">
+                <span class="hero-card__title">Total Balance ({{ baseCurrency() }})</span>
+                <strong class="hero-card__value">
+                    {{ baseBucket()?.balance ?? 0 | currency:baseCurrency():'symbol':'1.2-2' }}
+                </strong>
+            </div>
+
+            <div class="hero-card__grid">
+                <div class="hero-inner-card">
+                    <div class="hero-inner-card__header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                        </svg>
+                        <span>Available</span>
+                    </div>
+                    <span class="hero-inner-card__amount">{{ baseBucket()?.availableBalance ?? 0 | number:'1.2-2'
+                        }}</span>
+                </div>
+
+                <div class="hero-inner-card">
+                    <div class="hero-inner-card__header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Locked</span>
+                    </div>
+                    <span class="hero-inner-card__amount">{{ baseBucket()?.lockedBalance ?? 0 | number:'1.2-2' }}</span>
+                </div>
+            </div>
+        </app-card>
+
+        <app-card>
+            <app-fund-manager [showHeader]="false" (completed)="refreshData()"></app-fund-manager>
+        </app-card>
+
+        <app-card class="mc-card">
+            <div class="mc-card__header">
+                <h3>Multi-Currency Wallets</h3>
+                @if (multiCurrencyStatus() !== 'APPROVED') {
+                <app-badge [color]="multiCurrencyStatus() === 'PENDING' ? 'warning' : 'secondary'">
+                    {{ multiCurrencyStatus() | titlecase }}
+                </app-badge>
+                }
+            </div>
+
+            @if (isMultiCurrencyApproved()) {
+            <div class="mc-grid">
+                @for (bucket of foreignBuckets(); track bucket.currency) {
+                <div class="mc-bucket">
+                    <div class="mc-bucket__top">
+                        <span class="mc-bucket__currency">{{ bucket.currency }}</span>
+                        <strong class="mc-bucket__total">{{ bucket.balance | number:'1.2-2' }}</strong>
+                    </div>
+                    <div class="mc-bucket__bottom">
+                        <div class="mc-stat">
+                            <span>Avail</span>
+                            <strong>{{ bucket.availableBalance | number:'1.2-2' }}</strong>
+                        </div>
+                        <div class="mc-stat">
+                            <span>Locked</span>
+                            <strong>{{ bucket.lockedBalance | number:'1.2-2' }}</strong>
+                        </div>
+                    </div>
+                </div>
+                }
+                @if (foreignBuckets().length === 0) {
+                <div class="mc-empty">
+                    <span>No foreign currency balances available.</span>
+                </div>
+                }
+            </div>
+            } @else {
+            <div class="mc-blur-wrapper">
+                <div class="mc-blur-content" aria-hidden="true">
+                    <div class="mc-fake-bucket">
+                        <div><span>USD</span><strong>0.00</strong></div>
+                        <div><span>Avail: 0.00</span><span>Locked: 0.00</span></div>
+                    </div>
+                    <div class="mc-fake-bucket">
+                        <div><span>EUR</span><strong>0.00</strong></div>
+                        <div><span>Avail: 0.00</span><span>Locked: 0.00</span></div>
+                    </div>
+                </div>
+
+                <div class="mc-overlay">
+                    <div class="mc-overlay__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <span class="mc-overlay__title">Restricted Access</span>
+                    <p class="mc-overlay__desc">Unlock global markets by enabling multi-currency features.</p>
+                    <app-button variant="primary" size="small"
+                        [disabled]="multiCurrencyStatus() === 'PENDING' || multiCurrencyStatus() === 'REJECTED'"
+                        [isLoading]="isRequestingAccess()" (buttonClick)="requestMultiCurrencyAccess()">
+                        {{ multiCurrencyStatus() === 'PENDING' ? 'Request Pending' : 'Apply Now' }}
+                    </app-button>
+                </div>
+            </div>
+            }
+        </app-card>
+    </aside>
+
+    <main class="wallet-main">
+        <app-card class="ledger-card">
+            <div class="ledger-header">
+                <h2>Transaction Ledger</h2>
+
+                <div class="ledger-actions">
+                    <app-input class="ledger-search" [reserveMessageSpace]="false">
+                        <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input appInput type="text" placeholder="Search transactions..." [(ngModel)]="filterSearch">
+                    </app-input>
+
+                    <app-button class="ledger-filter-btn" variant="outline" size="medium"
+                        (buttonClick)="openFilterDrawer()">
+                        <div class="filter-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                            </svg>
+                            <span>Filters</span>
+                            @if (activeFilterTypes().length > 0) {
+                            <span class="filter-dot"></span>
+                            }
+                        </div>
+                    </app-button>
+                </div>
+            </div>
+
+            <div class="ledger-table-container">
+                <app-table [columns]="tableColumns()" [data]="filteredLedger()" [isLoading]="isLedgerLoading()"
+                    variant="flush" [pageSizeOptions]="[20, 60, 100]" [paginationLabelSuffix]="' per page'"
+                    [(currentPage)]="tableCurrentPage" [(pageSize)]="tablePageSize">
+
+                    <ng-template tableCell="createdAt" let-val>
+                        <span class="ledger-date">{{ val | date:'MMM dd' }}</span>
+                    </ng-template>
+
+                    <ng-template tableCell="description" let-val>
+                        <span class="ledger-desc">{{ val }}</span>
+                    </ng-template>
+
+                    <ng-template tableCell="amount" let-row="row">
+                        @if (row.type.includes('DEBIT') || row.type.includes('LOCK') || row.type.includes('FEE') ||
+                        row.type === 'WITHDRAWAL') {
+                        <span class="ledger-amount text-danger">-{{ row.amount | number:'1.2-2' }} {{ row.currency
+                            }}</span>
+                        } @else {
+                        <span class="ledger-amount text-success">+{{ row.amount | number:'1.2-2' }} {{ row.currency
+                            }}</span>
+                        }
+                    </ng-template>
+
+                    <ng-template tableExpandedRow let-row="row">
+                        <div class="ledger-receipt">
+                            <div class="receipt-group">
+                                <span class="receipt-label">Exact Time</span>
+                                <span class="receipt-value">{{ row.createdAt | date:'MMM dd, yyyy - hh:mm a' }}</span>
+                            </div>
+                            <div class="receipt-group">
+                                <span class="receipt-label">Transaction Type</span>
+                                <app-badge [color]="getLedgerBadgeColor(row.type)">
+                                    {{ formatLedgerType(row.type) }}
+                                </app-badge>
+                            </div>
+                            <div class="receipt-group">
+                                <span class="receipt-label">Balance After</span>
+                                <span class="receipt-value mono">{{ row.balanceAfter | number:'1.2-2' }} {{ row.currency
+                                    }}</span>
+                            </div>
+                        </div>
+                    </ng-template>
+
+                </app-table>
+            </div>
+        </app-card>
+    </main>
+</div>
+
+<app-drawer [(isOpen)]="isFilterDrawerOpen" position="right">
+    <div class="filter-drawer">
+        <h3>Filter Transactions</h3>
+
+        <div class="filter-section">
+            <span class="filter-label">Transaction Type</span>
+            <app-checkbox-group [options]="filterTypeOptions" displayKey="label" valueKey="value"
+                [(selectedValues)]="pendingFilterTypes">
+            </app-checkbox-group>
+        </div>
+
+        <div class="filter-actions">
+            <app-button variant="outline" size="medium" width="100%" (buttonClick)="resetFilters()">
+                Reset
+            </app-button>
+            <app-button variant="primary" size="medium" width="100%" [disabled]="!hasFilterChanges()"
+                (buttonClick)="applyFilters()">
+                Apply Filters
+            </app-button>
+        </div>
+    </div>
+</app-drawer>

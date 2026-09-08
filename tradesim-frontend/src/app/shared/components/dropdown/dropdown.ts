@@ -90,8 +90,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
 
   protected readonly panelTop = signal<number | null>(null);
   protected readonly panelBottom = signal<number | null>(null);
-  protected readonly panelLeft = signal<number>(0);
+  protected readonly panelLeft = signal<number | null>(null);
+  protected readonly panelRight = signal<number | null>(null);
   protected readonly panelMinWidth = signal<number>(0);
+  protected readonly panelMaxWidth = signal<number>(0);
 
   protected pendingValue: T | null = null;
 
@@ -208,6 +210,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     }
     const rect = this.hostRef.nativeElement.getBoundingClientRect();
     const viewportHeight = this.window.innerHeight;
+    const viewportWidth = this.window.innerWidth;
     const spaceBelow = viewportHeight - rect.bottom;
 
     const dir = this.direction();
@@ -222,7 +225,17 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     this.openUpwards.set(up);
 
     this.panelMinWidth.set(rect.width);
-    this.panelLeft.set(rect.left);
+
+    const center = rect.left + (rect.width / 2);
+    if (center > viewportWidth / 2) {
+      this.panelLeft.set(null);
+      this.panelRight.set(viewportWidth - rect.right);
+      this.panelMaxWidth.set(rect.right - 16);
+    } else {
+      this.panelLeft.set(rect.left);
+      this.panelRight.set(null);
+      this.panelMaxWidth.set(viewportWidth - rect.left - 16);
+    }
 
     if (up) {
       this.panelBottom.set(viewportHeight - rect.top + 6);

@@ -9,10 +9,10 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class WalletService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly apiBaseURL = `${environment.apiBaseURL}/wallet`;
 
-  private walletState = signal<Wallet | null>(null);
+  private readonly walletState = signal<Wallet | null>(null);
   public readonly wallet = this.walletState.asReadonly();
 
   loadWallet(): void {
@@ -32,6 +32,12 @@ export class WalletService {
 
   convert(request: CurrencyConversionRequest): Observable<void> {
     return this.http.post<void>(`${this.apiBaseURL}/convert`, request, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  requestMultiCurrency(): Observable<void> {
+    return this.http.post<void>(`${this.apiBaseURL}/multi-currency/request`, {}, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }

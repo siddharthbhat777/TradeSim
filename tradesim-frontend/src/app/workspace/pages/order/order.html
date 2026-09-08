@@ -18,15 +18,17 @@
                     [reserveMessageSpace]="false"></app-dropdown>
             </div>
 
-            <app-button variant="secondary" (buttonClick)="openFilterDrawer()">
-                <svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                </svg>
-                Filters
-                @if (hasActiveFilters()) {
-                <span class="filter-badge"></span>
-                }
+            <app-button class="order-filter-btn" variant="outline" size="medium" (buttonClick)="openFilterDrawer()">
+                <div class="filter-btn-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <span>Filters</span>
+                    @if (hasActiveFilters()) {
+                    <span class="filter-dot"></span>
+                    }
+                </div>
             </app-button>
         </div>
     </div>

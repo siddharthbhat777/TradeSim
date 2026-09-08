@@ -7,7 +7,7 @@
     }
 
     <div class="fund-manager__segmented">
-        <app-segmented-control [options]="modeOptions" [ngModel]="activeMode()" (ngModelChange)="setMode($event)"
+        <app-segmented-control [options]="modeOptions()" [ngModel]="activeMode()" (ngModelChange)="setMode($event)"
             [fullWidth]="true" [required]="true">
         </app-segmented-control>
     </div>
