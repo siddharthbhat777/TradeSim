@@ -4,7 +4,7 @@
             <div class="hero-card__header">
                 <span class="hero-card__title">Total Balance ({{ baseCurrency() }})</span>
                 <strong class="hero-card__value">
-                    {{ baseBucket()?.balance ?? 0 | currency:baseCurrency():'symbol':'1.2-2' }}
+                    {{ formatLocaleNumber(baseBucket()?.balance, baseCurrency(), 'currency') }}
                 </strong>
             </div>
 
@@ -18,8 +18,8 @@
                         </svg>
                         <span>Available</span>
                     </div>
-                    <span class="hero-inner-card__amount">{{ baseBucket()?.availableBalance ?? 0 | number:'1.2-2'
-                        }}</span>
+                    <span class="hero-inner-card__amount">{{ formatLocaleNumber(baseBucket()?.availableBalance,
+                        baseCurrency(), 'decimal') }}</span>
                 </div>
 
                 <div class="hero-inner-card">
@@ -31,7 +31,8 @@
                         </svg>
                         <span>Locked</span>
                     </div>
-                    <span class="hero-inner-card__amount">{{ baseBucket()?.lockedBalance ?? 0 | number:'1.2-2' }}</span>
+                    <span class="hero-inner-card__amount">{{ formatLocaleNumber(baseBucket()?.lockedBalance,
+                        baseCurrency(), 'decimal') }}</span>
                 </div>
             </div>
         </app-card>
@@ -56,16 +57,18 @@
                 <div class="mc-bucket">
                     <div class="mc-bucket__top">
                         <span class="mc-bucket__currency">{{ bucket.currency }}</span>
-                        <strong class="mc-bucket__total">{{ bucket.balance | number:'1.2-2' }}</strong>
+                        <strong class="mc-bucket__total">{{ formatLocaleNumber(bucket.balance, bucket.currency,
+                            'decimal') }}</strong>
                     </div>
                     <div class="mc-bucket__bottom">
                         <div class="mc-stat">
                             <span>Avail</span>
-                            <strong>{{ bucket.availableBalance | number:'1.2-2' }}</strong>
+                            <strong>{{ formatLocaleNumber(bucket.availableBalance, bucket.currency, 'decimal')
+                                }}</strong>
                         </div>
                         <div class="mc-stat">
                             <span>Locked</span>
-                            <strong>{{ bucket.lockedBalance | number:'1.2-2' }}</strong>
+                            <strong>{{ formatLocaleNumber(bucket.lockedBalance, bucket.currency, 'decimal') }}</strong>
                         </div>
                     </div>
                 </div>
@@ -133,7 +136,7 @@
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
                             <span>Filters</span>
-                            @if (activeFilterTypes().length > 0) {
+                            @if (hasActiveFilters()) {
                             <span class="filter-dot"></span>
                             }
                         </div>
@@ -144,7 +147,7 @@
             <div class="ledger-table-container">
                 <app-table [columns]="tableColumns()" [data]="filteredLedger()" [isLoading]="isLedgerLoading()"
                     variant="flush" [pageSizeOptions]="[20, 60, 100]" [paginationLabelSuffix]="' per page'"
-                    [(currentPage)]="tableCurrentPage" [(pageSize)]="tablePageSize">
+                    [(currentPage)]="tableCurrentPage" [(pageSize)]="tablePageSize" [interactiveRows]="true">
 
                     <ng-template tableCell="createdAt" let-val>
                         <span class="ledger-date">{{ val | date:'MMM dd' }}</span>
@@ -157,11 +160,11 @@
                     <ng-template tableCell="amount" let-row="row">
                         @if (row.type.includes('DEBIT') || row.type.includes('LOCK') || row.type.includes('FEE') ||
                         row.type === 'WITHDRAWAL') {
-                        <span class="ledger-amount text-danger">-{{ row.amount | number:'1.2-2' }} {{ row.currency
-                            }}</span>
+                        <span class="ledger-amount text-danger">-{{ formatLocaleNumber(row.amount, row.currency,
+                            'decimal') }} {{ row.currency }}</span>
                         } @else {
-                        <span class="ledger-amount text-success">+{{ row.amount | number:'1.2-2' }} {{ row.currency
-                            }}</span>
+                        <span class="ledger-amount text-success">+{{ formatLocaleNumber(row.amount, row.currency,
+                            'decimal') }} {{ row.currency }}</span>
                         }
                     </ng-template>
 
@@ -179,8 +182,8 @@
                             </div>
                             <div class="receipt-group">
                                 <span class="receipt-label">Balance After</span>
-                                <span class="receipt-value mono">{{ row.balanceAfter | number:'1.2-2' }} {{ row.currency
-                                    }}</span>
+                                <span class="receipt-value mono">{{ formatLocaleNumber(row.balanceAfter, row.currency,
+                                    'decimal') }} {{ row.currency }}</span>
                             </div>
                         </div>
                     </ng-template>
@@ -194,6 +197,40 @@
 <app-drawer [(isOpen)]="isFilterDrawerOpen" position="right">
     <div class="filter-drawer">
         <h3>Filter Transactions</h3>
+
+        <div class="filter-section">
+            <span class="filter-label">Date Range</span>
+            <div class="filter-row">
+                <app-input [reserveMessageSpace]="false">
+                    <input appInput type="date" [(ngModel)]="pendingStartDate" />
+                </app-input>
+                <span class="filter-separator">-</span>
+                <app-input [reserveMessageSpace]="false">
+                    <input appInput type="date" [(ngModel)]="pendingEndDate" />
+                </app-input>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-label-row">
+                <span class="filter-label">Amount Range</span>
+                <span class="filter-value">
+                    {{ formatLocaleNumber(draftAmountRange()[0] < draftAmountRange()[1] ? draftAmountRange()[0] :
+                        draftAmountRange()[1], baseCurrency(), 'currency' , 0) }} - {{
+                        formatLocaleNumber(draftAmountRange()[0]> draftAmountRange()[1] ? draftAmountRange()[0] :
+                        draftAmountRange()[1], baseCurrency(), 'currency', 0) }}
+                </span>
+            </div>
+            <app-slider [range]="true" [min]="amountRangeBounds().min" [max]="amountRangeBounds().max"
+                [step]="amountSliderStep()" [ngModel]="draftAmountRange()"
+                (ngModelChange)="onAmountSliderChange($event)"></app-slider>
+        </div>
+
+        <div class="filter-section">
+            <span class="filter-label">Flow Direction</span>
+            <app-segmented-control [options]="directionOptions" [(ngModel)]="pendingDirection" [fullWidth]="true">
+            </app-segmented-control>
+        </div>
 
         <div class="filter-section">
             <span class="filter-label">Transaction Type</span>

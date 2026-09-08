@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit, OnDestroy, output, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WalletService } from '../../../services/wallet/wallet-service';
 import { ForexService } from '../../../services/forex/forex-service';
@@ -20,8 +20,6 @@ export type FundManagerMode = 'deposit' | 'convert';
   imports: [
     CommonModule,
     FormsModule,
-    CurrencyPipe,
-    DecimalPipe,
     SegmentedControl,
     CustomInput,
     InputDirective,
@@ -185,6 +183,19 @@ export class FundManager implements OnInit, OnDestroy {
     this.isMobile.set(e.matches);
   };
 
+  formatLocaleNumber(value: number | undefined | null, currencyCode: string, style: 'currency' | 'decimal' = 'decimal', maxFraction = 2): string {
+    if (value === null || value === undefined) return '0.00';
+    const locale = currencyCode === 'INR' ? 'en-IN' : 'en-US';
+    const minFrac = maxFraction === 0 ? 0 : 2;
+    const maxFrac = Math.max(minFrac, maxFraction);
+    return new Intl.NumberFormat(locale, {
+      style: style,
+      currency: style === 'currency' ? currencyCode : undefined,
+      minimumFractionDigits: minFrac,
+      maximumFractionDigits: maxFrac
+    }).format(value);
+  }
+
   setMode(mode: FundManagerMode): void {
     this.activeMode.set(mode);
     this.modeChange.emit(mode);
@@ -243,7 +254,7 @@ export class FundManager implements OnInit, OnDestroy {
     this.isSubmitting.set(true);
     this.walletService.deposit({ amount }).subscribe({
       next: () => {
-        this.toastService.success(`Successfully deposited ${amount.toFixed(2)} ${this.baseCurrency()}`);
+        this.toastService.success(`Successfully deposited ${this.formatLocaleNumber(amount, this.baseCurrency(), 'decimal')}`);
         this.walletService.loadWallet();
         this.depositAmount.set(null);
         this.isSubmitting.set(false);
@@ -269,7 +280,7 @@ export class FundManager implements OnInit, OnDestroy {
       amountToConvert: amount
     }).subscribe({
       next: () => {
-        this.toastService.success(`Converted ${amount.toFixed(2)} ${source} to ${target}`);
+        this.toastService.success(`Converted ${this.formatLocaleNumber(amount, source, 'decimal')} to ${target}`);
         this.walletService.loadWallet();
         this.convertAmount.set(null);
         this.isSubmitting.set(false);
