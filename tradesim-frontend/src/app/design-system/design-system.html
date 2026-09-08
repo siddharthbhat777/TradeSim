@@ -2440,7 +2440,8 @@ this.dialogService.open(&#123;
                                     <td><code>undefined</code></td>
                                     <td>Structural directive to render an expandable accordion row beneath the main row.
                                         Generates a left-aligned chevron toggle automatically. Exposes the row data as
-                                        <code>$implicit</code> or <code>row</code>.</td>
+                                        <code>$implicit</code> or <code>row</code>.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -3242,6 +3243,112 @@ this.dialogService.open(&#123;
                                     <td>Calculates the difference between the provided time and exactly now. Handles
                                         plurals automatically and returns "Just now" for times under 30 seconds or
                                         invalid inputs.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="format-currency" class="doc-section">
+            <div class="section-header">
+                <h2>Format Currency Pipe</h2>
+                <p>A pure Angular pipe that formats monetary values using the correct native locale (e.g., US vs. Indian
+                    numbering systems) and handles decimal limits safely.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="max-width: 500px; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Standard USD</span>
+                            <strong style="color: var(--text-primary);">{{ 150000.5 | formatCurrency:'USD':'currency':2
+                                }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Standard INR (Indian Locale
+                                Comma Placement)</span>
+                            <strong style="color: var(--text-primary);">{{ 150000.5 | formatCurrency:'INR':'currency':2
+                                }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">INR Decimal Only (No
+                                Symbol)</span>
+                            <strong style="color: var(--text-primary);">{{ 150000.5 | formatCurrency:'INR':'decimal':2
+                                }}</strong>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Custom Precision (4
+                                Decimals)</span>
+                            <strong style="color: var(--text-primary);">{{ 1.23456 | formatCurrency:'USD':'currency':4
+                                }}</strong>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Format Currency snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Standard USD Format --&gt;
+&lt;span&gt;{{ 150000.5 | formatCurrency:'USD' }}&lt;/span&gt;
+
+&lt;!-- Standard INR Format (Notice the Indian comma placement) --&gt;
+&lt;span&gt;{{ 150000.5 | formatCurrency:'INR' }}&lt;/span&gt;
+
+&lt;!-- Decimal Only (No Currency Symbol) --&gt;
+&lt;span&gt;{{ 150000.5 | formatCurrency:'INR':'decimal' }}&lt;/span&gt;
+
+&lt;!-- Custom Decimal Precision (e.g., 4 decimal places) --&gt;
+&lt;span&gt;{{ 1.23456 | formatCurrency:'USD':'currency':4 }}&lt;/span&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Usage <code>formatCurrency</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Argument</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>currencyCode</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>The ISO 4217 currency code. Dictates both the symbol and the formatting locale
+                                        ('en-IN' vs 'en-US').</td>
+                                </tr>
+                                <tr>
+                                    <td><code>style</code></td>
+                                    <td><code>'currency' | 'decimal'</code></td>
+                                    <td><code>'currency'</code></td>
+                                    <td>Whether to print the symbol alongside the number, or just format the raw number.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxFraction</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>2</code></td>
+                                    <td>The maximum amount of decimal places to show. Passing 0 forces integers only
+                                        safely.</td>
                                 </tr>
                             </tbody>
                         </table>

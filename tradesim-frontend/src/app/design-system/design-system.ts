@@ -31,6 +31,7 @@ import { CandlestickChart, CandlestickData } from '../shared/components/charts/c
 import { AreaChart, AreaChartData } from '../shared/components/charts/area-chart/area-chart';
 import { Slider } from '../shared/components/slider/slider';
 import { Drawer, DrawerPosition } from '../shared/components/drawer/drawer';
+import { FormatCurrencyPipe } from '../shared/pipes/format-currency-pipe';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -41,7 +42,7 @@ interface DocSection {
 
 @Component({
   selector: 'app-design-system',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart, Slider, Drawer],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart, Slider, Drawer, FormatCurrencyPipe],
   templateUrl: './design-system.html',
   styleUrls: ['./design-system.scss']
 })
@@ -182,7 +183,8 @@ export class DesignSystem implements OnInit, OnDestroy {
     {
       title: 'Utilities & Pipes',
       items: [
-        { id: 'time-ago', name: 'Time Ago Pipe' }
+        { id: 'time-ago', name: 'Time Ago Pipe' },
+        { id: 'format-currency', name: 'Format Currency Pipe' }
       ]
     }
   ];
