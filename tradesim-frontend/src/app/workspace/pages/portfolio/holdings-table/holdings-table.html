@@ -15,6 +15,7 @@
 
     <app-table variant="flush" [columns]="columns" [data]="filteredHoldings()" [(currentPage)]="currentPage"
         [(pageSize)]="pageSize">
+
         <ng-template tableCell="symbol" let-val>
             <strong>{{ val }}</strong>
         </ng-template>
@@ -24,15 +25,15 @@
         </ng-template>
 
         <ng-template tableCell="averageBuyPrice" let-val>
-            {{ val | currency:baseCurrency():'symbol':'1.2-2' }}
+            {{ val | formatCurrency:baseCurrency():'currency':2 }}
         </ng-template>
 
         <ng-template tableCell="currentPrice" let-val>
-            {{ val | currency:baseCurrency():'symbol':'1.2-2' }}
+            {{ val | formatCurrency:baseCurrency():'currency':2 }}
         </ng-template>
 
         <ng-template tableCell="currentValue" let-val>
-            {{ val | currency:baseCurrency():'symbol':'1.2-2' }}
+            {{ val | formatCurrency:baseCurrency():'currency':2 }}
         </ng-template>
 
         <ng-template tableCell="unrealizedPnl" let-val>

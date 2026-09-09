@@ -6,6 +6,7 @@ export interface PortfolioHoldingResponse {
     currentPrice: number;
     currentValue: number;
     unrealizedPnl: number;
+    currency: string;
 }
 
 export interface PortfolioResponse {
@@ -18,6 +19,7 @@ export interface PortfolioResponse {
     totalRealizedPnl: number;
     totalPnl: number;
     equity: number;
+    baseCurrency: string;
 }
 
 export interface PortfolioHistoryResponse {

@@ -445,6 +445,9 @@ public class IpoService {
     }
 
     private IpoOfferResponse toOfferResponse(IpoOffer ipoOffer) {
+        Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
         return new IpoOfferResponse(
                 ipoOffer.getId(),
                 ipoOffer.getCompanyId(),
@@ -462,12 +465,16 @@ public class IpoService {
                 ipoOffer.getFinalizedByUserId(),
                 ipoOffer.getFinalizedAt(),
                 ipoOffer.getRejectionReason(),
+                exchange.getCurrency(),
                 ipoOffer.getCreatedAt(),
                 ipoOffer.getUpdatedAt()
         );
     }
 
     private IpoSubscriptionResponse toSubscriptionResponse(IpoSubscription ipoSubscription, IpoOffer ipoOffer) {
+        Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
         return new IpoSubscriptionResponse(
                 ipoSubscription.getId(),
                 ipoSubscription.getIpoOfferId(),
@@ -477,6 +484,7 @@ public class IpoService {
                 ipoSubscription.getLockedAmount(),
                 ipoSubscription.getAllottedShares(),
                 ipoSubscription.getStatus(),
+                exchange.getCurrency(),
                 ipoSubscription.getCreatedAt(),
                 ipoSubscription.getUpdatedAt()
         );

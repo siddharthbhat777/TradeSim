@@ -22,6 +22,7 @@ import { CheckboxGroup } from '../../../shared/components/checkbox/checkbox-grou
 import { CandlestickChart, CandlestickData } from '../../../shared/components/charts/candlestick-chart/candlestick-chart';
 import { Clock } from './clock/clock';
 import { StockDetails } from './stock-details/stock-details';
+import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency-pipe';
 
 @Component({
   selector: 'app-market',
@@ -42,7 +43,8 @@ import { StockDetails } from './stock-details/stock-details';
     CheckboxGroup,
     CandlestickChart,
     Clock,
-    StockDetails
+    StockDetails,
+    FormatCurrencyPipe
   ],
   templateUrl: './market.html',
   styleUrl: './market.scss',
@@ -71,22 +73,53 @@ export class Market implements OnInit {
   readonly searchQuery = signal<string>('');
   readonly sortBy = signal<string>('SYMBOL_ASC');
 
-  readonly maxStockPrice = computed(() => {
-    const stocks = this.rawStocks();
-    if (stocks.length === 0) return 10000;
-    const max = Math.max(...stocks.map(s => s.currentPrice));
-    return max > 0 ? Math.ceil(max / 100) * 100 : 10000;
-  });
-
-  readonly appliedPriceRange = signal<[number, number]>([0, 10000]);
   readonly appliedSectors = signal<string[]>([]);
   readonly appliedStatuses = signal<string[]>([]);
   readonly appliedMarketCapCategories = signal<string[]>([]);
 
-  readonly draftPriceRange = signal<[number, number]>([0, 10000]);
   readonly draftSectors = signal<string[]>([]);
   readonly draftStatuses = signal<string[]>([]);
   readonly draftMarketCapCategories = signal<string[]>([]);
+
+  readonly currentExchangeCurrency = computed(() => {
+    const id = this.selectedExchangeId();
+    const exchange = this.exchanges().find(e => e.id === id);
+    return exchange?.currency || 'USD';
+  });
+
+  readonly exchangeStocks = computed(() => {
+    const id = this.selectedExchangeId();
+    if (!id) return [];
+    return this.rawStocks().filter(s => s.exchangeId === id);
+  });
+
+  readonly priceRangeBounds = computed(() => {
+    const data = this.exchangeStocks();
+    if (data.length === 0) return { min: 0, max: 100 };
+
+    const maxPrice = Math.max(...data.map(s => s.currentPrice));
+    return {
+      min: 0,
+      max: (Math.ceil(maxPrice / 100) * 100) + 100
+    };
+  });
+
+  readonly priceSliderStep = computed(() => {
+    return Math.max(1, Math.floor(this.priceRangeBounds().max / 100));
+  });
+
+  readonly _appliedPriceRange = signal<[number, number] | null>(null);
+  readonly _draftPriceRange = signal<[number, number] | null>(null);
+
+  readonly appliedPriceRange = computed(() => {
+    const val = this._appliedPriceRange();
+    return val ? val : [this.priceRangeBounds().min, this.priceRangeBounds().max] as [number, number];
+  });
+
+  readonly draftPriceRange = computed(() => {
+    const val = this._draftPriceRange();
+    return val ? val : [this.priceRangeBounds().min, this.priceRangeBounds().max] as [number, number];
+  });
 
   readonly exchangeOptions = computed(() =>
     this.exchanges().map(e => ({ label: e.name, value: e.id, code: e.code, currency: e.currency, status: e.status }))
@@ -103,35 +136,24 @@ export class Market implements OnInit {
     { label: 'Price (Low to High)', value: 'PRICE_ASC' }
   ];
 
+  readonly marketCapOptions = [
+    { label: 'Large Cap', value: 'LARGE' },
+    { label: 'Mid Cap', value: 'MID' },
+    { label: 'Small Cap', value: 'SMALL' }
+  ];
+
+  readonly statusOptions = [
+    { label: 'Active', value: 'ACTIVE' },
+    { label: 'Halted', value: 'HALTED' },
+    { label: 'Delisted', value: 'DELISTED' }
+  ];
+
   readonly sectorOptions = computed(() => {
-    const sectors = new Set(this.rawStocks().map(s => s.sector));
+    const sectors = new Set(this.exchangeStocks().map(s => s.sector));
     return Array.from(sectors).sort().map(sector => ({
       label: sector.charAt(0) + sector.slice(1).toLowerCase().replace(/_/g, ' '),
       value: sector
     }));
-  });
-
-  readonly statusOptions = computed(() => {
-    const statuses = new Set(this.rawStocks().map(s => s.status));
-    return Array.from(statuses).sort().map(status => ({
-      label: status.charAt(0) + status.slice(1).toLowerCase(),
-      value: status
-    }));
-  });
-
-  readonly marketCapOptions = computed(() => {
-    const categories = new Set(
-      this.rawStocks()
-        .map(s => s.marketCapCategory)
-        .filter(cat => !!cat && cat !== 'UNKNOWN')
-    );
-    const order: Record<string, number> = { LARGE: 1, MID: 2, SMALL: 3 };
-    return Array.from(categories)
-      .sort((a, b) => (order[a] ?? 99) - (order[b] ?? 99))
-      .map(category => ({
-        label: category.charAt(0) + category.slice(1).toLowerCase() + ' Cap',
-        value: category
-      }));
   });
 
   readonly tableColumns = [
@@ -144,10 +166,9 @@ export class Market implements OnInit {
   ];
 
   readonly hasUnsavedFilters = computed(() => {
-    const appliedPrice = this.appliedPriceRange();
-    const draftPrice = this.draftPriceRange();
-
-    if (appliedPrice[0] !== draftPrice[0] || appliedPrice[1] !== draftPrice[1]) return true;
+    const activeRange = this.appliedPriceRange();
+    const draftRange = this.draftPriceRange();
+    if (activeRange[0] !== draftRange[0] || activeRange[1] !== draftRange[1]) return true;
 
     const checkArraysDifference = (arr1: string[], arr2: string[]) => {
       if (arr1.length !== arr2.length) return true;
@@ -163,8 +184,21 @@ export class Market implements OnInit {
     return false;
   });
 
+  readonly hasActiveFilters = computed(() => {
+    const pRange = this.appliedPriceRange();
+    const minPrice = Math.min(pRange[0], pRange[1]);
+    const maxPrice = Math.max(pRange[0], pRange[1]);
+    const bounds = this.priceRangeBounds();
+
+    return this.appliedSectors().length > 0 ||
+      this.appliedStatuses().length > 0 ||
+      this.appliedMarketCapCategories().length > 0 ||
+      minPrice > bounds.min ||
+      maxPrice < bounds.max;
+  });
+
   readonly filteredAndSortedStocks = computed(() => {
-    let result = [...this.rawStocks()];
+    let result = [...this.exchangeStocks()];
 
     const query = this.searchQuery().toLowerCase().trim();
     if (query) {
@@ -174,12 +208,12 @@ export class Market implements OnInit {
       );
     }
 
-    const [p1, p2] = this.appliedPriceRange();
-    const minPrice = Math.min(p1, p2);
-    const maxPrice = Math.max(p1, p2);
-    const ceiling = this.maxStockPrice();
+    const pRange = this.appliedPriceRange();
+    const minPrice = Math.min(pRange[0], pRange[1]);
+    const maxPrice = Math.max(pRange[0], pRange[1]);
+    const bounds = this.priceRangeBounds();
 
-    if (minPrice > 0 || maxPrice < ceiling) {
+    if (minPrice > bounds.min || maxPrice < bounds.max) {
       result = result.filter(s => s.currentPrice >= minPrice && s.currentPrice <= maxPrice);
     }
 
@@ -215,6 +249,16 @@ export class Market implements OnInit {
   constructor() {
     effect(() => {
       const exchangeId = this.selectedExchangeId();
+
+      this._appliedPriceRange.set(null);
+      this._draftPriceRange.set(null);
+      this.appliedSectors.set([]);
+      this.draftSectors.set([]);
+      this.appliedStatuses.set([]);
+      this.draftStatuses.set([]);
+      this.appliedMarketCapCategories.set([]);
+      this.draftMarketCapCategories.set([]);
+
       if (exchangeId) {
         this.marketIndexService.getIndicesByExchange(exchangeId).subscribe(data => {
           this.indices.set(data);
@@ -265,10 +309,6 @@ export class Market implements OnInit {
       this.rawStocks.set(data);
       this.isLoadingStocks.set(false);
 
-      const maxPrice = this.maxStockPrice();
-      this.appliedPriceRange.set([0, maxPrice]);
-      this.draftPriceRange.set([0, maxPrice]);
-
       const targetStockId = this.route.snapshot.queryParamMap.get('stockId');
       if (targetStockId) {
         const found = data.find(s => s.id === targetStockId);
@@ -301,19 +341,27 @@ export class Market implements OnInit {
     this.isFilterDrawerOpen.set(true);
   }
 
+  onPriceSliderChange(val: number | [number, number]): void {
+    if (Array.isArray(val)) {
+      this._draftPriceRange.set([val[0], val[1]]);
+    }
+  }
+
   resetDraftFilters(): void {
-    this.draftPriceRange.set([0, this.maxStockPrice()]);
     this.draftSectors.set([]);
     this.draftStatuses.set([]);
     this.draftMarketCapCategories.set([]);
+    this._draftPriceRange.set(null);
   }
 
   applyFilters(): void {
-    const [min, max] = this.draftPriceRange();
-    this.appliedPriceRange.set([Math.min(min, max), Math.max(min, max)]);
     this.appliedSectors.set([...this.draftSectors()]);
     this.appliedStatuses.set([...this.draftStatuses()]);
     this.appliedMarketCapCategories.set([...this.draftMarketCapCategories()]);
+
+    const [min, max] = this.draftPriceRange();
+    this._appliedPriceRange.set([Math.min(min, max), Math.max(min, max)]);
+
     this.isFilterDrawerOpen.set(false);
   }
 }

@@ -41,7 +41,7 @@
             </ng-template>
 
             <ng-template tableCell="issuePrice" let-row="row">
-                <span class="fw-semibold">{{ row.issuePrice | currency:baseCurrency():'symbol':'1.2-4' }}</span>
+                <span class="fw-semibold">{{ row.issuePrice | formatCurrency:row.currency:'currency':4 }}</span>
             </ng-template>
 
             <ng-template tableCell="sharesPerAllottee" let-row="row">

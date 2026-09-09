@@ -15,6 +15,7 @@ public record IpoSubscriptionResponse(
         BigDecimal lockedAmount,
         int allottedShares,
         IpoSubscriptionStatus status,
+        String currency,
         Instant createdAt,
         Instant updatedAt
 ) {

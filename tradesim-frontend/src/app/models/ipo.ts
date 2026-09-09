@@ -21,6 +21,7 @@ export interface IpoOfferResponse {
     rejectionReason: string | null;
     createdAt: string;
     updatedAt: string;
+    currency: string;
 }
 
 export interface IpoSubscriptionResponse {
@@ -34,4 +35,5 @@ export interface IpoSubscriptionResponse {
     status: IpoSubscriptionStatus;
     createdAt: string;
     updatedAt: string;
+    currency: string;
 }

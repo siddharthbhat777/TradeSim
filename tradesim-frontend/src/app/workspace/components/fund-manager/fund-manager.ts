@@ -12,6 +12,7 @@ import { Dropdown, DropdownOption } from '../../../shared/components/dropdown/dr
 import { Button } from '../../../shared/components/button/button';
 import { Alert } from '../../../shared/components/alert/alert';
 import { InlineLoader } from '../../../shared/components/loaders/inline-loader/inline-loader';
+import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency-pipe';
 
 export type FundManagerMode = 'deposit' | 'convert';
 
@@ -26,7 +27,8 @@ export type FundManagerMode = 'deposit' | 'convert';
     Dropdown,
     Button,
     Alert,
-    InlineLoader
+    InlineLoader,
+    FormatCurrencyPipe
   ],
   templateUrl: './fund-manager.html',
   styleUrl: './fund-manager.scss',
@@ -183,19 +185,6 @@ export class FundManager implements OnInit, OnDestroy {
     this.isMobile.set(e.matches);
   };
 
-  formatLocaleNumber(value: number | undefined | null, currencyCode: string, style: 'currency' | 'decimal' = 'decimal', maxFraction = 2): string {
-    if (value === null || value === undefined) return '0.00';
-    const locale = currencyCode === 'INR' ? 'en-IN' : 'en-US';
-    const minFrac = maxFraction === 0 ? 0 : 2;
-    const maxFrac = Math.max(minFrac, maxFraction);
-    return new Intl.NumberFormat(locale, {
-      style: style,
-      currency: style === 'currency' ? currencyCode : undefined,
-      minimumFractionDigits: minFrac,
-      maximumFractionDigits: maxFrac
-    }).format(value);
-  }
-
   setMode(mode: FundManagerMode): void {
     this.activeMode.set(mode);
     this.modeChange.emit(mode);
@@ -254,7 +243,7 @@ export class FundManager implements OnInit, OnDestroy {
     this.isSubmitting.set(true);
     this.walletService.deposit({ amount }).subscribe({
       next: () => {
-        this.toastService.success(`Successfully deposited ${this.formatLocaleNumber(amount, this.baseCurrency(), 'decimal')}`);
+        this.toastService.success(`Successfully deposited ${new Intl.NumberFormat(this.baseCurrency() === 'INR' ? 'en-IN' : 'en-US', { style: 'currency', currency: this.baseCurrency() }).format(amount)}`);
         this.walletService.loadWallet();
         this.depositAmount.set(null);
         this.isSubmitting.set(false);
@@ -280,7 +269,7 @@ export class FundManager implements OnInit, OnDestroy {
       amountToConvert: amount
     }).subscribe({
       next: () => {
-        this.toastService.success(`Converted ${this.formatLocaleNumber(amount, source, 'decimal')} to ${target}`);
+        this.toastService.success(`Converted ${new Intl.NumberFormat(source === 'INR' ? 'en-IN' : 'en-US', { style: 'decimal' }).format(amount)} to ${target}`);
         this.walletService.loadWallet();
         this.convertAmount.set(null);
         this.isSubmitting.set(false);

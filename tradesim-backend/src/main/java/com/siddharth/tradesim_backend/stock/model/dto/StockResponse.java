@@ -16,6 +16,8 @@ public record StockResponse(
         StockStatus status,
         Long dayVolume,
         BigDecimal marketCap,
-        MarketCapCategory marketCapCategory
+        MarketCapCategory marketCapCategory,
+        String currency,
+        UUID exchangeId
 ) {
 }

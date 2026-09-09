@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, inject, input, OnDestroy, signal, viewChild } from '@angular/core';
-import { CurrencyPipe, DatePipe, DecimalPipe, DOCUMENT } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SegmentedControl, SegmentOption } from '../../segmented-control/segmented-control';
+import { FormatCurrencyPipe } from '../../../pipes/format-currency-pipe';
 
 export interface AreaChartData {
   time: number | string | Date;
@@ -26,7 +27,7 @@ export interface XAxisTick {
 
 @Component({
   selector: 'app-area-chart',
-  imports: [DatePipe, CurrencyPipe, DecimalPipe, FormsModule, SegmentedControl],
+  imports: [DatePipe, FormatCurrencyPipe, FormsModule, SegmentedControl],
   templateUrl: './area-chart.html',
   styleUrl: './area-chart.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

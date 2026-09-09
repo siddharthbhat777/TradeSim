@@ -160,7 +160,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
         this.selected.set(first);
         this.onChange(first.value);
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect((onCleanup) => {
       if (this.isOpen()) {

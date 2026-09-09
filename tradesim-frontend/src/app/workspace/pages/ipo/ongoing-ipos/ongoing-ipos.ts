@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { IpoService } from '../../../../services/ipo/ipo-service';
@@ -16,6 +16,7 @@ import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Button } from '../../../../shared/components/button/button';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { FormatCurrencyPipe } from '../../../../shared/pipes/format-currency-pipe';
 
 export interface MappedIpoOffer extends IpoOfferResponse {
   symbol: string;
@@ -37,8 +38,8 @@ export interface MappedIpoOffer extends IpoOfferResponse {
     Dropdown,
     Button,
     EmptyState,
-    CurrencyPipe,
-    DatePipe
+    DatePipe,
+    FormatCurrencyPipe
   ],
   templateUrl: './ongoing-ipos.html',
   styleUrl: './ongoing-ipos.scss',
@@ -147,7 +148,8 @@ export class OngoingIpos implements OnInit {
 
   subscribe(offer: MappedIpoOffer): void {
     const totalCost = offer.issuePrice * offer.sharesPerAllottee;
-    const formattedCost = `${totalCost.toFixed(2)} ${this.baseCurrency()}`;
+    const locale = offer.currency === 'INR' ? 'en-IN' : 'en-US';
+    const formattedCost = new Intl.NumberFormat(locale, { style: 'currency', currency: offer.currency }).format(totalCost);
 
     const formattedHtml = `
       <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -163,7 +165,7 @@ export class OngoingIpos implements OnInit {
           </strong>
         </div>
         <span style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
-          These funds will remain securely locked in your wallet until the allotment is finalized.
+          These funds will be converted (if necessary) and securely locked in your wallet until the allotment is finalized.
         </span>
       </div>
     `;

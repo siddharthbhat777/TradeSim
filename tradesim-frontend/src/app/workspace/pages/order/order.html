@@ -51,7 +51,7 @@
 
             <ng-template tableCell="limitPrice" let-row="row">
                 @if (row.limitPrice) {
-                {{ row.limitPrice | currency:baseCurrency():'symbol':'1.2-4' }}
+                {{ row.limitPrice | formatCurrency:row.currency:'currency':4 }}
                 } @else {
                 <span class="text-muted">Market</span>
                 }
@@ -91,6 +91,39 @@
     </div>
 
     <div class="drawer-body">
+
+        <div class="filter-group">
+            <span class="label">Filter by Currency</span>
+            <app-dropdown [options]="currencyFilterOptions()" [ngModel]="pendingFilterCurrency()"
+                (ngModelChange)="onCurrencyFilterChange($event)" placeholder="Select Currency" [fullWidth]="true">
+            </app-dropdown>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-label-row">
+                <span class="label">Price Range</span>
+                @if (pendingFilterCurrency()) {
+                <span class="value">
+                    {{ (draftPriceRange()[0] < draftPriceRange()[1] ? draftPriceRange()[0] : draftPriceRange()[1]) |
+                        formatCurrency:pendingFilterCurrency():'currency':0 }} - {{ (draftPriceRange()[0]>
+                        draftPriceRange()[1]
+                        ? draftPriceRange()[0] : draftPriceRange()[1]) |
+                        formatCurrency:pendingFilterCurrency():'currency':0 }}
+                </span>
+                }
+            </div>
+            @if (pendingFilterCurrency()) {
+            <app-slider [range]="true" [min]="priceRangeBounds().min" [max]="priceRangeBounds().max"
+                [step]="priceSliderStep()" [ngModel]="draftPriceRange()"
+                (ngModelChange)="onPriceSliderChange($event)"></app-slider>
+            } @else {
+            <div
+                style="padding: 12px; text-align: center; background: var(--surface-secondary); border-radius: 8px; border: 1px dashed var(--border); color: var(--text-muted); font-size: 0.85rem;">
+                Select a currency to unlock range filter
+            </div>
+            }
+        </div>
+
         <div class="filter-group">
             <span class="label">Side</span>
             <app-segmented-control [options]="sideOptions" [(ngModel)]="draftSide" [required]="true"
@@ -108,17 +141,6 @@
                 [fullWidth]="true"></app-dropdown>
         </div>
 
-        <div class="filter-group">
-            <div class="filter-label-row">
-                <span class="label">Price Range</span>
-                <span class="value">
-                    {{ draftMinPrice() | currency:baseCurrency():'symbol':'1.0-0' }} - {{ draftMaxPrice() |
-                    currency:baseCurrency():'symbol':'1.0-0' }}
-                </span>
-            </div>
-            <app-slider [range]="true" [min]="priceRangeBounds().min" [max]="priceRangeBounds().max" [step]="1"
-                [ngModel]="draftPriceRange()" (ngModelChange)="onPriceSliderChange($event)"></app-slider>
-        </div>
     </div>
 
     <div class="drawer-footer">

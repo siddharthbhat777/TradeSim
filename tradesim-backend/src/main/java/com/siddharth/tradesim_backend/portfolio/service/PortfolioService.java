@@ -99,7 +99,8 @@ public class PortfolioService {
                     position.getAverageBuyPrice(),
                     currentPriceInAccountCurrency,
                     currentValue,
-                    unrealizedPnl
+                    unrealizedPnl,
+                    exchange.getCurrency()
             );
 
             responses.add(response);
@@ -116,7 +117,8 @@ public class PortfolioService {
                 totalUnrealizedPnl,
                 totalRealizedPnl,
                 totalPnl,
-                equity
+                equity,
+                tradingAccount.getBaseCurrency()
         );
     }
 

@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { FormatCurrencyPipe } from '../../pipes/format-currency-pipe';
 
 export type PriceIndicatorSign = 'positive' | 'negative' | 'neutral';
 
@@ -17,6 +18,8 @@ export class PriceIndicator {
   readonly valueDecimals = input<number>(0);
   readonly percentageDecimals = input<number>(2);
 
+  private readonly formatCurrencyPipe = new FormatCurrencyPipe();
+
   protected readonly sign = computed<PriceIndicatorSign>(() => {
     const v = this.value();
     if (v > 0) return 'positive';
@@ -24,15 +27,15 @@ export class PriceIndicator {
     return 'neutral';
   });
 
-  protected readonly formattedValue = computed(() =>
-    new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: this.currency(),
-      minimumFractionDigits: this.valueDecimals(),
-      maximumFractionDigits: this.valueDecimals(),
-      signDisplay: 'always'
-    }).format(this.value()),
-  );
+  protected readonly formattedValue = computed(() => {
+    const formatted = this.formatCurrencyPipe.transform(
+      this.value(),
+      this.currency(),
+      'currency',
+      this.valueDecimals()
+    );
+    return this.value() > 0 ? '+' + formatted : formatted;
+  });
 
   protected readonly formattedPercentage = computed(() => {
     const p = this.percentage();

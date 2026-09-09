@@ -26,7 +26,8 @@
     <div class="chart-body" #chartBody>
         <div class="y-axis-overlay">
             @for (tick of yAxisTicks(); track tick.value) {
-            <div class="axis-text-html" [style.top.px]="tick.y">{{ tick.value | number:'1.0-2' }}</div>
+            <div class="axis-text-html" [style.top.px]="tick.y">{{ tick.value | formatCurrency:currency():'decimal':2 }}
+            </div>
             }
         </div>
 
@@ -80,7 +81,7 @@
     @if (hoveredPoint(); as active) {
     <div class="chart-tooltip" [style.left.px]="tooltipX()" [style.top.px]="tooltipY()">
         <div class="tooltip-header">{{ active.data.time | date:'MMM dd, yyyy - HH:mm' }}</div>
-        <div class="tooltip-value">{{ active.data.value | currency:currency():'symbol':'1.2-2' }}</div>
+        <div class="tooltip-value">{{ active.data.value | formatCurrency:currency():'currency':2 }}</div>
     </div>
     }
 </div>

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { FormatCurrencyPipe } from '../../../../pipes/format-currency-pipe';
 
 export interface PieChartData {
   id: string;
@@ -15,7 +15,7 @@ interface CalculatedSlice extends PieChartData {
 
 @Component({
   selector: 'app-pie-chart',
-  imports: [DecimalPipe],
+  imports: [FormatCurrencyPipe],
   templateUrl: './pie-chart.html',
   styleUrl: './pie-chart.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -24,6 +24,7 @@ export class PieChart {
   readonly data = input.required<PieChartData[]>();
   readonly shape = input<'full' | 'half'>('full');
   readonly chartStyle = input<'solid' | 'donut'>('donut');
+  readonly currency = input<string>('INR');
 
   readonly size = input<number>(400);
   readonly donutThickness = input<number>(80);

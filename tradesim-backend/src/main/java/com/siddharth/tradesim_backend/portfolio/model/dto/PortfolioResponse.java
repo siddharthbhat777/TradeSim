@@ -12,6 +12,7 @@ public record PortfolioResponse(
         BigDecimal totalUnrealizedPnl,
         BigDecimal totalRealizedPnl,
         BigDecimal totalPnl,
-        BigDecimal equity
+        BigDecimal equity,
+        String baseCurrency
 ) {
 }

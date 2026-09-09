@@ -4,10 +4,11 @@ import { Card } from '../../../../shared/components/card/card';
 import { PriceIndicator } from '../../../../shared/components/price-indicator/price-indicator';
 import { PortfolioResponse } from '../../../../models/portfolio';
 import { RiskResponse } from '../../../../models/risk';
+import { FormatCurrencyPipe } from '../../../../shared/pipes/format-currency-pipe';
 
 @Component({
   selector: 'app-summary',
-  imports: [CommonModule, Card, PriceIndicator],
+  imports: [CommonModule, Card, PriceIndicator, FormatCurrencyPipe],
   templateUrl: './summary.html',
   styleUrl: './summary.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -78,17 +78,23 @@ public class StockService {
             globalCategoryMap.putAll(calculateCategoriesForExchange(exchange, sortedCaps));
         }
 
-        return stockDataList.stream().map(sd -> new StockResponse(
-                sd.stock().getId(),
-                sd.stock().getSymbol(),
-                sd.stock().getCompanyName(),
-                sd.price(),
-                sd.stock().getSector(),
-                sd.stock().getStatus(),
-                sd.stock().getDayVolume() != null ? sd.stock().getDayVolume() : 0L,
-                sd.marketCap(),
-                globalCategoryMap.getOrDefault(sd.stock().getId(), MarketCapCategory.UNKNOWN)
-        )).toList();
+        return stockDataList.stream().map(sd -> {
+            Exchange exchange = exchangeMap.get(sd.stock().getExchangeId());
+            String currency = exchange != null ? exchange.getCurrency() : "INR";
+            return new StockResponse(
+                    sd.stock().getId(),
+                    sd.stock().getSymbol(),
+                    sd.stock().getCompanyName(),
+                    sd.price(),
+                    sd.stock().getSector(),
+                    sd.stock().getStatus(),
+                    sd.stock().getDayVolume() != null ? sd.stock().getDayVolume() : 0L,
+                    sd.marketCap(),
+                    globalCategoryMap.getOrDefault(sd.stock().getId(), MarketCapCategory.UNKNOWN),
+                    currency,
+                    sd.stock().getExchangeId()
+            );
+        }).toList();
     }
 
     @Transactional(readOnly = true)
@@ -222,6 +228,7 @@ public class StockService {
         }
 
         MarketCapCategory category = resolveCategory(stock, marketCap);
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
         return new StockResponse(
                 stock.getId(),
@@ -232,7 +239,9 @@ public class StockService {
                 stock.getStatus(),
                 stock.getDayVolume() != null ? stock.getDayVolume() : 0L,
                 marketCap,
-                category
+                category,
+                exchange.getCurrency(),
+                stock.getExchangeId()
         );
     }
 

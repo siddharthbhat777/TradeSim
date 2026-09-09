@@ -17,6 +17,8 @@ import { CheckboxGroup } from '../../../shared/components/checkbox/checkbox-grou
 import { FundManager } from '../../components/fund-manager/fund-manager';
 import { SegmentedControl } from '../../../shared/components/segmented-control/segmented-control';
 import { Slider } from '../../../shared/components/slider/slider';
+import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency-pipe';
+import { Dropdown } from '../../../shared/components/dropdown/dropdown';
 
 @Component({
   selector: 'app-wallet',
@@ -36,7 +38,9 @@ import { Slider } from '../../../shared/components/slider/slider';
     CheckboxGroup,
     FundManager,
     SegmentedControl,
-    Slider
+    Slider,
+    FormatCurrencyPipe,
+    Dropdown
   ],
   templateUrl: './wallet.html',
   styleUrl: './wallet.scss',
@@ -82,13 +86,25 @@ export class Wallet implements OnInit {
   readonly activeEndDate = signal<string>('');
   readonly pendingEndDate = signal<string>('');
 
+  readonly activeFilterCurrency = signal<string | null>(null);
+  readonly pendingFilterCurrency = signal<string | null>(null);
+
+  readonly currencyFilterOptions = computed(() => {
+    const currencies = Array.from(new Set(this.ledgerData().map(d => d.currency)));
+    return currencies.map(c => ({ label: c, value: c }));
+  });
+
   readonly amountRangeBounds = computed(() => {
-    const data = this.ledgerData();
-    if (data.length === 0) return { min: 0, max: 10000 };
-    const amounts = data.map(d => d.amount);
+    const curr = this.pendingFilterCurrency();
+    if (!curr) return { min: 0, max: 100 };
+
+    const data = this.ledgerData().filter(d => d.currency === curr);
+    if (data.length === 0) return { min: 0, max: 100 };
+
+    const maxAmt = Math.max(...data.map(d => d.amount));
     return {
-      min: Math.floor(Math.min(...amounts)),
-      max: Math.ceil(Math.max(...amounts))
+      min: 0,
+      max: (Math.ceil(maxAmt / 100) * 100) + 100
     };
   });
 
@@ -138,11 +154,7 @@ export class Wallet implements OnInit {
     const direction = this.activeDirection();
     const start = this.activeStartDate();
     const end = this.activeEndDate();
-
-    const amtRange = this.appliedAmountRange();
-    const minAmt = Math.min(amtRange[0], amtRange[1]);
-    const maxAmt = Math.max(amtRange[0], amtRange[1]);
-    const bounds = this.amountRangeBounds();
+    const filterCurr = this.activeFilterCurrency();
 
     if (query) {
       data = data.filter(entry =>
@@ -168,7 +180,11 @@ export class Wallet implements OnInit {
       data = data.filter(entry => new Date(entry.createdAt).getTime() <= endDate);
     }
 
-    if (minAmt > bounds.min || maxAmt < bounds.max) {
+    if (filterCurr) {
+      data = data.filter(entry => entry.currency === filterCurr);
+      const amtRange = this.appliedAmountRange();
+      const minAmt = Math.min(amtRange[0], amtRange[1]);
+      const maxAmt = Math.max(amtRange[0], amtRange[1]);
       data = data.filter(entry => entry.amount >= minAmt && entry.amount <= maxAmt);
     }
 
@@ -186,27 +202,24 @@ export class Wallet implements OnInit {
   });
 
   readonly hasActiveFilters = computed(() => {
-    const amtRange = this.appliedAmountRange();
-    const minAmt = Math.min(amtRange[0], amtRange[1]);
-    const maxAmt = Math.max(amtRange[0], amtRange[1]);
-    const bounds = this.amountRangeBounds();
-
     return this.activeFilterTypes().length > 0 ||
       this.activeDirection() !== 'ALL' ||
       this.activeStartDate() !== '' ||
       this.activeEndDate() !== '' ||
-      minAmt > bounds.min ||
-      maxAmt < bounds.max;
+      this.activeFilterCurrency() !== null;
   });
 
   readonly hasFilterChanges = computed(() => {
     if (this.activeDirection() !== this.pendingDirection()) return true;
     if (this.activeStartDate() !== this.pendingStartDate()) return true;
     if (this.activeEndDate() !== this.pendingEndDate()) return true;
+    if (this.activeFilterCurrency() !== this.pendingFilterCurrency()) return true;
 
-    const activeRange = this.appliedAmountRange();
-    const draftRange = this.draftAmountRange();
-    if (activeRange[0] !== draftRange[0] || activeRange[1] !== draftRange[1]) return true;
+    if (this.pendingFilterCurrency()) {
+      const activeRange = this.appliedAmountRange();
+      const draftRange = this.draftAmountRange();
+      if (activeRange[0] !== draftRange[0] || activeRange[1] !== draftRange[1]) return true;
+    }
 
     const active = [...this.activeFilterTypes()].sort();
     const pending = [...this.pendingFilterTypes()].sort();
@@ -265,21 +278,14 @@ export class Wallet implements OnInit {
     return 'primary';
   }
 
-  formatLocaleNumber(value: number | undefined | null, currencyCode: string, style: 'currency' | 'decimal' = 'decimal', maxFraction = 2): string {
-    if (value === null || value === undefined) return '0.00';
-    const locale = currencyCode === 'INR' ? 'en-IN' : 'en-US';
-    const minFrac = maxFraction === 0 ? 0 : 2;
-    const maxFrac = Math.max(minFrac, maxFraction);
-    return new Intl.NumberFormat(locale, {
-      style: style,
-      currency: style === 'currency' ? currencyCode : undefined,
-      minimumFractionDigits: minFrac,
-      maximumFractionDigits: maxFrac
-    }).format(value);
-  }
-
   openFilterDrawer(): void {
     this.isFilterDrawerOpen.set(true);
+  }
+
+  onCurrencyFilterChange(currency: string): void {
+    this.pendingFilterCurrency.set(currency);
+    const bounds = this.amountRangeBounds();
+    this._draftAmountRange.set([bounds.min, bounds.max]);
   }
 
   onAmountSliderChange(val: number | [number, number]): void {
@@ -293,9 +299,14 @@ export class Wallet implements OnInit {
     this.activeDirection.set(this.pendingDirection());
     this.activeStartDate.set(this.pendingStartDate());
     this.activeEndDate.set(this.pendingEndDate());
+    this.activeFilterCurrency.set(this.pendingFilterCurrency());
 
-    const [min, max] = this.draftAmountRange();
-    this._appliedAmountRange.set([Math.min(min, max), Math.max(min, max)]);
+    if (this.pendingFilterCurrency()) {
+      const [min, max] = this.draftAmountRange();
+      this._appliedAmountRange.set([Math.min(min, max), Math.max(min, max)]);
+    } else {
+      this._appliedAmountRange.set(null);
+    }
 
     this.isFilterDrawerOpen.set(false);
     this.tableCurrentPage.set(1);
@@ -306,6 +317,7 @@ export class Wallet implements OnInit {
     this.pendingDirection.set('ALL');
     this.pendingStartDate.set('');
     this.pendingEndDate.set('');
+    this.pendingFilterCurrency.set(null);
     this._draftAmountRange.set(null);
   }
 }

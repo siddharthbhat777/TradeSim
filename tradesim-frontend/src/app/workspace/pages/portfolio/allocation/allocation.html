@@ -1,5 +1,5 @@
 <app-card class="allocation-card">
     <h2 class="allocation-title">Asset Allocation</h2>
-    <app-pie-chart-container [data]="data()" legendPosition="bottom" chartStyle="donut"
+    <app-pie-chart-container [data]="data()" [currency]="baseCurrency()" legendPosition="bottom" chartStyle="donut"
         [size]="240"></app-pie-chart-container>
 </app-card>

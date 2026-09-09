@@ -26,7 +26,8 @@
     <div class="chart-body" #chartBody>
         <div class="y-axis-overlay">
             @for (tick of yAxisTicks(); track tick.value) {
-            <div class="axis-text-html" [style.top.px]="tick.y">{{ tick.value | number:'1.0-2' }}</div>
+            <div class="axis-text-html" [style.top.px]="tick.y">{{ tick.value | formatCurrency:currency():'decimal':2 }}
+            </div>
             }
         </div>
 
@@ -85,14 +86,14 @@
     <div class="chart-tooltip" [style.left.px]="tooltipX()" [style.top.px]="tooltipY()">
         <div class="tooltip-header">{{ active.data.time | date:'MMM dd, yyyy - HH:mm' }}</div>
         <div class="tooltip-grid">
-            <span class="label">O:</span> <span class="value">{{ active.data.open | currency:currency():'symbol':'1.2-2'
-                }}</span>
-            <span class="label">H:</span> <span class="value">{{ active.data.high | currency:currency():'symbol':'1.2-2'
-                }}</span>
-            <span class="label">L:</span> <span class="value">{{ active.data.low | currency:currency():'symbol':'1.2-2'
-                }}</span>
+            <span class="label">O:</span> <span class="value">{{ active.data.open |
+                formatCurrency:currency():'currency':2 }}</span>
+            <span class="label">H:</span> <span class="value">{{ active.data.high |
+                formatCurrency:currency():'currency':2 }}</span>
+            <span class="label">L:</span> <span class="value">{{ active.data.low |
+                formatCurrency:currency():'currency':2 }}</span>
             <span class="label">C:</span> <span class="value" [class.bullish-text]="active.isBullish"
-                [class.bearish-text]="!active.isBullish">{{ active.data.close | currency:currency():'symbol':'1.2-2'
+                [class.bearish-text]="!active.isBullish">{{ active.data.close | formatCurrency:currency():'currency':2
                 }}</span>
         </div>
     </div>

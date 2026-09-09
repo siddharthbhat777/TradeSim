@@ -4,7 +4,7 @@
             <div class="hero-card__header">
                 <span class="hero-card__title">Total Balance ({{ baseCurrency() }})</span>
                 <strong class="hero-card__value">
-                    {{ formatLocaleNumber(baseBucket()?.balance, baseCurrency(), 'currency') }}
+                    {{ baseBucket()?.balance | formatCurrency:baseCurrency():'currency':2 }}
                 </strong>
             </div>
 
@@ -18,8 +18,8 @@
                         </svg>
                         <span>Available</span>
                     </div>
-                    <span class="hero-inner-card__amount">{{ formatLocaleNumber(baseBucket()?.availableBalance,
-                        baseCurrency(), 'decimal') }}</span>
+                    <span class="hero-inner-card__amount">{{ baseBucket()?.availableBalance |
+                        formatCurrency:baseCurrency():'decimal':2 }}</span>
                 </div>
 
                 <div class="hero-inner-card">
@@ -31,8 +31,8 @@
                         </svg>
                         <span>Locked</span>
                     </div>
-                    <span class="hero-inner-card__amount">{{ formatLocaleNumber(baseBucket()?.lockedBalance,
-                        baseCurrency(), 'decimal') }}</span>
+                    <span class="hero-inner-card__amount">{{ baseBucket()?.lockedBalance |
+                        formatCurrency:baseCurrency():'decimal':2 }}</span>
                 </div>
             </div>
         </app-card>
@@ -57,18 +57,17 @@
                 <div class="mc-bucket">
                     <div class="mc-bucket__top">
                         <span class="mc-bucket__currency">{{ bucket.currency }}</span>
-                        <strong class="mc-bucket__total">{{ formatLocaleNumber(bucket.balance, bucket.currency,
-                            'decimal') }}</strong>
+                        <strong class="mc-bucket__total">{{ bucket.balance | formatCurrency:bucket.currency:'decimal':2
+                            }}</strong>
                     </div>
                     <div class="mc-bucket__bottom">
                         <div class="mc-stat">
                             <span>Avail</span>
-                            <strong>{{ formatLocaleNumber(bucket.availableBalance, bucket.currency, 'decimal')
-                                }}</strong>
+                            <strong>{{ bucket.availableBalance | formatCurrency:bucket.currency:'decimal':2 }}</strong>
                         </div>
                         <div class="mc-stat">
                             <span>Locked</span>
-                            <strong>{{ formatLocaleNumber(bucket.lockedBalance, bucket.currency, 'decimal') }}</strong>
+                            <strong>{{ bucket.lockedBalance | formatCurrency:bucket.currency:'decimal':2 }}</strong>
                         </div>
                     </div>
                 </div>
@@ -160,11 +159,11 @@
                     <ng-template tableCell="amount" let-row="row">
                         @if (row.type.includes('DEBIT') || row.type.includes('LOCK') || row.type.includes('FEE') ||
                         row.type === 'WITHDRAWAL') {
-                        <span class="ledger-amount text-danger">-{{ formatLocaleNumber(row.amount, row.currency,
-                            'decimal') }} {{ row.currency }}</span>
+                        <span class="ledger-amount text-danger">-{{ row.amount |
+                            formatCurrency:row.currency:'currency':2 }}</span>
                         } @else {
-                        <span class="ledger-amount text-success">+{{ formatLocaleNumber(row.amount, row.currency,
-                            'decimal') }} {{ row.currency }}</span>
+                        <span class="ledger-amount text-success">+{{ row.amount |
+                            formatCurrency:row.currency:'currency':2 }}</span>
                         }
                     </ng-template>
 
@@ -182,8 +181,8 @@
                             </div>
                             <div class="receipt-group">
                                 <span class="receipt-label">Balance After</span>
-                                <span class="receipt-value mono">{{ formatLocaleNumber(row.balanceAfter, row.currency,
-                                    'decimal') }} {{ row.currency }}</span>
+                                <span class="receipt-value mono">{{ row.balanceAfter |
+                                    formatCurrency:row.currency:'currency':2 }}</span>
                             </div>
                         </div>
                     </ng-template>
@@ -199,6 +198,38 @@
         <h3>Filter Transactions</h3>
 
         <div class="filter-section">
+            <span class="filter-label">Filter by Currency</span>
+            <app-dropdown [options]="currencyFilterOptions()" [ngModel]="pendingFilterCurrency()"
+                (ngModelChange)="onCurrencyFilterChange($event)" placeholder="Select Currency" [fullWidth]="true">
+            </app-dropdown>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-label-row">
+                <span class="filter-label">Amount Range</span>
+                @if (pendingFilterCurrency()) {
+                <span class="value">
+                    {{ (draftAmountRange()[0] < draftAmountRange()[1] ? draftAmountRange()[0] : draftAmountRange()[1]) |
+                        formatCurrency:pendingFilterCurrency():'currency':0 }} - {{ (draftAmountRange()[0]>
+                        draftAmountRange()[1]
+                        ? draftAmountRange()[0] : draftAmountRange()[1]) |
+                        formatCurrency:pendingFilterCurrency():'currency':0 }}
+                </span>
+                }
+            </div>
+            @if (pendingFilterCurrency()) {
+            <app-slider [range]="true" [min]="amountRangeBounds().min" [max]="amountRangeBounds().max"
+                [step]="amountSliderStep()" [ngModel]="draftAmountRange()"
+                (ngModelChange)="onAmountSliderChange($event)"></app-slider>
+            } @else {
+            <div
+                style="padding: 12px; text-align: center; background: var(--surface-secondary); border-radius: 8px; border: 1px dashed var(--border); color: var(--text-muted); font-size: 0.85rem;">
+                Select a currency to unlock range filter
+            </div>
+            }
+        </div>
+
+        <div class="filter-section">
             <span class="filter-label">Date Range</span>
             <div class="filter-row">
                 <app-input [reserveMessageSpace]="false">
@@ -209,21 +240,6 @@
                     <input appInput type="date" [(ngModel)]="pendingEndDate" />
                 </app-input>
             </div>
-        </div>
-
-        <div class="filter-section">
-            <div class="filter-label-row">
-                <span class="filter-label">Amount Range</span>
-                <span class="filter-value">
-                    {{ formatLocaleNumber(draftAmountRange()[0] < draftAmountRange()[1] ? draftAmountRange()[0] :
-                        draftAmountRange()[1], baseCurrency(), 'currency' , 0) }} - {{
-                        formatLocaleNumber(draftAmountRange()[0]> draftAmountRange()[1] ? draftAmountRange()[0] :
-                        draftAmountRange()[1], baseCurrency(), 'currency', 0) }}
-                </span>
-            </div>
-            <app-slider [range]="true" [min]="amountRangeBounds().min" [max]="amountRangeBounds().max"
-                [step]="amountSliderStep()" [ngModel]="draftAmountRange()"
-                (ngModelChange)="onAmountSliderChange($event)"></app-slider>
         </div>
 
         <div class="filter-section">

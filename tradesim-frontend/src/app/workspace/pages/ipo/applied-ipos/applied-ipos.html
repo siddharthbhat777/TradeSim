@@ -40,11 +40,11 @@
             </ng-template>
 
             <ng-template tableCell="issuePrice" let-row="row">
-                <span>{{ row.issuePrice | currency:baseCurrency():'symbol':'1.2-4' }}</span>
+                <span>{{ row.issuePrice | formatCurrency:row.currency:'currency':4 }}</span>
             </ng-template>
 
             <ng-template tableCell="lockedAmount" let-row="row">
-                <span class="fw-semibold">{{ row.lockedAmount | currency:baseCurrency():'symbol':'1.2-2' }}</span>
+                <span class="fw-semibold">{{ row.lockedAmount | formatCurrency:baseCurrency():'currency':2 }}</span>
             </ng-template>
 
             <ng-template tableCell="allottedShares" let-row="row">

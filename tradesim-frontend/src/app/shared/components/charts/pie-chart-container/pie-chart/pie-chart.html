@@ -28,8 +28,9 @@
         </div>
 
         <div class="tooltip-body">
-            <span class="tooltip-value">{{ activeSlice.value | number }}</span>
-            <span class="tooltip-percentage">({{ activeSlice.percentage | number:'1.0-1' }}%)</span>
+            <span class="tooltip-value">{{ activeSlice.value | formatCurrency:currency():'currency':0 }}</span>
+            <span class="tooltip-percentage">({{ activeSlice.percentage | formatCurrency:currency():'decimal':1
+                }}%)</span>
         </div>
     </div>
     }

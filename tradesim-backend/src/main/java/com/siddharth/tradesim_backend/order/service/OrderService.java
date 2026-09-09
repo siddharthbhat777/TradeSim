@@ -93,12 +93,18 @@ public class OrderService {
         Map<UUID, Stock> stockMap = stockRepository.findAllById(stockIds).stream()
                 .collect(Collectors.toMap(Stock::getId, s -> s));
 
+        List<UUID> exchangeIds = stockMap.values().stream().map(Stock::getExchangeId).distinct().toList();
+        Map<UUID, Exchange> exchangeMap = exchangeRepository.findAllById(exchangeIds).stream()
+                .collect(Collectors.toMap(Exchange::getId, e -> e));
+
         List<UUID> orderIds = orders.stream().map(Order::getId).toList();
         List<Fill> fills = fillRepository.findFillsByOrderIds(orderIds);
 
         return orders.stream().map(order -> {
             Stock stock = stockMap.get(order.getStockId());
             String symbol = stock != null ? stock.getSymbol() : "UNKNOWN";
+            Exchange exchange = stock != null ? exchangeMap.get(stock.getExchangeId()) : null;
+            String currency = exchange != null ? exchange.getCurrency() : "USD";
 
             int filledQuantity;
             if (order.getStatus() == OrderStatus.CANCELLED) {
@@ -120,6 +126,7 @@ public class OrderService {
                     filledQuantity,
                     order.getLimitPrice(),
                     order.getStatus(),
+                    currency,
                     order.getCreatedAt()
             );
         }).toList();

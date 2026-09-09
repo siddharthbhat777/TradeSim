@@ -79,10 +79,9 @@
                     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                 </svg>
                 Filters
-                @if(appliedSectors().length > 0 || appliedStatuses().length > 0 || appliedMarketCapCategories().length >
-                0 || appliedPriceRange()[0] > 0 || appliedPriceRange()[1] < maxStockPrice()) { <span
-                    class="filter-badge"></span>
-                    }
+                @if (hasActiveFilters()) {
+                <span class="filter-badge"></span>
+                }
             </app-button>
         </div>
     </section>
@@ -100,8 +99,8 @@
                 <span class="stock-company-name">{{ val }}</span>
             </ng-template>
 
-            <ng-template tableCell="currentPrice" let-val>
-                <span class="fw-semibold">{{ val | currency:'INR':'symbol':'1.2-2' }}</span>
+            <ng-template tableCell="currentPrice" let-val let-row="row">
+                <span class="fw-semibold">{{ val | formatCurrency:row.currency:'currency':2 }}</span>
             </ng-template>
 
             <ng-template tableCell="dayVolume" let-val>
@@ -122,23 +121,27 @@
         </div>
 
         <div class="drawer-body">
+
             <div class="filter-group">
                 <div class="filter-label-row">
                     <span class="label">Price Range</span>
                     <span class="value">
                         {{ (draftPriceRange()[0] < draftPriceRange()[1] ? draftPriceRange()[0] : draftPriceRange()[1]) |
-                            currency:'INR':'symbol':'1.0-0' }} - {{ (draftPriceRange()[0]> draftPriceRange()[1] ?
-                            draftPriceRange()[0] : draftPriceRange()[1]) | currency:'INR':'symbol':'1.0-0' }}
+                            formatCurrency:currentExchangeCurrency():'currency':0 }} - {{ (draftPriceRange()[0]>
+                            draftPriceRange()[1] ?
+                            draftPriceRange()[0] : draftPriceRange()[1]) |
+                            formatCurrency:currentExchangeCurrency():'currency':0 }}
                     </span>
                 </div>
-                <app-slider [range]="true" [min]="0" [max]="maxStockPrice()" [step]="10"
-                    [(ngModel)]="draftPriceRange"></app-slider>
+                <app-slider [range]="true" [min]="priceRangeBounds().min" [max]="priceRangeBounds().max"
+                    [step]="priceSliderStep()" [ngModel]="draftPriceRange()"
+                    (ngModelChange)="onPriceSliderChange($event)"></app-slider>
             </div>
 
-            @if (marketCapOptions().length > 0) {
+            @if (marketCapOptions.length > 0) {
             <div class="filter-group">
                 <span class="label">Market Cap</span>
-                <app-checkbox-group [options]="marketCapOptions()" displayKey="label" valueKey="value"
+                <app-checkbox-group [options]="marketCapOptions" displayKey="label" valueKey="value"
                     [(selectedValues)]="draftMarketCapCategories">
                 </app-checkbox-group>
             </div>
@@ -153,10 +156,10 @@
             </div>
             }
 
-            @if (statusOptions().length > 0) {
+            @if (statusOptions.length > 0) {
             <div class="filter-group">
                 <span class="label">Status</span>
-                <app-checkbox-group [options]="statusOptions()" displayKey="label" valueKey="value"
+                <app-checkbox-group [options]="statusOptions" displayKey="label" valueKey="value"
                     [(selectedValues)]="draftStatuses">
                 </app-checkbox-group>
             </div>

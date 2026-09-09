@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../services/order/order-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
@@ -16,6 +16,7 @@ import { Dropdown, DropdownOption } from '../../../shared/components/dropdown/dr
 import { Slider } from '../../../shared/components/slider/slider';
 import { ToastService } from '../../../shared/components/toast/toast.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency-pipe';
 
 export interface OrderRow extends OrderHistoryResponse {
   displayQuantity: string;
@@ -38,7 +39,7 @@ export interface OrderRow extends OrderHistoryResponse {
     Dropdown,
     Slider,
     DatePipe,
-    CurrencyPipe
+    FormatCurrencyPipe
   ],
   templateUrl: './order.html',
   styleUrl: './order.scss',
@@ -59,12 +60,13 @@ export class Order implements OnInit {
   readonly appliedSide = signal<string>('ALL');
   readonly appliedType = signal<string>('ALL');
   readonly appliedStatus = signal<string>('ALL');
-  readonly _appliedPriceRange = signal<[number, number] | null>(null);
 
   readonly draftSide = signal<string>('ALL');
   readonly draftType = signal<string>('ALL');
   readonly draftStatus = signal<string>('ALL');
-  readonly _draftPriceRange = signal<[number, number] | null>(null);
+
+  readonly activeFilterCurrency = signal<string | null>(null);
+  readonly pendingFilterCurrency = signal<string | null>(null);
 
   readonly isFilterDrawerOpen = signal(false);
   readonly currentPage = signal<number>(1);
@@ -98,15 +100,31 @@ export class Order implements OnInit {
     { label: 'Cancelled', value: 'CANCELLED' }
   ];
 
+  readonly currencyFilterOptions = computed(() => {
+    const currencies = Array.from(new Set(this.allOrders().map(o => o.currency)));
+    return currencies.map(c => ({ label: c, value: c }));
+  });
+
   readonly priceRangeBounds = computed(() => {
-    const limitOrders = this.allOrders().filter(o => o.limitPrice !== null && o.limitPrice > 0);
-    if (limitOrders.length === 0) return { min: 0, max: 100000 };
-    const prices = limitOrders.map(o => o.limitPrice!);
+    const curr = this.pendingFilterCurrency();
+    if (!curr) return { min: 0, max: 100 };
+
+    const limitOrders = this.allOrders().filter(o => o.currency === curr && o.limitPrice !== null && o.limitPrice > 0);
+    if (limitOrders.length === 0) return { min: 0, max: 100 };
+
+    const maxPrice = Math.max(...limitOrders.map(o => o.limitPrice!));
     return {
-      min: Math.floor(Math.min(...prices)),
-      max: Math.ceil(Math.max(...prices))
+      min: 0,
+      max: (Math.ceil(maxPrice / 100) * 100) + 100
     };
   });
+
+  readonly priceSliderStep = computed(() => {
+    return Math.max(1, Math.floor(this.priceRangeBounds().max / 100));
+  });
+
+  readonly _appliedPriceRange = signal<[number, number] | null>(null);
+  readonly _draftPriceRange = signal<[number, number] | null>(null);
 
   readonly appliedPriceRange = computed(() => {
     const val = this._appliedPriceRange();
@@ -118,9 +136,6 @@ export class Order implements OnInit {
     return val ? val : [this.priceRangeBounds().min, this.priceRangeBounds().max] as [number, number];
   });
 
-  readonly draftMinPrice = computed(() => Math.min(this.draftPriceRange()[0], this.draftPriceRange()[1]));
-  readonly draftMaxPrice = computed(() => Math.max(this.draftPriceRange()[0], this.draftPriceRange()[1]));
-
   readonly hasActiveFilters = computed(() => {
     const min = Math.min(this.appliedPriceRange()[0], this.appliedPriceRange()[1]);
     const max = Math.max(this.appliedPriceRange()[0], this.appliedPriceRange()[1]);
@@ -129,21 +144,26 @@ export class Order implements OnInit {
     return this.appliedSide() !== 'ALL' ||
       this.appliedType() !== 'ALL' ||
       this.appliedStatus() !== 'ALL' ||
+      this.activeFilterCurrency() !== null ||
       min > bounds.min ||
       max < bounds.max;
   });
 
   readonly isApplyDisabled = computed(() => {
-    const draftMin = Math.min(this.draftPriceRange()[0], this.draftPriceRange()[1]);
-    const draftMax = Math.max(this.draftPriceRange()[0], this.draftPriceRange()[1]);
-    const appliedMin = Math.min(this.appliedPriceRange()[0], this.appliedPriceRange()[1]);
-    const appliedMax = Math.max(this.appliedPriceRange()[0], this.appliedPriceRange()[1]);
+    if (this.activeFilterCurrency() !== this.pendingFilterCurrency()) return false;
+
+    if (this.pendingFilterCurrency()) {
+      const draftMin = Math.min(this.draftPriceRange()[0], this.draftPriceRange()[1]);
+      const draftMax = Math.max(this.draftPriceRange()[0], this.draftPriceRange()[1]);
+      const appliedMin = Math.min(this.appliedPriceRange()[0], this.appliedPriceRange()[1]);
+      const appliedMax = Math.max(this.appliedPriceRange()[0], this.appliedPriceRange()[1]);
+
+      if (draftMin !== appliedMin || draftMax !== appliedMax) return false;
+    }
 
     return this.draftSide() === this.appliedSide() &&
       this.draftType() === this.appliedType() &&
-      this.draftStatus() === this.appliedStatus() &&
-      draftMin === appliedMin &&
-      draftMax === appliedMax;
+      this.draftStatus() === this.appliedStatus();
   });
 
   readonly processedOrders = computed<OrderRow[]>(() => {
@@ -166,16 +186,21 @@ export class Order implements OnInit {
       filtered = filtered.filter(o => o.status === this.appliedStatus());
     }
 
-    const currentRange = this.appliedPriceRange();
-    const bounds = this.priceRangeBounds();
-    const minPrice = Math.min(currentRange[0], currentRange[1]);
-    const maxPrice = Math.max(currentRange[0], currentRange[1]);
+    const filterCurr = this.activeFilterCurrency();
+    if (filterCurr) {
+      filtered = filtered.filter(o => o.currency === filterCurr);
 
-    if (minPrice > bounds.min || maxPrice < bounds.max) {
-      filtered = filtered.filter(o => {
-        if (!o.limitPrice) return true;
-        return o.limitPrice >= minPrice && o.limitPrice <= maxPrice;
-      });
+      const currentRange = this.appliedPriceRange();
+      const bounds = this.priceRangeBounds();
+      const minPrice = Math.min(currentRange[0], currentRange[1]);
+      const maxPrice = Math.max(currentRange[0], currentRange[1]);
+
+      if (minPrice > bounds.min || maxPrice < bounds.max) {
+        filtered = filtered.filter(o => {
+          if (!o.limitPrice) return true;
+          return o.limitPrice >= minPrice && o.limitPrice <= maxPrice;
+        });
+      }
     }
 
     const sort = this.activeSort();
@@ -215,14 +240,16 @@ export class Order implements OnInit {
     }
 
     this.orderService.loadOrders();
-
-    const bounds = this.priceRangeBounds();
-    this._appliedPriceRange.set([bounds.min, bounds.max]);
-    this._draftPriceRange.set([bounds.min, bounds.max]);
   }
 
   openFilterDrawer(): void {
     this.isFilterDrawerOpen.set(true);
+  }
+
+  onCurrencyFilterChange(currency: string): void {
+    this.pendingFilterCurrency.set(currency);
+    const bounds = this.priceRangeBounds();
+    this._draftPriceRange.set([bounds.min, bounds.max]);
   }
 
   onPriceSliderChange(val: number | [number, number]): void {
@@ -232,8 +259,15 @@ export class Order implements OnInit {
   }
 
   applyFilters(): void {
-    const [min, max] = this.draftPriceRange();
-    this._appliedPriceRange.set([Math.min(min, max), Math.max(min, max)]);
+    this.activeFilterCurrency.set(this.pendingFilterCurrency());
+
+    if (this.pendingFilterCurrency()) {
+      const [min, max] = this.draftPriceRange();
+      this._appliedPriceRange.set([Math.min(min, max), Math.max(min, max)]);
+    } else {
+      this._appliedPriceRange.set(null);
+    }
+
     this.appliedSide.set(this.draftSide());
     this.appliedType.set(this.draftType());
     this.appliedStatus.set(this.draftStatus());
@@ -242,8 +276,8 @@ export class Order implements OnInit {
   }
 
   resetDraftFilters(): void {
-    const bounds = this.priceRangeBounds();
-    this._draftPriceRange.set([bounds.min, bounds.max]);
+    this.pendingFilterCurrency.set(null);
+    this._draftPriceRange.set(null);
     this.draftSide.set('ALL');
     this.draftType.set('ALL');
     this.draftStatus.set('ALL');

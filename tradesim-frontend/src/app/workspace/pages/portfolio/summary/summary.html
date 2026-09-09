@@ -1,7 +1,7 @@
 <div class="summary-grid">
     <app-card>
         <span class="summary-label">Total Equity</span>
-        <h2 class="summary-value">{{ portfolio()?.equity || 0 | currency:baseCurrency():'symbol':'1.2-2' }}</h2>
+        <h2 class="summary-value">{{ portfolio()?.equity || 0 | formatCurrency:baseCurrency():'currency':2 }}</h2>
     </app-card>
 
     <app-card>
@@ -31,8 +31,8 @@
                 [style.width.%]="marginUsedPercent()"></div>
         </div>
         <div class="health-footer">
-            <span>Used: {{ risk()?.marginUsed || 0 | currency:baseCurrency():'symbol':'1.0-0' }}</span>
-            <span>Maint: {{ risk()?.maintenanceMargin || 0 | currency:baseCurrency():'symbol':'1.0-0' }}</span>
+            <span>Used: {{ risk()?.marginUsed || 0 | formatCurrency:baseCurrency():'currency':0 }}</span>
+            <span>Maint: {{ risk()?.maintenanceMargin || 0 | formatCurrency:baseCurrency():'currency':0 }}</span>
         </div>
     </app-card>
 </div>

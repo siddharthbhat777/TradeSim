@@ -18,6 +18,7 @@ public record OrderHistoryResponse(
         int filledQuantity,
         BigDecimal limitPrice,
         OrderStatus status,
+        String currency,
         Instant createdAt
 ) {
 }

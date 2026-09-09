@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IpoService } from '../../../../services/ipo/ipo-service';
 import { StockService } from '../../../../services/stock/stock-service';
@@ -13,6 +13,7 @@ import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Badge } from '../../../../shared/components/badge/badge';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { FormatCurrencyPipe } from '../../../../shared/pipes/format-currency-pipe';
 
 export interface MappedIpoSubscription extends IpoSubscriptionResponse {
   symbol: string;
@@ -31,8 +32,8 @@ export interface MappedIpoSubscription extends IpoSubscriptionResponse {
     Dropdown,
     Badge,
     EmptyState,
-    CurrencyPipe,
-    DatePipe
+    DatePipe,
+    FormatCurrencyPipe
   ],
   templateUrl: './applied-ipos.html',
   styleUrl: './applied-ipos.scss',

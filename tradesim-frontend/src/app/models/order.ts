@@ -19,6 +19,7 @@ export interface OrderHistoryResponse {
     limitPrice: number | null;
     status: 'OPEN' | 'PARTIALLY_FILLED' | 'FILLED' | 'CANCELLED';
     createdAt: string;
+    currency: string;
 }
 
 export interface OrderEstimateResponse {

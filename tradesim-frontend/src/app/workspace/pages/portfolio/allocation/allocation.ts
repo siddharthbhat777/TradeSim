@@ -12,4 +12,5 @@ import { PieChartData } from '../../../../shared/components/charts/pie-chart-con
 })
 export class Allocation {
   readonly data = input.required<PieChartData[]>();
+  readonly baseCurrency = input.required<string>();
 }

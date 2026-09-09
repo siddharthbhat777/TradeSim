@@ -17,7 +17,7 @@
         <div class="fund-manager__balance-overview">
             <span class="fund-manager__balance-label">Current Available Cash</span>
             <strong class="fund-manager__balance-value">
-                {{ formatLocaleNumber(baseBucket()?.availableBalance, baseCurrency(), 'currency') }}
+                {{ baseBucket()?.availableBalance | formatCurrency:baseCurrency():'currency':2 }}
             </strong>
         </div>
 
@@ -31,7 +31,7 @@
         <div class="fund-manager__presets">
             @for (amount of quickDepositAmounts; track amount) {
             <button type="button" class="fund-manager__preset-btn" (click)="addDepositPreset(amount)">
-                + {{ formatLocaleNumber(amount, baseCurrency(), 'currency', 0) }}
+                + {{ amount | formatCurrency:baseCurrency():'currency':0 }}
             </button>
             }
         </div>
@@ -60,7 +60,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <span style="font-weight: 600;">{{ option.label }}</span>
                             <span style="font-size: 0.85rem; color: var(--text-secondary);">
-                                Avail: {{ formatLocaleNumber(option.availableBalance, option.label, 'decimal') }}
+                                Avail: {{ option.availableBalance | formatCurrency:option.label:'decimal':2 }}
                             </span>
                         </div>
                     </ng-template>
@@ -85,7 +85,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <span style="font-weight: 600;">{{ option.label }}</span>
                             <span style="font-size: 0.85rem; color: var(--text-secondary);">
-                                Avail: {{ formatLocaleNumber(option.availableBalance, option.label, 'decimal') }}
+                                Avail: {{ option.availableBalance | formatCurrency:option.label:'decimal':2 }}
                             </span>
                         </div>
                     </ng-template>
@@ -100,8 +100,8 @@
                 <span suffix>{{ sourceCurrency() }}</span>
             </app-input>
             <div class="fund-manager__source-meta">
-                <span>Available: {{ formatLocaleNumber(activeSourceBucket()?.availableBalance, sourceCurrency(),
-                    'decimal') }} {{ sourceCurrency() }}</span>
+                <span>Available: {{ activeSourceBucket()?.availableBalance | formatCurrency:sourceCurrency():'decimal':2
+                    }} {{ sourceCurrency() }}</span>
                 <button type="button" class="fund-manager__max-btn" (click)="setFullSourceBalance()">MAX</button>
             </div>
         </div>
@@ -112,8 +112,8 @@
                 @if (isLoadingRate()) {
                 <app-inline-loader size="small" variant="muted"></app-inline-loader>
                 } @else if (currentRate()) {
-                <strong>1 {{ sourceCurrency() }} = {{ formatLocaleNumber(currentRate(), targetCurrency(), 'decimal', 4)
-                    }} {{ targetCurrency() }}</strong>
+                <strong>1 {{ sourceCurrency() }} = {{ currentRate() | formatCurrency:targetCurrency():'decimal':4 }} {{
+                    targetCurrency() }}</strong>
                 } @else {
                 <span class="text-muted">Unavailable</span>
                 }
@@ -121,8 +121,7 @@
 
             <div class="fund-manager__summary-line">
                 <span>Estimated FX Fee (~1%)</span>
-                <span>{{ formatLocaleNumber(estimatedFxFee(), sourceCurrency(), 'decimal') }} {{ sourceCurrency()
-                    }}</span>
+                <span>{{ estimatedFxFee() | formatCurrency:sourceCurrency():'decimal':2 }} {{ sourceCurrency() }}</span>
             </div>
 
             <div class="fund-manager__divider"></div>
@@ -130,8 +129,7 @@
             <div class="fund-manager__summary-line highlight">
                 <span>Estimated Received</span>
                 <strong class="target-amount">
-                    {{ formatLocaleNumber(estimatedTargetAmount(), targetCurrency(), 'decimal') }} {{ targetCurrency()
-                    }}
+                    {{ estimatedTargetAmount() | formatCurrency:targetCurrency():'decimal':2 }} {{ targetCurrency() }}
                 </strong>
             </div>
         </div>

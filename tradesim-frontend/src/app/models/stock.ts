@@ -10,4 +10,6 @@ export interface Stock {
     dayVolume: number;
     marketCap: number;
     marketCapCategory: MarketCapCategory;
+    currency: string;
+    exchangeId: string;
 }

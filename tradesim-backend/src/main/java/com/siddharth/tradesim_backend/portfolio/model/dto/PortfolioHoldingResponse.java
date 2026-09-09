@@ -10,6 +10,7 @@ public record PortfolioHoldingResponse(
         BigDecimal averageBuyPrice,
         BigDecimal currentPrice,
         BigDecimal currentValue,
-        BigDecimal unrealizedPnl
+        BigDecimal unrealizedPnl,
+        String currency
 ) {
 }
