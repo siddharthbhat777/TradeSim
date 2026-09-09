@@ -24,12 +24,12 @@
             {{ val | number }}
         </ng-template>
 
-        <ng-template tableCell="averageBuyPrice" let-val>
-            {{ val | formatCurrency:baseCurrency():'currency':2 }}
+        <ng-template tableCell="averageBuyPrice" let-row="row">
+            {{ row.nativeAverageBuyPrice | formatCurrency:row.currency:'currency':2 }}
         </ng-template>
 
-        <ng-template tableCell="currentPrice" let-val>
-            {{ val | formatCurrency:baseCurrency():'currency':2 }}
+        <ng-template tableCell="currentPrice" let-row="row">
+            {{ row.nativeCurrentPrice | formatCurrency:row.currency:'currency':2 }}
         </ng-template>
 
         <ng-template tableCell="currentValue" let-val>
@@ -40,5 +40,39 @@
             <app-price-indicator [value]="val" [currency]="baseCurrency()" [showPercentage]="false"
                 [valueDecimals]="2"></app-price-indicator>
         </ng-template>
+
+        <ng-template tableExpandedRow let-row="row">
+            <div class="expanded-details-grid">
+                <div class="detail-group">
+                    <span class="detail-label">Total Invested (Cost Basis)</span>
+                    <span class="detail-value mono">{{ row.totalInvested | formatCurrency:baseCurrency():'currency':2
+                        }}</span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Asset Native Currency</span>
+                    <span class="detail-value">{{ row.currency }}</span>
+                </div>
+
+                @if (row.currency !== baseCurrency()) {
+                <div class="detail-group">
+                    <span class="detail-label">Native Total Value</span>
+                    <span class="detail-value mono">{{ row.nativeCurrentValue | formatCurrency:row.currency:'currency':2
+                        }}</span>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Native Unrealized P&L</span>
+                    <app-price-indicator class="detail-value" [value]="row.nativeUnrealizedPnl"
+                        [currency]="row.currency" [showPercentage]="false" [valueDecimals]="2"></app-price-indicator>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Current FX Rate</span>
+                    <span class="detail-value mono">1 {{ row.currency }} = {{ row.fxRate |
+                        formatCurrency:baseCurrency():'decimal':4 }}</span>
+                </div>
+                }
+            </div>
+        </ng-template>
+
     </app-table>
 </app-card>

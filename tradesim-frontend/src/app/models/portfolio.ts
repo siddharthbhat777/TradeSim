@@ -6,7 +6,13 @@ export interface PortfolioHoldingResponse {
     currentPrice: number;
     currentValue: number;
     unrealizedPnl: number;
+    nativeAverageBuyPrice: number;
+    nativeCurrentPrice: number;
+    nativeCurrentValue: number;
+    nativeUnrealizedPnl: number;
+    totalInvested: number;
     currency: string;
+    fxRate: number;
 }
 
 export interface PortfolioResponse {

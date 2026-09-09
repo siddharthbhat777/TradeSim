@@ -5,7 +5,7 @@ import { OrderService } from '../../../services/order/order-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { OrderHistoryResponse } from '../../../models/order';
 import { Card } from '../../../shared/components/card/card';
-import { Table, TableColumn, TableCellDirective } from '../../../shared/components/table/table';
+import { Table, TableColumn, TableCellDirective, TableExpandedRowDirective } from '../../../shared/components/table/table';
 import { CustomInput } from '../../../shared/components/input/input';
 import { InputDirective } from '../../../shared/directives/input';
 import { Button } from '../../../shared/components/button/button';
@@ -30,6 +30,7 @@ export interface OrderRow extends OrderHistoryResponse {
     Card,
     Table,
     TableCellDirective,
+    TableExpandedRowDirective,
     CustomInput,
     InputDirective,
     Button,
@@ -107,10 +108,10 @@ export class Order implements OnInit {
 
   readonly priceRangeBounds = computed(() => {
     const curr = this.pendingFilterCurrency();
-    if (!curr) return { min: 0, max: 100 };
+    if (!curr) return { min: 0, max: 100000 };
 
     const limitOrders = this.allOrders().filter(o => o.currency === curr && o.limitPrice !== null && o.limitPrice > 0);
-    if (limitOrders.length === 0) return { min: 0, max: 100 };
+    if (limitOrders.length === 0) return { min: 0, max: 100000 };
 
     const maxPrice = Math.max(...limitOrders.map(o => o.limitPrice!));
     return {
@@ -303,6 +304,12 @@ export class Order implements OnInit {
           }
         });
       }
+    });
+  }
+
+  copyId(id: string): void {
+    navigator.clipboard.writeText(id).then(() => {
+      this.toastService.success('Order ID copied to clipboard');
     });
   }
 }

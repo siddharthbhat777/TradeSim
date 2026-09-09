@@ -122,10 +122,13 @@ public class OrderService {
                     symbol,
                     order.getSide(),
                     order.getOrderType(),
+                    order.getTimeInForce(),
                     order.getQuantity(),
                     filledQuantity,
                     order.getLimitPrice(),
                     order.getStatus(),
+                    order.getFundingCurrency(),
+                    order.getExpiresAt(),
                     currency,
                     order.getCreatedAt()
             );

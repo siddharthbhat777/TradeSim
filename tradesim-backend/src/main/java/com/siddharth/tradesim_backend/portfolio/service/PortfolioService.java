@@ -54,10 +54,11 @@ public class PortfolioService {
 
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
         Wallet wallet = walletService.getWalletByUserId(userId);
+        String baseCurrency = tradingAccount.getBaseCurrency();
 
         BigDecimal totalCashValue = BigDecimal.ZERO;
         for (WalletBucket bucket : wallet.getBuckets()) {
-            totalCashValue = totalCashValue.add(forexService.convert(bucket.getBalance(), bucket.getCurrency(), tradingAccount.getBaseCurrency()));
+            totalCashValue = totalCashValue.add(forexService.convert(bucket.getBalance(), bucket.getCurrency(), baseCurrency));
         }
 
         List<Position> positions = positionRepository.findByUserId(userId);
@@ -78,14 +79,26 @@ public class PortfolioService {
             }
 
             Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+            String nativeCurrency = exchange.getCurrency();
 
-            BigDecimal totalValueInStockCurrency = stock.getLastTradedPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal currentValue = forexService.convert(totalValueInStockCurrency, exchange.getCurrency(), tradingAccount.getBaseCurrency());
+            BigDecimal fxRate = forexService.convert(BigDecimal.ONE, nativeCurrency, baseCurrency);
 
-            BigDecimal currentPriceInAccountCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), tradingAccount.getBaseCurrency());
+            BigDecimal nativeCurrentPrice = stock.getLastTradedPrice() != null ? stock.getLastTradedPrice() : BigDecimal.ZERO;
+            BigDecimal nativeCurrentValue = nativeCurrentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+
+            BigDecimal currentPriceInAccountCurrency = nativeCurrentPrice.multiply(fxRate).setScale(4, RoundingMode.HALF_UP);
+            BigDecimal currentValue = nativeCurrentValue.multiply(fxRate).setScale(4, RoundingMode.HALF_UP);
 
             BigDecimal invested = position.getTotalInvested();
             BigDecimal unrealizedPnl = currentValue.subtract(invested);
+
+            BigDecimal nativeInvested = invested.compareTo(BigDecimal.ZERO) > 0 && fxRate.compareTo(BigDecimal.ZERO) > 0
+                    ? invested.divide(fxRate, 4, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            BigDecimal nativeAverageBuyPrice = position.getQuantity() > 0
+                    ? nativeInvested.divide(BigDecimal.valueOf(position.getQuantity()), 4, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            BigDecimal nativeUnrealizedPnl = nativeCurrentValue.subtract(nativeInvested);
 
             totalValue = totalValue.add(currentValue);
             totalInvested = totalInvested.add(invested);
@@ -100,7 +113,13 @@ public class PortfolioService {
                     currentPriceInAccountCurrency,
                     currentValue,
                     unrealizedPnl,
-                    exchange.getCurrency()
+                    nativeAverageBuyPrice,
+                    nativeCurrentPrice,
+                    nativeCurrentValue,
+                    nativeUnrealizedPnl,
+                    invested,
+                    nativeCurrency,
+                    fxRate
             );
 
             responses.add(response);
@@ -108,6 +127,7 @@ public class PortfolioService {
 
         BigDecimal equity = totalCashValue.add(totalValue).subtract(tradingAccount.getMarginLoan());
         BigDecimal totalPnl = totalRealizedPnl.add(totalUnrealizedPnl);
+
         return new PortfolioResponse(
                 responses,
                 totalCashValue,
@@ -118,7 +138,7 @@ public class PortfolioService {
                 totalRealizedPnl,
                 totalPnl,
                 equity,
-                tradingAccount.getBaseCurrency()
+                baseCurrency
         );
     }
 

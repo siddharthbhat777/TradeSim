@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, signal } from '@an
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Card } from '../../../../shared/components/card/card';
-import { Table, TableColumn, TableCellDirective } from '../../../../shared/components/table/table';
+import { Table, TableColumn, TableCellDirective, TableExpandedRowDirective } from '../../../../shared/components/table/table';
 import { CustomInput } from '../../../../shared/components/input/input';
 import { InputDirective } from '../../../../shared/directives/input';
 import { PriceIndicator } from '../../../../shared/components/price-indicator/price-indicator';
@@ -17,6 +17,7 @@ import { FormatCurrencyPipe } from '../../../../shared/pipes/format-currency-pip
     Card,
     Table,
     TableCellDirective,
+    TableExpandedRowDirective,
     CustomInput,
     InputDirective,
     PriceIndicator,

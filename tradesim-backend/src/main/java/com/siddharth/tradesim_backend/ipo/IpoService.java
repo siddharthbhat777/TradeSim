@@ -481,9 +481,11 @@ public class IpoService {
                 ipoOffer.getStockId(),
                 ipoSubscription.getUserId(),
                 ipoOffer.getIssuePrice(),
+                ipoOffer.getSharesPerAllottee(),
                 ipoSubscription.getLockedAmount(),
                 ipoSubscription.getAllottedShares(),
                 ipoSubscription.getStatus(),
+                ipoOffer.getSubscriptionEndAt(),
                 exchange.getCurrency(),
                 ipoSubscription.getCreatedAt(),
                 ipoSubscription.getUpdatedAt()

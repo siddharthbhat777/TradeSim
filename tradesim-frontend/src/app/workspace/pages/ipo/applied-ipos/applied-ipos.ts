@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { IpoService } from '../../../../services/ipo/ipo-service';
 import { StockService } from '../../../../services/stock/stock-service';
 import { TradingAccountService } from '../../../../services/trading-account/trading-account-service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { IpoSubscriptionResponse } from '../../../../models/ipo';
 import { Stock } from '../../../../models/stock';
 import { Card } from '../../../../shared/components/card/card';
-import { Table, TableCellDirective, TableColumn } from '../../../../shared/components/table/table';
+import { Table, TableCellDirective, TableColumn, TableExpandedRowDirective } from '../../../../shared/components/table/table';
 import { CustomInput } from '../../../../shared/components/input/input';
 import { InputDirective } from '../../../../shared/directives/input';
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
@@ -27,6 +28,7 @@ export interface MappedIpoSubscription extends IpoSubscriptionResponse {
     Card,
     Table,
     TableCellDirective,
+    TableExpandedRowDirective,
     CustomInput,
     InputDirective,
     Dropdown,
@@ -43,6 +45,7 @@ export class AppliedIpos implements OnInit {
   private readonly ipoService = inject(IpoService);
   private readonly stockService = inject(StockService);
   private readonly tradingAccountService = inject(TradingAccountService);
+  private readonly toastService = inject(ToastService);
 
   readonly baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR');
 
@@ -121,6 +124,12 @@ export class AppliedIpos implements OnInit {
         });
       },
       error: () => this.isLoading.set(false)
+    });
+  }
+
+  copyId(id: string): void {
+    navigator.clipboard.writeText(id).then(() => {
+      this.toastService.success('Subscription ID copied to clipboard');
     });
   }
 }

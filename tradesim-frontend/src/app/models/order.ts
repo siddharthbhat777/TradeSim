@@ -14,12 +14,15 @@ export interface OrderHistoryResponse {
     symbol: string;
     side: 'BUY' | 'SELL';
     orderType: 'MARKET' | 'LIMIT';
+    timeInForce: 'DAY' | 'IOC' | 'GTC';
     quantity: number;
     filledQuantity: number;
     limitPrice: number | null;
     status: 'OPEN' | 'PARTIALLY_FILLED' | 'FILLED' | 'CANCELLED';
-    createdAt: string;
+    fundingCurrency: string;
+    expiresAt: string | null;
     currency: string;
+    createdAt: string;
 }
 
 export interface OrderEstimateResponse {

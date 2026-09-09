@@ -30,10 +30,12 @@ export interface IpoSubscriptionResponse {
     stockId: string;
     userId: string;
     issuePrice: number;
+    sharesPerAllottee: number;
     lockedAmount: number;
     allottedShares: number;
     status: IpoSubscriptionStatus;
+    subscriptionEndAt: string;
+    currency: string;
     createdAt: string;
     updatedAt: string;
-    currency: string;
 }
