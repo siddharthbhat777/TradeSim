@@ -18,8 +18,7 @@ const USER_MENU: NavItem[] = [
   { label: 'Market', route: 'market', icon: 'line-chart' },
   { label: 'Order', route: 'order', icon: 'shopping-cart' },
   { label: 'IPO Center', route: 'ipo', icon: 'landmark' },
-  { label: 'Wallet', route: 'wallet', icon: 'wallet' },
-  { label: 'Account', route: 'account', icon: 'user' }
+  { label: 'Wallet', route: 'wallet', icon: 'wallet' }
 ];
 
 @Component({
