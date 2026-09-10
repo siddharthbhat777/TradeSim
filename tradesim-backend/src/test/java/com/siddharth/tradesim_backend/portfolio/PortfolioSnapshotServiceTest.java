@@ -118,7 +118,8 @@ class PortfolioSnapshotServiceTest {
                 BigDecimal.valueOf(100),
                 BigDecimal.valueOf(50),
                 BigDecimal.valueOf(150),
-                totalValue.add(BigDecimal.valueOf(100))
+                totalValue.add(BigDecimal.valueOf(100)),
+                "INR"
         );
     }
 }

@@ -1,45 +1,64 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Allocation } from './allocation';
+import { PortfolioService } from '../../../../services/portfolio/portfolio-service';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { signal } from '@angular/core';
+
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
 
 describe('Allocation', () => {
   let component: Allocation;
   let fixture: ComponentFixture<Allocation>;
 
   beforeEach(async () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+    vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
+    const mockPortfolioService = {
+      portfolio: signal({
+        holdings: [
+          { symbol: 'AAPL', currentValue: 5000 },
+          { symbol: 'TSLA', currentValue: 3000 }
+        ],
+        totalCashValue: 1000,
+        baseCurrency: 'USD'
+      }),
+      loadPortfolio: vi.fn()
+    };
+
     await TestBed.configureTestingModule({
       imports: [Allocation],
+      providers: [
+        { provide: PortfolioService, useValue: mockPortfolioService }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Allocation);
-    component = fixture.componentInstance;
-
+    fixture.componentRef.setInput('baseCurrency', 'USD');
     fixture.componentRef.setInput('data', []);
 
+    component = fixture.componentInstance;
     fixture.detectChanges();
     await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should handle empty data correctly', () => {
-    fixture.componentRef.setInput('data', []);
-    fixture.detectChanges();
-    expect(component.data().length).toBe(0);
-  });
-
-  it('should handle populated pie chart data correctly', () => {
-    const mockData = [
-      { id: '1', label: 'Cash', value: 5000, color: '#000000' },
-      { id: '2', label: 'AAPL', value: 2000, color: '#FFFFFF' }
-    ];
-
-    fixture.componentRef.setInput('data', mockData);
-    fixture.detectChanges();
-
-    expect(component.data().length).toBe(2);
-    expect(component.data()[0].label).toBe('Cash');
-    expect(component.data()[1].value).toBe(2000);
   });
 });

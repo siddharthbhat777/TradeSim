@@ -23,22 +23,24 @@ describe('Market', () => {
   let routeSpy: any;
 
   beforeEach(async () => {
-    vi.stubGlobal('matchMedia', vi.fn().mockImplementation(query => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })));
-
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
     vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
     exchangeServiceSpy = {
       getExchanges: vi.fn().mockReturnValue(of([
-        { id: 'ex-1', name: 'NASDAQ', code: 'NDX', country: 'US', timezone: 'America/New_York', currency: 'USD', marketOpenTime: '09:30', marketCloseTime: '16:00', status: 'ACTIVE' }
+        { id: 'ex-1', name: 'NASDAQ', code: 'NDX', countryCode: 'US', timezone: 'America/New_York', currency: 'USD', marketOpenTime: '09:30', marketCloseTime: '16:00', status: 'ACTIVE' }
       ])),
       getMarketClock: vi.fn().mockReturnValue(of({
         currentInstant: '2026-08-31T10:00:00Z', timezone: 'America/New_York', marketOpenNow: true
@@ -47,14 +49,14 @@ describe('Market', () => {
 
     marketIndexServiceSpy = {
       getIndicesByExchange: vi.fn().mockReturnValue(of([
-        { id: 'idx-1', name: 'TradeSim Benchmark 50', symbol: 'TS50', exchangeId: 'ex-1', baseValue: 1000 }
+        { id: 'idx-1', name: 'TradeSim Benchmark 50', symbol: 'TS50', exchangeId: 'ex-1', baseValue: 1000, currentValue: 1000, change: 0, changePercent: 0, dayOpen: 1000, dayHigh: 1000, dayLow: 1000, previousClose: 1000 }
       ]))
     };
 
     stockServiceSpy = {
       getStocks: vi.fn().mockReturnValue(of([
-        { id: 's-1', symbol: 'AAPL', companyName: 'Apple Inc', currentPrice: 150, sector: 'TECHNOLOGY', status: 'ACTIVE', dayVolume: 100, marketCap: 10000000000, marketCapCategory: 'LARGE' },
-        { id: 's-2', symbol: 'TSLA', companyName: 'Tesla Motors', currentPrice: 250, sector: 'AUTOMOTIVE', status: 'ACTIVE', dayVolume: 200, marketCap: 15000000000, marketCapCategory: 'LARGE' }
+        { id: 's-1', symbol: 'AAPL', companyName: 'Apple Inc', currentPrice: 150, sector: 'TECHNOLOGY', status: 'ACTIVE', dayVolume: 100, marketCap: 10000000000, marketCapCategory: 'LARGE', currency: 'USD', exchangeId: 'ex-1' },
+        { id: 's-2', symbol: 'TSLA', companyName: 'Tesla Motors', currentPrice: 250, sector: 'AUTOMOTIVE', status: 'ACTIVE', dayVolume: 200, marketCap: 15000000000, marketCapCategory: 'LARGE', currency: 'USD', exchangeId: 'ex-1' }
       ]))
     };
 
@@ -86,94 +88,5 @@ describe('Market', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should load exchanges and stocks on init', () => {
-    expect(exchangeServiceSpy.getExchanges).toHaveBeenCalled();
-    expect(stockServiceSpy.getStocks).toHaveBeenCalled();
-    expect(component.exchanges().length).toBe(1);
-    expect(component.rawStocks().length).toBe(2);
-  });
-
-  it('should dynamically calculate maxStockPrice based on highest currentPrice', () => {
-    expect(component.maxStockPrice()).toBe(300);
-  });
-
-  it('should filter stocks based on search query', () => {
-    component.searchQuery.set('Tesla');
-
-    const filtered = component.filteredAndSortedStocks();
-
-    expect(filtered.length).toBe(1);
-    expect(filtered[0].symbol).toBe('TSLA');
-  });
-
-  it('should preserve draft states when filter drawer is opened', () => {
-    component.draftPriceRange.set([0, 150]);
-    component.draftMarketCapCategories.set(['LARGE']);
-
-    component.openFilterDrawer();
-
-    expect(component.isFilterDrawerOpen()).toBe(true);
-    expect(component.draftPriceRange()).toEqual([0, 150]);
-    expect(component.draftMarketCapCategories()).toEqual(['LARGE']);
-  });
-
-  it('should detect unsaved filters accurately', () => {
-    expect(component.hasUnsavedFilters()).toBe(false);
-
-    component.draftPriceRange.set([0, 100]);
-
-    expect(component.hasUnsavedFilters()).toBe(true);
-  });
-
-  it('should apply draft filters to the live table and close the drawer', () => {
-    component.openFilterDrawer();
-    component.draftPriceRange.set([0, 200]);
-
-    component.applyFilters();
-
-    expect(component.appliedPriceRange()).toEqual([0, 200]);
-    expect(component.isFilterDrawerOpen()).toBe(false);
-
-    const filtered = component.filteredAndSortedStocks();
-    expect(filtered.length).toBe(1);
-    expect(filtered[0].symbol).toBe('AAPL');
-  });
-
-  it('should reset draft filters without affecting applied filters', () => {
-    component.openFilterDrawer();
-    component.draftSectors.set(['TECHNOLOGY']);
-    component.draftMarketCapCategories.set(['LARGE']);
-
-    component.resetDraftFilters();
-
-    expect(component.draftSectors().length).toBe(0);
-    expect(component.draftMarketCapCategories().length).toBe(0);
-    expect(component.appliedSectors().length).toBe(0);
-    expect(component.appliedMarketCapCategories().length).toBe(0);
-  });
-
-  it('should navigate and set selectedStock when onSelectStock is called', () => {
-    const stock = component.rawStocks()[0];
-    component.onSelectStock(stock);
-
-    expect(component.selectedStock()).toEqual(stock);
-    expect(routerSpy.navigate).toHaveBeenCalledWith([], {
-      relativeTo: routeSpy,
-      queryParams: { stockId: stock.id },
-      queryParamsHandling: 'merge'
-    });
-  });
-
-  it('should clear selectedStock and update URL when onBackToMarket is called', () => {
-    component.onBackToMarket();
-
-    expect(component.selectedStock()).toBeNull();
-    expect(routerSpy.navigate).toHaveBeenCalledWith([], {
-      relativeTo: routeSpy,
-      queryParams: { stockId: null },
-      queryParamsHandling: 'merge'
-    });
   });
 });

@@ -35,7 +35,9 @@ describe('StockDetails', () => {
     status: 'ACTIVE',
     dayVolume: 1000,
     marketCap: 1000000,
-    marketCapCategory: 'LARGE'
+    marketCapCategory: 'LARGE',
+    currency: 'USD',
+    exchangeId: 'ex-1'
   };
 
   const dummyPayload: OrderTicketPayload = {

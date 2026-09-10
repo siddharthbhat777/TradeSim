@@ -44,7 +44,9 @@ class StockControllerTest {
                 StockStatus.ACTIVE,
                 0L,
                 BigDecimal.ZERO,
-                MarketCapCategory.UNKNOWN
+                MarketCapCategory.UNKNOWN,
+                "USD",
+                UUID.randomUUID()
         );
 
         when(stockService.fetchStocks()).thenReturn(List.of(stock));

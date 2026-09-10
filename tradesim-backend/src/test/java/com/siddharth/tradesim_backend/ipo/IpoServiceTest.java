@@ -135,8 +135,14 @@ class IpoServiceTest {
                 .status(StockStatus.HALTED)
                 .build();
 
+        Exchange exchange = Exchange.builder()
+                .id(stock.getExchangeId())
+                .currency("USD")
+                .build();
+
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(ipoOfferRepository.existsByStockIdAndStatusIn(eq(stockId), any())).thenReturn(false);
         when(ipoOfferRepository.save(any(IpoOffer.class))).thenAnswer(invocation -> {
             IpoOffer ipoOffer = invocation.getArgument(0);
@@ -189,9 +195,15 @@ class IpoServiceTest {
                 .status(StockStatus.HALTED)
                 .build();
 
+        Exchange exchange = Exchange.builder()
+                .id(stock.getExchangeId())
+                .currency("USD")
+                .build();
+
         when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
         when(ipoOfferRepository.save(any(IpoOffer.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         IpoOfferResponse response = ipoService.approveIpoOffer(ipoOfferId, adminUserId);
@@ -358,7 +370,9 @@ class IpoServiceTest {
                 StockStatus.ACTIVE,
                 0L,
                 BigDecimal.ZERO,
-                MarketCapCategory.UNKNOWN
+                MarketCapCategory.UNKNOWN,
+                "USD",
+                exchange.getId()
         );
 
         when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));

@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { vi } from 'vitest';
 import { Workspace } from './workspace';
 import { AuthService } from '../services/auth/auth-service';
 import { DialogService } from '../shared/components/dialog/dialog.service';
@@ -10,11 +9,12 @@ describe('Workspace', () => {
   let fixture: ComponentFixture<Workspace>;
 
   const mockAuthService = {
-    logout: vi.fn()
+    logout: () => ({ subscribe: () => { } })
   };
 
   const mockDialogService = {
-    open: vi.fn()
+    open: () => { },
+    close: () => { }
   };
 
   beforeEach(async () => {

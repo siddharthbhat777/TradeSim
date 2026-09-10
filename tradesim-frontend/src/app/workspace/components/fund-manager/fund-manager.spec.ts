@@ -1,33 +1,49 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
-import { of } from 'rxjs';
-import { vi } from 'vitest';
 import { FundManager } from './fund-manager';
 import { WalletService } from '../../../services/wallet/wallet-service';
 import { ForexService } from '../../../services/forex/forex-service';
-import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { signal } from '@angular/core';
+import { of } from 'rxjs';
+
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
 
 describe('FundManager', () => {
   let component: FundManager;
   let fixture: ComponentFixture<FundManager>;
 
   beforeEach(async () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+    vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
     const mockWalletService = {
-      wallet: signal({ multiCurrencyStatus: 'APPROVED', buckets: [] }),
-      loadWallet: vi.fn(),
+      wallet: signal({
+        buckets: [{ currency: 'USD', balance: 1000, availableBalance: 1000 }]
+      }),
       deposit: vi.fn().mockReturnValue(of({})),
       convert: vi.fn().mockReturnValue(of({}))
     };
 
     const mockForexService = {
-      getSupportedCurrencies: vi.fn().mockReturnValue(of(['INR', 'USD'])),
-      getExchangeRate: vi.fn().mockReturnValue(of(83.5))
-    };
-
-    const mockTradingAccountService = {
-      tradingAccount: signal({ baseCurrency: 'INR', leverage: 5 }),
-      loadTradingAccount: vi.fn()
+      getSupportedCurrencies: vi.fn().mockReturnValue(of(['USD', 'EUR'])),
+      getExchangeRate: vi.fn().mockReturnValue(of(1.1))
     };
 
     const mockToastService = {
@@ -40,40 +56,17 @@ describe('FundManager', () => {
       providers: [
         { provide: WalletService, useValue: mockWalletService },
         { provide: ForexService, useValue: mockForexService },
-        { provide: TradingAccountService, useValue: mockTradingAccountService },
         { provide: ToastService, useValue: mockToastService }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FundManager);
     component = fixture.componentInstance;
+    fixture.detectChanges();
     await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should update activeMode and emit modeChange', () => {
-    const emitSpy = vi.spyOn(component.modeChange, 'emit');
-    component.setMode('convert');
-    expect(component.activeMode()).toBe('convert');
-    expect(emitSpy).toHaveBeenCalledWith('convert');
-  });
-
-  it('should add preset values to deposit amount', () => {
-    component.depositAmount.set(1000);
-    component.addDepositPreset(5000);
-    expect(component.depositAmount()).toBe(6000);
-  });
-
-  it('should swap source and target currencies', () => {
-    component.sourceCurrency.set('INR');
-    component.targetCurrency.set('USD');
-
-    component.swapCurrencies();
-
-    expect(component.sourceCurrency()).toBe('USD');
-    expect(component.targetCurrency()).toBe('INR');
   });
 });

@@ -160,7 +160,9 @@ class ListingServiceTest {
                 StockStatus.HALTED,
                 0L,
                 BigDecimal.ZERO,
-                MarketCapCategory.UNKNOWN
+                MarketCapCategory.UNKNOWN,
+                "INR",
+                exchangeId
         );
 
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
