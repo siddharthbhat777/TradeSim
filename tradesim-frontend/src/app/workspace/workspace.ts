@@ -48,9 +48,6 @@ export class Workspace {
     this.isMobileMenuOpen.set(false);
   }
 
-  onSettingsClick(): void {
-  }
-
   onLogoutClick(): void {
     this.dialogService.open({
       title: 'Confirm Logout',

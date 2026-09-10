@@ -37,6 +37,11 @@ export const workspaceRoutes: Routes = [
                 title: 'Wallet'
             },
             {
+                path: 'settings',
+                loadComponent: () => import('./pages/settings/settings').then((module) => module.Settings),
+                title: 'Settings'
+            },
+            {
                 path: '**',
                 loadComponent: () => import('./pages/not-found/not-found').then((module) => module.NotFound),
                 title: 'Not found'

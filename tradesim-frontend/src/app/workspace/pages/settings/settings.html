@@ -1,0 +1,116 @@
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>Settings</h1>
+    </div>
+
+    <div class="settings-layout">
+        <nav class="settings-sidebar">
+            <button class="nav-item" [class.active]="activeTab() === 'profile'" (click)="setTab('profile')">Profile
+                Details</button>
+            <button class="nav-item" [class.active]="activeTab() === 'security'" (click)="setTab('security')">Security &
+                Access</button>
+            <button class="nav-item" [class.active]="activeTab() === 'preferences'" (click)="setTab('preferences')">App
+                Preferences</button>
+            <button class="nav-item" [class.active]="activeTab() === 'faqs'" (click)="setTab('faqs')">FAQs</button>
+        </nav>
+
+        <main class="settings-content">
+            @if (activeTab() === 'profile') {
+            <app-card>
+                <h2 class="section-title">Profile Details</h2>
+                <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
+                    <div class="form-grid">
+                        <app-input label="Full Name">
+                            <input appInput type="text" formControlName="fullName" />
+                        </app-input>
+                        <app-dropdown label="Country" [options]="countryOptions"
+                            formControlName="countryCode"></app-dropdown>
+                        <app-dropdown label="Linked Bank Name" [options]="currentBankOptions()"
+                            formControlName="linkedBankName"></app-dropdown>
+                        <app-input label="Base Currency">
+                            <input appInput type="text" formControlName="baseCurrency" />
+                        </app-input>
+                    </div>
+                    <div class="form-actions">
+                        <app-button type="submit" variant="primary">Save Changes</app-button>
+                    </div>
+                </form>
+            </app-card>
+            }
+
+            @if (activeTab() === 'security') {
+            <div class="security-sections">
+                <app-card>
+                    <h2 class="section-title">Change Password</h2>
+                    <form [formGroup]="securityForm" (ngSubmit)="onSaveSecurity()">
+                        <div class="form-stack">
+                            <app-input label="Current Password">
+                                <input appInput type="password" formControlName="currentPassword" />
+                            </app-input>
+                            <app-input label="New Password">
+                                <input appInput type="password" formControlName="newPassword" />
+                            </app-input>
+                            <app-input label="Confirm New Password">
+                                <input appInput type="password" formControlName="confirmPassword" />
+                            </app-input>
+                        </div>
+                        <div class="form-actions">
+                            <app-button type="submit" variant="primary">Update Password</app-button>
+                        </div>
+                    </form>
+                </app-card>
+
+                <app-card border="danger">
+                    <div class="danger-zone">
+                        <div class="danger-content">
+                            <h2 class="section-title text-danger">Danger Zone</h2>
+                            <p class="danger-description">Deactivating your account will suspend your trading
+                                activities. You can reactivate it later by logging in.</p>
+                        </div>
+                        <app-button variant="danger" (click)="onDeactivateAccount()">Deactivate Account</app-button>
+                    </div>
+                </app-card>
+            </div>
+            }
+
+            @if (activeTab() === 'preferences') {
+            <app-card>
+                <h2 class="section-title">App Preferences</h2>
+                <form [formGroup]="preferencesForm" (ngSubmit)="onSavePreferences()">
+                    <div class="form-stack">
+                        <app-dropdown label="Theme" [options]="themeOptions"
+                            formControlName="themePreference"></app-dropdown>
+                    </div>
+                    <div class="form-actions">
+                        <app-button type="submit" variant="primary">Save Preferences</app-button>
+                    </div>
+                </form>
+            </app-card>
+            }
+
+            @if (activeTab() === 'faqs') {
+            <app-card>
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <div class="faq-list">
+                    @for (faq of faqs(); track faq.question; let i = $index) {
+                    <div class="faq-item" [class.expanded]="expandedFaqIndex() === i">
+                        <button type="button" class="faq-question" (click)="toggleFaq(i)">
+                            <span class="faq-question-text">{{ faq.question }}</span>
+                            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        @if (expandedFaqIndex() === i) {
+                        <div class="faq-answer">
+                            <p>{{ faq.answer }}</p>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+            </app-card>
+            }
+        </main>
+    </div>
+</div>

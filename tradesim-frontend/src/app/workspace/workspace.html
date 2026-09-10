@@ -77,7 +77,8 @@
         </nav>
 
         <div class="workspace__sidebar-footer">
-            <button class="workspace__nav-link" (click)="onSettingsClick()">
+            <button class="workspace__nav-link" routerLink="settings" routerLinkActive="workspace__nav-link--active"
+                (click)="closeMobileMenu()">
                 <div class="workspace__tooltip-layer">
                     <app-tooltip [text]="isCollapsed() ? 'Settings' : ''" position="right">
                         <div class="workspace__tooltip-trigger"></div>
