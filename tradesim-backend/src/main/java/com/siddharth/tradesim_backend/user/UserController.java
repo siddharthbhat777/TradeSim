@@ -1,13 +1,16 @@
 package com.siddharth.tradesim_backend.user;
 
+import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleRequest;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleResponse;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusRequest;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
+import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -17,6 +20,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+
+    @GetMapping("me")
+    public ResponseEntity<UserProfileResponse> getMyProfile(@AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(userService.fetchUserProfile(principal.getUserId()));
+    }
 
     @PutMapping("change/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")

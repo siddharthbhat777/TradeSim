@@ -68,12 +68,12 @@ class CompanyOnboardingControllerTest {
 
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
                 new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
-                new RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123", "US", null)
+                new RegisterRequest("Apple Rep", "apple_representative", "apple_representative@example.com", "Representative@123", "Silicon Valley Bank", "US", null)
         );
 
         CompanyOnboardingResponse response = new CompanyOnboardingResponse(
                 new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE),
-                new RegisterResponse(representativeId, "apple_representative", "apple_representative@example.com", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
+                new RegisterResponse(representativeId, "Apple Rep", "apple_representative", "apple_representative@example.com", "Silicon Valley Bank", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
                 new CompanyRepresentativeAssignmentResponse(
                         UUID.randomUUID(), companyId, representativeId, adminId,
                         CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,

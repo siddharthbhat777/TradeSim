@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
+import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
@@ -92,11 +93,14 @@ public class AuthService {
 
         try {
             User user = User.builder()
+                    .fullName(request.fullName())
                     .username(request.username())
                     .email(request.email())
                     .password(passwordEncoder.encode(request.password()))
+                    .linkedBankName(request.linkedBankName())
                     .role(role)
                     .accountStatus(AccountStatus.ACTIVE)
+                    .themePreference(ThemePreference.SYSTEM)
                     .countryCode(request.countryCode())
                     .bankBalance(new BigDecimal("10000000.0000"))
                     .build();
@@ -109,8 +113,10 @@ public class AuthService {
 
             return new RegisterResponse(
                     saved.getId(),
+                    saved.getFullName(),
                     saved.getUsername(),
                     saved.getEmail(),
+                    saved.getLinkedBankName(),
                     saved.getRole(),
                     saved.getAccountStatus()
             );

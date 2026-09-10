@@ -6,6 +6,10 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
+        @NotBlank(message = "Full name is required")
+        @Size(max = 100, message = "Full name must not exceed 100 characters")
+        String fullName,
+
         @NotBlank(message = "Username is required")
         String username,
 
@@ -19,6 +23,10 @@ public record RegisterRequest(
                 message = "Password must be at least 8 characters long and contain one uppercase letter, one number, and one special character"
         )
         String password,
+
+        @NotBlank(message = "Linked bank name is required")
+        @Size(max = 100, message = "Linked bank name must not exceed 100 characters")
+        String linkedBankName,
 
         @NotBlank(message = "Country code is required (e.g., IN, US)")
         @Size(min = 2, max = 2, message = "Country code must be exactly 2 characters")

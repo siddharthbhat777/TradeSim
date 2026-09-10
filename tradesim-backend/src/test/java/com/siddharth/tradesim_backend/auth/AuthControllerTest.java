@@ -53,12 +53,14 @@ class AuthControllerTest {
 
     @Test
     void shouldRegisterSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest("sid", "sid@test.com", "Password@123", "IN", null);
+        RegisterRequest request = new RegisterRequest("Siddharth Bhat", "sid", "sid@test.com", "Password@123", "HDFC Bank", "IN", null);
 
         RegisterResponse response = new RegisterResponse(
                 UUID.randomUUID(),
+                "Siddharth Bhat",
                 "sid",
                 "sid@test.com",
+                "HDFC Bank",
                 Role.USER,
                 AccountStatus.ACTIVE
         );
@@ -67,6 +69,8 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fullName").value("Siddharth Bhat"))
+                .andExpect(jsonPath("$.linkedBankName").value("HDFC Bank"))
                 .andExpect(jsonPath("$.username").value("sid"))
                 .andExpect(jsonPath("$.email").value("sid@test.com"))
                 .andExpect(jsonPath("$.role").value("USER"))
@@ -80,6 +84,7 @@ class AuthControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
+                                          "fullName": "Siddharth Bhat",
                                           "username": "sid",
                                           "email": "sid@test.com",
                                         """)
@@ -92,13 +97,15 @@ class AuthControllerTest {
 
     @Test
     void validationFailureShouldReturnFieldErrors() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "bad-email", "weak", "", null);
+        RegisterRequest request = new RegisterRequest("", "", "bad-email", "weak", "", "", null);
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.fullName").exists())
+                .andExpect(jsonPath("$.fieldErrors.linkedBankName").exists())
                 .andExpect(jsonPath("$.fieldErrors.username").value("Username is required"))
                 .andExpect(jsonPath("$.fieldErrors.email").value("Invalid email format"))
                 .andExpect(jsonPath("$.fieldErrors.password").exists())

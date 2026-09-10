@@ -2,12 +2,14 @@ package com.siddharth.tradesim_backend.user;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
+import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleRequest;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleResponse;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusRequest;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
+import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,11 +21,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,6 +45,54 @@ class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Test
+    void authenticatedUserShouldFetchOwnProfile() throws Exception {
+        UUID userId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .username("sid")
+                .password("password")
+                .role(Role.USER)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        UserPrincipal principal = new UserPrincipal(user);
+
+        UserProfileResponse response = new UserProfileResponse(
+                userId,
+                "Siddharth Bhat",
+                "sid",
+                "sid@test.com",
+                "HDFC Bank",
+                Role.USER,
+                AccountStatus.ACTIVE,
+                ThemePreference.SYSTEM,
+                "IN",
+                BigDecimal.valueOf(10000),
+                null
+        );
+
+        when(userService.fetchUserProfile(eq(userId))).thenReturn(response);
+
+        mockMvc.perform(
+                        get("/users/me")
+                                .with(authentication(
+                                        new UsernamePasswordAuthenticationToken(
+                                                principal,
+                                                null,
+                                                principal.getAuthorities()
+                                        )
+                                ))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId.toString()))
+                .andExpect(jsonPath("$.fullName").value("Siddharth Bhat"))
+                .andExpect(jsonPath("$.linkedBankName").value("HDFC Bank"))
+                .andExpect(jsonPath("$.themePreference").value("SYSTEM"))
+                .andExpect(jsonPath("$.username").value("sid"));
+    }
 
     @Test
     void adminShouldChangeUserStatus() throws Exception {

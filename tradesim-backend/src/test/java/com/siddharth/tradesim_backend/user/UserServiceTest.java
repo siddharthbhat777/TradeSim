@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.user;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
+import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
@@ -10,18 +11,21 @@ import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
+import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,6 +47,34 @@ class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
+
+    @Test
+    void shouldFetchUserProfileSuccessfully() {
+        UUID userId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .fullName("Siddharth Bhat")
+                .username("sid")
+                .email("sid@test.com")
+                .linkedBankName("HDFC Bank")
+                .role(Role.USER)
+                .accountStatus(AccountStatus.ACTIVE)
+                .themePreference(ThemePreference.SYSTEM)
+                .countryCode("IN")
+                .bankBalance(BigDecimal.valueOf(1000000))
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        UserProfileResponse response = userService.fetchUserProfile(userId);
+
+        assertEquals(userId, response.id());
+        assertEquals("Siddharth Bhat", response.fullName());
+        assertEquals("HDFC Bank", response.linkedBankName());
+        assertEquals(ThemePreference.SYSTEM, response.themePreference());
+        assertEquals("IN", response.countryCode());
+    }
 
     @Test
     void shouldThrowExceptionWhenUserNotFound() {
@@ -100,6 +132,7 @@ class UserServiceTest {
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
         when(orderRepository.findByUserIdAndStatusIn(eq(userId), eq(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED)))).thenReturn(List.of(openOrder, partialOrder));
+        when(authRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         userService.changeStatus(userId, AccountStatus.BANNED);
 
@@ -119,6 +152,7 @@ class UserServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(authRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         userService.changeStatus(userId, AccountStatus.SUSPENDED);
 
@@ -139,6 +173,7 @@ class UserServiceTest {
                 .build();
 
         when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(authRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         userService.changeRole(userId, Role.COMPANY_REPRESENTATIVE);
 

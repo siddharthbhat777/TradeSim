@@ -61,9 +61,11 @@ class AuthServiceTest {
     void shouldRegisterCompanyRepresentativeSuccessfully() {
         UUID userId = UUID.randomUUID();
         RegisterRequest request = new RegisterRequest(
+                "Representative One",
                 "representative1",
                 "representative1@example.com",
                 "Representative@123",
+                "HDFC Bank",
                 "IN",
                 null
         );
@@ -81,6 +83,8 @@ class AuthServiceTest {
 
         assertNotNull(response);
         assertEquals(userId, response.id());
+        assertEquals("Representative One", response.fullName());
+        assertEquals("HDFC Bank", response.linkedBankName());
         assertEquals(Role.COMPANY_REPRESENTATIVE, response.role());
         assertEquals(AccountStatus.ACTIVE, response.accountStatus());
         verify(tradingAccountService).createTradingAccountForUser(userId, "INR");
@@ -90,9 +94,11 @@ class AuthServiceTest {
     @Test
     void shouldThrowWhenBaseCurrencyMissingForUnsupportedCountry() {
         RegisterRequest request = new RegisterRequest(
+                "Mexico User",
                 "mexico_user",
                 "mx@example.com",
                 "Password@123",
+                "Citibanamex",
                 "MX",
                 null
         );
@@ -109,9 +115,11 @@ class AuthServiceTest {
     void shouldRegisterWithExplicitBaseCurrencyForUnsupportedCountry() {
         UUID userId = UUID.randomUUID();
         RegisterRequest request = new RegisterRequest(
+                "Mexico User",
                 "mexico_user",
                 "mx@example.com",
                 "Password@123",
+                "Citibanamex",
                 "MX",
                 "EUR"
         );

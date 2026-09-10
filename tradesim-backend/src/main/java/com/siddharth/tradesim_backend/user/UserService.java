@@ -12,10 +12,10 @@ import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleResponse;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
-import jakarta.transaction.Transactional;
+import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,66 +28,73 @@ public class UserService {
     private final OrderLifecycleService orderLifecycleService;
     private final CompanyRepresentativeAssignmentRepository companyRepresentativeAssignmentRepository;
 
+    @Transactional(readOnly = true)
+    public UserProfileResponse fetchUserProfile(UUID userId) {
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+
+        return new UserProfileResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getLinkedBankName(),
+                user.getRole(),
+                user.getAccountStatus(),
+                user.getThemePreference(),
+                user.getCountryCode(),
+                user.getBankBalance(),
+                user.getLastLogin()
+        );
+    }
+
     @Transactional
     public ChangeUserStatusResponse changeStatus(UUID userId, AccountStatus status) {
         User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
-        if (user.getAccountStatus().equals(AccountStatus.BANNED)) throw UserException.conflict("Cannot change status of banned user");
-        if (status.equals(AccountStatus.DEACTIVATED)) throw UserException.conflict("Account can only be deactivated by account owner");
-        try {
-            if (status.equals(AccountStatus.BANNED)) {
-                List<Order> openOrders = orderRepository.findByUserIdAndStatusIn(userId, List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED));
 
-                for (Order order : openOrders) {
-                    orderLifecycleService.cancelOrder(order);
-                }
-            }
-            user.setAccountStatus(status);
-            authRepository.save(user);
-            return new ChangeUserStatusResponse(
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getRole(),
-                    user.getAccountStatus()
-            );
-        } catch (DataIntegrityViolationException e) {
-            throw UserException.badRequest("Invalid status data");
+        if (user.getAccountStatus() == AccountStatus.BANNED) {
+            throw UserException.conflict("Cannot change status of a BANNED user");
         }
+
+        if (status == AccountStatus.DEACTIVATED) {
+            throw UserException.conflict("Only users can deactivate their own accounts");
+        }
+
+        if (status == AccountStatus.BANNED) {
+            List<Order> openOrders = orderRepository.findByUserIdAndStatusIn(userId, List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED));
+
+            for (Order order : openOrders) {
+                orderLifecycleService.cancelOrder(order);
+            }
+        }
+
+        user.setAccountStatus(status);
+        User saved = authRepository.save(user);
+
+        return new ChangeUserStatusResponse(saved.getId(), saved.getUsername(), saved.getEmail(), saved.getRole(), saved.getAccountStatus());
     }
 
     @Transactional
     public ChangeUserRoleResponse changeRole(UUID userId, Role role) {
         User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
 
-        if (user.getRole() == Role.ADMIN) {
-            throw UserException.conflict("Cannot change role of admin user");
-        }
-
         if (role == Role.ADMIN) {
-            throw UserException.conflict("Admin role cannot be assigned through this endpoint");
+            throw UserException.conflict("Admin role assignment is forbidden via API");
         }
 
-        if (user.getRole() == role) {
-            throw UserException.conflict("User already has this role");
+        if (user.getRole() == Role.ADMIN) {
+            throw UserException.conflict("Cannot change role of an Admin user");
         }
 
-        if (user.getRole() == Role.COMPANY_REPRESENTATIVE && role == Role.USER && companyRepresentativeAssignmentRepository.existsByUserIdAndStatus(userId, CompanyRepresentativeAssignmentStatus.ACTIVE)) {
-            throw UserException.conflict("Revoke active company representative assignments before changing role");
+        if (user.getRole() == Role.COMPANY_REPRESENTATIVE && role == Role.USER) {
+            boolean hasActiveAssignments = companyRepresentativeAssignmentRepository.existsByUserIdAndStatus(userId, CompanyRepresentativeAssignmentStatus.ACTIVE);
+            if (hasActiveAssignments) {
+                throw UserException.conflict("Cannot demote Company Representative with active company assignments");
+            }
         }
 
-        try {
-            user.setRole(role);
-            authRepository.save(user);
+        user.setRole(role);
+        User saved = authRepository.save(user);
 
-            return new ChangeUserRoleResponse(
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getRole(),
-                    user.getAccountStatus()
-            );
-        } catch (DataIntegrityViolationException e) {
-            throw UserException.badRequest("Invalid role data");
-        }
+        return new ChangeUserRoleResponse(saved.getId(), saved.getUsername(), saved.getEmail(), saved.getRole(), saved.getAccountStatus());
     }
 }
