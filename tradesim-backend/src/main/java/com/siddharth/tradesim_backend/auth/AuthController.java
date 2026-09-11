@@ -40,9 +40,21 @@ public class AuthController {
     @Value("${auth.refresh-token.cookie-same-site}")
     private String refreshTokenCookieSameSite;
 
+    @PostMapping("otp/send")
+    public ResponseEntity<Void> requestOtp(@Valid @RequestBody SendOtpRequest request) {
+        authService.requestOtp(request);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(request));
+    }
+
+    @PostMapping("password/reset")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("login")
@@ -69,6 +81,7 @@ public class AuthController {
     }
 
     @PostMapping("deactivate")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deactivate(@Valid @RequestBody DeactivateRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         authService.deactivateAccount(principal.getUserId(), request);
         return ResponseEntity.noContent()

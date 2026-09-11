@@ -50,13 +50,15 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/register",
                                 "/auth/reactivate",
-                                "/auth/refresh"
+                                "/auth/refresh",
+                                "/auth/otp/send",
+                                "/auth/password/reset"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
+                        .authenticationEntryPoint((request, response, _) ->
                                 apiErrorResponseWriter.write(
                                         response,
                                         HttpStatus.UNAUTHORIZED,
@@ -65,7 +67,7 @@ public class SecurityConfig {
                                         request.getRequestURI()
                                 )
                         )
-                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                        .accessDeniedHandler((request, response, _) ->
                                 apiErrorResponseWriter.write(
                                         response,
                                         HttpStatus.FORBIDDEN,

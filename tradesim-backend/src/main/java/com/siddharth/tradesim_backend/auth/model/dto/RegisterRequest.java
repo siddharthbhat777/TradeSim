@@ -28,12 +28,14 @@ public record RegisterRequest(
         @Size(max = 100, message = "Linked bank name must not exceed 100 characters")
         String linkedBankName,
 
-        @NotBlank(message = "Country code is required (e.g., IN, US)")
+        @NotBlank(message = "Country code is required")
         @Size(min = 2, max = 2, message = "Country code must be exactly 2 characters")
-        @Pattern(regexp = "^[A-Z]{2}$", message = "Country code must be a valid 2-letter uppercase ISO code")
         String countryCode,
 
         @Pattern(regexp = "^[A-Z]{3}$", message = "Base currency must be a valid 3-letter ISO code")
-        String baseCurrency
+        String baseCurrency,
+
+        @NotBlank(message = "OTP is required")
+        String otp
 ) {
 }

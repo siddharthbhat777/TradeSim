@@ -6,6 +6,7 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.auth.service.OtpService;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
@@ -14,6 +15,7 @@ import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.user.dto.BankBalanceRequest;
 import com.siddharth.tradesim_backend.user.dto.BankBalanceResponse;
+import com.siddharth.tradesim_backend.user.dto.ChangePasswordRequest;
 import com.siddharth.tradesim_backend.user.dto.EditProfileRequest;
 import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
 import org.junit.jupiter.api.Test;
@@ -52,6 +54,9 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private OtpService otpService;
 
     @InjectMocks
     private UserService userService;
@@ -146,6 +151,60 @@ class UserServiceTest {
         when(passwordEncoder.matches("wrongpass", "encoded")).thenReturn(false);
 
         assertThrows(AuthException.class, () -> userService.fetchBankBalance(userId, request));
+    }
+
+    @Test
+    void shouldChangePasswordSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        ChangePasswordRequest request = new ChangePasswordRequest("oldpass", "NewPass@123");
+
+        User user = User.builder()
+                .id(userId)
+                .password("encoded")
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldpass", "encoded")).thenReturn(true);
+        when(passwordEncoder.matches("NewPass@123", "encoded")).thenReturn(false);
+        when(passwordEncoder.encode("NewPass@123")).thenReturn("newEncoded");
+
+        userService.changePassword(userId, request);
+
+        assertEquals("newEncoded", user.getPassword());
+        verify(authRepository).save(user);
+    }
+
+    @Test
+    void shouldThrowWhenInvalidCurrentPasswordForChangePassword() {
+        UUID userId = UUID.randomUUID();
+        ChangePasswordRequest request = new ChangePasswordRequest("wrongpass", "NewPass@123");
+
+        User user = User.builder()
+                .id(userId)
+                .password("encoded")
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpass", "encoded")).thenReturn(false);
+
+        assertThrows(AuthException.class, () -> userService.changePassword(userId, request));
+    }
+
+    @Test
+    void shouldThrowWhenNewPasswordIsSameAsCurrentPassword() {
+        UUID userId = UUID.randomUUID();
+        ChangePasswordRequest request = new ChangePasswordRequest("oldpass", "oldpass");
+
+        User user = User.builder()
+                .id(userId)
+                .password("encoded")
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldpass", "encoded")).thenReturn(true);
+
+        UserException exception = assertThrows(UserException.class, () -> userService.changePassword(userId, request));
+        assertEquals("New password cannot be the same as the current password", exception.getMessage());
     }
 
     @Test

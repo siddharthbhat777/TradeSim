@@ -8,6 +8,10 @@ public class AuthException extends BusinessException {
         super(status, errorCode, message);
     }
 
+    public static AuthException notFound(String message) {
+        return new AuthException(HttpStatus.NOT_FOUND, "AUTH_NOT_FOUND", message);
+    }
+
     public static AuthException unauthorized(String message) {
         return new AuthException(HttpStatus.UNAUTHORIZED, "AUTH_UNAUTHORIZED", message);
     }

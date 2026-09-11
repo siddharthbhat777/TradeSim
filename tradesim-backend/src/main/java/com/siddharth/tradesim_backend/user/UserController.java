@@ -1,14 +1,7 @@
 package com.siddharth.tradesim_backend.user;
 
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.user.dto.BankBalanceRequest;
-import com.siddharth.tradesim_backend.user.dto.BankBalanceResponse;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleRequest;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleResponse;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusRequest;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
-import com.siddharth.tradesim_backend.user.dto.EditProfileRequest;
-import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
+import com.siddharth.tradesim_backend.user.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +25,23 @@ public class UserController {
     @PutMapping("profile/edit")
     public ResponseEntity<UserProfileResponse> editProfile(@Valid @RequestBody EditProfileRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(userService.editProfile(principal.getUserId(), request));
+    }
+
+    @PutMapping("password/change")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        userService.changePassword(principal.getUserId(), request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("email/change/initiate")
+    public ResponseEntity<Void> initiateEmailChange(@Valid @RequestBody InitiateEmailChangeRequest request) {
+        userService.initiateEmailChange(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("email/change/verify")
+    public ResponseEntity<UserProfileResponse> verifyEmailChange(@Valid @RequestBody VerifyEmailChangeRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(userService.verifyEmailChange(principal.getUserId(), request));
     }
 
     @PostMapping("profile/bank-balance")

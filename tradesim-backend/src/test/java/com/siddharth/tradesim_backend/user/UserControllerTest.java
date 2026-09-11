@@ -5,14 +5,7 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
-import com.siddharth.tradesim_backend.user.dto.BankBalanceRequest;
-import com.siddharth.tradesim_backend.user.dto.BankBalanceResponse;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleRequest;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleResponse;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusRequest;
-import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
-import com.siddharth.tradesim_backend.user.dto.EditProfileRequest;
-import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
+import com.siddharth.tradesim_backend.user.dto.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +22,8 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -163,6 +158,43 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bankBalance").value(10000));
+    }
+
+    @Test
+    void shouldChangePasswordSuccessfully() throws Exception {
+        UUID userId = UUID.randomUUID();
+        User admin = User.builder().id(userId).username("admin").password("password").role(Role.USER).accountStatus(AccountStatus.ACTIVE).build();
+        UserPrincipal principal = new UserPrincipal(admin);
+
+        ChangePasswordRequest request = new ChangePasswordRequest("OldPass@123", "NewPass@123");
+
+        mockMvc.perform(put("/users/password/change")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(userService).changePassword(eq(userId), any(ChangePasswordRequest.class));
+    }
+
+    @Test
+    void shouldReturnConflictWhenNewPasswordIsSameAsCurrentPassword() throws Exception {
+        UUID userId = UUID.randomUUID();
+        User admin = User.builder().id(userId).username("admin").password("password").role(Role.USER).accountStatus(AccountStatus.ACTIVE).build();
+        UserPrincipal principal = new UserPrincipal(admin);
+
+        ChangePasswordRequest request = new ChangePasswordRequest("OldPass@123", "OldPass@123");
+
+        doThrow(UserException.conflict("New password cannot be the same as the current password"))
+                .when(userService).changePassword(eq(userId), any(ChangePasswordRequest.class));
+
+        mockMvc.perform(put("/users/password/change")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("USER_CONFLICT"))
+                .andExpect(jsonPath("$.message").value("New password cannot be the same as the current password"));
     }
 
     @Test

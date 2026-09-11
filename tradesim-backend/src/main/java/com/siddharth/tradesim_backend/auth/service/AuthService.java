@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.repository.RefreshTokenRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
+import com.siddharth.tradesim_backend.auth.enums.OtpPurpose;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.AuthException;
@@ -44,34 +45,58 @@ public class AuthService {
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final OtpService otpService;
+
+    @Transactional
+    public void requestOtp(SendOtpRequest request) {
+        if (request.purpose() == OtpPurpose.REGISTRATION && authRepository.existsByEmail(request.email())) {
+            throw AuthException.conflict("Email is already registered");
+        }
+
+        if (request.purpose() == OtpPurpose.FORGOT_PASSWORD && !authRepository.existsByEmail(request.email())) {
+            throw AuthException.notFound("User not found");
+        }
+
+        otpService.generateAndSendOtp(request.email(), request.purpose());
+    }
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.REGISTRATION);
         return registerUserWithRole(request, Role.USER);
     }
 
     @Transactional
     public RegisterResponse registerCompanyRepresentative(RegisterRequest request) {
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.REGISTRATION);
         return registerUserWithRole(request, Role.COMPANY_REPRESENTATIVE);
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.FORGOT_PASSWORD);
+
+        User user = authRepository.findByUsernameOrEmail(request.email())
+                .orElseThrow(() -> AuthException.notFound("User not found"));
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        authRepository.save(user);
+
+        refreshTokenRepository.revokeActiveTokensForUser(user.getId(), Instant.now());
     }
 
     @Transactional
     public AuthTokenResult loginUser(LoginRequest request) {
         User user = authenticateCredentials(request.usernameOrEmail(), request.password());
-
         assertCanLogin(user);
-
         return issueTokens(user);
     }
 
     @Transactional
     public AuthTokenResult reactivateAccount(ReactivateRequest request) {
         User user = authenticateCredentials(request.usernameOrEmail(), request.password());
-
         assertCanReactivate(user);
-
         user.setAccountStatus(AccountStatus.ACTIVE);
-
         return issueTokens(user);
     }
 
@@ -161,20 +186,16 @@ public class AuthService {
 
     private String resolveBaseCurrency(String countryCode, String requestedBaseCurrency) {
         String countryCurrency = resolveNativeCurrencyFromCountryCode(countryCode);
-
         if (countryCurrency != null && isSupportedCurrency(countryCurrency)) {
             return countryCurrency;
         }
-
         if (requestedBaseCurrency == null || requestedBaseCurrency.isBlank()) {
             throw AuthException.badRequest("Base currency is required because your country's native currency is not supported for wallets");
         }
-
         String candidate = requestedBaseCurrency.trim().toUpperCase();
         if (isSupportedCurrency(candidate)) {
             return candidate;
         }
-
         throw AuthException.badRequest("Selected base currency is not supported");
     }
 

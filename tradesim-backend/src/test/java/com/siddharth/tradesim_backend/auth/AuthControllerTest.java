@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.auth;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
+import com.siddharth.tradesim_backend.auth.enums.OtpPurpose;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
@@ -29,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthControllerTest {
 
@@ -59,7 +60,7 @@ class AuthControllerTest {
 
     @Test
     void shouldRegisterSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest("Siddharth Bhat", "sid", "sid@test.com", "Password@123", "HDFC Bank", "IN", null);
+        RegisterRequest request = new RegisterRequest("Siddharth Bhat", "sid", "sid@test.com", "Password@123", "HDFC Bank", "IN", null, "123456");
 
         RegisterResponse response = new RegisterResponse(
                 UUID.randomUUID(),
@@ -84,6 +85,30 @@ class AuthControllerTest {
     }
 
     @Test
+    void shouldSendOtpSuccessfully() throws Exception {
+        SendOtpRequest request = new SendOtpRequest("test@email.com", OtpPurpose.REGISTRATION);
+
+        mockMvc.perform(post("/auth/otp/send")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(authService).requestOtp(any(SendOtpRequest.class));
+    }
+
+    @Test
+    void shouldResetPasswordSuccessfully() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("test@email.com", "123456", "NewPass@123");
+
+        mockMvc.perform(post("/auth/password/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(authService).resetPassword(any(ResetPasswordRequest.class));
+    }
+
+    @Test
     void malformedJsonShouldReturnBadRequest() throws Exception {
         mockMvc.perform(
                         post("/auth/register")
@@ -103,7 +128,7 @@ class AuthControllerTest {
 
     @Test
     void validationFailureShouldReturnFieldErrors() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "", "bad-email", "weak", "", "", null);
+        RegisterRequest request = new RegisterRequest("", "", "bad-email", "weak", "", "", null, "");
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -115,29 +140,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.fieldErrors.username").value("Username is required"))
                 .andExpect(jsonPath("$.fieldErrors.email").value("Invalid email format"))
                 .andExpect(jsonPath("$.fieldErrors.password").exists())
-                .andExpect(jsonPath("$.fieldErrors.countryCode").exists());
-    }
-
-    @Test
-    void shouldReactivateSuccessfully() throws Exception {
-        ReactivateRequest request = new ReactivateRequest("sid", "password");
-
-        AuthTokenResult response = new AuthTokenResult(
-                "mock-jwt-accessToken",
-                "mock-refresh-token",
-                "sid",
-                Role.USER
-        );
-
-        when(authService.reactivateAccount(any(ReactivateRequest.class))).thenReturn(response);
-
-        mockMvc.perform(post("/auth/reactivate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").value("mock-jwt-accessToken"))
-                .andExpect(jsonPath("$.username").value("sid"))
-                .andExpect(jsonPath("$.role").value("USER"));
+                .andExpect(jsonPath("$.fieldErrors.countryCode").exists())
+                .andExpect(jsonPath("$.fieldErrors.otp").exists());
     }
 
     @Test

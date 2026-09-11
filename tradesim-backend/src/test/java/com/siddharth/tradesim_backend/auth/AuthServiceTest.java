@@ -8,6 +8,7 @@ import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.repository.RefreshTokenRepository;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
+import com.siddharth.tradesim_backend.auth.service.OtpService;
 import com.siddharth.tradesim_backend.auth.service.RefreshTokenService;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
 import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
@@ -17,9 +18,9 @@ import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.wallet.WalletService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,14 +29,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -70,8 +66,27 @@ class AuthServiceTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
-    @InjectMocks
+    @Mock
+    private OtpService otpService;
+
     private AuthService authService;
+
+    @BeforeEach
+    void setUp() {
+        authService = new AuthService(
+                authRepository,
+                passwordEncoder,
+                jwtService,
+                tradingAccountService,
+                walletService,
+                refreshTokenService,
+                supportedCurrencyRepository,
+                orderRepository,
+                orderLifecycleService,
+                refreshTokenRepository,
+                otpService
+        );
+    }
 
     @Test
     void shouldRegisterCompanyRepresentativeSuccessfully() {
@@ -83,7 +98,8 @@ class AuthServiceTest {
                 "Representative@123",
                 "HDFC Bank",
                 "IN",
-                null
+                null,
+                "123456"
         );
 
         when(authRepository.existsByEmail(request.email())).thenReturn(false);
@@ -116,7 +132,8 @@ class AuthServiceTest {
                 "Password@123",
                 "Citibanamex",
                 "MX",
-                null
+                null,
+                "123456"
         );
 
         when(authRepository.existsByEmail(request.email())).thenReturn(false);
@@ -137,7 +154,8 @@ class AuthServiceTest {
                 "Password@123",
                 "Citibanamex",
                 "MX",
-                "EUR"
+                "EUR",
+                "123456"
         );
 
         SupportedCurrency eurCurrency = SupportedCurrency.builder().code("EUR").isActive(true).build();
