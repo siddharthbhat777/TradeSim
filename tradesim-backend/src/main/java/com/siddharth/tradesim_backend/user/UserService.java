@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.user;
 
+import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
@@ -10,10 +11,14 @@ import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
+import com.siddharth.tradesim_backend.user.dto.BankBalanceRequest;
+import com.siddharth.tradesim_backend.user.dto.BankBalanceResponse;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserRoleResponse;
 import com.siddharth.tradesim_backend.user.dto.ChangeUserStatusResponse;
+import com.siddharth.tradesim_backend.user.dto.EditProfileRequest;
 import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +32,7 @@ public class UserService {
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
     private final CompanyRepresentativeAssignmentRepository companyRepresentativeAssignmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public UserProfileResponse fetchUserProfile(UUID userId) {
@@ -42,9 +48,31 @@ public class UserService {
                 user.getAccountStatus(),
                 user.getThemePreference(),
                 user.getCountryCode(),
-                user.getBankBalance(),
                 user.getLastLogin()
         );
+    }
+
+    @Transactional
+    public UserProfileResponse editProfile(UUID userId, EditProfileRequest request) {
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+
+        user.setFullName(request.fullName());
+        user.setLinkedBankName(request.linkedBankName());
+
+        User saved = authRepository.save(user);
+
+        return fetchUserProfile(saved.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public BankBalanceResponse fetchBankBalance(UUID userId, BankBalanceRequest request) {
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw AuthException.unauthorized("Invalid password");
+        }
+
+        return new BankBalanceResponse(user.getBankBalance());
     }
 
     @Transactional

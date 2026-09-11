@@ -1,22 +1,27 @@
 package com.siddharth.tradesim_backend.user;
 
-import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.model.Order;
 import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
+import com.siddharth.tradesim_backend.user.dto.BankBalanceRequest;
+import com.siddharth.tradesim_backend.user.dto.BankBalanceResponse;
+import com.siddharth.tradesim_backend.user.dto.EditProfileRequest;
 import com.siddharth.tradesim_backend.user.dto.UserProfileResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -44,6 +49,9 @@ class UserServiceTest {
 
     @Mock
     private CompanyRepresentativeAssignmentRepository companyRepresentativeAssignmentRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -74,6 +82,70 @@ class UserServiceTest {
         assertEquals("HDFC Bank", response.linkedBankName());
         assertEquals(ThemePreference.SYSTEM, response.themePreference());
         assertEquals("IN", response.countryCode());
+    }
+
+    @Test
+    void shouldEditProfileSuccessfully() {
+        UUID userId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .fullName("Old Name")
+                .username("sid")
+                .email("sid@test.com")
+                .linkedBankName("Old Bank")
+                .role(Role.USER)
+                .accountStatus(AccountStatus.ACTIVE)
+                .themePreference(ThemePreference.SYSTEM)
+                .countryCode("IN")
+                .bankBalance(BigDecimal.valueOf(1000000))
+                .build();
+
+        EditProfileRequest request = new EditProfileRequest("New Name", "New Bank");
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(authRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UserProfileResponse response = userService.editProfile(userId, request);
+
+        assertEquals("New Name", response.fullName());
+        assertEquals("New Bank", response.linkedBankName());
+        verify(authRepository).save(user);
+    }
+
+    @Test
+    void shouldFetchBankBalanceSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        BankBalanceRequest request = new BankBalanceRequest("password123");
+
+        User user = User.builder()
+                .id(userId)
+                .password("encoded")
+                .bankBalance(BigDecimal.valueOf(50000))
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "encoded")).thenReturn(true);
+
+        BankBalanceResponse response = userService.fetchBankBalance(userId, request);
+
+        assertEquals(BigDecimal.valueOf(50000), response.bankBalance());
+    }
+
+    @Test
+    void shouldThrowWhenInvalidPasswordForBankBalance() {
+        UUID userId = UUID.randomUUID();
+        BankBalanceRequest request = new BankBalanceRequest("wrongpass");
+
+        User user = User.builder()
+                .id(userId)
+                .password("encoded")
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpass", "encoded")).thenReturn(false);
+
+        assertThrows(AuthException.class, () -> userService.fetchBankBalance(userId, request));
     }
 
     @Test
