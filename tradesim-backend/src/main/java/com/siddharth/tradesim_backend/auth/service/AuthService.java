@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.auth.service;
 
 import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.auth.repository.RefreshTokenRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
@@ -9,6 +10,10 @@ import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
 import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Currency;
+import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +41,9 @@ public class AuthService {
     private final WalletService walletService;
     private final RefreshTokenService refreshTokenService;
     private final SupportedCurrencyRepository supportedCurrencyRepository;
+    private final OrderRepository orderRepository;
+    private final OrderLifecycleService orderLifecycleService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
@@ -63,6 +73,30 @@ public class AuthService {
         user.setAccountStatus(AccountStatus.ACTIVE);
 
         return issueTokens(user);
+    }
+
+    @Transactional
+    public void deactivateAccount(UUID userId, DeactivateRequest request) {
+        User user = authRepository.findById(userId)
+                .orElseThrow(() -> AuthException.unauthorized("User not found"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw AuthException.unauthorized(INVALID_CREDENTIALS_MESSAGE);
+        }
+
+        if (user.getAccountStatus() == AccountStatus.DEACTIVATED) {
+            throw AuthException.conflict("Account is already deactivated.");
+        }
+
+        List<Order> openOrders = orderRepository.findByUserIdAndStatusIn(userId, List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED));
+        for (Order order : openOrders) {
+            orderLifecycleService.cancelOrder(order);
+        }
+
+        user.setAccountStatus(AccountStatus.DEACTIVATED);
+        authRepository.save(user);
+
+        refreshTokenRepository.revokeActiveTokensForUser(userId, Instant.now());
     }
 
     @Transactional

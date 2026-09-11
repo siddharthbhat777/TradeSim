@@ -5,11 +5,16 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.auth.repository.RefreshTokenRepository;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
 import com.siddharth.tradesim_backend.auth.service.RefreshTokenService;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
 import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.wallet.WalletService;
 import org.junit.jupiter.api.Test;
@@ -19,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,6 +60,15 @@ class AuthServiceTest {
 
     @Mock
     private SupportedCurrencyRepository supportedCurrencyRepository;
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderLifecycleService orderLifecycleService;
+
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
 
     @InjectMocks
     private AuthService authService;
@@ -294,5 +310,46 @@ class AuthServiceTest {
         assertEquals("sid", response.username());
 
         verify(authRepository).save(user);
+    }
+
+    @Test
+    void shouldDeactivateAccountSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        DeactivateRequest request = new DeactivateRequest("password123");
+
+        User user = User.builder()
+                .id(userId)
+                .password("encoded")
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        Order openOrder = Order.builder().status(OrderStatus.OPEN).build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "encoded")).thenReturn(true);
+        when(orderRepository.findByUserIdAndStatusIn(eq(userId), eq(List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED)))).thenReturn(List.of(openOrder));
+
+        authService.deactivateAccount(userId, request);
+
+        assertEquals(AccountStatus.DEACTIVATED, user.getAccountStatus());
+        verify(orderLifecycleService).cancelOrder(openOrder);
+        verify(authRepository).save(user);
+        verify(refreshTokenRepository).revokeActiveTokensForUser(eq(userId), any());
+    }
+
+    @Test
+    void shouldThrowWhenInvalidPasswordForDeactivate() {
+        UUID userId = UUID.randomUUID();
+        DeactivateRequest request = new DeactivateRequest("wrongpass");
+
+        User user = User.builder()
+                .id(userId)
+                .password("encoded")
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpass", "encoded")).thenReturn(false);
+
+        assertThrows(AuthException.class, () -> authService.deactivateAccount(userId, request));
     }
 }

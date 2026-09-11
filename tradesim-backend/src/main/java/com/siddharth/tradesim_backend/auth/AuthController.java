@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.auth;
 
+import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -63,6 +66,14 @@ public class AuthController {
     @PostMapping("reactivate")
     public ResponseEntity<LoginResponse> reactivate(@Valid @RequestBody ReactivateRequest request) {
         return buildAuthResponse(authService.reactivateAccount(request));
+    }
+
+    @PostMapping("deactivate")
+    public ResponseEntity<Void> deactivate(@Valid @RequestBody DeactivateRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        authService.deactivateAccount(principal.getUserId(), request);
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, clearRefreshTokenCookie().toString())
+                .build();
     }
 
     private ResponseEntity<LoginResponse> buildAuthResponse(AuthTokenResult result) {
