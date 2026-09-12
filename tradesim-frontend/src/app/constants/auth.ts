@@ -9,3 +9,9 @@ export enum Role {
     admin = "ADMIN",
     companyRepresentative = "COMPANY_REPRESENTATIVE"
 }
+
+export enum OtpPurpose {
+    REGISTRATION = "REGISTRATION",
+    FORGOT_PASSWORD = "FORGOT_PASSWORD",
+    CHANGE_EMAIL = "CHANGE_EMAIL"
+}

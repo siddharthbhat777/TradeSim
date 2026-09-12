@@ -10,13 +10,13 @@ import { Observable } from 'rxjs';
 })
 export class WalletService {
   private readonly http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/wallet`;
+  private readonly walletURL = `${environment.apiBaseURL}/wallet`;
 
   private readonly walletState = signal<Wallet | null>(null);
   public readonly wallet = this.walletState.asReadonly();
 
   loadWallet(): void {
-    this.http.get<Wallet>(this.apiBaseURL, {
+    this.http.get<Wallet>(this.walletURL, {
       context: skipInterceptors({ loader: true })
     }).subscribe({
       next: (data) => this.walletState.set(data),
@@ -25,19 +25,19 @@ export class WalletService {
   }
 
   deposit(request: WalletTransactionRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiBaseURL}/deposit`, request, {
+    return this.http.post<void>(`${this.walletURL}/deposit`, request, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }
 
   convert(request: CurrencyConversionRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiBaseURL}/convert`, request, {
+    return this.http.post<void>(`${this.walletURL}/convert`, request, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }
 
   requestMultiCurrency(): Observable<void> {
-    return this.http.post<void>(`${this.apiBaseURL}/multi-currency/request`, {}, {
+    return this.http.post<void>(`${this.walletURL}/multi-currency/request`, {}, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }

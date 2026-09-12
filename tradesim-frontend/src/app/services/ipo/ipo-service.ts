@@ -10,28 +10,28 @@ import { IpoOfferResponse, IpoSubscriptionResponse } from '../../models/ipo';
 })
 export class IpoService {
   private http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/ipo-offers`;
+  private readonly ipoURL = `${environment.apiBaseURL}/ipo-offers`;
 
   getOpenIpos(): Observable<IpoOfferResponse[]> {
-    return this.http.get<IpoOfferResponse[]>(`${this.apiBaseURL}/open`, {
+    return this.http.get<IpoOfferResponse[]>(`${this.ipoURL}/open`, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   getUpcomingIpos(): Observable<IpoOfferResponse[]> {
-    return this.http.get<IpoOfferResponse[]>(`${this.apiBaseURL}/upcoming`, {
+    return this.http.get<IpoOfferResponse[]>(`${this.ipoURL}/upcoming`, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   getMySubscriptions(): Observable<IpoSubscriptionResponse[]> {
-    return this.http.get<IpoSubscriptionResponse[]>(`${this.apiBaseURL}/subscriptions`, {
+    return this.http.get<IpoSubscriptionResponse[]>(`${this.ipoURL}/subscriptions`, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   subscribeToIpo(ipoOfferId: string): Observable<IpoSubscriptionResponse> {
-    return this.http.post<IpoSubscriptionResponse>(`${this.apiBaseURL}/${ipoOfferId}/subscriptions`, {}, {
+    return this.http.post<IpoSubscriptionResponse>(`${this.ipoURL}/${ipoOfferId}/subscriptions`, {}, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }

@@ -9,21 +9,21 @@ import { Exchange, ExchangeMarketClock } from '../../models/exchange';
 })
 export class ExchangeService {
   private http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/exchanges`;
+  private readonly exchangeURL = `${environment.apiBaseURL}/exchanges`;
 
   getExchanges() {
-    return this.http.get<Exchange[]>(this.apiBaseURL, {
+    return this.http.get<Exchange[]>(this.exchangeURL, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   getExchange(exchangeId: string) {
-    return this.http.get<Exchange>(`${this.apiBaseURL}/${exchangeId}`, {
+    return this.http.get<Exchange>(`${this.exchangeURL}/${exchangeId}`, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   getMarketClock(exchangeId: string) {
-    return this.http.get<ExchangeMarketClock>(`${this.apiBaseURL}/${exchangeId}/market-clock`);
+    return this.http.get<ExchangeMarketClock>(`${this.exchangeURL}/${exchangeId}/market-clock`);
   }
 }

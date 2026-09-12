@@ -10,10 +10,10 @@ import { skipInterceptors } from '../../shared/utils/http-context';
 })
 export class LedgerService {
   private readonly http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/ledger`;
+  private readonly ledgerURL = `${environment.apiBaseURL}/ledger`;
 
   getMyLedger(): Observable<LedgerEntryResponse[]> {
-    return this.http.get<LedgerEntryResponse[]>(this.apiBaseURL, {
+    return this.http.get<LedgerEntryResponse[]>(this.ledgerURL, {
       context: skipInterceptors({ loader: true })
     });
   }

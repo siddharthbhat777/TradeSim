@@ -9,13 +9,13 @@ import { skipInterceptors } from '../../shared/utils/http-context';
 })
 export class TradingAccountService {
   private http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/trading-account`;
+  private readonly tradingAccountURL = `${environment.apiBaseURL}/trading-account`;
 
   private tradingAccountState = signal<TradingAccountResponse | null>(null);
   public readonly tradingAccount = this.tradingAccountState.asReadonly();
 
   loadTradingAccount(): void {
-    this.http.get<TradingAccountResponse>(this.apiBaseURL, {
+    this.http.get<TradingAccountResponse>(this.tradingAccountURL, {
       context: skipInterceptors({ loader: true })
     }).subscribe({
       next: (data) => this.tradingAccountState.set(data),

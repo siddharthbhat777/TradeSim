@@ -10,13 +10,13 @@ import { Observable } from 'rxjs';
 })
 export class PortfolioService {
   private http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/portfolio`;
+  private readonly portfolioURL = `${environment.apiBaseURL}/portfolio`;
 
   private portfolioState = signal<PortfolioResponse | null>(null);
   public readonly portfolio = this.portfolioState.asReadonly();
 
   loadPortfolio(): void {
-    this.http.get<PortfolioResponse>(this.apiBaseURL, {
+    this.http.get<PortfolioResponse>(this.portfolioURL, {
       context: skipInterceptors({ loader: true })
     }).subscribe({
       next: (data) => this.portfolioState.set(data),
@@ -25,13 +25,13 @@ export class PortfolioService {
   }
 
   getPortfolioHistory(): Observable<PortfolioHistoryResponse[]> {
-    return this.http.get<PortfolioHistoryResponse[]>(`${this.apiBaseURL}/history`, {
+    return this.http.get<PortfolioHistoryResponse[]>(`${this.portfolioURL}/history`, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   getExposure(): Observable<PortfolioExposureResponse[]> {
-    return this.http.get<PortfolioExposureResponse[]>(`${this.apiBaseURL}/exposure`, {
+    return this.http.get<PortfolioExposureResponse[]>(`${this.portfolioURL}/exposure`, {
       context: skipInterceptors({ loader: true })
     });
   }

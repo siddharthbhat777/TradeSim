@@ -9,22 +9,22 @@ import { MarketIndex, MarketIndexConstituent } from '../../models/market-index';
 })
 export class MarketIndexService {
   private http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/indices`;
+  private readonly marketIndexURL = `${environment.apiBaseURL}/indices`;
 
   getAllIndices() {
-    return this.http.get<MarketIndex[]>(this.apiBaseURL, {
+    return this.http.get<MarketIndex[]>(this.marketIndexURL, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   getIndicesByExchange(exchangeId: string) {
-    return this.http.get<MarketIndex[]>(`${this.apiBaseURL}/exchange/${exchangeId}`, {
+    return this.http.get<MarketIndex[]>(`${this.marketIndexURL}/exchange/${exchangeId}`, {
       context: skipInterceptors({ loader: true })
     });
   }
 
   getConstituents(indexId: string) {
-    return this.http.get<MarketIndexConstituent[]>(`${this.apiBaseURL}/${indexId}/constituents`, {
+    return this.http.get<MarketIndexConstituent[]>(`${this.marketIndexURL}/${indexId}/constituents`, {
       context: skipInterceptors({ loader: true })
     });
   }

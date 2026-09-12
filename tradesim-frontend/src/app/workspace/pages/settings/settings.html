@@ -1,116 +1,267 @@
 <div class="settings-container">
-    <div class="settings-header">
-        <h1>Settings</h1>
-    </div>
+    <header class="settings-header">
+        <h1>Account Settings</h1>
+        <p>Manage your profile, bank details, and account security.</p>
+    </header>
 
-    <div class="settings-layout">
-        <nav class="settings-sidebar">
-            <button class="nav-item" [class.active]="activeTab() === 'profile'" (click)="setTab('profile')">Profile
-                Details</button>
-            <button class="nav-item" [class.active]="activeTab() === 'security'" (click)="setTab('security')">Security &
-                Access</button>
-            <button class="nav-item" [class.active]="activeTab() === 'preferences'" (click)="setTab('preferences')">App
-                Preferences</button>
-            <button class="nav-item" [class.active]="activeTab() === 'faqs'" (click)="setTab('faqs')">FAQs</button>
-        </nav>
+    @if (isLoading()) {
+    <app-card [isLoading]="true"></app-card>
+    } @else {
+    <app-card>
+        <h2 class="section-title">Profile Information</h2>
 
-        <main class="settings-content">
-            @if (activeTab() === 'profile') {
-            <app-card>
-                <h2 class="section-title">Profile Details</h2>
-                <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
-                    <div class="form-grid">
-                        <app-input label="Full Name">
-                            <input appInput type="text" formControlName="fullName" />
-                        </app-input>
-                        <app-dropdown label="Country" [options]="countryOptions"
-                            formControlName="countryCode"></app-dropdown>
-                        <app-dropdown label="Linked Bank Name" [options]="currentBankOptions()"
-                            formControlName="linkedBankName"></app-dropdown>
-                        <app-input label="Base Currency">
-                            <input appInput type="text" formControlName="baseCurrency" />
-                        </app-input>
-                    </div>
-                    <div class="form-actions">
-                        <app-button type="submit" variant="primary">Save Changes</app-button>
-                    </div>
-                </form>
-            </app-card>
-            }
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form">
+            <div class="form-grid">
+                <div class="field-with-error">
+                    <app-input label="Full Name" [showErrors]="false" [reserveMessageSpace]="false">
+                        <input appInput type="text" formControlName="fullName" autocomplete="name" />
+                    </app-input>
 
-            @if (activeTab() === 'security') {
-            <div class="security-sections">
-                <app-card>
-                    <h2 class="section-title">Change Password</h2>
-                    <form [formGroup]="securityForm" (ngSubmit)="onSaveSecurity()">
-                        <div class="form-stack">
-                            <app-input label="Current Password">
-                                <input appInput type="password" formControlName="currentPassword" />
-                            </app-input>
-                            <app-input label="New Password">
-                                <input appInput type="password" formControlName="newPassword" />
-                            </app-input>
-                            <app-input label="Confirm New Password">
-                                <input appInput type="password" formControlName="confirmPassword" />
-                            </app-input>
-                        </div>
-                        <div class="form-actions">
-                            <app-button type="submit" variant="primary">Update Password</app-button>
-                        </div>
-                    </form>
-                </app-card>
-
-                <app-card border="danger">
-                    <div class="danger-zone">
-                        <div class="danger-content">
-                            <h2 class="section-title text-danger">Danger Zone</h2>
-                            <p class="danger-description">Deactivating your account will suspend your trading
-                                activities. You can reactivate it later by logging in.</p>
-                        </div>
-                        <app-button variant="danger" (click)="onDeactivateAccount()">Deactivate Account</app-button>
-                    </div>
-                </app-card>
-            </div>
-            }
-
-            @if (activeTab() === 'preferences') {
-            <app-card>
-                <h2 class="section-title">App Preferences</h2>
-                <form [formGroup]="preferencesForm" (ngSubmit)="onSavePreferences()">
-                    <div class="form-stack">
-                        <app-dropdown label="Theme" [options]="themeOptions"
-                            formControlName="themePreference"></app-dropdown>
-                    </div>
-                    <div class="form-actions">
-                        <app-button type="submit" variant="primary">Save Preferences</app-button>
-                    </div>
-                </form>
-            </app-card>
-            }
-
-            @if (activeTab() === 'faqs') {
-            <app-card>
-                <h2 class="section-title">Frequently Asked Questions</h2>
-                <div class="faq-list">
-                    @for (faq of faqs(); track faq.question; let i = $index) {
-                    <div class="faq-item" [class.expanded]="expandedFaqIndex() === i">
-                        <button type="button" class="faq-question" (click)="toggleFaq(i)">
-                            <span class="faq-question-text">{{ faq.question }}</span>
-                            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        @if (expandedFaqIndex() === i) {
-                        <div class="faq-answer">
-                            <p>{{ faq.answer }}</p>
-                        </div>
-                        }
-                    </div>
+                    @if (inputError(profileForm.controls.fullName, 'text'); as error) {
+                    <p class="manual-error">{{ error }}</p>
                     }
                 </div>
-            </app-card>
+
+                <app-input label="Linked Bank Name"
+                    [errorText]="inputError(profileForm.controls.linkedBankName, 'text')">
+                    <input appInput type="text" formControlName="linkedBankName" />
+                </app-input>
+            </div>
+
+            <div class="profile-actions">
+                <app-button type="submit" [disabled]="profileForm.pristine || profileForm.invalid"
+                    [isLoading]="isSavingProfile()">
+                    Save Changes
+                </app-button>
+            </div>
+        </form>
+
+        <form [formGroup]="emailForm" (ngSubmit)="confirmEmailChange()" class="email-form">
+            <div class="email-row">
+                <app-input label="Email Address" [showErrors]="false" [reserveMessageSpace]="false">
+                    <input appInput type="email" formControlName="email" autocomplete="email"
+                        (input)="clearServerError(emailForm.controls.email)" />
+                </app-input>
+
+                @if (!emailOtpActive()) {
+                <app-button type="button" variant="outline" [disabled]="!canRequestEmailVerification()"
+                    [isLoading]="isSendingEmailOtp()" (buttonClick)="requestEmailOtp()">
+                    Verify
+                </app-button>
+                }
+            </div>
+
+            @if (inputError(emailForm.controls.email, 'email'); as error) {
+            <p class="manual-error email-error">{{ error }}</p>
             }
-        </main>
-    </div>
+
+            @if (emailOtpActive()) {
+            <div class="otp-panel">
+                <div class="otp-panel__header">
+                    <span>Enter the six-digit OTP sent to your new email.</span>
+                    <span class="timer-badge">{{ emailSecondsRemaining() }}s</span>
+                </div>
+
+                <app-input label="OTP" [errorText]="inputError(emailForm.controls.otp, 'otp')">
+                    <input appInput type="text" inputmode="numeric" maxlength="6" formControlName="otp"
+                        autocomplete="one-time-code" (input)="clearServerError(emailForm.controls.otp)" />
+                </app-input>
+
+                <div class="inline-actions">
+                    <app-button type="submit" [isLoading]="isVerifyingEmail()">
+                        Confirm Email
+                    </app-button>
+
+                    <app-button type="button" variant="outline" (buttonClick)="cancelEmailChange()">
+                        Cancel
+                    </app-button>
+                </div>
+            </div>
+            }
+        </form>
+    </app-card>
+
+    <app-card>
+        <h2 class="section-title">Secure Bank Details</h2>
+
+        <div class="bank-details">
+            <div class="bank-detail">
+                <span class="detail-label">Linked Bank</span>
+                <strong>{{ profile()?.linkedBankName }}</strong>
+            </div>
+
+            <div class="bank-detail">
+                <span class="detail-label">Account Balance</span>
+
+                @if (bankBalance() !== null) {
+                <strong class="balance-value">
+                    {{ bankBalance() | formatCurrency:baseCurrency() }}
+                </strong>
+                } @else {
+                <app-button type="button" variant="outline" (buttonClick)="openBalanceModal()">
+                    Reveal Balance
+                </app-button>
+                }
+            </div>
+        </div>
+    </app-card>
+
+    <app-card>
+        <div class="security-header">
+            <h2 class="section-title">Account Security</h2>
+
+            @if (securityMode() === 'forgot') {
+            <app-button type="button" variant="outline" size="small" (buttonClick)="returnToStandardPassword()">
+                Update Password Manually
+            </app-button>
+            }
+        </div>
+
+        @if (securityMode() === 'standard') {
+        <form [formGroup]="standardPasswordForm" (ngSubmit)="changePassword()" class="form-stack">
+            <app-input label="Current Password"
+                [errorText]="inputError(standardPasswordForm.controls.currentPassword, 'password')">
+                <input appInput type="password" formControlName="currentPassword" autocomplete="current-password"
+                    (input)="clearServerError(standardPasswordForm.controls.currentPassword)" />
+            </app-input>
+
+            <app-input label="New Password"
+                [errorText]="inputError(standardPasswordForm.controls.newPassword, 'password')">
+                <input appInput type="password" formControlName="newPassword" autocomplete="new-password" />
+            </app-input>
+
+            <app-input label="Confirm New Password" [errorText]="standardPasswordForm.hasError('passwordMismatch') &&
+              standardPasswordForm.controls.confirmPassword.touched
+                ? 'Passwords do not match.'
+                : inputError(standardPasswordForm.controls.confirmPassword, 'confirm')">
+                <input appInput type="password" formControlName="confirmPassword" autocomplete="new-password"
+                    [appInputInvalid]="standardPasswordForm.hasError('passwordMismatch') &&
+                standardPasswordForm.controls.confirmPassword.touched" />
+            </app-input>
+
+            <div class="security-actions">
+                <app-button type="submit" [isLoading]="isChangingPassword()">
+                    Update Password
+                </app-button>
+
+                <app-button type="button" variant="outline" (buttonClick)="openForgotPassword()">
+                    Forgot Password?
+                </app-button>
+            </div>
+        </form>
+        } @else {
+        <div class="forgot-password-view">
+            <p>We will send a reset code to <strong>{{ profile()?.email }}</strong>.</p>
+
+            @if (!forgotOtpActive()) {
+            <app-button type="button" [isLoading]="isSendingForgotOtp()" (buttonClick)="sendForgotPasswordOtp()">
+                Send OTP
+            </app-button>
+            } @else {
+            <form [formGroup]="forgotPasswordForm" (ngSubmit)="resetPassword()" class="form-stack">
+                <div class="otp-panel__header">
+                    <span>Enter the OTP sent to your email.</span>
+                    <span class="timer-badge">{{ forgotSecondsRemaining() }}s</span>
+                </div>
+
+                <app-input label="OTP" [errorText]="inputError(forgotPasswordForm.controls.otp, 'otp')">
+                    <input appInput type="text" inputmode="numeric" maxlength="6" formControlName="otp"
+                        autocomplete="one-time-code" (input)="clearServerError(forgotPasswordForm.controls.otp)" />
+                </app-input>
+
+                <app-input label="New Password"
+                    [errorText]="inputError(forgotPasswordForm.controls.newPassword, 'password')">
+                    <input appInput type="password" formControlName="newPassword" autocomplete="new-password" />
+                </app-input>
+
+                <app-input label="Confirm New Password" [errorText]="forgotPasswordForm.hasError('passwordMismatch') &&
+                  forgotPasswordForm.controls.confirmPassword.touched
+                    ? 'Passwords do not match.'
+                    : inputError(forgotPasswordForm.controls.confirmPassword, 'confirm')">
+                    <input appInput type="password" formControlName="confirmPassword" autocomplete="new-password"
+                        [appInputInvalid]="forgotPasswordForm.hasError('passwordMismatch') &&
+                    forgotPasswordForm.controls.confirmPassword.touched" />
+                </app-input>
+
+                <app-button type="submit" [isLoading]="isResettingPassword()">
+                    Set New Password
+                </app-button>
+            </form>
+            }
+        </div>
+        }
+    </app-card>
+
+    <app-card border="danger">
+        <div class="deactivate-card">
+            <div class="deactivate-card__copy">
+                <div class="deactivate-card__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2>Deactivate Account</h2>
+                    <p>This cancels open orders, revokes your session, and logs you out immediately.</p>
+                </div>
+            </div>
+
+            <app-button type="button" variant="danger" (buttonClick)="requestDeactivation()">
+                Deactivate Account
+            </app-button>
+        </div>
+    </app-card>
+    }
 </div>
+
+@if (showBalanceModal()) {
+<app-modal ariaLabel="Reveal account balance" (closed)="closeBalanceModal()">
+    <form [formGroup]="balanceForm" (ngSubmit)="revealBalance()" class="modal-form">
+        <h2>Reveal Account Balance</h2>
+        <p>Enter your current password to view your linked bank balance.</p>
+
+        <app-input label="Current Password" [errorText]="inputError(balanceForm.controls.password, 'password')">
+            <input appInput type="password" formControlName="password" autocomplete="current-password"
+                (input)="clearServerError(balanceForm.controls.password)" />
+        </app-input>
+
+        <div class="modal-actions">
+            <app-button type="button" variant="outline" (buttonClick)="closeBalanceModal()">
+                Cancel
+            </app-button>
+
+            <app-button type="submit" [isLoading]="isRevealingBalance()">
+                Reveal Balance
+            </app-button>
+        </div>
+    </form>
+</app-modal>
+}
+
+@if (showDeactivateModal()) {
+<app-modal ariaLabel="Confirm account deactivation" (closed)="closeDeactivateModal()">
+    <form [formGroup]="deactivateForm" (ngSubmit)="deactivateAccount()" class="modal-form">
+        <h2 class="text-danger">Confirm Deactivation</h2>
+        <p>Enter your current password to deactivate your account.</p>
+
+        <app-input label="Current Password" [errorText]="inputError(deactivateForm.controls.password, 'password')">
+            <input appInput type="password" formControlName="password" autocomplete="current-password"
+                (input)="clearServerError(deactivateForm.controls.password)" />
+        </app-input>
+
+        <div class="modal-actions modal-actions--deactivate">
+            <app-button type="submit" variant="danger" [isLoading]="isDeactivating()">
+                Deactivate Account
+            </app-button>
+
+            <app-button type="button" variant="outline" (buttonClick)="closeDeactivateModal()">
+                Cancel
+            </app-button>
+        </div>
+    </form>
+</app-modal>
+}

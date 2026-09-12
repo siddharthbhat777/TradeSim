@@ -1,14 +1,17 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { RegisterRequest } from '../../models/register-request';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { Observable, throwError } from 'rxjs';
+import { catchError, finalize, tap } from 'rxjs/operators';
+
 import { environment } from '../../../environment/environment';
+import { skipInterceptors } from '../../shared/utils/http-context';
 import { AuthStatus } from '../../constants/auth';
 import { AuthUser } from '../../models/auth-user';
 import { LoginRequest } from '../../models/login-request';
 import { LoginResponse } from '../../models/login-response';
-import { catchError, finalize, tap, throwError } from 'rxjs';
-import { skipInterceptors } from '../../shared/utils/http-context';
-import { Router } from '@angular/router';
+import { RegisterRequest } from '../../models/register-request';
+import { ResetPasswordRequest, SendOtpRequest } from '../../models/user';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +31,27 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private readonly authUrl = `${environment.apiBaseURL}/auth`;
+
+  requestOtp(request: SendOtpRequest) {
+    return this.http.post(`${this.authUrl}/otp/send`, request, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  resetPassword(request: ResetPasswordRequest) {
+    return this.http.post(`${this.authUrl}/password/reset`, request, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  deactivateAccount(password: string) {
+    return this.http.post(`${this.authUrl}/deactivate`, { password }, {
+      withCredentials: true,
+      context: skipInterceptors({ loader: true, toast: true })
+    }).pipe(
+      tap(() => this.clearSession())
+    );
+  }
 
   registerUser(formData: RegisterRequest) {
     return this.http.post(`${this.authUrl}/register`, formData, {

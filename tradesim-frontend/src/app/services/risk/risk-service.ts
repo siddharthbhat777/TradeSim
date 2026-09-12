@@ -10,10 +10,10 @@ import { RiskResponse } from '../../models/risk';
 })
 export class RiskService {
   private http = inject(HttpClient);
-  private readonly apiBaseURL = `${environment.apiBaseURL}/risk`;
+  private readonly riskURL = `${environment.apiBaseURL}/risk`;
 
   getMyRisk(): Observable<RiskResponse> {
-    return this.http.get<RiskResponse>(this.apiBaseURL, {
+    return this.http.get<RiskResponse>(this.riskURL, {
       context: skipInterceptors({ loader: true })
     });
   }
