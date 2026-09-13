@@ -30,6 +30,7 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { AuthService } from '../../../services/auth/auth-service';
 import { UserService } from '../../../services/user/user-service';
+import { ThemeService } from '../../../services/theme-service';
 import { ResetPasswordRequest, SendOtpRequest, UserProfile } from '../../../models/user';
 import { OtpPurpose } from '../../../constants/auth';
 import { SegmentedControl, SegmentOption } from '../../../shared/components/segmented-control/segmented-control';
@@ -70,6 +71,7 @@ export class Settings implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(DialogService);
   private readonly auth = inject(AuthService);
+  private readonly themeService = inject(ThemeService);
 
   readonly profile = signal<UserProfile | null>(null);
   readonly baseCurrency = signal('INR');
@@ -160,6 +162,7 @@ export class Settings implements OnInit, OnDestroy {
       next: ({ profile, account }) => {
         this.profile.set(profile);
         this.selectedTheme.set(profile.themePreference);
+        this.themeService.setTheme(profile.themePreference);
         this.baseCurrency.set(account.baseCurrency);
         this.profileForm.reset({
           fullName: profile.fullName,
@@ -212,6 +215,7 @@ export class Settings implements OnInit, OnDestroy {
     this.userService.updateTheme(newTheme).subscribe({
       next: (profile) => {
         this.profile.set(profile);
+        this.themeService.setTheme(newTheme);
         this.isUpdatingTheme.set(false);
         this.toast.success('Theme preference updated.');
       },

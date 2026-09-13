@@ -1,5 +1,5 @@
-import { Component, inject, signal, effect, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Logo } from '../shared/components/logo/logo';
 import { ToastService } from '../shared/components/toast/toast.service';
@@ -33,8 +33,6 @@ import { Slider } from '../shared/components/slider/slider';
 import { Drawer, DrawerPosition } from '../shared/components/drawer/drawer';
 import { FormatCurrencyPipe } from '../shared/pipes/format-currency-pipe';
 
-type ThemeMode = 'light' | 'dark' | 'system';
-
 interface DocSection {
   title: string;
   items: { id: string; name: string }[];
@@ -44,77 +42,12 @@ interface DocSection {
   selector: 'app-design-system',
   imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart, Slider, Drawer, FormatCurrencyPipe],
   templateUrl: './design-system.html',
-  styleUrls: ['./design-system.scss']
+  styleUrls: ['./design-system.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DesignSystem implements OnInit, OnDestroy {
+export class DesignSystem {
   private toastService = inject(ToastService);
   protected dialogService = inject(DialogService);
-  private platformId = inject(PLATFORM_ID);
-
-  theme = signal<ThemeMode>('system');
-  private mediaQueryList: MediaQueryList | null = null;
-
-  themeOptions: DropdownOption<ThemeMode>[] = [
-    { label: 'System Default', value: 'system', icon: '💻' },
-    { label: 'Light Mode', value: 'light', icon: '☀️' },
-    { label: 'Dark Mode', value: 'dark', icon: '🌙' }
-  ];
-
-  constructor() {
-    effect(() => {
-      this.applyTheme(this.theme());
-    });
-  }
-
-  ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-      this.mediaQueryList.addEventListener('change', this.onSystemThemeChange);
-
-      const savedTheme = localStorage.getItem('design-system-theme') as ThemeMode;
-      if (savedTheme) {
-        this.theme.set(savedTheme);
-      } else {
-        this.theme.set('system');
-      }
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.mediaQueryList) {
-      this.mediaQueryList.removeEventListener('change', this.onSystemThemeChange);
-    }
-  }
-
-  onThemeChange(mode: ThemeMode) {
-    this.theme.set(mode);
-  }
-
-  private onSystemThemeChange = (e: MediaQueryListEvent) => {
-    if (this.theme() === 'system') {
-      this.applyTheme('system');
-    }
-  };
-
-  private applyTheme(mode: ThemeMode) {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    let isDark = false;
-
-    if (mode === 'system') {
-      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    } else {
-      isDark = mode === 'dark';
-    }
-
-    if (isDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
-
-    localStorage.setItem('design-system-theme', mode);
-  }
 
   navigation: DocSection[] = [
     {
