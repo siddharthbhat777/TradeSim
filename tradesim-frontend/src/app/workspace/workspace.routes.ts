@@ -3,6 +3,16 @@ import { Workspace } from './workspace';
 import { userGuard } from '../guards/user';
 import { adminGuard } from '../guards/admin';
 import { representativeGuard } from '../guards/representative';
+import { Role } from '../constants/auth';
+import { inject } from '@angular/core';
+import { AuthService } from '../services/auth/auth-service';
+
+const resolveWorkspaceRedirect = () => {
+    const role = inject(AuthService).currentUser()?.role;
+    if (role === Role.admin) return 'admin';
+    if (role === Role.companyRepresentative) return 'representative';
+    return 'portfolio';
+};
 
 export const workspaceRoutes: Routes = [
     {
@@ -12,7 +22,7 @@ export const workspaceRoutes: Routes = [
             {
                 path: '',
                 pathMatch: 'full',
-                redirectTo: 'portfolio'
+                redirectTo: resolveWorkspaceRedirect
             },
             {
                 path: 'portfolio',

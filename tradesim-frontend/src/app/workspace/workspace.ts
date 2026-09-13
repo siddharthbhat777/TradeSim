@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { Logo } from '../shared/components/logo/logo';
@@ -6,6 +6,7 @@ import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { AuthService } from '../services/auth/auth-service';
 import { DialogService } from '../shared/components/dialog/dialog.service';
 import { Drawer } from '../shared/components/drawer/drawer';
+import { Role } from '../constants/auth';
 
 export interface NavItem {
   label: string;
@@ -21,6 +22,13 @@ const USER_MENU: NavItem[] = [
   { label: 'Wallet', route: 'wallet', icon: 'wallet' }
 ];
 
+const ADMIN_MENU: NavItem[] = [
+  { label: 'Dashboard', route: 'admin/dashboard', icon: 'pie-chart' },
+  { label: 'Exchanges', route: 'admin/exchanges', icon: 'globe' },
+  { label: 'Companies', route: 'admin/companies', icon: 'building' },
+  { label: 'Approvals', route: 'admin/approvals', icon: 'check-circle' }
+];
+
 @Component({
   selector: 'app-workspace',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Logo, Tooltip, Drawer, NgTemplateOutlet],
@@ -29,12 +37,19 @@ const USER_MENU: NavItem[] = [
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Workspace {
-  readonly menuItems = signal<NavItem[]>(USER_MENU);
+  private authService = inject(AuthService);
+  private dialogService = inject(DialogService);
+
   readonly isCollapsed = signal(false);
   readonly isMobileMenuOpen = signal(false);
 
-  private authService = inject(AuthService);
-  private dialogService = inject(DialogService);
+  readonly menuItems = computed(() => {
+    const role = this.authService.currentUser()?.role;
+    if (role === Role.admin) {
+      return ADMIN_MENU;
+    }
+    return USER_MENU;
+  });
 
   toggleCollapse(): void {
     this.isCollapsed.update(v => !v);
