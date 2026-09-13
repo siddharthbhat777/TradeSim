@@ -45,6 +45,7 @@ public class UserController {
     }
 
     @PostMapping("profile/bank-balance")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<BankBalanceResponse> getBankBalance(@Valid @RequestBody BankBalanceRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(userService.fetchBankBalance(principal.getUserId(), request));
     }

@@ -1,9 +1,9 @@
 package com.siddharth.tradesim_backend.ipo;
 
-import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
@@ -36,9 +36,9 @@ import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import com.siddharth.tradesim_backend.stock.service.StockService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import com.siddharth.tradesim_backend.wallet.model.Wallet;
 import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
-import com.siddharth.tradesim_backend.wallet.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -359,7 +359,7 @@ class IpoServiceTest {
         Wallet wallet2 = Wallet.builder().id(UUID.randomUUID()).build();
         WalletBucket bucket2 = WalletBucket.builder().balance(BigDecimal.valueOf(12000)).lockedBalance(BigDecimal.valueOf(5000)).build();
 
-        Exchange exchange = Exchange.builder().currency("USD").build();
+        Exchange exchange = Exchange.builder().id(UUID.randomUUID()).currency("USD").build();
 
         StockResponse activatedStock = new StockResponse(
                 stockId,

@@ -47,25 +47,25 @@ public class IpoController {
     }
 
     @GetMapping("open")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<IpoOfferResponse>> getOpenIpoOffers() {
         return ResponseEntity.ok(ipoService.fetchOpenIpoOffers());
     }
 
     @GetMapping("upcoming")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<IpoOfferResponse>> getUpcomingIpoOffers() {
         return ResponseEntity.ok(ipoService.fetchUpcomingIpoOffers());
     }
 
     @PostMapping("{ipoOfferId}/subscriptions")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<IpoSubscriptionResponse> subscribeToIpo(@PathVariable UUID ipoOfferId, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ipoService.subscribeToIpo(ipoOfferId, principal.getUserId()));
     }
 
     @GetMapping("subscriptions")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<IpoSubscriptionResponse>> getMySubscriptions(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(ipoService.fetchMySubscriptions(principal.getUserId()));
     }

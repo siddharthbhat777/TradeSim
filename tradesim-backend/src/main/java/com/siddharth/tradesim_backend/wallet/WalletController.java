@@ -21,31 +21,31 @@ public class WalletController {
     private final WalletService walletService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<WalletResponse> getMyWallet(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(walletService.fetchMyWallet(principal.getUserId()));
     }
 
     @PostMapping("deposit")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<WalletResponse> depositFromBank(@Valid @RequestBody WalletTransactionRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(walletService.depositFromBank(principal.getUserId(), request.amount()));
     }
 
     @PostMapping("withdraw")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<WalletResponse> withdrawToBank(@Valid @RequestBody WalletTransactionRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(walletService.withdrawToBank(principal.getUserId(), request.amount()));
     }
 
     @PostMapping("convert")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<WalletResponse> convertCurrency(@Valid @RequestBody CurrencyConversionRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(walletService.convertCurrency(principal.getUserId(), request));
     }
 
     @PostMapping("multi-currency/request")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<WalletResponse> requestMultiCurrencyAccess(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(walletService.requestMultiCurrencyAccess(principal.getUserId()));
     }

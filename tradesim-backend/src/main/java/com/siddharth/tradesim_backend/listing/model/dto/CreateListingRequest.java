@@ -1,9 +1,11 @@
 package com.siddharth.tradesim_backend.listing.model.dto;
 
 import com.siddharth.tradesim_backend.stock.enums.Sector;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public record CreateListingRequest(
@@ -36,6 +38,12 @@ public record CreateListingRequest(
         @DecimalMin(value = "0.1", message = "Price band percent must be at least 0.1")
         @DecimalMax(value = "50", message = "Price band percent must not exceed 50")
         @Digits(integer = 3, fraction = 2, message = "Price band percent must have up to 2 decimal places")
-        BigDecimal priceBandPercent
+        BigDecimal priceBandPercent,
+
+        @Min(value = 1, message = "Total shares must be at least 1")
+        Integer totalShares,
+
+        @Valid
+        List<CapTableEntryRequest> capTable
 ) {
 }

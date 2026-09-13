@@ -1,17 +1,24 @@
 package com.siddharth.tradesim_backend.listing;
 
-import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.CompanyException;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
+import com.siddharth.tradesim_backend.company.model.CompanyRepresentativeAssignment;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
-import com.siddharth.tradesim_backend.exchange.ExchangeException;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
+import com.siddharth.tradesim_backend.listing.model.ListingCapTableEntry;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
+import com.siddharth.tradesim_backend.listing.model.dto.CapTableEntryRequest;
 import com.siddharth.tradesim_backend.listing.model.dto.CreateListingRequest;
 import com.siddharth.tradesim_backend.listing.model.dto.ListingRequestResponse;
+import com.siddharth.tradesim_backend.position.PositionRepository;
+import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.stock.enums.MarketCapCategory;
 import com.siddharth.tradesim_backend.stock.enums.Sector;
 import com.siddharth.tradesim_backend.stock.enums.StockStatus;
@@ -19,11 +26,14 @@ import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import com.siddharth.tradesim_backend.stock.service.StockService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,10 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ListingServiceTest {
@@ -52,15 +59,21 @@ class ListingServiceTest {
     private CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
 
     @Mock
+    private CompanyRepresentativeAssignmentRepository assignmentRepository;
+
+    @Mock
     private StockService stockService;
+
+    @Mock
+    private PositionRepository positionRepository;
 
     @InjectMocks
     private ListingService listingService;
 
     @Test
-    void shouldSubmitListingRequestWhenRepresentativeAssignmentIsActive() {
+    void shouldSubmitListingRequestAsManagerAndSetPendingInternalReview() {
         UUID companyId = UUID.randomUUID();
-        UUID representativeUserId = UUID.randomUUID();
+        UUID managerUserId = UUID.randomUUID();
         UUID exchangeId = UUID.randomUUID();
 
         CreateListingRequest request = new CreateListingRequest(
@@ -68,7 +81,9 @@ class ListingServiceTest {
                 exchangeId,
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
-                null
+                BigDecimal.TEN,
+                null,
+                List.of()
         );
 
         Company company = Company.builder()
@@ -77,22 +92,95 @@ class ListingServiceTest {
                 .status(CompanyStatus.ACTIVE)
                 .build();
 
+        CompanyRepresentativeAssignment assignment = CompanyRepresentativeAssignment.builder()
+                .assignmentRole(CompanyRepresentativeAssignmentRole.MANAGER)
+                .build();
+
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(assignmentRepository.findByCompanyIdAndUserId(companyId, managerUserId)).thenReturn(Optional.of(assignment));
         when(stockService.existsBySymbol("INFY")).thenReturn(false);
-        when(listingRequestRepository.existsBySymbolAndStatus("INFY", ListingStatus.PENDING)).thenReturn(false);
+        when(listingRequestRepository.existsBySymbolAndStatusIn("INFY", List.of(ListingStatus.PENDING_INTERNAL_REVIEW, ListingStatus.PENDING_EXCHANGE_APPROVAL))).thenReturn(false);
         when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> {
             ListingRequest listingRequest = invocation.getArgument(0);
             listingRequest.setId(UUID.randomUUID());
             return listingRequest;
         });
 
-        ListingRequestResponse response = listingService.submitListingRequest(companyId, representativeUserId, request);
+        ListingRequestResponse response = listingService.submitListingRequest(companyId, managerUserId, request);
 
         assertThat(response.symbol()).isEqualTo("INFY");
-        assertThat(response.status()).isEqualTo(ListingStatus.PENDING);
-        assertThat(response.priceBandPercent()).isEqualByComparingTo(BigDecimal.TEN);
-        verify(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, representativeUserId);
+        assertThat(response.status()).isEqualTo(ListingStatus.PENDING_INTERNAL_REVIEW);
+        verify(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, managerUserId);
         verify(exchangeService).assertExchangeActive(exchangeId);
+    }
+
+    @Test
+    void shouldSubmitDirectListingWithCapTableAsPrimaryContactAndAutoSign() {
+        UUID companyId = UUID.randomUUID();
+        UUID primaryContactId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+        UUID targetUserId = UUID.randomUUID();
+
+        CreateListingRequest request = new CreateListingRequest(
+                "SLACK",
+                exchangeId,
+                BigDecimal.valueOf(120.00),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN,
+                1000,
+                List.of(new CapTableEntryRequest(targetUserId, 1000))
+        );
+
+        Company company = Company.builder().id(companyId).status(CompanyStatus.ACTIVE).build();
+
+        CompanyRepresentativeAssignment assignment = CompanyRepresentativeAssignment.builder()
+                .assignmentRole(CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT)
+                .build();
+
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(assignmentRepository.findByCompanyIdAndUserId(companyId, primaryContactId)).thenReturn(Optional.of(assignment));
+        when(assignmentRepository.existsByCompanyIdAndUserIdAndStatus(companyId, targetUserId, CompanyRepresentativeAssignmentStatus.ACTIVE)).thenReturn(true);
+        when(stockService.existsBySymbol("SLACK")).thenReturn(false);
+        when(listingRequestRepository.existsBySymbolAndStatusIn(eq("SLACK"), any())).thenReturn(false);
+        when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> {
+            ListingRequest listingRequest = invocation.getArgument(0);
+            listingRequest.setId(UUID.randomUUID());
+            return listingRequest;
+        });
+
+        ListingRequestResponse response = listingService.submitListingRequest(companyId, primaryContactId, request);
+
+        assertThat(response.status()).isEqualTo(ListingStatus.PENDING_EXCHANGE_APPROVAL);
+        assertThat(response.totalShares()).isEqualTo(1000);
+        assertThat(response.capTable()).hasSize(1);
+    }
+
+    @Test
+    void shouldRejectDirectListingIfCapTableMathIsWrong() {
+        UUID companyId = UUID.randomUUID();
+        UUID primaryContactId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+        UUID targetUserId = UUID.randomUUID();
+
+        CreateListingRequest request = new CreateListingRequest(
+                "SLACK",
+                exchangeId,
+                BigDecimal.valueOf(120.00),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN,
+                1000,
+                List.of(new CapTableEntryRequest(targetUserId, 500))
+        );
+
+        Company company = Company.builder().id(companyId).status(CompanyStatus.ACTIVE).build();
+        CompanyRepresentativeAssignment assignment = CompanyRepresentativeAssignment.builder()
+                .assignmentRole(CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT).build();
+
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(assignmentRepository.findByCompanyIdAndUserId(companyId, primaryContactId)).thenReturn(Optional.of(assignment));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> listingService.submitListingRequest(companyId, primaryContactId, request));
+        assertThat(exception.getMessage()).isEqualTo("Sum of cap table quantities must equal total shares");
     }
 
     @Test
@@ -106,7 +194,9 @@ class ListingServiceTest {
                 exchangeId,
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
-                BigDecimal.TEN
+                BigDecimal.TEN,
+                null,
+                List.of()
         );
 
         Company company = Company.builder()
@@ -125,43 +215,52 @@ class ListingServiceTest {
     }
 
     @Test
-    void shouldApproveListingRequestAndCreateHaltedStock() {
+    void shouldApproveListingRequestAndInjectSharesForDirectListing() {
         UUID listingRequestId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
-        UUID representativeUserId = UUID.randomUUID();
         UUID adminUserId = UUID.randomUUID();
         UUID exchangeId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
+        UUID founderUserId = UUID.randomUUID();
 
         ListingRequest listingRequest = ListingRequest.builder()
                 .id(listingRequestId)
                 .companyId(companyId)
-                .submittedByUserId(representativeUserId)
-                .symbol("INFY")
+                .submittedByUserId(UUID.randomUUID())
+                .symbol("SLACK")
                 .exchangeId(exchangeId)
-                .referencePrice(BigDecimal.valueOf(1500.25))
+                .referencePrice(BigDecimal.valueOf(120.00))
                 .sector(Sector.TECHNOLOGY)
                 .priceBandPercent(BigDecimal.TEN)
-                .status(ListingStatus.PENDING)
+                .totalShares(1000)
+                .status(ListingStatus.PENDING_EXCHANGE_APPROVAL)
+                .capTable(new ArrayList<>())
                 .build();
+
+        ListingCapTableEntry capEntry = ListingCapTableEntry.builder()
+                .listingRequest(listingRequest)
+                .userId(founderUserId)
+                .quantity(1000)
+                .build();
+        listingRequest.getCapTable().add(capEntry);
 
         Company company = Company.builder()
                 .id(companyId)
-                .name("Infosys")
+                .name("Slack Tech")
                 .status(CompanyStatus.ACTIVE)
                 .build();
 
         StockResponse createdStock = new StockResponse(
                 stockId,
-                "INFY",
-                "Infosys",
-                BigDecimal.valueOf(1500.25),
+                "SLACK",
+                "Slack Tech",
+                BigDecimal.valueOf(120.00),
                 Sector.TECHNOLOGY,
-                StockStatus.HALTED,
+                StockStatus.ACTIVE,
                 0L,
                 BigDecimal.ZERO,
                 MarketCapCategory.UNKNOWN,
-                "INR",
+                "USD",
                 exchangeId
         );
 
@@ -170,31 +269,34 @@ class ListingServiceTest {
         when(stockService.createStockFromListingApproval(
                 eq(companyId),
                 eq(exchangeId),
-                eq("INFY"),
-                eq(BigDecimal.valueOf(1500.25)),
+                eq("SLACK"),
+                eq(BigDecimal.valueOf(120.00)),
                 eq(Sector.TECHNOLOGY),
-                eq(BigDecimal.TEN)
+                eq(BigDecimal.TEN),
+                eq(1000),
+                eq(StockStatus.ACTIVE)
         )).thenReturn(createdStock);
+
+        when(positionRepository.findByUserIdAndStockId(founderUserId, stockId)).thenReturn(Optional.empty());
         when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ListingRequestResponse response = listingService.approveListingRequest(listingRequestId, adminUserId);
 
         assertThat(response.status()).isEqualTo(ListingStatus.APPROVED);
         assertThat(response.approvedStockId()).isEqualTo(stockId);
-        assertThat(response.reviewedByUserId()).isEqualTo(adminUserId);
-        verify(stockService).createStockFromListingApproval(
-                eq(companyId),
-                eq(exchangeId),
-                eq("INFY"),
-                eq(BigDecimal.valueOf(1500.25)),
-                eq(Sector.TECHNOLOGY),
-                eq(BigDecimal.TEN)
-        );
-        verify(exchangeService).assertExchangeActive(exchangeId);
+
+        ArgumentCaptor<Position> positionCaptor = ArgumentCaptor.forClass(Position.class);
+        verify(positionRepository).save(positionCaptor.capture());
+
+        Position savedPosition = positionCaptor.getValue();
+        assertThat(savedPosition.getUserId()).isEqualTo(founderUserId);
+        assertThat(savedPosition.getQuantity()).isEqualTo(1000);
+        assertThat(savedPosition.getStockId()).isEqualTo(stockId);
+        assertThat(savedPosition.getAverageBuyPrice()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
-    void shouldRejectPendingListingRequest() {
+    void shouldRejectPendingExchangeApprovalListingRequest() {
         UUID listingRequestId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
         UUID representativeUserId = UUID.randomUUID();
@@ -210,7 +312,8 @@ class ListingServiceTest {
                 .referencePrice(BigDecimal.valueOf(1500.25))
                 .sector(Sector.TECHNOLOGY)
                 .priceBandPercent(BigDecimal.TEN)
-                .status(ListingStatus.PENDING)
+                .status(ListingStatus.PENDING_EXCHANGE_APPROVAL)
+                .capTable(new ArrayList<>())
                 .build();
 
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
@@ -225,48 +328,19 @@ class ListingServiceTest {
     }
 
     @Test
-    void shouldThrowWhenApprovingNonPendingListingRequest() {
+    void shouldThrowWhenApprovingNonPendingExchangeListingRequest() {
         UUID listingRequestId = UUID.randomUUID();
 
         ListingRequest listingRequest = ListingRequest.builder()
                 .id(listingRequestId)
                 .symbol("INFY")
-                .status(ListingStatus.REJECTED)
+                .status(ListingStatus.PENDING_INTERNAL_REVIEW)
                 .build();
 
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
 
         BusinessException exception = assertThrows(BusinessException.class, () -> listingService.approveListingRequest(listingRequestId, UUID.randomUUID()));
 
-        assertThat(exception.getMessage()).isEqualTo("Only pending listing requests can be reviewed");
-    }
-
-    @Test
-    void shouldRejectListingSubmissionWhenExchangeIsInactive() {
-        UUID companyId = UUID.randomUUID();
-        UUID representativeUserId = UUID.randomUUID();
-        UUID exchangeId = UUID.randomUUID();
-
-        CreateListingRequest request = new CreateListingRequest(
-                "INFY",
-                exchangeId,
-                BigDecimal.valueOf(1500.25),
-                Sector.TECHNOLOGY,
-                BigDecimal.TEN
-        );
-
-        Company company = Company.builder()
-                .id(companyId)
-                .name("Infosys")
-                .status(CompanyStatus.ACTIVE)
-                .build();
-
-        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
-        doThrow(ExchangeException.conflict("Exchange is not active")).when(exchangeService).assertExchangeActive(exchangeId);
-
-        BusinessException exception = assertThrows(BusinessException.class, () -> listingService.submitListingRequest(companyId, representativeUserId, request));
-
-        assertThat(exception.getMessage()).isEqualTo("Exchange is not active");
-        verify(listingRequestRepository, never()).save(any());
+        assertThat(exception.getMessage()).isEqualTo("Only requests pending exchange approval can be approved by admin");
     }
 }

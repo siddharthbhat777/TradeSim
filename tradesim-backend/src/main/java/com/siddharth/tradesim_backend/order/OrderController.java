@@ -24,26 +24,26 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<OrderHistoryResponse>> getMyOrders(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(orderService.fetchUserOrders(user.getUserId()));
     }
 
     @PostMapping("estimate")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<OrderEstimateResponse> estimateOrder(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.estimateOrder(user.getUserId(), request));
     }
 
     @PostMapping("create")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<OrderResponse> placeOrder(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody OrderRequest request) {
         OrderResponse response = orderService.createOrder(user.getUserId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("{orderId}/cancel")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<Void> cancelOrder(@AuthenticationPrincipal UserPrincipal user, @PathVariable UUID orderId) {
         orderService.cancelOrder(user.getUserId(), orderId);
         return ResponseEntity.noContent().build();

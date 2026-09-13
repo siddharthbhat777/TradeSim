@@ -9,6 +9,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -54,6 +56,12 @@ public class ListingRequest extends AuditableEntity {
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal priceBandPercent;
+
+    private Integer totalShares;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "listingRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ListingCapTableEntry> capTable = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

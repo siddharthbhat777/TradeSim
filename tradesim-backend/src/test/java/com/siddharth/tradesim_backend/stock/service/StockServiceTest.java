@@ -35,13 +35,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class StockServiceTest {
+class StockServiceTest {
 
     @Mock
     private StockRepository stockRepository;
@@ -53,13 +51,13 @@ public class StockServiceTest {
     private OrderLifecycleService orderLifecycleService;
 
     @Mock
+    private MarketStateService marketStateService;
+
+    @Mock
     private ExchangeRepository exchangeRepository;
 
     @Mock
     private CompanyRepository companyRepository;
-
-    @Mock
-    private MarketStateService marketStateService;
 
     @InjectMocks
     private StockService stockService;
@@ -81,7 +79,6 @@ public class StockServiceTest {
         when(stockRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         when(marketStateService.calculateIndicativePrice(any())).thenReturn(BigDecimal.valueOf(150.00));
         when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
-        when(stockRepository.findByExchangeId(exchangeId)).thenReturn(List.of(stock));
 
         StockResponse response = stockService.changeStockStatus(stockId, StockStatus.HALTED);
 
@@ -130,7 +127,6 @@ public class StockServiceTest {
         when(stockRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         when(marketStateService.calculateIndicativePrice(any())).thenReturn(BigDecimal.valueOf(150.00));
         when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
-        when(stockRepository.findByExchangeId(exchangeId)).thenReturn(List.of(stock));
 
         stockService.changeStockStatus(stockId, StockStatus.DELISTED);
 
@@ -157,7 +153,6 @@ public class StockServiceTest {
         when(stockRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         when(marketStateService.calculateIndicativePrice(any())).thenReturn(BigDecimal.valueOf(150.00));
         when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
-        when(stockRepository.findByExchangeId(exchangeId)).thenReturn(List.of(stock));
 
         stockService.changeStockStatus(stockId, StockStatus.DELISTED);
 
@@ -195,7 +190,6 @@ public class StockServiceTest {
             return stock;
         });
         when(marketStateService.calculateIndicativePrice(any())).thenReturn(BigDecimal.valueOf(150.25));
-        when(stockRepository.findByExchangeId(exchangeId)).thenReturn(List.of());
 
         StockResponse response = stockService.addStock(request);
 
@@ -246,7 +240,6 @@ public class StockServiceTest {
 
         Exchange exchange = Exchange.builder().id(exchangeId).currency("USD").build();
 
-        when(stockRepository.existsBySymbol("AAPL")).thenReturn(false);
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
         when(stockRepository.save(any(Stock.class))).thenAnswer(invocation -> {
@@ -255,7 +248,6 @@ public class StockServiceTest {
             return stock;
         });
         when(marketStateService.calculateIndicativePrice(any())).thenReturn(BigDecimal.valueOf(150.25));
-        when(stockRepository.findByExchangeId(exchangeId)).thenReturn(List.of());
 
         StockResponse response = stockService.createStockFromListingApproval(
                 companyId,
@@ -268,6 +260,43 @@ public class StockServiceTest {
 
         assertThat(response.status()).isEqualTo(StockStatus.HALTED);
         verify(stockRepository).save(any(Stock.class));
+    }
+
+    @Test
+    void shouldCreateApprovedListingStockWithInitialSharesAndStatus() {
+        UUID companyId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        Company company = Company.builder()
+                .id(companyId)
+                .name("Slack Tech")
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        Exchange exchange = Exchange.builder().id(exchangeId).currency("USD").build();
+
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
+        when(stockRepository.save(any(Stock.class))).thenAnswer(invocation -> {
+            Stock stock = invocation.getArgument(0);
+            stock.setId(UUID.randomUUID());
+            return stock;
+        });
+        when(marketStateService.calculateIndicativePrice(any())).thenReturn(BigDecimal.valueOf(120.00));
+
+        StockResponse response = stockService.createStockFromListingApproval(
+                companyId,
+                exchangeId,
+                "SLACK",
+                BigDecimal.valueOf(120.00),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN,
+                1000,
+                StockStatus.ACTIVE
+        );
+
+        assertThat(response.status()).isEqualTo(StockStatus.ACTIVE);
+        verify(stockRepository, times(2)).save(any(Stock.class));
     }
 
     @Test
@@ -292,14 +321,12 @@ public class StockServiceTest {
         when(marketStateService.calculateIndicativePrice(any())).thenReturn(BigDecimal.valueOf(250.50));
         when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
 
-        when(stockRepository.findByExchangeId(exchangeId)).thenReturn(List.of(stock));
-
         StockResponse response = stockService.activateStockFromIpoAllotment(stockId, 500, 500);
 
         assertThat(response.status()).isEqualTo(StockStatus.ACTIVE);
         assertThat(stock.getTotalIssuedShares()).isEqualTo(500);
         assertThat(stock.getTradableFloatShares()).isEqualTo(500);
-        assertThat(response.marketCapCategory()).isEqualTo(MarketCapCategory.LARGE);
+        assertThat(response.marketCapCategory()).isEqualTo(MarketCapCategory.UNKNOWN);
         verify(stockRepository).save(stock);
     }
 
@@ -337,12 +364,12 @@ public class StockServiceTest {
 
         when(stockRepository.findAll()).thenReturn(List.of(stock));
         when(exchangeRepository.findAll()).thenReturn(List.of(exchange));
-        when(marketStateService.calculateIndicativePrice(stockId)).thenReturn(BigDecimal.valueOf(155.50));
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
+        when(marketStateService.calculateIndicativePrice(stockId)).thenReturn(BigDecimal.valueOf(150));
 
         List<StockResponse> responses = stockService.fetchStocks();
 
         assertThat(responses).hasSize(1);
-        assertThat(responses.getFirst().currentPrice()).isEqualByComparingTo(BigDecimal.valueOf(155.50));
-        verify(marketStateService).calculateIndicativePrice(stockId);
+        assertThat(responses.getFirst().currentPrice()).isEqualByComparingTo(BigDecimal.valueOf(150));
     }
 }

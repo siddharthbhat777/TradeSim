@@ -133,13 +133,48 @@ public class StockService {
     }
 
     @Transactional
-    public StockResponse activateStockFromIssuanceApproval(UUID stockId, int totalIssuedShares, int tradableFloatShares) {
-        return activateStockFromPrimaryMarketAllocation(stockId, totalIssuedShares, tradableFloatShares, "issuance approval");
+    public StockResponse createStockFromListingApproval(UUID companyId, UUID exchangeId, String symbol, BigDecimal referencePrice, Sector sector, BigDecimal priceBandPercent, Integer totalShares, StockStatus status) {
+        Stock saved = createStock(
+                symbol,
+                companyId,
+                exchangeId,
+                referencePrice,
+                sector,
+                priceBandPercent,
+                status
+        );
+
+        if (totalShares != null) {
+            saved.setTotalIssuedShares(totalShares);
+            saved.setTradableFloatShares(totalShares);
+            saved = stockRepository.save(saved);
+        }
+
+        return toResponse(saved);
     }
 
     @Transactional
     public StockResponse activateStockFromIpoAllotment(UUID stockId, int totalIssuedShares, int tradableFloatShares) {
-        return activateStockFromPrimaryMarketAllocation(stockId, totalIssuedShares, tradableFloatShares, "IPO allotment");
+        if (tradableFloatShares > totalIssuedShares) {
+            throw StockException.badRequest("Tradable float shares cannot exceed total issued shares");
+        }
+
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
+
+        if (stock.getStatus() != StockStatus.HALTED) {
+            throw StockException.conflict("Only HALTED stocks can be activated through IPO allotment");
+        }
+
+        if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
+            throw StockException.conflict("Initial share allocation has already been applied to this stock");
+        }
+
+        stock.setTotalIssuedShares(totalIssuedShares);
+        stock.setTradableFloatShares(tradableFloatShares);
+        stock.setStatus(StockStatus.ACTIVE);
+
+        Stock saved = stockRepository.save(stock);
+        return toResponse(saved);
     }
 
     @Transactional
@@ -165,29 +200,6 @@ public class StockService {
         } catch (DataIntegrityViolationException e) {
             throw StockException.badRequest("Invalid status data");
         }
-    }
-
-    private StockResponse activateStockFromPrimaryMarketAllocation(UUID stockId, int totalIssuedShares, int tradableFloatShares, String activationSource) {
-        if (tradableFloatShares > totalIssuedShares) {
-            throw StockException.badRequest("Tradable float shares cannot exceed total issued shares");
-        }
-
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> StockException.notFound("Stock not found"));
-
-        if (stock.getStatus() != StockStatus.HALTED) {
-            throw StockException.conflict("Only HALTED stocks can be activated through " + activationSource);
-        }
-
-        if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
-            throw StockException.conflict("Initial share allocation has already been applied to this stock");
-        }
-
-        stock.setTotalIssuedShares(totalIssuedShares);
-        stock.setTradableFloatShares(tradableFloatShares);
-        stock.setStatus(StockStatus.ACTIVE);
-
-        Stock saved = stockRepository.save(stock);
-        return toResponse(saved);
     }
 
     private Stock createStock(String symbol, UUID companyId, UUID exchangeId, BigDecimal initialPrice, Sector sector, BigDecimal priceBandPercent, StockStatus status) {
