@@ -92,7 +92,7 @@
             Customize how TradeSim looks on your device.
         </p>
         <app-segmented-control [options]="themeOptions" [ngModel]="selectedTheme()"
-            (ngModelChange)="updateTheme($event)" [fullWidth]="true">
+            (ngModelChange)="updateTheme($event)" [fullWidth]="true" required>
         </app-segmented-control>
     </app-card>
 
