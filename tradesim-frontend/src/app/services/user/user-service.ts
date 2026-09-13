@@ -58,4 +58,10 @@ export class UserService {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }
+
+  updateTheme(theme: string) {
+    return this.http.put<UserProfile>(`${this.usersUrl}/profile/theme`, { theme }, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
 }

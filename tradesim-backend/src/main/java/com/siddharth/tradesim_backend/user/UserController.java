@@ -61,4 +61,9 @@ public class UserController {
     public ResponseEntity<ChangeUserRoleResponse> changeRole(@PathVariable UUID userId, @Valid @RequestBody ChangeUserRoleRequest request) {
         return ResponseEntity.ok(userService.changeRole(userId, request.role()));
     }
+
+    @PutMapping("profile/theme")
+    public ResponseEntity<UserProfileResponse> updateTheme(@Valid @RequestBody UpdateThemeRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(userService.updateTheme(principal.getUserId(), request.theme()));
+    }
 }

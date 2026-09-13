@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.user;
 
 import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.enums.OtpPurpose;
+import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
@@ -35,19 +36,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserProfileResponse fetchUserProfile(UUID userId) {
         User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
-
-        return new UserProfileResponse(
-                user.getId(),
-                user.getFullName(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getLinkedBankName(),
-                user.getRole(),
-                user.getAccountStatus(),
-                user.getThemePreference(),
-                user.getCountryCode(),
-                user.getLastLogin()
-        );
+        return toProfileResponse(user);
     }
 
     @Transactional
@@ -59,7 +48,7 @@ public class UserService {
 
         User saved = authRepository.save(user);
 
-        return fetchUserProfile(saved.getId());
+        return toProfileResponse(saved);
     }
 
     @Transactional
@@ -99,7 +88,7 @@ public class UserService {
         user.setEmail(request.newEmail());
         User saved = authRepository.save(user);
 
-        return fetchUserProfile(saved.getId());
+        return toProfileResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -161,5 +150,28 @@ public class UserService {
         User saved = authRepository.save(user);
 
         return new ChangeUserRoleResponse(saved.getId(), saved.getUsername(), saved.getEmail(), saved.getRole(), saved.getAccountStatus());
+    }
+
+    @Transactional
+    public UserProfileResponse updateTheme(UUID userId, ThemePreference theme) {
+        User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+        user.setThemePreference(theme);
+        User saved = authRepository.save(user);
+        return toProfileResponse(saved);
+    }
+
+    private UserProfileResponse toProfileResponse(User user) {
+        return new UserProfileResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getLinkedBankName(),
+                user.getRole(),
+                user.getAccountStatus(),
+                user.getThemePreference(),
+                user.getCountryCode(),
+                user.getLastLogin()
+        );
     }
 }

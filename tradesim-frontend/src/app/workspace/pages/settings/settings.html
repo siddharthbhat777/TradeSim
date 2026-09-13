@@ -82,6 +82,21 @@
     </app-card>
 
     <app-card>
+        <div class="security-header">
+            <h2 class="section-title">Appearance & Theme</h2>
+            @if (isUpdatingTheme()) {
+            <app-inline-loader size="small" variant="muted"></app-inline-loader>
+            }
+        </div>
+        <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem; font-size: 0.9rem;">
+            Customize how TradeSim looks on your device.
+        </p>
+        <app-segmented-control [options]="themeOptions" [ngModel]="selectedTheme()"
+            (ngModelChange)="updateTheme($event)" [fullWidth]="true">
+        </app-segmented-control>
+    </app-card>
+
+    <app-card>
         <h2 class="section-title">Secure Bank Details</h2>
 
         <div class="bank-details">

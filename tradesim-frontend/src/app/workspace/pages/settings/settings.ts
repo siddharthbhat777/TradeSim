@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
   ReactiveFormsModule,
+  FormsModule,
   FormBuilder,
   ValidationErrors,
   Validators
@@ -31,6 +32,8 @@ import { AuthService } from '../../../services/auth/auth-service';
 import { UserService } from '../../../services/user/user-service';
 import { ResetPasswordRequest, SendOtpRequest, UserProfile } from '../../../models/user';
 import { OtpPurpose } from '../../../constants/auth';
+import { SegmentedControl, SegmentOption } from '../../../shared/components/segmented-control/segmented-control';
+import { InlineLoader } from '../../../shared/components/loaders/inline-loader/inline-loader';
 
 const PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/;
 
@@ -46,12 +49,15 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     Card,
     CustomInput,
     InputDirective,
     Button,
     Modal,
-    FormatCurrencyPipe
+    FormatCurrencyPipe,
+    SegmentedControl,
+    InlineLoader
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
@@ -88,6 +94,14 @@ export class Settings implements OnInit, OnDestroy {
 
   readonly showDeactivateModal = signal(false);
   readonly isDeactivating = signal(false);
+
+  readonly selectedTheme = signal<string>('SYSTEM');
+  readonly isUpdatingTheme = signal(false);
+  readonly themeOptions: SegmentOption<string>[] = [
+    { label: 'System Default', value: 'SYSTEM' },
+    { label: 'Light Mode', value: 'LIGHT' },
+    { label: 'Dark Mode', value: 'DARK' }
+  ];
 
   readonly profileForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -145,6 +159,7 @@ export class Settings implements OnInit, OnDestroy {
     }).subscribe({
       next: ({ profile, account }) => {
         this.profile.set(profile);
+        this.selectedTheme.set(profile.themePreference);
         this.baseCurrency.set(account.baseCurrency);
         this.profileForm.reset({
           fullName: profile.fullName,
@@ -185,6 +200,23 @@ export class Settings implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isSavingProfile.set(false);
+        this.toast.danger(this.errorMessage(error));
+      }
+    });
+  }
+
+  updateTheme(newTheme: string): void {
+    this.selectedTheme.set(newTheme);
+    this.isUpdatingTheme.set(true);
+
+    this.userService.updateTheme(newTheme).subscribe({
+      next: (profile) => {
+        this.profile.set(profile);
+        this.isUpdatingTheme.set(false);
+        this.toast.success('Theme preference updated.');
+      },
+      error: (error) => {
+        this.isUpdatingTheme.set(false);
         this.toast.danger(this.errorMessage(error));
       }
     });
