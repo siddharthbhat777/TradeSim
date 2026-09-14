@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
 import { Dashboard } from './dashboard';
 import { ExchangeService } from '../../../../services/exchange/exchange-service';
 import { MarketIndexService } from '../../../../services/market-index/market-index-service';
@@ -14,13 +15,13 @@ describe('Dashboard', () => {
   let component: Dashboard;
   let fixture: ComponentFixture<Dashboard>;
 
-  const mockExchangeService = { getExchanges: () => of([]) };
-  const mockMarketIndexService = { getIndicesByExchange: () => of([]) };
-  const mockUserService = { getAllUsers: () => of([]) };
-  const mockCompanyService = { getCompanies: () => of([]) };
-  const mockIpoService = { getPendingIpos: () => of([]) };
-  const mockListingService = { getPendingExchangeRequests: () => of([]) };
-  const mockWalletService = { getPendingMultiCurrencyRequests: () => of([]) };
+  const mockExchangeService = { getExchanges: vi.fn().mockReturnValue(of([])) };
+  const mockMarketIndexService = { getIndicesByExchange: vi.fn().mockReturnValue(of([])) };
+  const mockUserService = { getAllUsers: vi.fn().mockReturnValue(of([])) };
+  const mockCompanyService = { getCompanies: vi.fn().mockReturnValue(of([])) };
+  const mockIpoService = { getPendingIpos: vi.fn().mockReturnValue(of([])) };
+  const mockListingService = { getPendingExchangeRequests: vi.fn().mockReturnValue(of([])) };
+  const mockWalletService = { getPendingMultiCurrencyRequests: vi.fn().mockReturnValue(of([])) };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
