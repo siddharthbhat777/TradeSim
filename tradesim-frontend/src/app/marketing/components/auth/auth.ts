@@ -2,7 +2,7 @@ import { Component, inject, output, signal } from '@angular/core';
 import { Modal } from "../../../shared/components/modal/modal";
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RegisterRequest } from '../../../models/register-request';
-import { AuthService } from '../../../services/auth-service/auth-service';
+import { AuthService } from '../../../services/auth/auth-service';
 import { AuthStatus } from '../../../constants/auth';
 import { LoginRequest } from '../../../models/login-request';
 import { HttpErrorResponse } from '@angular/common/http';

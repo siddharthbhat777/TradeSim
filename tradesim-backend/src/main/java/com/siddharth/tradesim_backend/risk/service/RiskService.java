@@ -1,6 +1,10 @@
 package com.siddharth.tradesim_backend.risk.service;
 
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.model.Position;
 import com.siddharth.tradesim_backend.risk.dto.RiskResponse;
@@ -12,8 +16,12 @@ import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.user.UserException;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,15 +36,22 @@ public class RiskService {
     private final AuthRepository authRepository;
     private final TradingAccountService tradingAccountService;
     private final LiquidationService liquidationService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
+    private final WalletService walletService;
 
-    public void validateBuyOrder(TradingAccount tradingAccount, BigDecimal orderValue) {
-        BigDecimal requiredMargin = orderValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+    public void validateBuyOrder(TradingAccount tradingAccount, BigDecimal orderValueUserCurrency) {
+        Wallet wallet = walletService.getWalletByUserId(tradingAccount.getUserId());
+        WalletBucket bucket = walletService.getBucket(wallet.getId(), tradingAccount.getBaseCurrency());
 
-        if (tradingAccount.getAvailableBalance().compareTo(requiredMargin) < 0) {
+        BigDecimal requiredMargin = orderValueUserCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+
+        if (bucket.getAvailableBalance().compareTo(requiredMargin) < 0) {
             throw RiskException.conflict("Insufficient margin");
         }
     }
 
+    @Transactional
     public void checkLiquidation(UUID userId) {
         authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
@@ -47,6 +62,7 @@ public class RiskService {
         }
     }
 
+    @Transactional(readOnly = true)
     public RiskResponse getUserRisk(UUID userId) {
         authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
@@ -54,6 +70,13 @@ public class RiskService {
     }
 
     private RiskResponse calculateRisk(UUID userId, TradingAccount tradingAccount) {
+        Wallet wallet = walletService.getWalletByUserId(userId);
+        BigDecimal totalCashValue = BigDecimal.ZERO;
+
+        for (WalletBucket bucket : wallet.getBuckets()) {
+            totalCashValue = totalCashValue.add(forexService.convert(bucket.getBalance(), bucket.getCurrency(), tradingAccount.getBaseCurrency()));
+        }
+
         List<Position> positions = positionRepository.findByUserId(userId);
 
         BigDecimal totalPositionValue = BigDecimal.ZERO;
@@ -61,16 +84,19 @@ public class RiskService {
 
         for (Position position : positions) {
             Stock stock = stockRepository.findById(position.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+            String stockCurrency = exchange.getCurrency();
 
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal positionValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), stockCurrency, tradingAccount.getBaseCurrency());
+
+            BigDecimal positionValue = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal unrealizedPnl = currentPriceInUserCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
 
             totalPositionValue = totalPositionValue.add(positionValue);
             totalUnrealizedPnl = totalUnrealizedPnl.add(unrealizedPnl);
         }
 
-        BigDecimal equity = tradingAccount.calculateEquity(totalPositionValue);
+        BigDecimal equity = totalCashValue.add(totalPositionValue).subtract(tradingAccount.getMarginLoan());
         BigDecimal marginUsed = BigDecimal.ZERO;
         if (totalPositionValue.compareTo(BigDecimal.ZERO) > 0) {
             marginUsed = totalPositionValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);

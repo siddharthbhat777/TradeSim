@@ -1,5 +1,6 @@
-import { Component, inject, signal, effect, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Logo } from '../shared/components/logo/logo';
 import { ToastService } from '../shared/components/toast/toast.service';
 import { Button } from '../shared/components/button/button';
@@ -9,7 +10,6 @@ import { Alert } from '../shared/components/alert/alert';
 import { Tooltip } from '../shared/components/tooltip/tooltip';
 import { CustomInput } from '../shared/components/input/input';
 import { InputDirective } from '../shared/directives/input';
-import { FormsModule } from '@angular/forms';
 import { Checkbox } from '../shared/components/checkbox/checkbox';
 import { CheckboxGroup } from '../shared/components/checkbox/checkbox-group/checkbox-group';
 import { Toggle } from '../shared/components/toggle/toggle';
@@ -27,8 +27,11 @@ import { PieChart } from '../shared/components/charts/pie-chart-container/pie-ch
 import { Legend } from '../shared/components/charts/legend/legend';
 import { PieChartContainer } from '../shared/components/charts/pie-chart-container/pie-chart-container';
 import { TimeAgoPipe } from '../shared/pipes/time-ago-pipe';
-
-type ThemeMode = 'light' | 'dark' | 'system';
+import { CandlestickChart, CandlestickData } from '../shared/components/charts/candlestick-chart/candlestick-chart';
+import { AreaChart, AreaChartData } from '../shared/components/charts/area-chart/area-chart';
+import { Slider } from '../shared/components/slider/slider';
+import { Drawer, DrawerPosition } from '../shared/components/drawer/drawer';
+import { FormatCurrencyPipe } from '../shared/pipes/format-currency-pipe';
 
 interface DocSection {
   title: string;
@@ -37,74 +40,14 @@ interface DocSection {
 
 @Component({
   selector: 'app-design-system',
-  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe],
+  imports: [CommonModule, FormsModule, Logo, Button, Badge, Card, Alert, Tooltip, CustomInput, InputDirective, Checkbox, CheckboxGroup, Toggle, Dropdown, SegmentedControl, NumberStepper, EmptyState, InlineLoader, Skeleton, Pagination, Table, PriceIndicator, PieChart, Legend, PieChartContainer, TimeAgoPipe, CandlestickChart, AreaChart, Slider, Drawer, FormatCurrencyPipe],
   templateUrl: './design-system.html',
-  styleUrls: ['./design-system.scss']
+  styleUrls: ['./design-system.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DesignSystem implements OnInit, OnDestroy {
+export class DesignSystem {
   private toastService = inject(ToastService);
   protected dialogService = inject(DialogService);
-
-  theme = signal<ThemeMode>('system');
-  private mediaQueryList: MediaQueryList | null = null;
-
-  themeOptions: DropdownOption<ThemeMode>[] = [
-    { label: 'System Default', value: 'system', icon: '💻' },
-    { label: 'Light Mode', value: 'light', icon: '☀️' },
-    { label: 'Dark Mode', value: 'dark', icon: '🌙' }
-  ];
-
-  constructor() {
-    effect(() => {
-      this.applyTheme(this.theme());
-    });
-  }
-
-  ngOnInit() {
-    this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-    this.mediaQueryList.addEventListener('change', this.onSystemThemeChange);
-
-    const savedTheme = localStorage.getItem('design-system-theme') as ThemeMode;
-    if (savedTheme) {
-      this.theme.set(savedTheme);
-    } else {
-      this.applyTheme('system');
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.mediaQueryList) {
-      this.mediaQueryList.removeEventListener('change', this.onSystemThemeChange);
-    }
-  }
-
-  onThemeChange(mode: ThemeMode) {
-    this.theme.set(mode);
-  }
-
-  private onSystemThemeChange = (e: MediaQueryListEvent) => {
-    if (this.theme() === 'system') {
-      this.applyTheme('system');
-    }
-  };
-
-  private applyTheme(mode: ThemeMode) {
-    let isDark = false;
-
-    if (mode === 'system') {
-      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    } else {
-      isDark = mode === 'dark';
-    }
-
-    if (isDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-
-    localStorage.setItem('design-system-theme', mode);
-  }
 
   navigation: DocSection[] = [
     {
@@ -131,7 +74,8 @@ export class DesignSystem implements OnInit, OnDestroy {
         { id: 'toggle', name: 'Toggle' },
         { id: 'dropdown', name: 'Dropdown' },
         { id: 'segmented-control', name: 'Segmented Control' },
-        { id: 'number-stepper', name: 'Number Stepper' }
+        { id: 'number-stepper', name: 'Number Stepper' },
+        { id: 'slider', name: 'Slider' }
       ]
     },
     {
@@ -147,7 +91,8 @@ export class DesignSystem implements OnInit, OnDestroy {
       title: 'Overlays & Popups',
       items: [
         { id: 'dialog', name: 'Dialog' },
-        { id: 'tooltip', name: 'Tooltip' }
+        { id: 'tooltip', name: 'Tooltip' },
+        { id: 'drawer', name: 'Drawer' }
       ]
     },
     {
@@ -163,13 +108,16 @@ export class DesignSystem implements OnInit, OnDestroy {
       items: [
         { id: 'pie-chart', name: 'Pie Chart' },
         { id: 'legend', name: 'Legend' },
-        { id: 'pie-chart-container', name: 'Pie Chart Container' }
+        { id: 'pie-chart-container', name: 'Pie Chart Container' },
+        { id: 'candlestick-chart', name: 'Candlestick Chart' },
+        { id: 'area-chart', name: 'Area Chart' }
       ]
     },
     {
       title: 'Utilities & Pipes',
       items: [
-        { id: 'time-ago', name: 'Time Ago Pipe' }
+        { id: 'time-ago', name: 'Time Ago Pipe' },
+        { id: 'format-currency', name: 'Format Currency Pipe' }
       ]
     }
   ];
@@ -290,6 +238,12 @@ export class DesignSystem implements OnInit, OnDestroy {
   stepperLarge = 10;
   stepperMixed = 0;
 
+  singleSliderValue = 50;
+  rangeSliderValue: [number, number] = [20, 80];
+
+  drawerOpen = signal(false);
+  drawerPosition = signal<DrawerPosition>('right');
+
   protected pagTotalItems = signal(87);
   protected pagCurrentPage = signal(1);
   protected pagPageSize = signal(10);
@@ -318,6 +272,33 @@ export class DesignSystem implements OnInit, OnDestroy {
     { id: 'finance', label: 'Financials', value: 20000, color: '#f59e0b' },
     { id: 'energy', label: 'Energy', value: 10000, color: '#ef4444' }
   ]);
+
+  protected candlestickDemoData = signal<CandlestickData[]>(
+    Array.from({ length: 100 }).map((_, i) => {
+      const date = new Date('2026-01-01T09:15:00');
+      date.setDate(date.getDate() + i);
+      const base = 150 + Math.sin(i * 0.1) * 20 + (i * 0.5);
+      return {
+        time: date,
+        open: base,
+        high: base + Math.random() * 5 + 2,
+        low: base - Math.random() * 5 - 2,
+        close: base + (Math.random() * 6 - 3)
+      };
+    })
+  );
+
+  protected areaDemoData = signal<AreaChartData[]>(
+    Array.from({ length: 100 }).map((_, i) => {
+      const date = new Date('2026-01-01T09:15:00');
+      date.setDate(date.getDate() + i);
+      const base = 50000 + Math.sin(i * 0.1) * 5000 + (i * 200);
+      return {
+        time: date,
+        value: base + (Math.random() * 1000 - 500)
+      };
+    })
+  );
 
   protected activePieSlice = signal<string | null>(null);
   protected activeLegendId = signal<string | null>(null);
@@ -411,12 +392,9 @@ export class DesignSystem implements OnInit, OnDestroy {
 
   triggerConfirmDialog() {
     this.dialogService.open({
-      title: 'Delete Workspace?',
-      message: 'Are you sure you want to delete this workspace? All data will be permanently removed. This action cannot be undone.',
-      primaryLabel: 'Delete',
-      secondaryLabel: 'Cancel',
-      onPrimary: () => console.log('User clicked Delete!'),
-      onSecondary: () => console.log('User clicked Cancel')
+      title: 'Rich Text Dialog',
+      messageHtml: 'A total of <strong>30,000.00 INR</strong> will be locked securely.',
+      primaryLabel: 'Confirm'
     });
   }
 
@@ -427,5 +405,10 @@ export class DesignSystem implements OnInit, OnDestroy {
       primaryLabel: 'Log In',
       isBlocking: true
     });
+  }
+
+  openDrawer(pos: DrawerPosition) {
+    this.drawerPosition.set(pos);
+    this.drawerOpen.set(true);
   }
 }

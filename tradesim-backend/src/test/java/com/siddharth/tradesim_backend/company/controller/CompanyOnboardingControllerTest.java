@@ -4,6 +4,7 @@ import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
 import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
+import com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest;
 import com.siddharth.tradesim_backend.auth.model.dto.RegisterResponse;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
@@ -67,12 +68,12 @@ class CompanyOnboardingControllerTest {
 
         CreateCompanyOnboardingRequest request = new CreateCompanyOnboardingRequest(
                 new CreateCompanyRequest("Apple Inc", "APPLE", "United States"),
-                new com.siddharth.tradesim_backend.auth.model.dto.RegisterRequest("apple_representative", "apple_representative@example.com", "Representative@123")
+                new RegisterRequest("Apple Rep", "apple_representative", "apple_representative@example.com", "Representative@123", "Silicon Valley Bank", "US", null, "123456")
         );
 
         CompanyOnboardingResponse response = new CompanyOnboardingResponse(
                 new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE),
-                new RegisterResponse(representativeId, "apple_representative", "apple_representative@example.com", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
+                new RegisterResponse(representativeId, "Apple Rep", "apple_representative", "apple_representative@example.com", "Silicon Valley Bank", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
                 new CompanyRepresentativeAssignmentResponse(
                         UUID.randomUUID(), companyId, representativeId, adminId,
                         CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,

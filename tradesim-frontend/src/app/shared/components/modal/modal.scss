@@ -25,7 +25,7 @@
     overflow-y: auto;
     max-height: 90vh;
     outline: none;
-    animation: modal-pop 0.15s ease-out forwards;
+    animation: modal-pop 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 
     &:focus-visible {
       outline: 2px solid var(--accent);
@@ -46,10 +46,10 @@
 @keyframes modal-pop {
   from {
     opacity: 0;
-    transform: scale(0.97) translateY(5px);
+    margin-top: 15px;
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    margin-top: 0;
   }
 }

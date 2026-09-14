@@ -3,12 +3,6 @@
     <aside class="docs-sidebar">
         <div class="sidebar-header">
             <app-logo size="small"></app-logo>
-
-            <div class="theme-switcher" style="display: flex; align-items: center; gap: 0.5rem; width: 200px;">
-                <app-dropdown [options]="themeOptions" [ngModel]="theme()" (ngModelChange)="onThemeChange($event)"
-                    size="medium" [fullWidth]="true">
-                </app-dropdown>
-            </div>
         </div>
 
         <nav class="nav-menu" aria-label="Component Navigation">
@@ -957,7 +951,6 @@
             </div>
 
             <div class="doc-card">
-
                 <div class="doc-card__preview">
                     <div
                         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; width: 100%;">
@@ -970,6 +963,18 @@
                         <app-dropdown label="Country" placeholder="Select a country" [searchable]="true"
                             searchPlaceholder="Find country..." [options]="countryOptions"
                             [(ngModel)]="selectedCountry">
+                        </app-dropdown>
+
+                        <app-dropdown label="Exchange (Custom Template)" placeholder="Select Exchange"
+                            [options]="countryOptions" [(ngModel)]="selectedCountry">
+                            <ng-template #optionTemplate let-option>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <span style="font-weight: 600;">{{ option.label }}</span>
+                                    <span
+                                        style="font-size: 0.75rem; color: var(--success); font-weight: 700;">ACTIVE</span>
+                                </div>
+                            </ng-template>
                         </app-dropdown>
 
                         <app-dropdown label="Assignee" [loading]="true" placeholder="Loading users..." [options]="[]">
@@ -987,15 +992,7 @@
                         <div class="code-content">
                             <button class="copy-btn"
                                 (click)="copyCode('<app-dropdown [options]=\'opts\' [(ngModel)]=\'val\'></app-dropdown>')">Copy</button>
-                            <pre><code>&lt;app-dropdown 
-  label="Framework" 
-  placeholder="Select a framework" 
-  helperText="Solid is currently disabled."
-  [options]="frameworkOptions" 
-  [(ngModel)]="selectedFramework"&gt;
-&lt;/app-dropdown&gt;
-
-&lt;app-dropdown 
+                            <pre ngNonBindable><code>&lt;app-dropdown 
   label="Country" 
   placeholder="Select a country" 
   [searchable]="true"
@@ -1004,10 +1001,14 @@
   [(ngModel)]="selectedCountry"&gt;
 &lt;/app-dropdown&gt;
 
-&lt;app-dropdown 
-  label="Assignee" 
-  [loading]="true"
-  [options]="[]"&gt;
+&lt;!-- Custom Option Template --&gt;
+&lt;app-dropdown label="Exchange" [options]="exchangeOptions" [(ngModel)]="selectedExchange"&gt;
+  &lt;ng-template #optionTemplate let-option&gt;
+    &lt;div style="display: flex; justify-content: space-between; width: 100%;"&gt;
+      &lt;span&gt;&#123;&#123; option.label &#125;&#125;&lt;/span&gt;
+      &lt;span style="color: var(--success);"&gt;&#123;&#123; option.status &#125;&#125;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/ng-template&gt;
 &lt;/app-dropdown&gt;</code></pre>
                         </div>
                     </details>
@@ -1019,7 +1020,7 @@
                         <table class="api-table">
                             <thead>
                                 <tr>
-                                    <th>Property</th>
+                                    <th>Property / Slot</th>
                                     <th>Type</th>
                                     <th>Default</th>
                                     <th>Description</th>
@@ -1049,7 +1050,7 @@
                                     <td><code>size</code></td>
                                     <td><code>'small' | 'medium' | 'large'</code></td>
                                     <td><code>'large'</code></td>
-                                    <td>Controls the padding, font size, and height of the trigger element.</td>
+                                    <td>Controls padding, font size, and height of the trigger element.</td>
                                 </tr>
                                 <tr>
                                     <td><code>loading</code></td>
@@ -1061,13 +1062,28 @@
                                     <td><code>panelLoading</code></td>
                                     <td><code>boolean</code></td>
                                     <td><code>false</code></td>
-                                    <td>Shows an inline loader inside the open panel (useful for async searching).</td>
+                                    <td>Shows an inline loader inside the open panel.</td>
                                 </tr>
                                 <tr>
                                     <td><code>fullWidth</code></td>
                                     <td><code>boolean</code></td>
                                     <td><code>false</code></td>
                                     <td>Removes the default 400px max-width restriction.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>#optionTemplate</code></td>
+                                    <td><code>TemplateRef&lt;unknown&gt;</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Custom template for rendering list items. Exposes the option object as
+                                        <code>$implicit</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>direction</code></td>
+                                    <td><code>'auto' | 'up' | 'down'</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>Forces the dropdown panel to open upwards or downwards. Auto calculates based on
+                                        viewport space.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1319,6 +1335,101 @@
                     </div>
                 </div>
 
+            </div>
+        </section>
+
+        <section id="slider" class="doc-section">
+            <div class="section-header">
+                <h2>Slider</h2>
+                <p>A highly customizable slider component supporting both single values and dual-thumb ranges.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; flex-direction: column; gap: 3rem; width: 100%; max-width: 400px;">
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 600; font-size: 0.9rem;">Single Value</span>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">{{ singleSliderValue
+                                    }}</span>
+                            </div>
+                            <app-slider [min]="0" [max]="100" [(ngModel)]="singleSliderValue"></app-slider>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 600; font-size: 0.9rem;">Price Range</span>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                    ${{ rangeSliderValue[0] }} - ${{ rangeSliderValue[1] }}
+                                </span>
+                            </div>
+                            <app-slider [range]="true" [min]="0" [max]="500" [step]="5"
+                                [(ngModel)]="rangeSliderValue"></app-slider>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Slider snippet copied')">Copy</button>
+                            <pre
+                                ngNonBindable><code>&lt;app-slider [min]="0" [max]="100" [(ngModel)]="value"&gt;&lt;/app-slider&gt;
+
+&lt;app-slider [range]="true" [min]="0" [max]="500" [step]="5" [(ngModel)]="rangeArray"&gt;&lt;/app-slider&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Slider Properties <code>&lt;app-slider&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[min]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>0</code></td>
+                                    <td>The minimum allowed value for the slider.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[max]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>100</code></td>
+                                    <td>The maximum allowed value for the slider.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[step]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>1</code></td>
+                                    <td>The granularity of the slider steps.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[range]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, renders a dual-thumb slider and expects an array of two numbers for the
+                                        value.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[(ngModel)]</code></td>
+                                    <td><code>number | [number, number]</code></td>
+                                    <td><code>0</code></td>
+                                    <td>Two-way binds the selected value. Uses an array if range is true.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1890,8 +2001,16 @@ this.dialogService.open(&#123;
                                 <tr>
                                     <td><code>message</code></td>
                                     <td><code>string</code></td>
-                                    <td><span style="color: var(--danger);">Required</span></td>
-                                    <td>The main body text of the dialog.</td>
+                                    <td><code>undefined</code></td>
+                                    <td>The main body plain text. Required if <code>messageHtml</code> is not provided.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>messageHtml</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Optional HTML-formatted body text. Takes precedence over <code>message</code> if
+                                        provided.</td>
                                 </tr>
                                 <tr>
                                     <td><code>title</code></td>
@@ -2052,6 +2171,110 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="drawer" class="doc-section">
+            <div class="section-header">
+                <h2>Drawer</h2>
+                <p>A highly flexible off-canvas panel that slides in from any screen edge. Ideal for mobile navigation,
+                    complex filters, and contextual forms.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <app-button variant="outline" (click)="openDrawer('left')">Open Left</app-button>
+                        <app-button variant="primary" (click)="openDrawer('right')">Open Right</app-button>
+                        <app-button variant="secondary" (click)="openDrawer('top')">Open Top</app-button>
+                        <app-button variant="warning" (click)="openDrawer('bottom')">Open Bottom</app-button>
+                    </div>
+
+                    <app-drawer [(isOpen)]="drawerOpen" [position]="drawerPosition()">
+                        <div style="padding: 2rem 1.5rem;">
+                            <h3 style="margin-top: 0; font-size: 1.5rem; color: var(--text-primary);">Drawer Content
+                            </h3>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">
+                                This is a highly flexible drawer. It automatically locks the background scroll,
+                                traps focus appropriately, and supports rendering from the {{ drawerPosition() }} edge.
+                            </p>
+
+                            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                                <app-input label="Example Field">
+                                    <input appInput type="text" placeholder="Type something..." />
+                                </app-input>
+                                <app-button variant="primary" width="100%" (click)="drawerOpen.set(false)">Confirm &
+                                    Close</app-button>
+                            </div>
+                        </div>
+                    </app-drawer>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Drawer snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;app-button (click)="isOpen.set(true)"&gt;Open Drawer&lt;/app-button&gt;
+
+&lt;app-drawer [(isOpen)]="isOpen" position="right"&gt;
+  &lt;div style="padding: 2rem;"&gt;
+    &lt;h3&gt;Filters&lt;/h3&gt;
+    &lt;!-- Your content here --&gt;
+  &lt;/div&gt;
+&lt;/app-drawer&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3>Properties <code>&lt;app-drawer&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[(isOpen)]</code></td>
+                                    <td><code>ModelSignal&lt;boolean&gt;</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Two-way binds the visibility state of the drawer.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[position]</code></td>
+                                    <td><code>'left' | 'right' | 'top' | 'bottom'</code></td>
+                                    <td><code>'right'</code></td>
+                                    <td>The edge of the screen the drawer slides out from.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[closeOnBackdrop]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>If true, clicking the dark overlay will close the drawer.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[hideCloseButton]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, hides the default circular close button in the top right.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(closed)</code></td>
+                                    <td><code>EventEmitter&lt;void&gt;</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Emitted whenever the drawer is dismissed (via button, backdrop, or escape key).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="table" class="doc-section">
             <div class="section-header">
                 <h2>Data Table</h2>
@@ -2067,9 +2290,9 @@ this.dialogService.open(&#123;
                     </div>
 
                     <app-table [columns]="tableColumns()" [data]="tableData()" [isLoading]="tableIsLoading()"
+                        variant="default" [paginationLabelSuffix]="' per page'" [paginationMobileLabelSuffix]="' / pg'"
                         [(currentPage)]="tableCurrentPage" [(pageSize)]="tablePageSize">
 
-                        <!-- Custom template for 'status' column -->
                         <ng-template tableCell="status" let-val>
                             <span [style.color]="val === 'Active' ? 'var(--success)' : 'var(--text-muted)'"
                                 style="font-weight: 600;">
@@ -2077,7 +2300,6 @@ this.dialogService.open(&#123;
                             </span>
                         </ng-template>
 
-                        <!-- Custom template for 'actions' column -->
                         <ng-template tableCell="actions" let-row="row">
                             <app-button variant="outline" size="small">Edit</app-button>
                         </ng-template>
@@ -2091,20 +2313,29 @@ this.dialogService.open(&#123;
                         <div class="code-content">
                             <button class="copy-btn" (click)="copyCode('Table snippet copied')">Copy</button>
                             <pre ngNonBindable><code>&lt;app-table 
+  variant="default"
   [columns]="columns()" 
   [data]="data()"
   [isLoading]="isLoading()"
+  [paginationLabelSuffix]="' per page'"
+  [paginationMobileLabelSuffix]="' / pg'"
   [(currentPage)]="currentPage"
-  [(pageSize)]="pageSize"&gt;
+  [(pageSize)]="pageSize"
+  [interactiveRows]="true"
+  (rowClick)="onRowSelected($event)"&gt;
 
-  &lt;!-- Custom Cell Template (binds to column 'key') --&gt;
   &lt;ng-template tableCell="status" let-val&gt;
     &lt;span class="status-badge"&gt;&#123;&#123; val &#125;&#125;&lt;/span&gt;
   &lt;/ng-template&gt;
 
-  &lt;!-- Accessing the full row object --&gt;
   &lt;ng-template tableCell="actions" let-row="row"&gt;
     &lt;app-button variant="outline" size="small"&gt;Edit &#123;&#123; row.name &#125;&#125;&lt;/app-button&gt;
+  &lt;/ng-template&gt;
+
+  &lt;ng-template tableExpandedRow let-row="row"&gt;
+    &lt;div class="expanded-details"&gt;
+      &lt;span&gt;Additional details for &#123;&#123; row.name &#125;&#125;&lt;/span&gt;
+    &lt;/div&gt;
   &lt;/ng-template&gt;
 
 &lt;/app-table&gt;</code></pre>
@@ -2138,6 +2369,12 @@ this.dialogService.open(&#123;
                                     <td>The array of objects to display in the table.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>[variant]</code></td>
+                                    <td><code>'default' | 'flush'</code></td>
+                                    <td><code>'default'</code></td>
+                                    <td>Controls the visual styling. Use 'flush' inside cards.</td>
+                                </tr>
+                                <tr>
                                     <td><code>[paginated]</code></td>
                                     <td><code>boolean</code></td>
                                     <td><code>true</code></td>
@@ -2150,16 +2387,55 @@ this.dialogService.open(&#123;
                                     <td>Shows a loading overlay or a loading empty state.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>[paginationLabelSuffix]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>' per page'</code></td>
+                                    <td>Text appended to the items-per-page dropdown.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[paginationMobileLabelSuffix]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>' / pg'</code></td>
+                                    <td>Compact text appended to the dropdown on mobile screens.</td>
+                                </tr>
+                                <tr>
                                     <td><code>[(currentPage)]</code></td>
                                     <td><code>ModelSignal&lt;number&gt;</code></td>
                                     <td><code>1</code></td>
                                     <td>Two-way binding for the current active page.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>[(pageSize)]</code></td>
+                                    <td><code>ModelSignal&lt;number&gt;</code></td>
+                                    <td><code>10</code></td>
+                                    <td>Two-way bound items-per-page limit.</td>
+                                </tr>
+                                <tr>
                                     <td><code>[emptyText]</code></td>
                                     <td><code>string</code></td>
                                     <td><code>'No data to display'</code></td>
                                     <td>Main text displayed when the data array is empty.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[interactiveRows]</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Applies hover and pointer styles indicating the row is clickable.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(rowClick)</code></td>
+                                    <td><code>EventEmitter&lt;T&gt;</code></td>
+                                    <td><code>-</code></td>
+                                    <td>Fired when a user clicks on a table row. Returns the row's data object.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>*tableExpandedRow</code></td>
+                                    <td><code>TemplateRef</code></td>
+                                    <td><code>undefined</code></td>
+                                    <td>Structural directive to render an expandable accordion row beneath the main row.
+                                        Generates a left-aligned chevron toggle automatically. Exposes the row data as
+                                        <code>$implicit</code> or <code>row</code>.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2178,9 +2454,9 @@ this.dialogService.open(&#123;
             <div class="doc-card">
                 <div class="doc-card__preview">
                     <div style="display: flex; flex-direction: column; gap: 2rem;">
-                        <!-- Standard Pagination -->
                         <div>
                             <app-pagination [totalItems]="pagTotalItems()" [pageSizeOptions]="[10, 25, 50, 100]"
+                                [labelSuffix]="' per page'" [mobileLabelSuffix]="' / pg'"
                                 [(currentPage)]="pagCurrentPage" [(pageSize)]="pagPageSize">
                             </app-pagination>
                             <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
@@ -2196,10 +2472,11 @@ this.dialogService.open(&#123;
                         <summary class="code-summary">View Source</summary>
                         <div class="code-content">
                             <button class="copy-btn" (click)="copyCode('Pagination snippet copied')">Copy</button>
-                            <pre ngNonBindable><code>&lt;!-- Basic Usage with Two-Way Binding --&gt;
-&lt;app-pagination
+                            <pre ngNonBindable><code>&lt;app-pagination
   [totalItems]="87"
   [pageSizeOptions]="[10, 25, 50, 100]"
+  [labelSuffix]="' per page'"
+  [mobileLabelSuffix]="' / pg'"
   [(currentPage)]="currentPage"
   [(pageSize)]="pageSize"
   size="medium"&gt;
@@ -2238,6 +2515,18 @@ this.dialogService.open(&#123;
                                     <td><code>'small' | 'medium' | 'large'</code></td>
                                     <td><code>'medium'</code></td>
                                     <td>Controls the scaling of internal buttons and inputs.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[labelSuffix]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>' per page'</code></td>
+                                    <td>Text appended to the items-per-page dropdown.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[mobileLabelSuffix]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>' / pg'</code></td>
+                                    <td>Compact text appended to the dropdown on mobile screens.</td>
                                 </tr>
                                 <tr>
                                     <td><code>[(currentPage)]</code></td>
@@ -2287,11 +2576,11 @@ this.dialogService.open(&#123;
                             <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-secondary);">Custom
                                 Currency & Decimals</h3>
                             <div style="display: flex; gap: 2rem; align-items: center;">
-                                <app-price-indicator [value]="4250.75" [valueDecimals]="2" currency="USD" locale="en-US"
+                                <app-price-indicator [value]="4250.75" [valueDecimals]="2" currency="USD"
                                     [showPercentage]="false">
                                 </app-price-indicator>
 
-                                <app-price-indicator [value]="-85.5" [valueDecimals]="2" currency="EUR" locale="de-DE"
+                                <app-price-indicator [value]="-85.5" [valueDecimals]="2" currency="EUR"
                                     [showArrow]="false">
                                 </app-price-indicator>
                             </div>
@@ -2311,12 +2600,11 @@ this.dialogService.open(&#123;
   [percentage]="2.45"&gt;
 &lt;/app-price-indicator&gt;
 
-&lt;!-- Custom Currency (Locale is required if currency != INR) --&gt;
+&lt;!-- Custom Currency (Browser handles locale automatically) --&gt;
 &lt;app-price-indicator 
   [value]="4250.75" 
   [valueDecimals]="2" 
   currency="USD" 
-  locale="en-US" 
   [showPercentage]="false"&gt;
 &lt;/app-price-indicator&gt;
 
@@ -2371,13 +2659,6 @@ this.dialogService.open(&#123;
                                     <td><code>string</code></td>
                                     <td><code>'INR'</code></td>
                                     <td>The ISO 4217 currency code (e.g., 'INR', 'USD', 'EUR').</td>
-                                </tr>
-                                <tr>
-                                    <td><code>[locale]</code></td>
-                                    <td><code>string</code></td>
-                                    <td><code>'en-IN'</code> (if INR)</td>
-                                    <td>The BCP 47 language tag. <strong style="color: var(--danger)">Required if
-                                            currency is not INR.</strong></td>
                                 </tr>
                                 <tr>
                                     <td><code>[valueDecimals]</code></td>
@@ -2705,6 +2986,174 @@ this.dialogService.open(&#123;
             </div>
         </section>
 
+        <section id="candlestick-chart" class="doc-section">
+            <div class="section-header">
+                <h2>Candlestick Chart</h2>
+                <p>A high-performance, native SVG candlestick chart built for displaying OHLC (Open, High, Low, Close)
+                    financial data with interactive crosshairs and tooltips.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); width: 100%; display: flex; justify-content: center; overflow-x: auto;">
+                        <app-candlestick-chart [data]="candlestickDemoData()" [width]="800" [height]="400"
+                            currency="USD">
+                        </app-candlestick-chart>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Candlestick snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Basic Usage --&gt;
+&lt;app-candlestick-chart 
+  [data]="ohlcData()" 
+  [width]="800" 
+  [height]="400" 
+  currency="USD"&gt;
+&lt;/app-candlestick-chart&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Candlestick Chart Properties <code>&lt;app-candlestick-chart&gt;</code>
+                    </h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>CandlestickData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of OHLC objects (time, open, high, low, close).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[width]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>800</code></td>
+                                    <td>The width of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[height]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>400</code></td>
+                                    <td>The height of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[padding]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>20</code></td>
+                                    <td>Internal padding to prevent extreme highs/lows from touching the edges.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[candleWidth]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>8</code></td>
+                                    <td>The visual width of the rectangle body of each candle.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[currency]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>Currency code used for formatting the prices in the interactive tooltip.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="area-chart" class="doc-section">
+            <div class="section-header">
+                <h2>Area Chart</h2>
+                <p>A native SVG area chart with a gradient fill, perfect for displaying portfolio history or
+                    single-metric performance over time.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); width: 100%; display: flex; justify-content: center; overflow-x: auto;">
+                        <app-area-chart [data]="areaDemoData()" [width]="800" [height]="400" currency="USD">
+                        </app-area-chart>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Area chart snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Basic Usage --&gt;
+&lt;app-area-chart 
+  [data]="portfolioHistory()" 
+  [width]="800" 
+  [height]="400" 
+  currency="USD"&gt;
+&lt;/app-area-chart&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Area Chart Properties <code>&lt;app-area-chart&gt;</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[data]</code></td>
+                                    <td><code>AreaChartData[]</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>Array of objects containing <code>time</code> and a single numeric
+                                        <code>value</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>[width]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>800</code></td>
+                                    <td>The width of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[height]</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>400</code></td>
+                                    <td>The height of the SVG canvas in pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[currency]</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>Currency code used for formatting the prices in the tooltip.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="time-ago" class="doc-section">
             <div class="section-header">
                 <h2>Time Ago Pipe</h2>
@@ -2788,6 +3237,112 @@ this.dialogService.open(&#123;
                                     <td>Calculates the difference between the provided time and exactly now. Handles
                                         plurals automatically and returns "Just now" for times under 30 seconds or
                                         invalid inputs.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="format-currency" class="doc-section">
+            <div class="section-header">
+                <h2>Format Currency Pipe</h2>
+                <p>A pure Angular pipe that formats monetary values using the correct native locale (e.g., US vs. Indian
+                    numbering systems) and handles decimal limits safely.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="max-width: 500px; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Standard USD</span>
+                            <strong style="color: var(--text-primary);">{{ 150000.5 | formatCurrency:'USD':'currency':2
+                                }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Standard INR (Indian Locale
+                                Comma Placement)</span>
+                            <strong style="color: var(--text-primary);">{{ 150000.5 | formatCurrency:'INR':'currency':2
+                                }}</strong>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">INR Decimal Only (No
+                                Symbol)</span>
+                            <strong style="color: var(--text-primary);">{{ 150000.5 | formatCurrency:'INR':'decimal':2
+                                }}</strong>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Custom Precision (4
+                                Decimals)</span>
+                            <strong style="color: var(--text-primary);">{{ 1.23456 | formatCurrency:'USD':'currency':4
+                                }}</strong>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Format Currency snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Standard USD Format --&gt;
+&lt;span&gt;{{ 150000.5 | formatCurrency:'USD' }}&lt;/span&gt;
+
+&lt;!-- Standard INR Format (Notice the Indian comma placement) --&gt;
+&lt;span&gt;{{ 150000.5 | formatCurrency:'INR' }}&lt;/span&gt;
+
+&lt;!-- Decimal Only (No Currency Symbol) --&gt;
+&lt;span&gt;{{ 150000.5 | formatCurrency:'INR':'decimal' }}&lt;/span&gt;
+
+&lt;!-- Custom Decimal Precision (e.g., 4 decimal places) --&gt;
+&lt;span&gt;{{ 1.23456 | formatCurrency:'USD':'currency':4 }}&lt;/span&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Usage <code>formatCurrency</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Argument</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>currencyCode</code></td>
+                                    <td><code>string</code></td>
+                                    <td><code>'INR'</code></td>
+                                    <td>The ISO 4217 currency code. Dictates both the symbol and the formatting locale
+                                        ('en-IN' vs 'en-US').</td>
+                                </tr>
+                                <tr>
+                                    <td><code>style</code></td>
+                                    <td><code>'currency' | 'decimal'</code></td>
+                                    <td><code>'currency'</code></td>
+                                    <td>Whether to print the symbol alongside the number, or just format the raw number.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxFraction</code></td>
+                                    <td><code>number</code></td>
+                                    <td><code>2</code></td>
+                                    <td>The maximum amount of decimal places to show. Passing 0 forces integers only
+                                        safely.</td>
                                 </tr>
                             </tbody>
                         </table>

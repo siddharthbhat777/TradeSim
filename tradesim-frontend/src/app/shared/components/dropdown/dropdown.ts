@@ -3,16 +3,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
-  DOCUMENT,
+  contentChild,
   ElementRef,
   effect,
   inject,
   input,
   output,
   signal,
+  TemplateRef,
   viewChild,
 } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import type { ControlValueAccessor } from '@angular/forms';
 import { NgControl } from '@angular/forms';
 import { CustomInput } from '../input/input';
@@ -25,6 +26,7 @@ export interface DropdownOption<T = unknown> {
   value: T;
   icon?: string;
   disabled?: boolean;
+  [key: string]: unknown;
 }
 
 export type DropdownSize = 'small' | 'medium' | 'large';
@@ -38,7 +40,7 @@ const booleanAttributeOrNull = (value: unknown): boolean | null => {
 
 @Component({
   selector: 'app-dropdown',
-  imports: [CustomInput, InputDirective, InlineLoader],
+  imports: [CommonModule, CustomInput, InputDirective, InlineLoader],
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -47,8 +49,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   private readonly ngControl = inject(NgControl, { optional: true, self: true });
   private readonly hostRef = inject(ElementRef);
   private readonly searchInputRef = viewChild<ElementRef<HTMLInputElement>>('searchInput');
+  private readonly document = inject(DOCUMENT);
+  private readonly window = this.document.defaultView;
 
-  private readonly uid = generateUniqueId('dd');
+  readonly uid = generateUniqueId('dd');
 
   protected readonly triggerId = `app-dropdown-trigger-${this.uid}`;
   protected readonly labelId = `app-dropdown-label-${this.uid}`;
@@ -68,9 +72,12 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   readonly emptyText = input('No options available');
   readonly loading = input(false, { transform: booleanAttribute });
   readonly panelLoading = input(false, { transform: booleanAttribute });
+  readonly direction = input<'auto' | 'up' | 'down'>('auto');
   readonly reserveMessageSpace = input<boolean | null>(null, {
     transform: booleanAttributeOrNull,
   });
+
+  readonly optionTemplate = contentChild<TemplateRef<unknown>>('optionTemplate');
 
   readonly opened = output<void>();
 
@@ -80,6 +87,15 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   protected readonly activeIndex = signal(-1);
   protected readonly cvaDisabled = signal(false);
   protected readonly searchQuery = signal('');
+
+  protected readonly panelTop = signal<number | null>(null);
+  protected readonly panelBottom = signal<number | null>(null);
+  protected readonly panelLeft = signal<number | null>(null);
+  protected readonly panelRight = signal<number | null>(null);
+  protected readonly panelMinWidth = signal<number>(0);
+  protected readonly panelMaxWidth = signal<number>(0);
+
+  protected pendingValue: T | null = null;
 
   protected readonly disabledState = computed(() => this.disabled() || this.cvaDisabled());
 
@@ -119,39 +135,45 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   private typeAheadBuffer = '';
   private typeAheadTimeout?: ReturnType<typeof setTimeout>;
 
-  private readonly window = inject(DOCUMENT).defaultView;
-  private readonly destroyRef = inject(DestroyRef);
-
   constructor() {
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
     }
 
-    this.destroyRef.onDestroy(() => {
-      this.window?.removeEventListener('click', this.onWindowClick, { capture: true });
-      this.window?.removeEventListener('scroll', this.calculatePosition, { capture: true });
-      this.window?.removeEventListener('resize', this.calculatePosition);
-    });
-
     effect(() => {
       const opts = this.options();
-      if (!this.placeholder() && this.selected() === null && opts.length > 0) {
+      const currentSel = this.selected();
+
+      if (this.pendingValue !== null && opts.length > 0) {
+        const found = opts.find((option) => option.value === this.pendingValue);
+        if (found) {
+          this.selected.set(found);
+          this.pendingValue = null;
+        }
+      } else if (currentSel) {
+        const updatedSel = opts.find((option) => option.value === currentSel.value);
+        if (updatedSel && updatedSel !== currentSel) {
+          this.selected.set(updatedSel);
+        }
+      } else if (!this.placeholder() && opts.length > 0) {
         const first = opts.find((option) => !option.disabled) ?? opts[0];
         this.selected.set(first);
         this.onChange(first.value);
       }
     });
 
-    effect(() => {
+    effect((onCleanup) => {
       if (this.isOpen()) {
         this.calculatePosition();
         this.window?.addEventListener('click', this.onWindowClick, { capture: true });
-        this.window?.addEventListener('scroll', this.calculatePosition, { capture: true, passive: true });
+        this.window?.addEventListener('scroll', this.onWindowScroll, { capture: true, passive: true });
         this.window?.addEventListener('resize', this.calculatePosition, { passive: true });
-      } else {
-        this.window?.removeEventListener('click', this.onWindowClick, { capture: true });
-        this.window?.removeEventListener('scroll', this.calculatePosition, { capture: true });
-        this.window?.removeEventListener('resize', this.calculatePosition);
+
+        onCleanup(() => {
+          this.window?.removeEventListener('click', this.onWindowClick, { capture: true });
+          this.window?.removeEventListener('scroll', this.onWindowScroll, { capture: true });
+          this.window?.removeEventListener('resize', this.calculatePosition);
+        });
       }
     });
   }
@@ -183,18 +205,63 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   }
 
   private calculatePosition = (): void => {
-    if (!this.isOpen()) {
+    if (!this.isOpen() || !this.window) {
       return;
     }
     const rect = this.hostRef.nativeElement.getBoundingClientRect();
-    const viewportHeight = this.window?.innerHeight || 0;
+    const viewportHeight = this.window.innerHeight;
+    const viewportWidth = this.window.innerWidth;
     const spaceBelow = viewportHeight - rect.bottom;
-    this.openUpwards.set(spaceBelow < 320 && rect.top > spaceBelow);
+
+    const dir = this.direction();
+    let up = false;
+    if (dir === 'up') {
+      up = true;
+    } else if (dir === 'down') {
+      up = false;
+    } else {
+      up = spaceBelow < 320 && rect.top > spaceBelow;
+    }
+    this.openUpwards.set(up);
+
+    this.panelMinWidth.set(rect.width);
+
+    const center = rect.left + (rect.width / 2);
+    if (center > viewportWidth / 2) {
+      this.panelLeft.set(null);
+      this.panelRight.set(viewportWidth - rect.right);
+      this.panelMaxWidth.set(rect.right - 16);
+    } else {
+      this.panelLeft.set(rect.left);
+      this.panelRight.set(null);
+      this.panelMaxWidth.set(viewportWidth - rect.left - 16);
+    }
+
+    if (up) {
+      this.panelBottom.set(viewportHeight - rect.top + 6);
+      this.panelTop.set(null);
+    } else {
+      this.panelTop.set(rect.bottom + 6);
+      this.panelBottom.set(null);
+    }
+  };
+
+  private onWindowScroll = (event: Event): void => {
+    const target = event.target as Node | null;
+    const panel = this.document.getElementById(`app-dropdown-panel-${this.uid}`);
+    if (panel && target && panel.contains(target)) {
+      return;
+    }
+    this.calculatePosition();
   };
 
   private onWindowClick = (event: MouseEvent): void => {
     const target = event.target as Node | null;
     if (target && !this.hostRef.nativeElement.contains(target)) {
+      const panel = this.document.getElementById(`app-dropdown-panel-${this.uid}`);
+      if (panel && panel.contains(target)) {
+        return;
+      }
       this.isOpen.set(false);
       this.onTouched();
     }
@@ -368,9 +435,18 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
   writeValue(value: T | null | undefined): void {
     if (value === null || value === undefined) {
       this.selected.set(null);
+      this.pendingValue = null;
       return;
     }
-    this.selected.set(this.options().find((option) => option.value === value) ?? null);
+
+    const found = this.options().find((option) => option.value === value);
+    if (found) {
+      this.selected.set(found);
+      this.pendingValue = null;
+    } else {
+      this.selected.set(null);
+      this.pendingValue = value;
+    }
   }
 
   registerOnChange(fn: (value: T | null) => void): void {

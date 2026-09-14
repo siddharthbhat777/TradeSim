@@ -2,18 +2,33 @@ package com.siddharth.tradesim_backend.auth.service;
 
 import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.auth.repository.RefreshTokenRepository;
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
+import com.siddharth.tradesim_backend.auth.enums.OtpPurpose;
 import com.siddharth.tradesim_backend.auth.enums.Role;
+import com.siddharth.tradesim_backend.auth.enums.ThemePreference;
 import com.siddharth.tradesim_backend.auth.AuthException;
 import com.siddharth.tradesim_backend.auth.model.User;
+import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
+import com.siddharth.tradesim_backend.order.enums.OrderStatus;
+import com.siddharth.tradesim_backend.order.model.Order;
+import com.siddharth.tradesim_backend.order.repository.OrderRepository;
+import com.siddharth.tradesim_backend.order.service.OrderLifecycleService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,36 +39,89 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final RefreshTokenService refreshTokenService;
+    private final SupportedCurrencyRepository supportedCurrencyRepository;
+    private final OrderRepository orderRepository;
+    private final OrderLifecycleService orderLifecycleService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final OtpService otpService;
+
+    @Transactional
+    public void requestOtp(SendOtpRequest request) {
+        if (request.purpose() == OtpPurpose.REGISTRATION && authRepository.existsByEmail(request.email())) {
+            throw AuthException.conflict("Email is already registered");
+        }
+
+        if (request.purpose() == OtpPurpose.FORGOT_PASSWORD && !authRepository.existsByEmail(request.email())) {
+            throw AuthException.notFound("User not found");
+        }
+
+        otpService.generateAndSendOtp(request.email(), request.purpose());
+    }
 
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.REGISTRATION);
         return registerUserWithRole(request, Role.USER);
     }
 
     @Transactional
     public RegisterResponse registerCompanyRepresentative(RegisterRequest request) {
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.REGISTRATION);
         return registerUserWithRole(request, Role.COMPANY_REPRESENTATIVE);
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.FORGOT_PASSWORD);
+
+        User user = authRepository.findByUsernameOrEmail(request.email())
+                .orElseThrow(() -> AuthException.notFound("User not found"));
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        authRepository.save(user);
+
+        refreshTokenRepository.revokeActiveTokensForUser(user.getId(), Instant.now());
     }
 
     @Transactional
     public AuthTokenResult loginUser(LoginRequest request) {
         User user = authenticateCredentials(request.usernameOrEmail(), request.password());
-
         assertCanLogin(user);
-
         return issueTokens(user);
     }
 
     @Transactional
     public AuthTokenResult reactivateAccount(ReactivateRequest request) {
         User user = authenticateCredentials(request.usernameOrEmail(), request.password());
-
         assertCanReactivate(user);
-
         user.setAccountStatus(AccountStatus.ACTIVE);
-
         return issueTokens(user);
+    }
+
+    @Transactional
+    public void deactivateAccount(UUID userId, DeactivateRequest request) {
+        User user = authRepository.findById(userId)
+                .orElseThrow(() -> AuthException.unauthorized("User not found"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw AuthException.unauthorized(INVALID_CREDENTIALS_MESSAGE);
+        }
+
+        if (user.getAccountStatus() == AccountStatus.DEACTIVATED) {
+            throw AuthException.conflict("Account is already deactivated.");
+        }
+
+        List<Order> openOrders = orderRepository.findByUserIdAndStatusIn(userId, List.of(OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED));
+        for (Order order : openOrders) {
+            orderLifecycleService.cancelOrder(order);
+        }
+
+        user.setAccountStatus(AccountStatus.DEACTIVATED);
+        authRepository.save(user);
+
+        refreshTokenRepository.revokeActiveTokensForUser(userId, Instant.now());
     }
 
     @Transactional
@@ -84,25 +152,71 @@ public class AuthService {
 
         try {
             User user = User.builder()
+                    .fullName(request.fullName())
                     .username(request.username())
                     .email(request.email())
                     .password(passwordEncoder.encode(request.password()))
+                    .linkedBankName(request.linkedBankName())
                     .role(role)
                     .accountStatus(AccountStatus.ACTIVE)
+                    .themePreference(ThemePreference.SYSTEM)
+                    .countryCode(request.countryCode())
+                    .bankBalance(new BigDecimal("10000000.0000"))
                     .build();
 
             User saved = authRepository.save(user);
-            tradingAccountService.createTradingAccountForUser(saved.getId());
+
+            String baseCurrency = resolveBaseCurrency(request.countryCode(), request.baseCurrency());
+            tradingAccountService.createTradingAccountForUser(saved.getId(), baseCurrency);
+            walletService.createWalletForUser(saved.getId(), baseCurrency);
 
             return new RegisterResponse(
                     saved.getId(),
+                    saved.getFullName(),
                     saved.getUsername(),
                     saved.getEmail(),
+                    saved.getLinkedBankName(),
                     saved.getRole(),
                     saved.getAccountStatus()
             );
         } catch (DataIntegrityViolationException e) {
             throw AuthException.badRequest("Invalid user data");
+        }
+    }
+
+    private String resolveBaseCurrency(String countryCode, String requestedBaseCurrency) {
+        String countryCurrency = resolveNativeCurrencyFromCountryCode(countryCode);
+        if (countryCurrency != null && isSupportedCurrency(countryCurrency)) {
+            return countryCurrency;
+        }
+        if (requestedBaseCurrency == null || requestedBaseCurrency.isBlank()) {
+            throw AuthException.badRequest("Base currency is required because your country's native currency is not supported for wallets");
+        }
+        String candidate = requestedBaseCurrency.trim().toUpperCase();
+        if (isSupportedCurrency(candidate)) {
+            return candidate;
+        }
+        throw AuthException.badRequest("Selected base currency is not supported");
+    }
+
+    private boolean isSupportedCurrency(String countryCurrency) {
+        if (countryCurrency.equalsIgnoreCase("INR")) {
+            return true;
+        }
+        return supportedCurrencyRepository.findById(countryCurrency)
+                .map(SupportedCurrency::isActive)
+                .orElse(false);
+    }
+
+    private String resolveNativeCurrencyFromCountryCode(String countryCode) {
+        if (countryCode == null || countryCode.isBlank()) {
+            return null;
+        }
+        try {
+            Locale locale = Locale.of("", countryCode.trim().toUpperCase());
+            return Currency.getInstance(locale).getCurrencyCode();
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 

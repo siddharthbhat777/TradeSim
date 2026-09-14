@@ -22,19 +22,19 @@ public class PortfolioController {
     private final PortfolioService portfolioService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<PortfolioResponse> getPortfolio(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(portfolioService.fetchPortfolio(user.getUserId()));
     }
 
     @GetMapping("history")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<PortfolioHistoryResponse>> getPortfolioHistory(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(portfolioService.fetchPortfolioHistory(principal.getUserId()));
     }
 
     @GetMapping("exposure")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<PortfolioExposureResponse>> getExposure(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(portfolioService.fetchExposure(principal.getUserId()));
     }

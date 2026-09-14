@@ -12,16 +12,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class PositionTest {
 
     @Test
-    void shouldCalculateAverageBuyPriceCorrectly() {
+    void shouldAddInvestmentCorrectly() {
         Position position = Position.builder()
                 .quantity(10)
                 .lockedQuantity(0)
                 .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(1000))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 
-        position.updateAverageBuyPrice(BigDecimal.valueOf(200), 10);
+        position.addInvestment(BigDecimal.valueOf(2000), 10);
 
+        assertThat(position.getQuantity()).isEqualTo(20);
+        assertThat(position.getTotalInvested()).isEqualByComparingTo("3000");
         assertThat(position.getAverageBuyPrice()).isEqualByComparingTo("150.0000");
     }
 
@@ -31,6 +34,7 @@ class PositionTest {
                 .quantity(10)
                 .lockedQuantity(0)
                 .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(1000))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 
@@ -46,6 +50,7 @@ class PositionTest {
                 .quantity(5)
                 .lockedQuantity(0)
                 .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(500))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 
@@ -58,6 +63,7 @@ class PositionTest {
                 .quantity(10)
                 .lockedQuantity(5)
                 .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(1000))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 
@@ -72,12 +78,32 @@ class PositionTest {
                 .quantity(10)
                 .lockedQuantity(0)
                 .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(1000))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 
         position.decreaseQuantity(4);
 
         assertThat(position.getQuantity()).isEqualTo(6);
+        assertThat(position.getTotalInvested()).isEqualByComparingTo("600");
+        assertThat(position.getAverageBuyPrice()).isEqualByComparingTo("100");
+    }
+
+    @Test
+    void shouldClearValuesWhenDecreasingToZero() {
+        Position position = Position.builder()
+                .quantity(10)
+                .lockedQuantity(0)
+                .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(1000))
+                .realizedPnl(BigDecimal.ZERO)
+                .build();
+
+        position.decreaseQuantity(10);
+
+        assertThat(position.getQuantity()).isEqualTo(0);
+        assertThat(position.getTotalInvested()).isEqualByComparingTo("0");
+        assertThat(position.getAverageBuyPrice()).isEqualByComparingTo("0");
     }
 
     @Test
@@ -86,6 +112,7 @@ class PositionTest {
                 .quantity(5)
                 .lockedQuantity(0)
                 .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(500))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 
@@ -98,6 +125,7 @@ class PositionTest {
                 .quantity(10)
                 .lockedQuantity(0)
                 .averageBuyPrice(BigDecimal.valueOf(100))
+                .totalInvested(BigDecimal.valueOf(1000))
                 .realizedPnl(BigDecimal.ZERO)
                 .build();
 

@@ -1,10 +1,14 @@
 import { Injectable, signal } from '@angular/core';
 
+export type DialogVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
+
 export interface DialogOptions {
     title?: string;
-    message: string;
+    message?: string;
+    messageHtml?: string;
     primaryLabel?: string;
     secondaryLabel?: string;
+    primaryVariant?: DialogVariant;
     isBlocking?: boolean;
     showClose?: boolean;
     onPrimary?: () => void;

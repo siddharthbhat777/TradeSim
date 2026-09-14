@@ -17,6 +17,7 @@ public class TradingAccountController {
     private final TradingAccountService tradingAccountService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<TradingAccountResponse> getMyTradingAccount(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(tradingAccountService.fetchMyTradingAccount(principal.getUserId()));
     }

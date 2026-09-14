@@ -62,7 +62,8 @@ class OrderControllerTest {
                 OrderSide.BUY,
                 OrderType.LIMIT,
                 TimeInForce.DAY,
-                BigDecimal.valueOf(100)
+                BigDecimal.valueOf(100),
+                null
         );
 
         OrderResponse response = new OrderResponse(

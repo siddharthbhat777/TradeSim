@@ -1,0 +1,38 @@
+<div class="summary-grid">
+    <app-card>
+        <span class="summary-label">Total Equity</span>
+        <h2 class="summary-value">{{ portfolio()?.equity || 0 | formatCurrency:baseCurrency():'currency':2 }}</h2>
+    </app-card>
+
+    <app-card>
+        <span class="summary-label">Realized P&L</span>
+        <div class="summary-value">
+            <app-price-indicator [value]="portfolio()?.totalRealizedPnl || 0" [currency]="baseCurrency()"
+                [showPercentage]="false" [valueDecimals]="2"></app-price-indicator>
+        </div>
+    </app-card>
+
+    <app-card>
+        <span class="summary-label">Unrealized P&L</span>
+        <div class="summary-value">
+            <app-price-indicator [value]="portfolio()?.totalUnrealizedPnl || 0" [currency]="baseCurrency()"
+                [showPercentage]="false" [valueDecimals]="2"></app-price-indicator>
+        </div>
+    </app-card>
+
+    <app-card>
+        <div class="health-header">
+            <span class="summary-label">Margin Health</span>
+            <span class="health-status" [class]="'health-status--' + (risk()?.riskLevel | lowercase)">{{
+                risk()?.riskLevel || 'SAFE' }}</span>
+        </div>
+        <div class="health-bar-container">
+            <div class="health-bar" [class]="'health-bar--' + (risk()?.riskLevel | lowercase)"
+                [style.width.%]="marginUsedPercent()"></div>
+        </div>
+        <div class="health-footer">
+            <span>Used: {{ risk()?.marginUsed || 0 | formatCurrency:baseCurrency():'currency':0 }}</span>
+            <span>Maint: {{ risk()?.maintenanceMargin || 0 | formatCurrency:baseCurrency():'currency':0 }}</span>
+        </div>
+    </app-card>
+</div>

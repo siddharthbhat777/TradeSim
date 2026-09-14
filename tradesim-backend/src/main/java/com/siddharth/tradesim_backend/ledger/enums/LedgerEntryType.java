@@ -2,6 +2,8 @@ package com.siddharth.tradesim_backend.ledger.enums;
 
 public enum LedgerEntryType {
     INITIAL_CREDIT,
+    DEPOSIT,
+    WITHDRAWAL,
     BUY_LIMIT_MARGIN_LOCK,
     BUY_LIMIT_MARGIN_UNLOCK,
     BUY_ORDER_MARGIN_LOCK,
@@ -12,5 +14,6 @@ public enum LedgerEntryType {
     MARGIN_LOAN_REPAYMENT,
     IPO_SUBSCRIPTION_LOCK,
     IPO_SUBSCRIPTION_UNLOCK,
-    IPO_ALLOTMENT_DEBIT
+    IPO_ALLOTMENT_DEBIT,
+    FX_CONVERSION_FEE
 }

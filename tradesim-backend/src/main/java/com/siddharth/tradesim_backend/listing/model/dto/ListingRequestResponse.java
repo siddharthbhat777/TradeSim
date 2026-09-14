@@ -5,6 +5,7 @@ import com.siddharth.tradesim_backend.stock.enums.Sector;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record ListingRequestResponse(
@@ -16,6 +17,8 @@ public record ListingRequestResponse(
         BigDecimal referencePrice,
         Sector sector,
         BigDecimal priceBandPercent,
+        Integer totalShares,
+        List<CapTableEntryResponse> capTable,
         ListingStatus status,
         UUID reviewedByUserId,
         Instant reviewedAt,

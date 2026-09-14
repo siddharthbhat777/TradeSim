@@ -111,12 +111,15 @@ class PortfolioSnapshotServiceTest {
     private PortfolioResponse portfolioResponse(BigDecimal totalValue) {
         return new PortfolioResponse(
                 List.of(),
+                BigDecimal.valueOf(100),
+                BigDecimal.ZERO,
                 totalValue,
                 BigDecimal.valueOf(400),
                 BigDecimal.valueOf(100),
                 BigDecimal.valueOf(50),
                 BigDecimal.valueOf(150),
-                totalValue.add(BigDecimal.valueOf(100))
+                totalValue.add(BigDecimal.valueOf(100)),
+                "INR"
         );
     }
 }

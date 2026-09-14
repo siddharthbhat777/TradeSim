@@ -63,6 +63,7 @@ export class Tooltip {
   }
 
   private show(): void {
+    if (!this.text()) return;
     const panel = this.panelRef().nativeElement as HTMLElement & { showPopover?: () => void };
     panel.showPopover?.();
     this.isOpen.set(true);

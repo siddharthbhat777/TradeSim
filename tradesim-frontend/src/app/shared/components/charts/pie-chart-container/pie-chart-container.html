@@ -6,10 +6,11 @@
 <div class="container-layout" [class]="['pos-' + legendPosition(), wrap() ? 'wrap' : 'nowrap']">
     <div class="chart-section">
         <app-pie-chart [data]="data()" [shape]="shape()" [chartStyle]="chartStyle()" [size]="size()"
-            [activeSliceId]="activeSliceId()" (sliceHover)="onSliceHover($event)" />
+            [currency]="currency()" [activeSliceId]="activeSliceId()" (sliceHover)="onSliceHover($event)" />
     </div>
     <div class="legend-section">
-        <app-legend [data]="data()" [activeId]="activeSliceId()" (itemHover)="onLegendHover($event)" />
+        <app-legend [data]="data()" [currency]="currency()" [activeId]="activeSliceId()"
+            (itemHover)="onLegendHover($event)" />
     </div>
 </div>
 }

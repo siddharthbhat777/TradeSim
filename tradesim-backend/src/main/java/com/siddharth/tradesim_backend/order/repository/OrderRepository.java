@@ -16,4 +16,5 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByStockIdAndStatusIn(UUID stockId, List<OrderStatus> statuses);
     List<Order> findByUserIdAndStatusIn(UUID userId, List<OrderStatus> statuses);
     List<Order> findByStatusInAndExpiresAtLessThanEqual(Collection<OrderStatus> statuses, Instant expiresAt);
+    List<Order> findByUserIdOrderByCreatedAtDesc(UUID userId);
 }

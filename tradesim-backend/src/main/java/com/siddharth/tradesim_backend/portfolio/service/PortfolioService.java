@@ -1,6 +1,11 @@
 package com.siddharth.tradesim_backend.portfolio.service;
 
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
 import com.siddharth.tradesim_backend.portfolio.PortfolioSnapshotRepository;
@@ -16,6 +21,9 @@ import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.user.UserException;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +41,25 @@ public class PortfolioService {
     private final AuthRepository authRepository;
     private final PortfolioSnapshotRepository portfolioSnapshotRepository;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final LedgerService ledgerService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
+    private final FxFeeService fxFeeService;
 
     public PortfolioResponse fetchPortfolio(UUID userId) {
-        authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
+        if (!authRepository.existsById(userId)) {
+            throw UserException.notFound("User not found");
+        }
+
         TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+        Wallet wallet = walletService.getWalletByUserId(userId);
+        String baseCurrency = tradingAccount.getBaseCurrency();
+
+        BigDecimal totalCashValue = BigDecimal.ZERO;
+        for (WalletBucket bucket : wallet.getBuckets()) {
+            totalCashValue = totalCashValue.add(forexService.convert(bucket.getBalance(), bucket.getCurrency(), baseCurrency));
+        }
 
         List<Position> positions = positionRepository.findByUserId(userId);
         List<UUID> stockIds = positions.stream().map(Position::getStockId).toList();
@@ -56,10 +78,27 @@ public class PortfolioService {
                 throw StockException.notFound("Stock not found");
             }
 
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal currentValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
-            BigDecimal invested = position.getAverageBuyPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+            String nativeCurrency = exchange.getCurrency();
+
+            BigDecimal fxRate = forexService.convert(BigDecimal.ONE, nativeCurrency, baseCurrency);
+
+            BigDecimal nativeCurrentPrice = stock.getLastTradedPrice() != null ? stock.getLastTradedPrice() : BigDecimal.ZERO;
+            BigDecimal nativeCurrentValue = nativeCurrentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+
+            BigDecimal currentPriceInAccountCurrency = nativeCurrentPrice.multiply(fxRate).setScale(4, RoundingMode.HALF_UP);
+            BigDecimal currentValue = nativeCurrentValue.multiply(fxRate).setScale(4, RoundingMode.HALF_UP);
+
+            BigDecimal invested = position.getTotalInvested();
+            BigDecimal unrealizedPnl = currentValue.subtract(invested);
+
+            BigDecimal nativeInvested = invested.compareTo(BigDecimal.ZERO) > 0 && fxRate.compareTo(BigDecimal.ZERO) > 0
+                    ? invested.divide(fxRate, 4, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            BigDecimal nativeAverageBuyPrice = position.getQuantity() > 0
+                    ? nativeInvested.divide(BigDecimal.valueOf(position.getQuantity()), 4, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            BigDecimal nativeUnrealizedPnl = nativeCurrentValue.subtract(nativeInvested);
 
             totalValue = totalValue.add(currentValue);
             totalInvested = totalInvested.add(invested);
@@ -71,24 +110,35 @@ public class PortfolioService {
                     stock.getSymbol(),
                     position.getQuantity(),
                     position.getAverageBuyPrice(),
-                    currentPrice,
+                    currentPriceInAccountCurrency,
                     currentValue,
-                    unrealizedPnl
+                    unrealizedPnl,
+                    nativeAverageBuyPrice,
+                    nativeCurrentPrice,
+                    nativeCurrentValue,
+                    nativeUnrealizedPnl,
+                    invested,
+                    nativeCurrency,
+                    fxRate
             );
 
             responses.add(response);
         }
 
-        BigDecimal equity = tradingAccount.calculateEquity(totalValue);
+        BigDecimal equity = totalCashValue.add(totalValue).subtract(tradingAccount.getMarginLoan());
         BigDecimal totalPnl = totalRealizedPnl.add(totalUnrealizedPnl);
+
         return new PortfolioResponse(
                 responses,
+                totalCashValue,
+                tradingAccount.getMarginLoan(),
                 totalValue,
                 totalInvested,
                 totalUnrealizedPnl,
                 totalRealizedPnl,
                 totalPnl,
-                equity
+                equity,
+                baseCurrency
         );
     }
 
@@ -109,6 +159,11 @@ public class PortfolioService {
 
     @Transactional(readOnly = true)
     public List<PortfolioExposureResponse> fetchExposure(UUID userId) {
+        if (!authRepository.existsById(userId)) {
+            throw UserException.notFound("User not found");
+        }
+
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
         List<Position> positions = positionRepository.findByUserId(userId);
 
         if (positions.isEmpty()) {
@@ -125,8 +180,11 @@ public class PortfolioService {
             if (stock == null) {
                 throw StockException.notFound("Stock not found");
             }
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal value = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
+            BigDecimal totalValueInStockCurrency = stock.getLastTradedPrice().multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal value = forexService.convert(totalValueInStockCurrency, exchange.getCurrency(), tradingAccount.getBaseCurrency());
 
             positionValues.put(position.getStockId(), value);
 
@@ -165,10 +223,15 @@ public class PortfolioService {
         if (execution.buyerId().equals(execution.sellerId())) {
             throw PortfolioException.conflict("Self-trading is not allowed");
         }
-        BigDecimal tradeValue = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
 
-        authRepository.findById(execution.buyerId()).orElseThrow(() -> UserException.notFound("User not found"));
-        authRepository.findById(execution.sellerId()).orElseThrow(() -> UserException.notFound("User not found"));
+        if (!authRepository.existsById(execution.buyerId()) || !authRepository.existsById(execution.sellerId())) {
+            throw UserException.notFound("User not found");
+        }
+
+        Stock stock = stockRepository.findById(execution.stockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
+        String stockCurrency = exchange.getCurrency();
 
         UUID firstLockedUserId = execution.buyerId().compareTo(execution.sellerId()) <= 0 ? execution.buyerId() : execution.sellerId();
         UUID secondLockedUserId = firstLockedUserId.equals(execution.buyerId()) ? execution.sellerId() : execution.buyerId();
@@ -179,11 +242,26 @@ public class PortfolioService {
         TradingAccount buyerTradingAccount = execution.buyerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
         TradingAccount sellerTradingAccount = execution.sellerId().equals(firstLockedUserId) ? firstLockedAccount : secondLockedAccount;
 
-        Position sellerPosition = positionRepository.findByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
+        String buyerFundingCurrency = execution.buyerFundingCurrency() != null ? execution.buyerFundingCurrency() : buyerTradingAccount.getBaseCurrency();
+        String sellerCurrency = execution.sellerFundingCurrency() != null ? execution.sellerFundingCurrency() : sellerTradingAccount.getBaseCurrency();
 
-        settleBuyer(execution, buyerTradingAccount, tradeValue);
-        settleSeller(execution, sellerTradingAccount, sellerPosition, tradeValue);
-        Position buyerPosition = updateBuyerPosition(execution);
+        Wallet buyerWallet = walletService.getWalletByUserId(execution.buyerId());
+        WalletBucket buyerBucket = walletService.getOrCreateBucketForUpdate(buyerWallet.getId(), buyerFundingCurrency);
+
+        Wallet sellerWallet = walletService.getWalletByUserId(execution.sellerId());
+        WalletBucket sellerBucket = walletService.getOrCreateBucketForUpdate(sellerWallet.getId(), sellerCurrency);
+
+        BigDecimal tradeValueInStockCurrency = execution.executionPrice().multiply(BigDecimal.valueOf(execution.quantity()));
+
+        BigDecimal exactBuyerTradeValueInFundingCurrency = forexService.convert(tradeValueInStockCurrency, stockCurrency, buyerFundingCurrency);
+        BigDecimal exactBuyerTradeValueInBaseCurrency = forexService.convert(tradeValueInStockCurrency, stockCurrency, buyerTradingAccount.getBaseCurrency());
+        BigDecimal exactSellerTradeValue = forexService.convert(tradeValueInStockCurrency, stockCurrency, sellerCurrency);
+
+        Position sellerPosition = positionRepository.findUnlockedByUserIdAndStockId(execution.sellerId(), execution.stockId()).orElseThrow(() -> PositionException.notFound("Seller position not found"));
+
+        settleBuyer(execution, buyerBucket, buyerTradingAccount, exactBuyerTradeValueInFundingCurrency, exactBuyerTradeValueInBaseCurrency, stockCurrency, buyerFundingCurrency);
+        settleSeller(execution, sellerBucket, sellerTradingAccount, sellerPosition, exactSellerTradeValue, stockCurrency, sellerCurrency);
+        Position buyerPosition = updateBuyerPosition(execution, exactBuyerTradeValueInBaseCurrency);
         positionRepository.save(buyerPosition);
 
         tradingAccountService.saveTradingAccount(buyerTradingAccount);
@@ -196,107 +274,155 @@ public class PortfolioService {
         }
     }
 
-    private void settleBuyer(TradeExecution execution, TradingAccount buyerTradingAccount, BigDecimal tradeValue) {
+    private void settleBuyer(TradeExecution execution, WalletBucket buyerBucket, TradingAccount buyerTradingAccount, BigDecimal exactBuyerTradeValueInFundingCurrency, BigDecimal exactBuyerTradeValueInBaseCurrency, String stockCurrency, String buyerFundingCurrency) {
         if (execution.buyerFundsReserved()) {
             if (execution.buyerReservationPrice() == null) {
                 throw PortfolioException.conflict("Missing buyer reservation price");
             }
 
-            BigDecimal reservedMargin = execution.buyerReservationPrice()
+            BigDecimal reservedMarginInStockCurrency = execution.buyerReservationPrice()
                     .multiply(BigDecimal.valueOf(execution.quantity()))
                     .divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
 
-            buyerTradingAccount.unlockFunds(reservedMargin);
+            BigDecimal reservedMarginInFundingCurrency = forexService.convert(reservedMarginInStockCurrency, stockCurrency, buyerFundingCurrency);
+            BigDecimal reservedFxFee = fxFeeService.calculateConversionFee(buyerFundingCurrency, stockCurrency, reservedMarginInFundingCurrency);
+            BigDecimal totalLocked = reservedMarginInFundingCurrency.add(reservedFxFee);
+
+            buyerBucket.setLockedBalance(buyerBucket.getLockedBalance().subtract(totalLocked));
 
             if (execution.buyerOrderType() == OrderType.LIMIT) {
                 ledgerService.recordBuyLimitMarginUnlock(
+                        buyerBucket,
                         buyerTradingAccount,
-                        reservedMargin,
+                        totalLocked,
                         execution.stockId(),
                         execution.buyOrderId()
                 );
             } else {
                 ledgerService.recordBuyOrderMarginUnlock(
+                        buyerBucket,
                         buyerTradingAccount,
-                        reservedMargin,
+                        totalLocked,
                         execution.stockId(),
                         execution.buyOrderId()
                 );
             }
         }
 
-        BigDecimal requiredMargin = tradeValue.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
-        buyerTradingAccount.debit(requiredMargin);
+        BigDecimal requiredMarginInFundingCurrency = exactBuyerTradeValueInFundingCurrency.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal executionFxFee = fxFeeService.calculateConversionFee(buyerFundingCurrency, stockCurrency, requiredMarginInFundingCurrency);
+
+        buyerBucket.setBalance(buyerBucket.getBalance().subtract(requiredMarginInFundingCurrency));
+        if (executionFxFee.compareTo(BigDecimal.ZERO) > 0) {
+            buyerBucket.setBalance(buyerBucket.getBalance().subtract(executionFxFee));
+        }
+
         ledgerService.recordTradeMarginDebit(
+                buyerBucket,
                 buyerTradingAccount,
-                requiredMargin,
+                requiredMarginInFundingCurrency,
                 execution.stockId(),
                 execution.buyOrderId()
         );
 
-        BigDecimal loanIncrease = tradeValue.subtract(requiredMargin);
-        if (loanIncrease.compareTo(BigDecimal.ZERO) > 0) {
-            buyerTradingAccount.increaseMarginLoan(loanIncrease);
-            ledgerService.recordMarginLoanIncrease(
+        if (executionFxFee.compareTo(BigDecimal.ZERO) > 0) {
+            ledgerService.recordFxConversionFee(
+                    buyerBucket,
                     buyerTradingAccount,
-                    loanIncrease,
+                    executionFxFee,
+                    execution.stockId(),
+                    execution.buyOrderId(),
+                    null,
+                    buyerFundingCurrency,
+                    stockCurrency
+            );
+        }
+
+        BigDecimal requiredMarginInBaseCurrency = exactBuyerTradeValueInBaseCurrency.divide(BigDecimal.valueOf(buyerTradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal loanIncreaseInBaseCurrency = exactBuyerTradeValueInBaseCurrency.subtract(requiredMarginInBaseCurrency);
+
+        if (loanIncreaseInBaseCurrency.compareTo(BigDecimal.ZERO) > 0) {
+            buyerTradingAccount.increaseMarginLoan(loanIncreaseInBaseCurrency);
+            ledgerService.recordMarginLoanIncrease(
+                    buyerBucket,
+                    buyerTradingAccount,
+                    loanIncreaseInBaseCurrency,
                     execution.stockId(),
                     execution.buyOrderId()
             );
         }
     }
 
-    private void settleSeller(TradeExecution execution, TradingAccount sellerTradingAccount, Position sellerPosition, BigDecimal tradeValue) {
+    private void settleSeller(TradeExecution execution, WalletBucket sellerBucket, TradingAccount sellerTradingAccount, Position sellerPosition, BigDecimal exactSellerTradeValue, String stockCurrency, String sellerCurrency) {
         if (execution.sellerSharesReserved()) {
             sellerPosition.unlockShares(execution.quantity());
         }
 
-        BigDecimal executionPrice = execution.executionPrice();
-        BigDecimal averagePrice = sellerPosition.getAverageBuyPrice();
+        BigDecimal costBasis = sellerPosition.getTotalInvested()
+                .multiply(BigDecimal.valueOf(execution.quantity()))
+                .divide(BigDecimal.valueOf(sellerPosition.getQuantity()), 4, RoundingMode.HALF_UP);
 
-        BigDecimal pnl = executionPrice.subtract(averagePrice).multiply(BigDecimal.valueOf(execution.quantity()));
+        BigDecimal pnl = exactSellerTradeValue.subtract(costBasis);
+
         sellerPosition.decreaseQuantity(execution.quantity());
         sellerPosition.addRealizedPnl(pnl);
 
-        BigDecimal remainingProceeds = tradeValue;
-        BigDecimal loanToRepay = sellerTradingAccount.getMarginLoan().min(remainingProceeds);
+        BigDecimal executionFxFee = fxFeeService.calculateConversionFee(stockCurrency, sellerCurrency, exactSellerTradeValue);
+        BigDecimal netProceedsBase = exactSellerTradeValue.subtract(executionFxFee);
+
+        BigDecimal loanToRepay = sellerTradingAccount.getMarginLoan().min(netProceedsBase);
         if (loanToRepay.compareTo(BigDecimal.ZERO) > 0) {
             sellerTradingAccount.decreaseMarginLoan(loanToRepay);
             ledgerService.recordMarginLoanRepayment(
+                    sellerBucket,
                     sellerTradingAccount,
                     loanToRepay,
                     execution.stockId(),
                     execution.sellOrderId()
             );
-            remainingProceeds = remainingProceeds.subtract(loanToRepay);
+            netProceedsBase = netProceedsBase.subtract(loanToRepay);
         }
-        if (remainingProceeds.compareTo(BigDecimal.ZERO) > 0) {
-            sellerTradingAccount.credit(remainingProceeds);
+        if (netProceedsBase.compareTo(BigDecimal.ZERO) > 0) {
+            sellerBucket.setBalance(sellerBucket.getBalance().add(netProceedsBase));
             ledgerService.recordTradeProceedsCredit(
+                    sellerBucket,
                     sellerTradingAccount,
-                    remainingProceeds,
+                    netProceedsBase,
                     execution.stockId(),
                     execution.sellOrderId()
             );
         }
+
+        if (executionFxFee.compareTo(BigDecimal.ZERO) > 0) {
+            ledgerService.recordFxConversionFee(
+                    sellerBucket,
+                    sellerTradingAccount,
+                    executionFxFee,
+                    execution.stockId(),
+                    execution.sellOrderId(),
+                    null,
+                    stockCurrency,
+                    sellerCurrency
+            );
+        }
     }
 
-    private Position updateBuyerPosition(TradeExecution execution) {
-        Position buyerPosition = positionRepository.findByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
+    private Position updateBuyerPosition(TradeExecution execution, BigDecimal exactBuyerTradeValue) {
+        Position buyerPosition = positionRepository.findUnlockedByUserIdAndStockId(execution.buyerId(), execution.stockId()).orElse(null);
 
         if (buyerPosition == null) {
             buyerPosition = Position.builder()
                     .userId(execution.buyerId())
                     .stockId(execution.stockId())
-                    .averageBuyPrice(execution.executionPrice())
+                    .averageBuyPrice(BigDecimal.ZERO)
+                    .totalInvested(BigDecimal.ZERO)
                     .realizedPnl(BigDecimal.ZERO)
                     .quantity(0)
                     .lockedQuantity(0)
                     .build();
         }
 
-        buyerPosition.updateAverageBuyPrice(execution.executionPrice(), execution.quantity());
-        buyerPosition.increaseQuantity(execution.quantity());
+        buyerPosition.addInvestment(exactBuyerTradeValue, execution.quantity());
         return buyerPosition;
     }
 }

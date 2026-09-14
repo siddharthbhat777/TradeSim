@@ -19,7 +19,7 @@ public class PositionController {
     private final PositionService positionService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<PositionResponse>> getPositions(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(positionService.fetchPositions(principal.getUserId()));
     }

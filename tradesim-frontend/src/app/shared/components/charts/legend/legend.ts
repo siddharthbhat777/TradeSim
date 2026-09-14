@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { FormatCurrencyPipe } from '../../../pipes/format-currency-pipe';
 
 export interface LegendItem {
   id: string;
@@ -14,7 +14,7 @@ interface CalculatedLegendItem extends LegendItem {
 
 @Component({
   selector: 'app-legend',
-  imports: [DecimalPipe],
+  imports: [FormatCurrencyPipe],
   templateUrl: './legend.html',
   styleUrl: './legend.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -23,6 +23,7 @@ export class Legend {
   readonly data = input.required<LegendItem[]>();
   readonly activeId = input<string | null>(null);
   readonly showPercentage = input<boolean>(true);
+  readonly currency = input<string>('INR');
   readonly itemHover = output<string | null>();
 
   readonly calculatedData = computed<CalculatedLegendItem[]>(() => {

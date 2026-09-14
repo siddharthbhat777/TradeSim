@@ -3,13 +3,17 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 24px;
+  padding: 16px;
   box-shadow: var(--shadow);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease,
     background-color 0.3s ease;
+
+  @media (min-width: 768px) {
+    padding: 24px;
+  }
 
   &--loading {
     cursor: wait;

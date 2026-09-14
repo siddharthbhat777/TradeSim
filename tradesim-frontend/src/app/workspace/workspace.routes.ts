@@ -1,49 +1,79 @@
 import { Routes } from '@angular/router';
+import { Workspace } from './workspace';
+import { userGuard } from '../guards/user';
+import { adminGuard } from '../guards/admin';
+import { representativeGuard } from '../guards/representative';
+import { Role } from '../constants/auth';
+import { inject } from '@angular/core';
+import { AuthService } from '../services/auth/auth-service';
+
+const resolveWorkspaceRedirect = () => {
+    const role = inject(AuthService).currentUser()?.role;
+    if (role === Role.admin) return 'admin';
+    if (role === Role.companyRepresentative) return 'representative';
+    return 'portfolio';
+};
 
 export const workspaceRoutes: Routes = [
     {
         path: '',
-        pathMatch: 'full',
-        redirectTo: 'dashboard'
-    },
-    {
-        path: 'dashboard',
-        loadComponent: () => import('./pages/dashboard/dashboard').then((module) => module.Dashboard),
-        title: 'Dashboard'
-    },
-    {
-        path: 'stock',
-        loadComponent: () => import('./pages/stock/stock').then((module) => module.Stock),
-        title: 'Stock Details'
-    },
-    {
-        path: 'portfolio',
-        loadComponent: () => import('./pages/portfolio/portfolio').then((module) => module.Portfolio),
-        title: 'Portfolio'
-    },
-    {
-        path: 'position',
-        loadComponent: () => import('./pages/position/position').then((module) => module.Position),
-        title: 'Position'
-    },
-    {
-        path: 'ipo',
-        loadComponent: () => import('./pages/ipo/ipo').then((module) => module.Ipo),
-        title: 'IPO Center'
-    },
-    {
-        path: 'account',
-        loadComponent: () => import('./pages/account/account').then((module) => module.Account),
-        title: 'Account'
-    },
-    {
-        path: 'order',
-        loadComponent: () => import('./pages/order/order').then((module) => module.Order),
-        title: 'Order'
-    },
-    {
-        path: '**',
-        loadComponent: () => import('./pages/not-found/not-found').then((module) => module.NotFound),
-        title: 'Not found'
+        component: Workspace,
+        children: [
+            {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: resolveWorkspaceRedirect
+            },
+            {
+                path: 'portfolio',
+                canMatch: [userGuard],
+                loadComponent: () => import('./pages/portfolio/portfolio').then((module) => module.Portfolio),
+                title: 'Portfolio'
+            },
+            {
+                path: 'market',
+                canMatch: [userGuard],
+                loadComponent: () => import('./pages/market/market').then((module) => module.Market),
+                title: 'Market'
+            },
+            {
+                path: 'ipo',
+                canMatch: [userGuard],
+                loadComponent: () => import('./pages/ipo/ipo').then((module) => module.Ipo),
+                title: 'IPO Center'
+            },
+            {
+                path: 'order',
+                canMatch: [userGuard],
+                loadComponent: () => import('./pages/order/order').then((module) => module.Order),
+                title: 'Order'
+            },
+            {
+                path: 'wallet',
+                canMatch: [userGuard],
+                loadComponent: () => import('./pages/wallet/wallet').then((module) => module.Wallet),
+                title: 'Wallet'
+            },
+            {
+                path: 'settings',
+                loadComponent: () => import('./pages/settings/settings').then((module) => module.Settings),
+                title: 'Settings'
+            },
+            {
+                path: 'admin',
+                canMatch: [adminGuard],
+                loadChildren: () => import('./pages/admin-layout/admin.routes').then((module) => module.adminRoutes)
+            },
+            {
+                path: 'representative',
+                canMatch: [representativeGuard],
+                loadChildren: () => import('./pages/representative-layout/representative.routes').then((module) => module.representativeRoutes)
+            },
+            {
+                path: '**',
+                loadComponent: () => import('./pages/not-found/not-found').then((module) => module.NotFound),
+                title: 'Not found'
+            }
+        ]
     }
 ];

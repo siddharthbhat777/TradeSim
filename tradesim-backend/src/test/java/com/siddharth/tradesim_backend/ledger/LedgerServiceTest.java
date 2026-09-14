@@ -4,6 +4,8 @@ import com.siddharth.tradesim_backend.ledger.enums.LedgerEntryType;
 import com.siddharth.tradesim_backend.ledger.model.LedgerEntry;
 import com.siddharth.tradesim_backend.ledger.model.dto.LedgerEntryResponse;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -31,47 +33,28 @@ class LedgerServiceTest {
     private LedgerService ledgerService;
 
     @Test
-    void shouldRecordInitialCreditEntry() {
-        TradingAccount tradingAccount = TradingAccount.builder()
-                .id(UUID.randomUUID())
-                .userId(UUID.randomUUID())
-                .balance(BigDecimal.valueOf(10000000))
-                .lockedBalance(BigDecimal.ZERO)
-                .marginLoan(BigDecimal.ZERO)
-                .build();
-
-        when(ledgerEntryRepository.save(any(LedgerEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        ledgerService.recordInitialCredit(tradingAccount, BigDecimal.valueOf(10000000));
-
-        ArgumentCaptor<LedgerEntry> captor = ArgumentCaptor.forClass(LedgerEntry.class);
-        verify(ledgerEntryRepository).save(captor.capture());
-
-        LedgerEntry ledgerEntry = captor.getValue();
-        assertThat(ledgerEntry.getType()).isEqualTo(LedgerEntryType.INITIAL_CREDIT);
-        assertThat(ledgerEntry.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(10000000));
-        assertThat(ledgerEntry.getBalanceAfter()).isEqualByComparingTo(BigDecimal.valueOf(10000000));
-        assertThat(ledgerEntry.getLockedBalanceAfter()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(ledgerEntry.getMarginLoanAfter()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(ledgerEntry.getIpoOfferId()).isNull();
-    }
-
-    @Test
     void shouldRecordIpoSubscriptionLockEntry() {
         UUID ipoOfferId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        Wallet wallet = Wallet.builder().userId(userId).build();
+        WalletBucket bucket = WalletBucket.builder()
+                .wallet(wallet)
+                .currency("USD")
+                .balance(BigDecimal.valueOf(100000))
+                .lockedBalance(BigDecimal.valueOf(5000))
+                .build();
 
         TradingAccount tradingAccount = TradingAccount.builder()
                 .id(UUID.randomUUID())
-                .userId(UUID.randomUUID())
-                .balance(BigDecimal.valueOf(100000))
-                .lockedBalance(BigDecimal.valueOf(5000))
+                .userId(userId)
                 .marginLoan(BigDecimal.ZERO)
                 .build();
 
         when(ledgerEntryRepository.save(any(LedgerEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ledgerService.recordIpoSubscriptionLock(tradingAccount, BigDecimal.valueOf(5000), stockId, ipoOfferId);
+        ledgerService.recordIpoSubscriptionLock(bucket, tradingAccount, BigDecimal.valueOf(5000), stockId, ipoOfferId);
 
         ArgumentCaptor<LedgerEntry> captor = ArgumentCaptor.forClass(LedgerEntry.class);
         verify(ledgerEntryRepository).save(captor.capture());

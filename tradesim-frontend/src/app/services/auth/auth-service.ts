@@ -1,0 +1,119 @@
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { Observable, throwError } from 'rxjs';
+import { catchError, finalize, tap } from 'rxjs/operators';
+
+import { environment } from '../../../environment/environment';
+import { skipInterceptors } from '../../shared/utils/http-context';
+import { AuthStatus } from '../../constants/auth';
+import { AuthUser } from '../../models/auth-user';
+import { LoginRequest } from '../../models/login-request';
+import { LoginResponse } from '../../models/login-response';
+import { RegisterRequest } from '../../models/register-request';
+import { ResetPasswordRequest, SendOtpRequest } from '../../models/user';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  showAuthDialog = signal({
+    show: false,
+    status: AuthStatus.Login
+  });
+
+  private readonly accessToken = signal<string | null>(null);
+  private readonly user = signal<AuthUser | null>(null);
+
+  readonly currentUser = this.user.asReadonly();
+  readonly isLoggedIn = computed(() => this.accessToken() !== null);
+
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private readonly authUrl = `${environment.apiBaseURL}/auth`;
+
+  requestOtp(request: SendOtpRequest) {
+    return this.http.post(`${this.authUrl}/otp/send`, request, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  resetPassword(request: ResetPasswordRequest) {
+    return this.http.post(`${this.authUrl}/password/reset`, request, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  deactivateAccount(password: string) {
+    return this.http.post(`${this.authUrl}/deactivate`, { password }, {
+      withCredentials: true,
+      context: skipInterceptors({ loader: true, toast: true })
+    }).pipe(
+      tap(() => this.clearSession())
+    );
+  }
+
+  registerUser(formData: RegisterRequest) {
+    return this.http.post(`${this.authUrl}/register`, formData, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  loginUser(formData: LoginRequest) {
+    return this.http.post<LoginResponse>(`${this.authUrl}/login`, formData, {
+      withCredentials: true,
+      context: skipInterceptors({ loader: true })
+    }).pipe(
+      tap((response) => this.setSession(response))
+    );
+  }
+
+  refreshSession() {
+    return this.http.post<LoginResponse>(`${this.authUrl}/refresh`, {}, {
+      withCredentials: true,
+      context: skipInterceptors({ loader: true, toast: true })
+    }).pipe(
+      tap((response) => this.setSession(response)),
+      catchError((error) => {
+        this.clearSession();
+        return throwError(() => error);
+      })
+    );
+  }
+
+  logout() {
+    return this.http.post<void>(`${this.authUrl}/logout`, {}, {
+      withCredentials: true,
+      context: skipInterceptors({ loader: true })
+    }).pipe(
+      finalize(() => this.clearSession())
+    );
+  }
+
+  reactivateAccount(formData: LoginRequest) {
+    return this.http.post<LoginResponse>(`${this.authUrl}/reactivate`, formData, {
+      withCredentials: true,
+      context: skipInterceptors({ loader: true })
+    }).pipe(
+      tap((response) => this.setSession(response))
+    );
+  }
+
+  getAccessToken() {
+    return this.accessToken();
+  }
+
+  clearSession() {
+    this.accessToken.set(null);
+    this.user.set(null);
+    this.router.navigate(['/']);
+  }
+
+  private setSession(response: LoginResponse) {
+    this.accessToken.set(response.accessToken);
+    this.user.set({
+      username: response.username,
+      role: response.role
+    });
+  }
+}

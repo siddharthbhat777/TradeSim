@@ -61,25 +61,25 @@ public class CompanyController {
     }
 
     @PostMapping("{companyId}/representatives")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COMPANY_REPRESENTATIVE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<CompanyRepresentativeAssignmentResponse> assignRepresentative(@PathVariable UUID companyId, @Valid @RequestBody AssignCompanyRepresentativeRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED).body(companyRepresentativeAssignmentService.assignRepresentative(companyId, request.userId(), principal.getUserId()));
     }
 
     @GetMapping("{companyId}/representatives")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COMPANY_REPRESENTATIVE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<List<CompanyRepresentativeAssignmentResponse>> getRepresentatives(@PathVariable UUID companyId, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(companyRepresentativeAssignmentService.fetchActiveAssignments(companyId, principal.getUserId()));
     }
 
     @DeleteMapping("{companyId}/representatives/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COMPANY_REPRESENTATIVE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<CompanyRepresentativeAssignmentResponse> revokeRepresentative(@PathVariable UUID companyId, @PathVariable UUID userId, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(companyRepresentativeAssignmentService.revokeRepresentative(companyId, userId, principal.getUserId()));
     }
 
     @PutMapping("{companyId}/representatives/primary-contact")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COMPANY_REPRESENTATIVE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_REPRESENTATIVE')")
     public ResponseEntity<PrimaryContactTransferResponse> transferPrimaryContact(@PathVariable UUID companyId, @Valid @RequestBody TransferPrimaryContactRequest request, @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(companyRepresentativeAssignmentService.transferPrimaryContact(companyId, request.newPrimaryContactUserId(), principal.getUserId()));
     }

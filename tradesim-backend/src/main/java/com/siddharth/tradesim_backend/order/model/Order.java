@@ -26,6 +26,7 @@ import java.util.UUID;
 )
 @EntityListeners(AuditingEntityListener.class)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -67,6 +68,9 @@ public class Order extends AuditableEntity {
 
     @Column(precision = 19, scale = 4)
     private BigDecimal bookPrice;
+
+    @Column(length = 10)
+    private String fundingCurrency;
 
     private Instant expiresAt;
 

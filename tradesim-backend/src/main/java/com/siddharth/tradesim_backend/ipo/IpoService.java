@@ -9,7 +9,12 @@ import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
+import com.siddharth.tradesim_backend.exchange.ExchangeException;
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ipo.enums.IpoOfferStatus;
 import com.siddharth.tradesim_backend.ipo.enums.IpoSubscriptionStatus;
 import com.siddharth.tradesim_backend.ipo.model.IpoOffer;
@@ -30,6 +35,9 @@ import com.siddharth.tradesim_backend.stock.service.StockService;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
 import com.siddharth.tradesim_backend.user.UserException;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,9 +57,13 @@ public class IpoService {
     private final CompanyRepresentativeAssignmentService companyRepresentativeAssignmentService;
     private final ExchangeService exchangeService;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final PositionRepository positionRepository;
     private final StockService stockService;
     private final LedgerService ledgerService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
+    private final FxFeeService fxFeeService;
 
     @Transactional
     public IpoOfferResponse submitIpoOffer(UUID companyId, UUID stockId, UUID actingUserId, CreateIpoOfferRequest request) {
@@ -135,6 +147,17 @@ public class IpoService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<IpoOfferResponse> fetchUpcomingIpoOffers() {
+        Instant now = Instant.now();
+
+        return ipoOfferRepository.findByStatusOrderByCreatedAtAsc(IpoOfferStatus.SUBSCRIPTION_OPEN)
+                .stream()
+                .filter(offer -> now.isBefore(offer.getSubscriptionStartAt()))
+                .map(this::toOfferResponse)
+                .toList();
+    }
+
     @Transactional
     public IpoSubscriptionResponse subscribeToIpo(UUID ipoOfferId, UUID userId) {
         IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));
@@ -147,17 +170,35 @@ public class IpoService {
             throw IpoException.conflict("You have already subscribed to this IPO offer");
         }
 
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
-        BigDecimal subscriptionAmount = calculateSubscriptionAmount(ipoOffer);
+        Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+        String stockCurrency = exchange.getCurrency();
 
-        tradingAccount.lockFunds(subscriptionAmount);
-        tradingAccountService.saveTradingAccount(tradingAccount);
-        ledgerService.recordIpoSubscriptionLock(tradingAccount, subscriptionAmount, ipoOffer.getStockId(), ipoOffer.getId());
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(userId);
+        String userCurrency = tradingAccount.getBaseCurrency();
+
+        Wallet wallet = walletService.getWalletByUserId(userId);
+        WalletBucket bucket = walletService.getBucketForUpdate(wallet.getId(), userCurrency);
+
+        BigDecimal subscriptionAmountInStockCurrency = calculateSubscriptionAmount(ipoOffer);
+        BigDecimal subscriptionAmountInUserCurrency = forexService.convert(subscriptionAmountInStockCurrency, stockCurrency, userCurrency);
+
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(userCurrency, stockCurrency, subscriptionAmountInUserCurrency);
+        BigDecimal totalLock = subscriptionAmountInUserCurrency.add(fxFee);
+
+        if ("IN".equalsIgnoreCase(user.getCountryCode())) {
+            user.setBankBalance(user.getBankBalance().subtract(totalLock));
+            authRepository.save(user);
+        } else {
+            bucket.setLockedBalance(bucket.getLockedBalance().add(totalLock));
+        }
+
+        ledgerService.recordIpoSubscriptionLock(bucket, tradingAccount, totalLock, ipoOffer.getStockId(), ipoOffer.getId());
 
         IpoSubscription ipoSubscription = IpoSubscription.builder()
                 .ipoOfferId(ipoOfferId)
                 .userId(userId)
-                .lockedAmount(subscriptionAmount)
+                .lockedAmount(totalLock)
                 .allottedShares(0)
                 .status(IpoSubscriptionStatus.SUBMITTED)
                 .build();
@@ -214,6 +255,8 @@ public class IpoService {
         }
 
         Stock stock = validateStockForIpo(ipoOffer.getCompanyId(), ipoOffer.getStockId());
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+        String stockCurrency = exchange.getCurrency();
 
         List<IpoSubscription> subscriptions = ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId);
         if (subscriptions.size() < ipoOffer.getMaxAllottees()) {
@@ -226,19 +269,43 @@ public class IpoService {
         List<IpoSubscription> winningSubscriptions = shuffledSubscriptions.subList(0, ipoOffer.getMaxAllottees());
         List<IpoSubscription> losingSubscriptions = shuffledSubscriptions.subList(ipoOffer.getMaxAllottees(), shuffledSubscriptions.size());
 
-        BigDecimal subscriptionAmount = calculateSubscriptionAmount(ipoOffer);
         Map<UUID, TradingAccount> lockedAccounts = lockTradingAccounts(shuffledSubscriptions.stream().map(IpoSubscription::getUserId).toList());
 
         for (IpoSubscription winningSubscription : winningSubscriptions) {
-            TradingAccount tradingAccount = lockedAccounts.get(winningSubscription.getUserId());
-            tradingAccount.debitLockedFunds(subscriptionAmount);
-            tradingAccountService.saveTradingAccount(tradingAccount);
-            ledgerService.recordIpoAllotmentDebit(tradingAccount, subscriptionAmount, stock.getId(), ipoOffer.getId());
+            User user = authRepository.findById(winningSubscription.getUserId()).orElseThrow(() -> UserException.notFound("User not found"));
+            Wallet wallet = walletService.getWalletByUserId(user.getId());
+            TradingAccount tradingAccount = lockedAccounts.get(user.getId());
+            String userCurrency = tradingAccount.getBaseCurrency();
+            WalletBucket bucket = walletService.getBucketForUpdate(wallet.getId(), userCurrency);
+
+            BigDecimal subscriptionAmountInStockCurrency = calculateSubscriptionAmount(ipoOffer);
+            BigDecimal finalSubInUserCurr = forexService.convert(subscriptionAmountInStockCurrency, stockCurrency, userCurrency);
+            BigDecimal finalFxFee = fxFeeService.calculateConversionFee(userCurrency, stockCurrency, finalSubInUserCurr);
+
+            if ("IN".equalsIgnoreCase(user.getCountryCode())) {
+                user.setBankBalance(user.getBankBalance().add(winningSubscription.getLockedAmount()));
+                user.setBankBalance(user.getBankBalance().subtract(finalSubInUserCurr));
+                if (finalFxFee.compareTo(BigDecimal.ZERO) > 0) {
+                    user.setBankBalance(user.getBankBalance().subtract(finalFxFee));
+                }
+                authRepository.save(user);
+            } else {
+                bucket.setLockedBalance(bucket.getLockedBalance().subtract(winningSubscription.getLockedAmount()));
+                bucket.setBalance(bucket.getBalance().subtract(finalSubInUserCurr));
+                if (finalFxFee.compareTo(BigDecimal.ZERO) > 0) {
+                    bucket.setBalance(bucket.getBalance().subtract(finalFxFee));
+                }
+            }
+
+            ledgerService.recordIpoAllotmentDebit(bucket, tradingAccount, finalSubInUserCurr, stock.getId(), ipoOffer.getId());
+            if (finalFxFee.compareTo(BigDecimal.ZERO) > 0) {
+                ledgerService.recordFxConversionFee(bucket, tradingAccount, finalFxFee, stock.getId(), null, ipoOffer.getId(), userCurrency, stockCurrency);
+            }
 
             allocateIpoPosition(
                     winningSubscription.getUserId(),
                     stock,
-                    ipoOffer.getIssuePrice(),
+                    finalSubInUserCurr,
                     ipoOffer.getSharesPerAllottee()
             );
 
@@ -247,10 +314,19 @@ public class IpoService {
         }
 
         for (IpoSubscription losingSubscription : losingSubscriptions) {
-            TradingAccount tradingAccount = lockedAccounts.get(losingSubscription.getUserId());
-            tradingAccount.unlockFunds(losingSubscription.getLockedAmount());
-            tradingAccountService.saveTradingAccount(tradingAccount);
-            ledgerService.recordIpoSubscriptionUnlock(tradingAccount, losingSubscription.getLockedAmount(), stock.getId(), ipoOffer.getId());
+            User user = authRepository.findById(losingSubscription.getUserId()).orElseThrow(() -> UserException.notFound("User not found"));
+            Wallet wallet = walletService.getWalletByUserId(user.getId());
+            TradingAccount tradingAccount = lockedAccounts.get(user.getId());
+            WalletBucket bucket = walletService.getBucketForUpdate(wallet.getId(), tradingAccount.getBaseCurrency());
+
+            if ("IN".equalsIgnoreCase(user.getCountryCode())) {
+                user.setBankBalance(user.getBankBalance().add(losingSubscription.getLockedAmount()));
+                authRepository.save(user);
+            } else {
+                bucket.setLockedBalance(bucket.getLockedBalance().subtract(losingSubscription.getLockedAmount()));
+            }
+
+            ledgerService.recordIpoSubscriptionUnlock(bucket, tradingAccount, losingSubscription.getLockedAmount(), stock.getId(), ipoOffer.getId());
 
             losingSubscription.setAllottedShares(0);
             losingSubscription.setStatus(IpoSubscriptionStatus.NOT_ALLOTTED);
@@ -342,19 +418,19 @@ public class IpoService {
         Collections.shuffle(subscriptions, new Random(seed));
     }
 
-    private void allocateIpoPosition(UUID userId, Stock stock, BigDecimal issuePrice, int shareQuantity) {
+    private void allocateIpoPosition(UUID userId, Stock stock, BigDecimal exactBlockCost, int shareQuantity) {
         Position position = positionRepository.findByUserIdAndStockId(userId, stock.getId())
                 .orElse(Position.builder()
                         .userId(userId)
                         .stockId(stock.getId())
                         .quantity(0)
                         .lockedQuantity(0)
-                        .averageBuyPrice(issuePrice)
+                        .averageBuyPrice(BigDecimal.ZERO)
+                        .totalInvested(BigDecimal.ZERO)
                         .realizedPnl(BigDecimal.ZERO)
                         .build());
 
-        position.updateAverageBuyPrice(issuePrice, shareQuantity);
-        position.increaseQuantity(shareQuantity);
+        position.addInvestment(exactBlockCost, shareQuantity);
         positionRepository.save(position);
     }
 
@@ -369,6 +445,9 @@ public class IpoService {
     }
 
     private IpoOfferResponse toOfferResponse(IpoOffer ipoOffer) {
+        Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
         return new IpoOfferResponse(
                 ipoOffer.getId(),
                 ipoOffer.getCompanyId(),
@@ -386,21 +465,28 @@ public class IpoService {
                 ipoOffer.getFinalizedByUserId(),
                 ipoOffer.getFinalizedAt(),
                 ipoOffer.getRejectionReason(),
+                exchange.getCurrency(),
                 ipoOffer.getCreatedAt(),
                 ipoOffer.getUpdatedAt()
         );
     }
 
     private IpoSubscriptionResponse toSubscriptionResponse(IpoSubscription ipoSubscription, IpoOffer ipoOffer) {
+        Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
+
         return new IpoSubscriptionResponse(
                 ipoSubscription.getId(),
                 ipoSubscription.getIpoOfferId(),
                 ipoOffer.getStockId(),
                 ipoSubscription.getUserId(),
                 ipoOffer.getIssuePrice(),
+                ipoOffer.getSharesPerAllottee(),
                 ipoSubscription.getLockedAmount(),
                 ipoSubscription.getAllottedShares(),
                 ipoSubscription.getStatus(),
+                ipoOffer.getSubscriptionEndAt(),
+                exchange.getCurrency(),
                 ipoSubscription.getCreatedAt(),
                 ipoSubscription.getUpdatedAt()
         );

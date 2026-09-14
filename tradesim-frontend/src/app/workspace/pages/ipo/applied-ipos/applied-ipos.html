@@ -1,0 +1,95 @@
+<div class="applied-ipos">
+    <div class="applied-ipos-toolbar">
+        <div class="applied-search">
+            <app-input [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search by symbol..." [(ngModel)]="searchQuery" />
+            </app-input>
+        </div>
+        <div class="applied-filter">
+            <app-dropdown [options]="statusOptions" [(ngModel)]="selectedStatus" size="medium"
+                [reserveMessageSpace]="false"></app-dropdown>
+        </div>
+    </div>
+
+    <app-card [isLoading]="isLoading()">
+        @if (!isLoading() && processedSubscriptions().length === 0) {
+        <div class="ipo-empty-wrapper">
+            <app-empty-state text="No IPO applications found"
+                subtext="You haven't applied for any IPOs or no matches found for your filter.">
+                <svg icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </app-empty-state>
+        </div>
+        } @else {
+        <app-table variant="flush" [columns]="columns" [data]="processedSubscriptions()" [(currentPage)]="currentPage"
+            [(pageSize)]="pageSize">
+
+            <ng-template tableCell="symbol" let-row="row">
+                <span class="fw-semibold" style="color: var(--primary);">{{ row.symbol }}</span>
+            </ng-template>
+
+            <ng-template tableCell="issuePrice" let-row="row">
+                <span>{{ row.issuePrice | formatCurrency:row.currency:'currency':4 }}</span>
+            </ng-template>
+
+            <ng-template tableCell="lockedAmount" let-row="row">
+                <span class="fw-semibold">{{ row.lockedAmount | formatCurrency:baseCurrency():'currency':2 }}</span>
+            </ng-template>
+
+            <ng-template tableCell="allottedShares" let-row="row">
+                <span [class.text-muted]="row.allottedShares === 0">{{ row.allottedShares }}</span>
+            </ng-template>
+
+            <ng-template tableCell="status" let-row="row">
+                <app-badge
+                    [color]="row.status === 'ALLOTTED' ? 'success' : row.status === 'NOT_ALLOTTED' ? 'secondary' : 'primary'">
+                    {{ row.status.replace('_', ' ') }}
+                </app-badge>
+            </ng-template>
+
+            <ng-template tableCell="createdAt" let-row="row">
+                <span class="date-text">{{ row.createdAt | date:'MMM dd, yyyy - h:mm a' }}</span>
+            </ng-template>
+
+            <ng-template tableExpandedRow let-row="row">
+                <div class="expanded-details-grid">
+                    <div class="detail-group">
+                        <span class="detail-label">Subscription ID</span>
+                        <div class="detail-value-row">
+                            <span class="detail-value mono">{{ row.id | slice:0:8 }}</span>
+                            <button type="button" class="copy-icon-btn" (click)="copyId(row.id)" title="Copy full ID">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Lot Size</span>
+                        <span class="detail-value">{{ row.sharesPerAllottee }} Shares</span>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Expected Allotment</span>
+                        <span class="detail-value">{{ row.subscriptionEndAt | date:'MMM dd, yyyy - hh:mm a' }}</span>
+                    </div>
+                </div>
+            </ng-template>
+
+        </app-table>
+        }
+    </app-card>
+</div>

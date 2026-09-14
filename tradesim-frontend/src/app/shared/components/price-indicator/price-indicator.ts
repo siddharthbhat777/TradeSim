@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { FormatCurrencyPipe } from '../../pipes/format-currency-pipe';
 
 export type PriceIndicatorSign = 'positive' | 'negative' | 'neutral';
 
@@ -16,21 +17,8 @@ export class PriceIndicator {
   readonly currency = input<string>('INR');
   readonly valueDecimals = input<number>(0);
   readonly percentageDecimals = input<number>(2);
-  readonly locale = input<string | undefined>(undefined);
 
-  protected readonly effectiveLocale = computed(() => {
-    const explicit = this.locale();
-    if (explicit !== undefined) {
-      return explicit;
-    }
-    if (this.currency() === 'INR') {
-      return 'en-IN';
-    }
-    throw new Error(
-      `[PriceIndicator] "locale" is required when "currency" is not 'INR' (got currency="${this.currency()}"). ` +
-      `Pass one explicitly, e.g. [locale]="'en-US'".`
-    );
-  });
+  private readonly formatCurrencyPipe = new FormatCurrencyPipe();
 
   protected readonly sign = computed<PriceIndicatorSign>(() => {
     const v = this.value();
@@ -39,22 +27,22 @@ export class PriceIndicator {
     return 'neutral';
   });
 
-  protected readonly formattedValue = computed(() =>
-    new Intl.NumberFormat(this.effectiveLocale(), {
-      style: 'currency',
-      currency: this.currency(),
-      minimumFractionDigits: this.valueDecimals(),
-      maximumFractionDigits: this.valueDecimals(),
-      signDisplay: 'always'
-    }).format(this.value()),
-  );
+  protected readonly formattedValue = computed(() => {
+    const formatted = this.formatCurrencyPipe.transform(
+      this.value(),
+      this.currency(),
+      'currency',
+      this.valueDecimals()
+    );
+    return this.value() > 0 ? '+' + formatted : formatted;
+  });
 
   protected readonly formattedPercentage = computed(() => {
     const p = this.percentage();
     if (p === undefined) {
       return '';
     }
-    return new Intl.NumberFormat(this.effectiveLocale(), {
+    return new Intl.NumberFormat(undefined, {
       style: 'percent',
       minimumFractionDigits: this.percentageDecimals(),
       maximumFractionDigits: this.percentageDecimals(),

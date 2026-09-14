@@ -1,5 +1,8 @@
 package com.siddharth.tradesim_backend.risk;
 
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBook;
 import com.siddharth.tradesim_backend.order.orderbook.OrderBookManager;
 import com.siddharth.tradesim_backend.order.orderbook.OrderMatchingEngine;
@@ -12,6 +15,9 @@ import com.siddharth.tradesim_backend.stock.StockRepository;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -44,6 +50,9 @@ class LiquidationServiceTest {
     private TradingAccountService tradingAccountService;
 
     @Mock
+    private WalletService walletService;
+
+    @Mock
     private OrderMatchingEngine orderMatchingEngine;
 
     @Mock
@@ -54,6 +63,12 @@ class LiquidationServiceTest {
 
     @Mock
     private OrderLifecycleService orderLifecycleService;
+
+    @Mock
+    private ExchangeRepository exchangeRepository;
+
+    @Mock
+    private ForexService forexService;
 
     @InjectMocks
     private LiquidationService liquidationService;
@@ -77,22 +92,34 @@ class LiquidationServiceTest {
 
         Stock stock = Stock.builder()
                 .id(stockId)
+                .exchangeId(UUID.randomUUID())
                 .lastTradedPrice(BigDecimal.valueOf(100))
                 .build();
 
         TradingAccount tradingAccount = TradingAccount.builder()
                 .userId(userId)
-                .balance(BigDecimal.ZERO)
-                .lockedBalance(BigDecimal.ZERO)
+                .baseCurrency("INR")
                 .marginLoan(BigDecimal.valueOf(3000))
                 .leverage(5)
                 .maintenanceMarginPercent(BigDecimal.valueOf(50))
                 .build();
 
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .buckets(List.of(WalletBucket.builder().currency("INR").balance(BigDecimal.ZERO).build()))
+                .build();
+
+        Exchange exchange = Exchange.builder().currency("USD").build();
+
         when(positionRepository.findByUserId(userId)).thenReturn(new ArrayList<>(List.of(position)));
         when(positionRepository.findById(positionId)).thenReturn(Optional.of(position), Optional.empty());
         when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
         when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
+        when(forexService.convert(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+
         when(orderBookManager.withLock(eq(stockId), ArgumentMatchers.<Function<OrderBook, Boolean>>any())).thenReturn(true);
         when(orderMatchingEngine.match(any())).thenAnswer(invocation -> {
             com.siddharth.tradesim_backend.order.model.Order order = invocation.getArgument(0);

@@ -90,6 +90,7 @@ class IpoControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -135,6 +136,7 @@ class IpoControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -179,6 +181,7 @@ class IpoControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -213,9 +216,12 @@ class IpoControllerTest {
                 stockId,
                 userId,
                 BigDecimal.valueOf(125.50),
+                100,
                 BigDecimal.valueOf(12550),
                 0,
                 IpoSubscriptionStatus.SUBMITTED,
+                Instant.now().plusSeconds(600),
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -260,6 +266,7 @@ class IpoControllerTest {
                 adminId,
                 Instant.now(),
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -336,6 +343,7 @@ class IpoControllerTest {
                 null,
                 null,
                 "IPO disclosures are incomplete",
+                "USD",
                 Instant.now(),
                 Instant.now()
         );

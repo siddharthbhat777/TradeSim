@@ -1,1 +1,23 @@
-<p>ipo works!</p>
+<div class="ipo-page">
+    <div class="ipo-header">
+        <h1>IPO Center</h1>
+        <div class="ipo-controls">
+            <app-segmented-control [options]="tabOptions()" [(ngModel)]="activeTab" [fullWidth]="true"
+                [required]="true"></app-segmented-control>
+        </div>
+    </div>
+
+    <div class="ipo-content">
+        @switch (activeTab()) {
+        @case ('ONGOING') {
+        <app-ongoing-ipos />
+        }
+        @case ('APPLIED') {
+        <app-applied-ipos />
+        }
+        @case ('UPCOMING') {
+        <app-upcoming-ipos />
+        }
+        }
+    </div>
+</div>

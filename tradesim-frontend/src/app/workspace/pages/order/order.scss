@@ -1,0 +1,263 @@
+.order-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.order-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h1 {
+    margin: 0 0 4px 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+}
+
+.order-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (min-width: 1024px) {
+    width: auto;
+    flex-wrap: nowrap;
+  }
+}
+
+.order-search {
+  width: 100%;
+
+  @media (min-width: 640px) {
+    flex: 1 1 200px;
+  }
+
+  @media (min-width: 1024px) {
+    flex: none;
+    width: 280px;
+  }
+}
+
+.order-sort {
+  width: 100%;
+
+  @media (min-width: 640px) {
+    flex: 1 1 140px;
+  }
+
+  @media (min-width: 1024px) {
+    flex: none;
+    width: 160px;
+  }
+}
+
+.order-filter-btn {
+  ::ng-deep .button {
+    background: var(--surface-secondary);
+    border-color: transparent;
+    color: var(--text-primary);
+
+    &:hover {
+      background: var(--border);
+    }
+  }
+}
+
+.filter-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.filter-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  margin-left: 2px;
+}
+
+.fw-semibold {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.type-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.side-text {
+  font-weight: 700;
+
+  &--buy {
+    color: var(--success);
+  }
+
+  &--sell {
+    color: var(--danger);
+  }
+}
+
+.type-separator {
+  color: var(--border);
+  font-size: 0.75rem;
+}
+
+.type-text {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.date-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.drawer-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+}
+
+.drawer-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  .filter-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .value {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+  }
+}
+
+.drawer-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.expanded-details-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  background: var(--surface);
+  padding: 16px 20px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+
+  .detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .detail-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .detail-value-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .copy-icon-btn {
+      background: transparent;
+      border: none;
+      padding: 2px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition:
+        color 0.2s ease,
+        background-color 0.2s ease;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      &:hover {
+        color: var(--text-primary);
+        background: var(--surface-secondary);
+      }
+    }
+  }
+
+  .detail-value {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 500;
+
+    &.mono {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+  }
+}

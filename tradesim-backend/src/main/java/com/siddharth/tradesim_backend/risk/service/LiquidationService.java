@@ -1,5 +1,8 @@
 package com.siddharth.tradesim_backend.risk.service;
 
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderStatus;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -17,6 +20,9 @@ import com.siddharth.tradesim_backend.stock.service.MarketStateService;
 import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,11 +39,14 @@ public class LiquidationService {
     private final PositionRepository positionRepository;
     private final StockRepository stockRepository;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final OrderMatchingEngine orderMatchingEngine;
     private final OrderBookManager orderBookManager;
     private final OrderRepository orderRepository;
     private final OrderLifecycleService orderLifecycleService;
     private final MarketStateService marketStateService;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
     private final Set<UUID> liquidatingUsers = ConcurrentHashMap.newKeySet();
 
     public void liquidateUser(UUID userId) {
@@ -50,9 +59,12 @@ public class LiquidationService {
 
             if (positions.isEmpty()) return;
 
+            TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
+            String userCurrency = tradingAccount.getBaseCurrency();
+
             positions.sort((position1, position2) -> {
-                BigDecimal loss1 = getUnrealizedLoss(position1);
-                BigDecimal loss2 = getUnrealizedLoss(position2);
+                BigDecimal loss1 = getUnrealizedLoss(position1, userCurrency);
+                BigDecimal loss2 = getUnrealizedLoss(position2, userCurrency);
                 return loss2.compareTo(loss1);
             });
 
@@ -66,7 +78,7 @@ public class LiquidationService {
                         break;
                     }
 
-                    if (!shouldLiquidate(userId)) {
+                    if (!shouldLiquidate(tradingAccount)) {
                         return;
                     }
 
@@ -118,31 +130,45 @@ public class LiquidationService {
         }
     }
 
-    private BigDecimal getUnrealizedLoss(Position position) {
+    private BigDecimal getUnrealizedLoss(Position position, String userCurrency) {
         Stock stock = stockRepository.findById(position.getStockId()).orElseThrow();
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow();
 
-        BigDecimal currentPrice = stock.getLastTradedPrice();
-        BigDecimal unrealizedPnl = currentPrice.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
+        BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), userCurrency);
+        BigDecimal unrealizedPnl = currentPriceInUserCurrency.subtract(position.getAverageBuyPrice()).multiply(BigDecimal.valueOf(position.getQuantity()));
 
         return unrealizedPnl.min(BigDecimal.ZERO);
     }
 
-    private boolean shouldLiquidate(UUID userId) {
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserId(userId);
-        List<Position> positions = positionRepository.findByUserId(userId);
+    private boolean shouldLiquidate(TradingAccount tradingAccount) {
+        List<Position> positions = positionRepository.findByUserId(tradingAccount.getUserId());
+        String userCurrency = tradingAccount.getBaseCurrency();
+
+        Wallet wallet = walletService.getWalletByUserId(tradingAccount.getUserId());
+        BigDecimal totalCashValue = BigDecimal.ZERO;
+        for (WalletBucket bucket : wallet.getBuckets()) {
+            totalCashValue = totalCashValue.add(forexService.convert(bucket.getBalance(), bucket.getCurrency(), userCurrency));
+        }
 
         BigDecimal totalPositionValue = BigDecimal.ZERO;
 
         for (Position position : positions) {
             Stock stock = stockRepository.findById(position.getStockId()).orElseThrow();
+            Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow();
 
-            BigDecimal currentPrice = stock.getLastTradedPrice();
-            BigDecimal positionValue = currentPrice.multiply(BigDecimal.valueOf(position.getQuantity()));
+            BigDecimal currentPriceInUserCurrency = forexService.convert(stock.getLastTradedPrice(), exchange.getCurrency(), userCurrency);
+            BigDecimal positionValue = currentPriceInUserCurrency.multiply(BigDecimal.valueOf(position.getQuantity()));
+
             totalPositionValue = totalPositionValue.add(positionValue);
         }
 
-        BigDecimal equity = tradingAccount.calculateEquity(totalPositionValue);
-        BigDecimal marginUsed = totalPositionValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        BigDecimal equity = totalCashValue.add(totalPositionValue).subtract(tradingAccount.getMarginLoan());
+
+        BigDecimal marginUsed = BigDecimal.ZERO;
+        if (totalPositionValue.compareTo(BigDecimal.ZERO) > 0) {
+            marginUsed = totalPositionValue.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        }
+
         BigDecimal maintenanceMargin = marginUsed.multiply(tradingAccount.getMaintenanceMarginPercent().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
 
         return equity.compareTo(maintenanceMargin) < 0;

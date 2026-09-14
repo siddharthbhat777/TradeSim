@@ -1,0 +1,73 @@
+<div class="stock-details">
+    <app-stock-header [stock]="stock()" (back)="onBack()"></app-stock-header>
+
+    <div class="stock-details__layout">
+        <div class="stock-details__main">
+            <div class="stock-details__chart-card">
+                <app-candlestick-chart [data]="chartData()" width="100%" [height]="420"
+                    currency="USD"></app-candlestick-chart>
+            </div>
+
+            <div class="stock-details__stats-grid">
+                <app-card variant="surface">
+                    <span class="stat-label">Sector</span>
+                    <strong class="stat-value">{{ stock().sector }}</strong>
+                </app-card>
+
+                <app-card variant="surface">
+                    <span class="stat-label">Market Cap</span>
+                    <strong class="stat-value">{{ stock().marketCap | currency:'USD':'symbol':'1.0-0' }}</strong>
+                </app-card>
+
+                <app-card variant="surface">
+                    <span class="stat-label">Day Volume</span>
+                    <strong class="stat-value">{{ stock().dayVolume | number }}</strong>
+                </app-card>
+
+                <app-card variant="surface">
+                    <span class="stat-label">Classification</span>
+                    <strong class="stat-value">{{ stock().marketCapCategory }}</strong>
+                </app-card>
+            </div>
+        </div>
+
+        <app-order-ticket [stock]="stock()" [wallet]="walletService.wallet()" [baseCurrency]="baseCurrency()"
+            [supportedCurrencies]="supportedCurrencies()" (reviewOrder)="onReviewOrder($event)"
+            (openDeposit)="onOpenDeposit($event)">
+        </app-order-ticket>
+    </div>
+</div>
+
+<app-order-review-modal [(isOpen)]="showReviewModal" [payload]="activeOrderPayload()" [stockSymbol]="stock().symbol"
+    [baseCurrency]="baseCurrency()" [isEstimatingOrder]="isEstimatingOrder()" [orderEstimate]="orderEstimate()"
+    [isFetchingRate]="isFetchingRate()" [isSubmittingOrder]="isSubmittingOrder()" (openDeposit)="onOpenDeposit()"
+    (executeOrder)="onExecuteOrder()">
+</app-order-review-modal>
+
+@if (showFundModal()) {
+<app-fund-manager-modal [activeMode]="fundManagerMode()" [targetCurrency]="fundTargetCurrency()"
+    (closed)="onFundModalClosed()">
+</app-fund-manager-modal>
+}
+
+<app-drawer [(isOpen)]="showSuccessDrawer" position="bottom" (closed)="onSuccessDrawerClosed()">
+    <div class="success-drawer-content">
+        <div class="success-icon-wrapper">
+            <svg class="success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="success-circle" cx="26" cy="26" r="24" fill="none" />
+                <path class="success-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+            </svg>
+        </div>
+        <h3 class="success-title">Order Placed Successfully</h3>
+        <p class="success-message">
+            @if (activeOrderPayload(); as p) {
+            Your {{ p.orderSide === 'BUY' ? 'buy' : 'sell' }} order for <strong>{{ p.orderQuantity }}</strong> share(s)
+            of <strong>{{ stock().symbol }}</strong> has been submitted.
+            }
+        </p>
+        <div class="success-actions">
+            <app-button variant="primary" size="large" width="100%" (buttonClick)="onBackToMarket()">Back to
+                Market</app-button>
+        </div>
+    </div>
+</app-drawer>

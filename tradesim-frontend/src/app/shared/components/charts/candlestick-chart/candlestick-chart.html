@@ -1,0 +1,101 @@
+<div class="candlestick-wrapper" [class.is-fullscreen]="isFullScreen()"
+    [style.width]="isFullScreen() ? null : containerWidth()" [style.height.px]="isFullScreen() ? null : height()">
+
+    <div class="chart-toolbar">
+        <button type="button" class="toolbar-btn" (click)="toggleFullScreen()">
+            @if (isFullScreen()) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            }
+        </button>
+    </div>
+
+    <div class="chart-body" #chartBody>
+        <div class="y-axis-overlay">
+            @for (tick of yAxisTicks(); track tick.value) {
+            <div class="axis-text-html" [style.top.px]="tick.y">{{ tick.value | formatCurrency:currency():'decimal':2 }}
+            </div>
+            }
+        </div>
+
+        <svg class="candlestick-svg" [attr.width]="currentSvgWidth()" [attr.height]="currentSvgHeight()"
+            [attr.viewBox]="viewBox()" (mouseleave)="onMouseLeave()">
+
+            @for (tick of yAxisTicks(); track tick.value) {
+            <line class="grid-line" x1="0" [attr.x2]="currentSvgWidth() - 85" [attr.y1]="tick.y" [attr.y2]="tick.y">
+            </line>
+            }
+
+            @for (tick of xAxisTicks(); track tick.x) {
+            <text class="axis-text text-center" [attr.x]="tick.x" [attr.y]="currentSvgHeight() - 8">{{ tick.label |
+                date:'MMM dd' }}</text>
+            }
+
+            @if (hoveredCandle(); as active) {
+            <line class="crosshair" [attr.x1]="active.x" [attr.x2]="active.x" y1="0"
+                [attr.y2]="currentSvgHeight() - 30"></line>
+            <line class="crosshair" x1="0" [attr.x2]="currentSvgWidth() - 85" [attr.y1]="active.bodyY"
+                [attr.y2]="active.bodyY"></line>
+            }
+
+            @for (candle of renderedCandles(); track candle.data.time) {
+            <g class="candle-group" (mousemove)="onMouseMove($event, candle)">
+
+                <line class="candle-wick" [class.bullish]="candle.isBullish" [class.bearish]="!candle.isBullish"
+                    [attr.x1]="candle.x" [attr.x2]="candle.x" [attr.y1]="candle.yHigh" [attr.y2]="candle.topWickY2">
+                </line>
+
+                <line class="candle-wick" [class.bullish]="candle.isBullish" [class.bearish]="!candle.isBullish"
+                    [attr.x1]="candle.x" [attr.x2]="candle.x" [attr.y1]="candle.bottomWickY1" [attr.y2]="candle.yLow">
+                </line>
+
+                <rect class="candle-body" [class.bullish]="candle.isBullish" [class.bearish]="!candle.isBullish"
+                    [class.is-hovered]="hoveredCandle()?.data?.time === candle.data.time"
+                    [attr.x]="candle.x - (candleWidth() / 2)" [attr.y]="candle.bodyY" [attr.width]="candleWidth()"
+                    [attr.height]="candle.bodyHeight">
+                </rect>
+
+                <rect class="hover-target" [attr.x]="candle.x - (candleWidth() * 1.5)" y="0"
+                    [attr.width]="candleWidth() * 3" [attr.height]="currentSvgHeight()">
+                </rect>
+            </g>
+            }
+        </svg>
+    </div>
+
+    <div class="chart-footer">
+        <app-segmented-control [options]="timeframeOptions" [ngModel]="selectedTimeframe()"
+            (ngModelChange)="selectedTimeframe.set($event)" size="small" [fullWidth]="true" [required]="true">
+        </app-segmented-control>
+    </div>
+
+    @if (hoveredCandle(); as active) {
+    <div class="chart-tooltip" [style.left.px]="tooltipX()" [style.top.px]="tooltipY()">
+        <div class="tooltip-header">{{ active.data.time | date:'MMM dd, yyyy - HH:mm' }}</div>
+        <div class="tooltip-grid">
+            <span class="label">O:</span> <span class="value">{{ active.data.open |
+                formatCurrency:currency():'currency':2 }}</span>
+            <span class="label">H:</span> <span class="value">{{ active.data.high |
+                formatCurrency:currency():'currency':2 }}</span>
+            <span class="label">L:</span> <span class="value">{{ active.data.low |
+                formatCurrency:currency():'currency':2 }}</span>
+            <span class="label">C:</span> <span class="value" [class.bullish-text]="active.isBullish"
+                [class.bearish-text]="!active.isBullish">{{ active.data.close | formatCurrency:currency():'currency':2
+                }}</span>
+        </div>
+    </div>
+    }
+</div>

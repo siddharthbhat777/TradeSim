@@ -1,0 +1,14 @@
+<app-modal [closeOnBackdropClick]="true" (closed)="closeModal()">
+    <div class="fund-manager-modal-content">
+        <button type="button" class="modal-close-btn" (click)="closeModal()" aria-label="Close modal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <app-fund-manager [initialMode]="activeMode()" [defaultTargetCurrency]="targetCurrency()"
+            (completed)="closeModal()">
+        </app-fund-manager>
+    </div>
+</app-modal>

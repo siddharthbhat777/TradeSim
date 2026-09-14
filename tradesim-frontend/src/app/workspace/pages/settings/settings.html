@@ -1,0 +1,282 @@
+<div class="settings-container">
+    <header class="settings-header">
+        <h1>Account Settings</h1>
+        <p>Manage your profile, bank details, and account security.</p>
+    </header>
+
+    @if (isLoading()) {
+    <app-card [isLoading]="true"></app-card>
+    } @else {
+    <app-card>
+        <h2 class="section-title">Profile Information</h2>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form">
+            <div class="form-grid">
+                <div class="field-with-error">
+                    <app-input label="Full Name" [showErrors]="false" [reserveMessageSpace]="false">
+                        <input appInput type="text" formControlName="fullName" autocomplete="name" />
+                    </app-input>
+
+                    @if (inputError(profileForm.controls.fullName, 'text'); as error) {
+                    <p class="manual-error">{{ error }}</p>
+                    }
+                </div>
+
+                <app-input label="Linked Bank Name"
+                    [errorText]="inputError(profileForm.controls.linkedBankName, 'text')">
+                    <input appInput type="text" formControlName="linkedBankName" />
+                </app-input>
+            </div>
+
+            <div class="profile-actions">
+                <app-button type="submit" [disabled]="profileForm.pristine || profileForm.invalid"
+                    [isLoading]="isSavingProfile()">
+                    Save Changes
+                </app-button>
+            </div>
+        </form>
+
+        <form [formGroup]="emailForm" (ngSubmit)="confirmEmailChange()" class="email-form">
+            <div class="email-row">
+                <app-input label="Email Address" [showErrors]="false" [reserveMessageSpace]="false">
+                    <input appInput type="email" formControlName="email" autocomplete="email"
+                        (input)="clearServerError(emailForm.controls.email)" />
+                </app-input>
+
+                @if (!emailOtpActive()) {
+                <app-button type="button" variant="outline" [disabled]="!canRequestEmailVerification()"
+                    [isLoading]="isSendingEmailOtp()" (buttonClick)="requestEmailOtp()">
+                    Verify
+                </app-button>
+                }
+            </div>
+
+            @if (inputError(emailForm.controls.email, 'email'); as error) {
+            <p class="manual-error email-error">{{ error }}</p>
+            }
+
+            @if (emailOtpActive()) {
+            <div class="otp-panel">
+                <div class="otp-panel__header">
+                    <span>Enter the six-digit OTP sent to your new email.</span>
+                    <span class="timer-badge">{{ emailSecondsRemaining() }}s</span>
+                </div>
+
+                <app-input label="OTP" [errorText]="inputError(emailForm.controls.otp, 'otp')">
+                    <input appInput type="text" inputmode="numeric" maxlength="6" formControlName="otp"
+                        autocomplete="one-time-code" (input)="clearServerError(emailForm.controls.otp)" />
+                </app-input>
+
+                <div class="inline-actions">
+                    <app-button type="submit" [isLoading]="isVerifyingEmail()">
+                        Confirm Email
+                    </app-button>
+
+                    <app-button type="button" variant="outline" (buttonClick)="cancelEmailChange()">
+                        Cancel
+                    </app-button>
+                </div>
+            </div>
+            }
+        </form>
+    </app-card>
+
+    <app-card>
+        <div class="security-header">
+            <h2 class="section-title">Appearance & Theme</h2>
+            @if (isUpdatingTheme()) {
+            <app-inline-loader size="small" variant="muted"></app-inline-loader>
+            }
+        </div>
+        <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem; font-size: 0.9rem;">
+            Customize how TradeSim looks on your device.
+        </p>
+        <app-segmented-control [options]="themeOptions" [ngModel]="selectedTheme()"
+            (ngModelChange)="updateTheme($event)" [fullWidth]="true" required>
+        </app-segmented-control>
+    </app-card>
+
+    <app-card>
+        <h2 class="section-title">Secure Bank Details</h2>
+
+        <div class="bank-details">
+            <div class="bank-detail">
+                <span class="detail-label">Linked Bank</span>
+                <strong>{{ profile()?.linkedBankName }}</strong>
+            </div>
+
+            <div class="bank-detail">
+                <span class="detail-label">Account Balance</span>
+
+                @if (bankBalance() !== null) {
+                <strong class="balance-value">
+                    {{ bankBalance() | formatCurrency:baseCurrency() }}
+                </strong>
+                } @else {
+                <app-button type="button" variant="outline" (buttonClick)="openBalanceModal()">
+                    Reveal Balance
+                </app-button>
+                }
+            </div>
+        </div>
+    </app-card>
+
+    <app-card>
+        <div class="security-header">
+            <h2 class="section-title">Account Security</h2>
+
+            @if (securityMode() === 'forgot') {
+            <app-button type="button" variant="outline" size="small" (buttonClick)="returnToStandardPassword()">
+                Update Password Manually
+            </app-button>
+            }
+        </div>
+
+        @if (securityMode() === 'standard') {
+        <form [formGroup]="standardPasswordForm" (ngSubmit)="changePassword()" class="form-stack">
+            <app-input label="Current Password"
+                [errorText]="inputError(standardPasswordForm.controls.currentPassword, 'password')">
+                <input appInput type="password" formControlName="currentPassword" autocomplete="current-password"
+                    (input)="clearServerError(standardPasswordForm.controls.currentPassword)" />
+            </app-input>
+
+            <app-input label="New Password"
+                [errorText]="inputError(standardPasswordForm.controls.newPassword, 'password')">
+                <input appInput type="password" formControlName="newPassword" autocomplete="new-password" />
+            </app-input>
+
+            <app-input label="Confirm New Password" [errorText]="standardPasswordForm.hasError('passwordMismatch') &&
+              standardPasswordForm.controls.confirmPassword.touched
+                ? 'Passwords do not match.'
+                : inputError(standardPasswordForm.controls.confirmPassword, 'confirm')">
+                <input appInput type="password" formControlName="confirmPassword" autocomplete="new-password"
+                    [appInputInvalid]="standardPasswordForm.hasError('passwordMismatch') &&
+                standardPasswordForm.controls.confirmPassword.touched" />
+            </app-input>
+
+            <div class="security-actions">
+                <app-button type="submit" [isLoading]="isChangingPassword()">
+                    Update Password
+                </app-button>
+
+                <app-button type="button" variant="outline" (buttonClick)="openForgotPassword()">
+                    Forgot Password?
+                </app-button>
+            </div>
+        </form>
+        } @else {
+        <div class="forgot-password-view">
+            <p>We will send a reset code to <strong>{{ profile()?.email }}</strong>.</p>
+
+            @if (!forgotOtpActive()) {
+            <app-button type="button" [isLoading]="isSendingForgotOtp()" (buttonClick)="sendForgotPasswordOtp()">
+                Send OTP
+            </app-button>
+            } @else {
+            <form [formGroup]="forgotPasswordForm" (ngSubmit)="resetPassword()" class="form-stack">
+                <div class="otp-panel__header">
+                    <span>Enter the OTP sent to your email.</span>
+                    <span class="timer-badge">{{ forgotSecondsRemaining() }}s</span>
+                </div>
+
+                <app-input label="OTP" [errorText]="inputError(forgotPasswordForm.controls.otp, 'otp')">
+                    <input appInput type="text" inputmode="numeric" maxlength="6" formControlName="otp"
+                        autocomplete="one-time-code" (input)="clearServerError(forgotPasswordForm.controls.otp)" />
+                </app-input>
+
+                <app-input label="New Password"
+                    [errorText]="inputError(forgotPasswordForm.controls.newPassword, 'password')">
+                    <input appInput type="password" formControlName="newPassword" autocomplete="new-password" />
+                </app-input>
+
+                <app-input label="Confirm New Password" [errorText]="forgotPasswordForm.hasError('passwordMismatch') &&
+                  forgotPasswordForm.controls.confirmPassword.touched
+                    ? 'Passwords do not match.'
+                    : inputError(forgotPasswordForm.controls.confirmPassword, 'confirm')">
+                    <input appInput type="password" formControlName="confirmPassword" autocomplete="new-password"
+                        [appInputInvalid]="forgotPasswordForm.hasError('passwordMismatch') &&
+                    forgotPasswordForm.controls.confirmPassword.touched" />
+                </app-input>
+
+                <app-button type="submit" [isLoading]="isResettingPassword()">
+                    Set New Password
+                </app-button>
+            </form>
+            }
+        </div>
+        }
+    </app-card>
+
+    <app-card border="danger">
+        <div class="deactivate-card">
+            <div class="deactivate-card__copy">
+                <div class="deactivate-card__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2>Deactivate Account</h2>
+                    <p>This cancels open orders, revokes your session, and logs you out immediately.</p>
+                </div>
+            </div>
+
+            <app-button type="button" variant="danger" (buttonClick)="requestDeactivation()">
+                Deactivate Account
+            </app-button>
+        </div>
+    </app-card>
+    }
+</div>
+
+@if (showBalanceModal()) {
+<app-modal ariaLabel="Reveal account balance" (closed)="closeBalanceModal()">
+    <form [formGroup]="balanceForm" (ngSubmit)="revealBalance()" class="modal-form">
+        <h2>Reveal Account Balance</h2>
+        <p>Enter your current password to view your linked bank balance.</p>
+
+        <app-input label="Current Password" [errorText]="inputError(balanceForm.controls.password, 'password')">
+            <input appInput type="password" formControlName="password" autocomplete="current-password"
+                (input)="clearServerError(balanceForm.controls.password)" />
+        </app-input>
+
+        <div class="modal-actions">
+            <app-button type="button" variant="outline" (buttonClick)="closeBalanceModal()">
+                Cancel
+            </app-button>
+
+            <app-button type="submit" [isLoading]="isRevealingBalance()">
+                Reveal Balance
+            </app-button>
+        </div>
+    </form>
+</app-modal>
+}
+
+@if (showDeactivateModal()) {
+<app-modal ariaLabel="Confirm account deactivation" (closed)="closeDeactivateModal()">
+    <form [formGroup]="deactivateForm" (ngSubmit)="deactivateAccount()" class="modal-form">
+        <h2 class="text-danger">Confirm Deactivation</h2>
+        <p>Enter your current password to deactivate your account.</p>
+
+        <app-input label="Current Password" [errorText]="inputError(deactivateForm.controls.password, 'password')">
+            <input appInput type="password" formControlName="password" autocomplete="current-password"
+                (input)="clearServerError(deactivateForm.controls.password)" />
+        </app-input>
+
+        <div class="modal-actions modal-actions--deactivate">
+            <app-button type="submit" variant="danger" [isLoading]="isDeactivating()">
+                Deactivate Account
+            </app-button>
+
+            <app-button type="button" variant="outline" (buttonClick)="closeDeactivateModal()">
+                Cancel
+            </app-button>
+        </div>
+    </form>
+</app-modal>
+}

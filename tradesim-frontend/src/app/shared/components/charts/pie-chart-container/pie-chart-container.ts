@@ -18,6 +18,7 @@ export class PieChartContainer {
   readonly legendPosition = input<'top' | 'bottom' | 'left' | 'right'>('right');
   readonly wrap = input<boolean>(true);
   readonly isLoading = input<boolean>(false);
+  readonly currency = input<string>('INR');
 
   readonly activeSliceId = signal<string | null>(null);
 

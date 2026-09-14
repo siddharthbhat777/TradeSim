@@ -1,0 +1,37 @@
+.fund-manager-modal-content {
+  position: relative;
+  width: 100%;
+  min-width: 280px;
+
+  @media (min-width: 640px) {
+    min-width: 450px;
+  }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: var(--border);
+    color: var(--text-primary);
+  }
+}

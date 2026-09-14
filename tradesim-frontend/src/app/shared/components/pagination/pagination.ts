@@ -6,6 +6,7 @@ import {
   input,
   model,
   signal,
+  OnDestroy
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -23,10 +24,13 @@ export type PaginationSize = 'small' | 'medium' | 'large';
   styleUrl: './pagination.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Pagination {
+export class Pagination implements OnDestroy {
   totalItems = input.required<number>();
   pageSizeOptions = input<number[]>([10, 25, 50, 100]);
   size = input<PaginationSize>('medium');
+
+  labelSuffix = input<string>(' per page');
+  mobileLabelSuffix = input<string>(' / pg');
 
   currentPage = model<number>(1);
   pageSize = model<number>(10);
@@ -57,16 +61,32 @@ export class Pagination {
     }
   });
 
+  protected isMobile = signal(false);
+
+  protected currentSuffix = computed(() =>
+    this.isMobile() ? this.mobileLabelSuffix() : this.labelSuffix()
+  );
+
   protected pageSizeDropdownOptions = computed<DropdownOption<number>[]>(() =>
-    this.pageSizeOptions().map((size) => ({ label: `${size} per page`, value: size })),
+    this.pageSizeOptions().map((size) => ({ label: `${size}${this.currentSuffix()}`, value: size })),
   );
 
   protected pageInputValue = signal<string>('1');
   protected isShaking = signal(false);
 
   private shakeTimeout?: ReturnType<typeof setTimeout>;
+  private mediaQueryList: MediaQueryList;
+  private mediaQueryListener: (e: MediaQueryListEvent) => void;
 
   constructor() {
+    this.mediaQueryList = window.matchMedia('(max-width: 480px)');
+    this.isMobile.set(this.mediaQueryList.matches);
+
+    this.mediaQueryListener = (e: MediaQueryListEvent) => {
+      this.isMobile.set(e.matches);
+    };
+    this.mediaQueryList.addEventListener('change', this.mediaQueryListener);
+
     effect(() => {
       const page = this.currentPage();
       this.pageInputValue.set(String(page));
@@ -78,6 +98,10 @@ export class Pagination {
         this.currentPage.set(total);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.mediaQueryList.removeEventListener('change', this.mediaQueryListener);
   }
 
   protected goToPrevious(): void {

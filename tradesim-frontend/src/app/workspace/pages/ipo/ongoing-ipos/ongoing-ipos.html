@@ -1,0 +1,75 @@
+<div class="ongoing-ipos">
+    <div class="ongoing-ipos-toolbar">
+        <div class="ongoing-search">
+            <app-input [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search by symbol..." [(ngModel)]="searchQuery" />
+            </app-input>
+        </div>
+        <div class="ongoing-filter">
+            <app-dropdown [options]="categoryOptions" [(ngModel)]="selectedCategory" size="medium"
+                [reserveMessageSpace]="false"></app-dropdown>
+        </div>
+    </div>
+
+    <app-card [isLoading]="isLoading()">
+        @if (!isLoading() && processedOffers().length === 0) {
+        <div class="ipo-empty-wrapper">
+            <app-empty-state text="No ongoing IPOs found"
+                subtext="We couldn't find any open IPOs matching your criteria.">
+                <svg icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+            </app-empty-state>
+        </div>
+        } @else {
+        <app-table variant="flush" [columns]="columns" [data]="processedOffers()" [(currentPage)]="currentPage"
+            [(pageSize)]="pageSize">
+
+            <ng-template tableCell="symbol" let-row="row">
+                <span class="fw-semibold" style="color: var(--primary);">{{ row.symbol }}</span>
+            </ng-template>
+
+            <ng-template tableCell="marketCapCategory" let-row="row">
+                <span class="category-text">{{ row.marketCapCategory | titlecase }} Cap</span>
+            </ng-template>
+
+            <ng-template tableCell="issuePrice" let-row="row">
+                <span class="fw-semibold">{{ row.issuePrice | formatCurrency:row.currency:'currency':4 }}</span>
+            </ng-template>
+
+            <ng-template tableCell="sharesPerAllottee" let-row="row">
+                <span>{{ row.sharesPerAllottee }} Shares</span>
+            </ng-template>
+
+            <ng-template tableCell="subscriptionEndAt" let-row="row">
+                <span class="date-text">{{ row.subscriptionEndAt | date:'MMM dd, yyyy - h:mm a' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="actions" let-row="row">
+                @if (row.hasApplied) {
+                <span class="applied-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Applied
+                </span>
+                } @else {
+                <app-button variant="primary" size="small" [isLoading]="isSubmitting() === row.id"
+                    (buttonClick)="subscribe(row)">
+                    Apply
+                </app-button>
+                }
+            </ng-template>
+
+        </app-table>
+        }
+    </app-card>
+</div>

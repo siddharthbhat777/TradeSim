@@ -12,9 +12,12 @@ public record IpoSubscriptionResponse(
         UUID stockId,
         UUID userId,
         BigDecimal issuePrice,
+        int sharesPerAllottee,
         BigDecimal lockedAmount,
         int allottedShares,
         IpoSubscriptionStatus status,
+        Instant subscriptionEndAt,
+        String currency,
         Instant createdAt,
         Instant updatedAt
 ) {

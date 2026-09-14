@@ -1,0 +1,18 @@
+<div class="slider-wrapper" [class.is-disabled]="cvaDisabled()">
+    <div class="slider-track-container">
+        <div class="slider-track-bg"></div>
+        <div class="slider-track-fill" [style.left.%]="percentMin()" [style.width.%]="percentMax() - percentMin()">
+        </div>
+    </div>
+
+    @if (range()) {
+    <input type="range" class="slider-input" [min]="min()" [max]="max()" [step]="step()" [value]="valA()"
+        [disabled]="cvaDisabled()" (input)="onThumbAChange($event)" (blur)="onInputBlur()">
+
+    <input type="range" class="slider-input" [min]="min()" [max]="max()" [step]="step()" [value]="valB()"
+        [disabled]="cvaDisabled()" (input)="onThumbBChange($event)" (blur)="onInputBlur()">
+    } @else {
+    <input type="range" class="slider-input" [min]="min()" [max]="max()" [step]="step()" [value]="singleVal()"
+        [disabled]="cvaDisabled()" (input)="onSingleChange($event)" (blur)="onInputBlur()">
+    }
+</div>

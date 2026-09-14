@@ -54,9 +54,7 @@ class TradingAccountControllerTest {
         TradingAccountResponse response = new TradingAccountResponse(
                 tradingAccountId,
                 userId,
-                BigDecimal.valueOf(10000000),
-                BigDecimal.ZERO,
-                BigDecimal.valueOf(10000000),
+                "INR",
                 BigDecimal.ZERO,
                 5,
                 BigDecimal.valueOf(25),
@@ -71,8 +69,7 @@ class TradingAccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(tradingAccountId.toString()))
                 .andExpect(jsonPath("$.userId").value(userId.toString()))
-                .andExpect(jsonPath("$.balance").value(10000000))
-                .andExpect(jsonPath("$.availableBalance").value(10000000))
+                .andExpect(jsonPath("$.baseCurrency").value("INR"))
                 .andExpect(jsonPath("$.marginLoan").value(0));
     }
 

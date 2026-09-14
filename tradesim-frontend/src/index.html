@@ -11,6 +11,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
+
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('tradesim-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if (savedTheme === 'DARK' || (savedTheme !== 'LIGHT' && prefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    } catch (e) { }
+  </script>
+
   <style>
     .loader-wrapper {
       display: flex;
@@ -134,23 +146,21 @@
       }
     }
 
-    @media (prefers-color-scheme: dark) {
-      .loader-wrapper {
-        background-color: #0b1220;
-      }
+    html[data-theme='dark'] .loader-wrapper {
+      background-color: #0b1220;
+    }
 
-      .pulse-bar.bar-1 {
-        fill: #cbd5e1;
-      }
+    html[data-theme='dark'] .pulse-bar.bar-1 {
+      fill: #cbd5e1;
+    }
 
-      .trend-line {
-        stroke: #22d3ee;
-        filter: drop-shadow(0 4px 8px rgba(34, 211, 238, 0.5));
-      }
+    html[data-theme='dark'] .trend-line {
+      stroke: #22d3ee;
+      filter: drop-shadow(0 4px 8px rgba(34, 211, 238, 0.5));
+    }
 
-      .brand-text {
-        fill: #f8fafc;
-      }
+    html[data-theme='dark'] .brand-text {
+      fill: #f8fafc;
     }
   </style>
 </head>

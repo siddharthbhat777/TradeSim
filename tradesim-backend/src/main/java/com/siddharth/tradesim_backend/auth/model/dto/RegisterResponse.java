@@ -7,8 +7,10 @@ import java.util.UUID;
 
 public record RegisterResponse(
         UUID id,
+        String fullName,
         String username,
         String email,
+        String linkedBankName,
         Role role,
         AccountStatus accountStatus
 ) {

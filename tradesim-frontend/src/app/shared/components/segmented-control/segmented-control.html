@@ -8,14 +8,16 @@
     [attr.aria-describedby]="showError() ? errorId : null" (keydown)="onKeydown($event)" (focusout)="markTouched()">
 
     @if (selectedIndex() !== -1) {
-    <span class="segmented__indicator" [class.segmented__indicator--pop]="justSelected()" aria-hidden="true"></span>
+    <span class="segmented__indicator" [class.segmented__indicator--pop]="justSelected()" aria-hidden="true"
+        [style.width]="'calc((100% - 8px) / ' + options().length + ')'"
+        [style.left]="'calc(4px + ((100% - 8px) / ' + options().length + ') * ' + selectedIndex() + ')'"></span>
     }
 
     @for (option of options(); track option.value; let index = $index) {
     <button #segmentButton type="button" role="radio" class="segmented__segment" aria-checked="false"
         [attr.aria-checked]="index === selectedIndex() ? 'true' : 'false'" [tabindex]="index === focusIndex() ? 0 : -1"
         [disabled]="disabledState() || option.disabled" (click)="selectIndex(index)">
-        {{ option.label }}
+        <span class="segmented__segment-text">{{ option.label }}</span>
     </button>
     }
 </div>

@@ -10,6 +10,13 @@ public record PortfolioHoldingResponse(
         BigDecimal averageBuyPrice,
         BigDecimal currentPrice,
         BigDecimal currentValue,
-        BigDecimal unrealizedPnl
+        BigDecimal unrealizedPnl,
+        BigDecimal nativeAverageBuyPrice,
+        BigDecimal nativeCurrentPrice,
+        BigDecimal nativeCurrentValue,
+        BigDecimal nativeUnrealizedPnl,
+        BigDecimal totalInvested,
+        String currency,
+        BigDecimal fxRate
 ) {
 }

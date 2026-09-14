@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.auth;
 
+import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.auth.model.dto.*;
 import com.siddharth.tradesim_backend.auth.service.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -11,7 +12,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -37,9 +42,21 @@ public class AuthController {
     @Value("${auth.refresh-token.cookie-same-site}")
     private String refreshTokenCookieSameSite;
 
+    @PostMapping("otp/send")
+    public ResponseEntity<Void> requestOtp(@Valid @RequestBody SendOtpRequest request) {
+        authService.requestOtp(request);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(request));
+    }
+
+    @PostMapping("password/reset")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("login")
@@ -63,6 +80,14 @@ public class AuthController {
     @PostMapping("reactivate")
     public ResponseEntity<LoginResponse> reactivate(@Valid @RequestBody ReactivateRequest request) {
         return buildAuthResponse(authService.reactivateAccount(request));
+    }
+
+    @PostMapping("deactivate")
+    public ResponseEntity<Void> deactivate(@Valid @RequestBody DeactivateRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        authService.deactivateAccount(principal.getUserId(), request);
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, clearRefreshTokenCookie().toString())
+                .build();
     }
 
     private ResponseEntity<LoginResponse> buildAuthResponse(AuthTokenResult result) {

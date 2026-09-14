@@ -1,5 +1,9 @@
 package com.siddharth.tradesim_backend.order.service;
 
+import com.siddharth.tradesim_backend.exchange.ExchangeRepository;
+import com.siddharth.tradesim_backend.exchange.model.Exchange;
+import com.siddharth.tradesim_backend.forex.service.ForexService;
+import com.siddharth.tradesim_backend.forex.service.FxFeeService;
 import com.siddharth.tradesim_backend.ledger.LedgerService;
 import com.siddharth.tradesim_backend.order.enums.OrderSide;
 import com.siddharth.tradesim_backend.order.enums.OrderType;
@@ -10,8 +14,14 @@ import com.siddharth.tradesim_backend.order.repository.OrderRepository;
 import com.siddharth.tradesim_backend.position.PositionRepository;
 import com.siddharth.tradesim_backend.position.PositionException;
 import com.siddharth.tradesim_backend.position.model.Position;
+import com.siddharth.tradesim_backend.stock.StockException;
+import com.siddharth.tradesim_backend.stock.StockRepository;
+import com.siddharth.tradesim_backend.stock.model.Stock;
 import com.siddharth.tradesim_backend.trading_account.TradingAccountService;
 import com.siddharth.tradesim_backend.trading_account.model.TradingAccount;
+import com.siddharth.tradesim_backend.wallet.model.Wallet;
+import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
+import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +39,13 @@ public class OrderLifecycleService {
     private final OrderRepository orderRepository;
     private final OrderBookManager orderBookManager;
     private final TradingAccountService tradingAccountService;
+    private final WalletService walletService;
     private final PositionRepository positionRepository;
     private final LedgerService ledgerService;
+    private final StockRepository stockRepository;
+    private final ExchangeRepository exchangeRepository;
+    private final ForexService forexService;
+    private final FxFeeService fxFeeService;
 
     @Transactional
     public void cancelOrder(Order order) {
@@ -69,24 +84,43 @@ public class OrderLifecycleService {
             return;
         }
 
-        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(order.getUserId());
-        BigDecimal unlockAmount = order.getReservationPrice()
-                .multiply(BigDecimal.valueOf(remainingQty))
-                .divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+        Stock stock = stockRepository.findById(order.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
+        Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> com.siddharth.tradesim_backend.exchange.ExchangeException.notFound("Exchange not found"));
 
-        tradingAccount.unlockFunds(unlockAmount);
-        tradingAccountService.saveTradingAccount(tradingAccount);
+        TradingAccount tradingAccount = tradingAccountService.getTradingAccountByUserIdForUpdate(order.getUserId());
+        Wallet wallet = walletService.getWalletByUserId(order.getUserId());
+        String fundingCurrency = order.getFundingCurrency() != null ? order.getFundingCurrency() : tradingAccount.getBaseCurrency();
+        WalletBucket bucket = walletService.getBucketForUpdate(wallet.getId(), fundingCurrency);
+
+        BigDecimal blockValueInStockCurrency = order.getReservationPrice().multiply(BigDecimal.valueOf(remainingQty));
+        BigDecimal unlockAmountInStockCurrency = blockValueInStockCurrency.divide(BigDecimal.valueOf(tradingAccount.getLeverage()), 4, RoundingMode.HALF_UP);
+
+        BigDecimal unlockMarginInFundingCurrency = forexService.convert(
+                unlockAmountInStockCurrency,
+                exchange.getCurrency(),
+                fundingCurrency
+        );
+
+        BigDecimal fxFee = fxFeeService.calculateConversionFee(
+                fundingCurrency,
+                exchange.getCurrency(),
+                unlockMarginInFundingCurrency
+        );
+
+        BigDecimal totalUnlockAmount = unlockMarginInFundingCurrency.add(fxFee);
+
+        bucket.setLockedBalance(bucket.getLockedBalance().subtract(totalUnlockAmount));
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            ledgerService.recordBuyLimitMarginUnlock(tradingAccount, unlockAmount, order.getStockId(), order.getId());
+            ledgerService.recordBuyLimitMarginUnlock(bucket, tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
             return;
         }
 
-        ledgerService.recordBuyOrderMarginUnlock(tradingAccount, unlockAmount, order.getStockId(), order.getId());
+        ledgerService.recordBuyOrderMarginUnlock(bucket, tradingAccount, totalUnlockAmount, order.getStockId(), order.getId());
     }
 
     private void releaseSellReservation(Order order, int remainingQty) {
-        boolean sharesWereReserved = order.getOrderType() == OrderType.LIMIT || order.getTimeInForce() == TimeInForce.DAY;
+        boolean sharesWereReserved = order.getOrderType() == OrderType.LIMIT || order.getTimeInForce() == TimeInForce.DAY || order.getTimeInForce() == TimeInForce.GTC;
         if (!sharesWereReserved) {
             return;
         }

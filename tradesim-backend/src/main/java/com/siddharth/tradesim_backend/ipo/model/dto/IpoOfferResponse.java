@@ -23,6 +23,7 @@ public record IpoOfferResponse(
         UUID finalizedByUserId,
         Instant finalizedAt,
         String rejectionReason,
+        String currency,
         Instant createdAt,
         Instant updatedAt
 ) {

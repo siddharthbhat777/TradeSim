@@ -56,12 +56,15 @@ class PortfolioControllerTest {
 
         PortfolioResponse response = new PortfolioResponse(
                 List.of(holding),
+                new BigDecimal("500.00"),
+                BigDecimal.ZERO,
                 new BigDecimal("1500.00"),
+                new BigDecimal("1200.00"),
                 new BigDecimal("300.00"),
                 BigDecimal.ZERO,
-                new BigDecimal("1200.00"),
-                new BigDecimal("1500.00"),
-                new BigDecimal("1500.00")
+                new BigDecimal("300.00"),
+                new BigDecimal("2000.00"),
+                "INR"
         );
 
         when(portfolioService.fetchPortfolio(userId)).thenReturn(response);
@@ -90,7 +93,14 @@ class PortfolioControllerTest {
                 new BigDecimal("120.00"),
                 new BigDecimal("150.00"),
                 new BigDecimal("1500.00"),
-                new BigDecimal("300.00")
+                new BigDecimal("300.00"),
+                new BigDecimal("120.00"),
+                new BigDecimal("150.00"),
+                new BigDecimal("1500.00"),
+                new BigDecimal("300.00"),
+                new BigDecimal("1200.00"),
+                "USD",
+                BigDecimal.ONE
         );
     }
 }

@@ -1,0 +1,36 @@
+.portfolio-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.portfolio-header {
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+}
+
+.portfolio-middle {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 2fr 1fr;
+  }
+
+  &__history {
+    min-width: 0;
+  }
+
+  &__allocation {
+    min-width: 0;
+  }
+}

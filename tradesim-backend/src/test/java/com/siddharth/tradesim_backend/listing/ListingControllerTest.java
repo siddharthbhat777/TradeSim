@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -69,7 +70,9 @@ class ListingControllerTest {
                 exchangeId,
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
-                BigDecimal.TEN
+                BigDecimal.TEN,
+                null,
+                List.of()
         );
 
         ListingRequestResponse response = new ListingRequestResponse(
@@ -81,7 +84,9 @@ class ListingControllerTest {
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
-                ListingStatus.PENDING,
+                null,
+                List.of(),
+                ListingStatus.PENDING_INTERNAL_REVIEW,
                 null,
                 null,
                 null,
@@ -90,7 +95,7 @@ class ListingControllerTest {
                 Instant.now()
         );
 
-        when(listingService.submitListingRequest(eq(companyId), eq(representativeUserId), eq(request))).thenReturn(response);
+        when(listingService.submitListingRequest(eq(companyId), eq(representativeUserId), any(CreateListingRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/listing-requests/{companyId}", companyId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
@@ -98,11 +103,11 @@ class ListingControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.symbol").value("INFY"))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                .andExpect(jsonPath("$.status").value("PENDING_INTERNAL_REVIEW"));
     }
 
     @Test
-    void adminShouldFetchPendingListingRequests() throws Exception {
+    void adminShouldFetchPendingExchangeListingRequests() throws Exception {
         UUID adminId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
         UUID exchangeId = UUID.randomUUID();
@@ -125,7 +130,9 @@ class ListingControllerTest {
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
-                ListingStatus.PENDING,
+                null,
+                List.of(),
+                ListingStatus.PENDING_EXCHANGE_APPROVAL,
                 null,
                 null,
                 null,
@@ -134,16 +141,151 @@ class ListingControllerTest {
                 Instant.now()
         );
 
-        when(listingService.fetchPendingListingRequests()).thenReturn(List.of(response));
+        when(listingService.fetchPendingExchangeListingRequests()).thenReturn(List.of(response));
 
-        mockMvc.perform(get("/listing-requests/pending").with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+        mockMvc.perform(get("/listing-requests/pending-exchange").with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].symbol").value("INFY"))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+                .andExpect(jsonPath("$[0].status").value("PENDING_EXCHANGE_APPROVAL"));
     }
 
     @Test
-    void adminShouldApproveListingRequest() throws Exception {
+    void companyRepresentativeShouldFetchPendingInternalListingRequests() throws Exception {
+        UUID companyId = UUID.randomUUID();
+        UUID repId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        User rep = User.builder()
+                .id(repId)
+                .username("manager")
+                .password("password")
+                .role(Role.COMPANY_REPRESENTATIVE)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(rep);
+
+        ListingRequestResponse response = new ListingRequestResponse(
+                UUID.randomUUID(),
+                companyId,
+                UUID.randomUUID(),
+                "INFY",
+                exchangeId,
+                BigDecimal.valueOf(1500.25),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN,
+                null,
+                List.of(),
+                ListingStatus.PENDING_INTERNAL_REVIEW,
+                null,
+                null,
+                null,
+                null,
+                Instant.now(),
+                Instant.now()
+        );
+
+        when(listingService.fetchPendingInternalListingRequests(eq(companyId))).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/listing-requests/company/{companyId}/pending-internal", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].symbol").value("INFY"))
+                .andExpect(jsonPath("$[0].status").value("PENDING_INTERNAL_REVIEW"));
+    }
+
+    @Test
+    void primaryContactShouldApproveInternalListingRequest() throws Exception {
+        UUID repId = UUID.randomUUID();
+        UUID listingRequestId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        User rep = User.builder()
+                .id(repId)
+                .username("primary_contact")
+                .password("password")
+                .role(Role.COMPANY_REPRESENTATIVE)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(rep);
+
+        ListingRequestResponse response = new ListingRequestResponse(
+                listingRequestId,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "INFY",
+                exchangeId,
+                BigDecimal.valueOf(1500.25),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN,
+                null,
+                List.of(),
+                ListingStatus.PENDING_EXCHANGE_APPROVAL,
+                null,
+                null,
+                null,
+                null,
+                Instant.now(),
+                Instant.now()
+        );
+
+        when(listingService.approveInternalListingRequest(eq(listingRequestId), eq(repId))).thenReturn(response);
+
+        mockMvc.perform(put("/listing-requests/{listingRequestId}/internal-approve", listingRequestId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING_EXCHANGE_APPROVAL"));
+    }
+
+    @Test
+    void primaryContactShouldRejectInternalListingRequest() throws Exception {
+        UUID repId = UUID.randomUUID();
+        UUID listingRequestId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        User rep = User.builder()
+                .id(repId)
+                .username("primary_contact")
+                .password("password")
+                .role(Role.COMPANY_REPRESENTATIVE)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(rep);
+
+        RejectListingRequest request = new RejectListingRequest("Missing Cap Table");
+
+        ListingRequestResponse response = new ListingRequestResponse(
+                listingRequestId,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "INFY",
+                exchangeId,
+                BigDecimal.valueOf(1500.25),
+                Sector.TECHNOLOGY,
+                BigDecimal.TEN,
+                null,
+                List.of(),
+                ListingStatus.REJECTED,
+                null,
+                null,
+                null,
+                "Missing Cap Table",
+                Instant.now(),
+                Instant.now()
+        );
+
+        when(listingService.rejectInternalListingRequest(eq(listingRequestId), eq("Missing Cap Table"), eq(repId))).thenReturn(response);
+
+        mockMvc.perform(put("/listing-requests/{listingRequestId}/internal-reject", listingRequestId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"))
+                .andExpect(jsonPath("$.rejectionReason").value("Missing Cap Table"));
+    }
+
+    @Test
+    void adminShouldApproveExchangeListingRequest() throws Exception {
         UUID adminId = UUID.randomUUID();
         UUID listingRequestId = UUID.randomUUID();
         UUID stockId = UUID.randomUUID();
@@ -166,6 +308,8 @@ class ListingControllerTest {
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
+                null,
+                List.of(),
                 ListingStatus.APPROVED,
                 adminId,
                 Instant.now(),
@@ -177,14 +321,15 @@ class ListingControllerTest {
 
         when(listingService.approveListingRequest(eq(listingRequestId), eq(adminId))).thenReturn(response);
 
-        mockMvc.perform(put("/listing-requests/{listingRequestId}/approve", listingRequestId).with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+        mockMvc.perform(put("/listing-requests/{listingRequestId}/exchange-approve", listingRequestId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"))
                 .andExpect(jsonPath("$.approvedStockId").value(stockId.toString()));
     }
 
     @Test
-    void adminShouldRejectListingRequest() throws Exception {
+    void adminShouldRejectExchangeListingRequest() throws Exception {
         UUID adminId = UUID.randomUUID();
         UUID listingRequestId = UUID.randomUUID();
 
@@ -208,6 +353,8 @@ class ListingControllerTest {
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
+                null,
+                List.of(),
                 ListingStatus.REJECTED,
                 adminId,
                 Instant.now(),
@@ -219,7 +366,7 @@ class ListingControllerTest {
 
         when(listingService.rejectListingRequest(eq(listingRequestId), eq("Incomplete issuer details"), eq(adminId))).thenReturn(response);
 
-        mockMvc.perform(put("/listing-requests/{listingRequestId}/reject", listingRequestId)
+        mockMvc.perform(put("/listing-requests/{listingRequestId}/exchange-reject", listingRequestId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -248,7 +395,9 @@ class ListingControllerTest {
                 exchangeId,
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
-                BigDecimal.TEN
+                BigDecimal.TEN,
+                null,
+                List.of()
         );
 
         mockMvc.perform(post("/listing-requests/{companyId}", companyId)

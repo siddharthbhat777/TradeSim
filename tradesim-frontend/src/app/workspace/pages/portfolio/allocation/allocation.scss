@@ -1,0 +1,11 @@
+.allocation-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.allocation-title {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
