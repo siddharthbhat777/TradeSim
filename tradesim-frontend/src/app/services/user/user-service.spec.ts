@@ -5,7 +5,6 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { UserService } from './user-service';
 import { environment } from '../../../environment/environment';
 import { UserProfile, BankBalanceResponse } from '../../models/user';
-import { TradingAccountResponse } from '../../models/trading-account';
 
 describe('UserService', () => {
   let service: UserService;
@@ -53,26 +52,6 @@ describe('UserService', () => {
     const req = httpMock.expectOne(`${environment.apiBaseURL}/users/profile`);
     expect(req.request.method).toBe('GET');
     req.flush(mockProfile);
-  });
-
-  it('should fetch trading account', () => {
-    const mockAccount: TradingAccountResponse = {
-      id: 'acc-1',
-      userId: 'user-123',
-      baseCurrency: 'INR',
-      marginLoan: 0,
-      leverage: 5,
-      maintenanceMarginPercent: 25
-    };
-
-    service.getTradingAccount().subscribe((res) => {
-      expect(res.baseCurrency).toBe('INR');
-      expect(res.leverage).toBe(5);
-    });
-
-    const req = httpMock.expectOne(`${environment.apiBaseURL}/trading-account`);
-    expect(req.request.method).toBe('GET');
-    req.flush(mockAccount);
   });
 
   it('should update profile', () => {
@@ -131,5 +110,16 @@ describe('UserService', () => {
       newPassword: 'NewPass@123'
     });
     req.flush(null);
+  });
+
+  it('should update theme', () => {
+    service.updateTheme('DARK').subscribe((res) => {
+      expect(res.themePreference).toBe('DARK');
+    });
+
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users/profile/theme`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ theme: 'DARK' });
+    req.flush({ ...mockProfile, themePreference: 'DARK' });
   });
 });

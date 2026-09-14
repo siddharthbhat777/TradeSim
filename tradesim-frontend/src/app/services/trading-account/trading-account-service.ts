@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environment/environment';
 import { TradingAccountResponse } from '../../models/trading-account';
 import { skipInterceptors } from '../../shared/utils/http-context';
@@ -15,11 +16,15 @@ export class TradingAccountService {
   public readonly tradingAccount = this.tradingAccountState.asReadonly();
 
   loadTradingAccount(): void {
-    this.http.get<TradingAccountResponse>(this.tradingAccountURL, {
-      context: skipInterceptors({ loader: true })
-    }).subscribe({
+    this.getTradingAccount().subscribe({
       next: (data) => this.tradingAccountState.set(data),
       error: () => this.tradingAccountState.set(null)
+    });
+  }
+
+  getTradingAccount(): Observable<TradingAccountResponse> {
+    return this.http.get<TradingAccountResponse>(this.tradingAccountURL, {
+      context: skipInterceptors({ loader: true })
     });
   }
 }

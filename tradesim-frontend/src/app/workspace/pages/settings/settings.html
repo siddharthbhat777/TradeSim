@@ -96,6 +96,7 @@
         </app-segmented-control>
     </app-card>
 
+    @if (!isAdmin()) {
     <app-card>
         <h2 class="section-title">Secure Bank Details</h2>
 
@@ -120,6 +121,7 @@
             </div>
         </div>
     </app-card>
+    }
 
     <app-card>
         <div class="security-header">

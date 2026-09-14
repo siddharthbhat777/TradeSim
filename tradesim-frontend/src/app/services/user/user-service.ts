@@ -1,8 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
 import { environment } from '../../../environment/environment';
-import { TradingAccountResponse } from '../../models/trading-account';
 import { skipInterceptors } from '../../shared/utils/http-context';
 import {
   BankBalanceResponse, ChangePasswordRequest,
@@ -19,12 +17,6 @@ export class UserService {
 
   getProfile() {
     return this.http.get<UserProfile>(`${this.usersUrl}/profile`, {
-      context: skipInterceptors({ loader: true })
-    });
-  }
-
-  getTradingAccount() {
-    return this.http.get<TradingAccountResponse>(`${environment.apiBaseURL}/trading-account`, {
       context: skipInterceptors({ loader: true })
     });
   }

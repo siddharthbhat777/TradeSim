@@ -18,7 +18,8 @@ import {
 } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { forkJoin, interval, Subscription } from 'rxjs';
+import { forkJoin, interval, Subscription, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { Card } from '../../../shared/components/card/card';
 import { CustomInput } from '../../../shared/components/input/input';
@@ -30,9 +31,10 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { AuthService } from '../../../services/auth/auth-service';
 import { UserService } from '../../../services/user/user-service';
+import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { ThemeService } from '../../../services/theme-service';
 import { ResetPasswordRequest, SendOtpRequest, UserProfile } from '../../../models/user';
-import { OtpPurpose } from '../../../constants/auth';
+import { OtpPurpose, Role } from '../../../constants/auth';
 import { SegmentedControl, SegmentOption } from '../../../shared/components/segmented-control/segmented-control';
 import { InlineLoader } from '../../../shared/components/loaders/inline-loader/inline-loader';
 
@@ -67,6 +69,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 export class Settings implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
+  private readonly tradingAccountService = inject(TradingAccountService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(DialogService);
@@ -76,6 +79,8 @@ export class Settings implements OnInit, OnDestroy {
   readonly profile = signal<UserProfile | null>(null);
   readonly baseCurrency = signal('INR');
   readonly isLoading = signal(true);
+
+  readonly isAdmin = computed(() => this.profile()?.role === Role.admin);
 
   readonly isSavingProfile = signal(false);
   readonly isSendingEmailOtp = signal(false);
@@ -155,15 +160,24 @@ export class Settings implements OnInit, OnDestroy {
   private forgotTimer?: Subscription;
 
   ngOnInit(): void {
+    const userRole = this.authService.currentUser()?.role;
+    const accountRequest = userRole === Role.admin
+      ? of(null)
+      : this.tradingAccountService.getTradingAccount().pipe(catchError(() => of(null)));
+
     forkJoin({
       profile: this.userService.getProfile(),
-      account: this.userService.getTradingAccount()
+      account: accountRequest
     }).subscribe({
       next: ({ profile, account }) => {
         this.profile.set(profile);
         this.selectedTheme.set(profile.themePreference);
         this.themeService.setTheme(profile.themePreference);
-        this.baseCurrency.set(account.baseCurrency);
+
+        if (account) {
+          this.baseCurrency.set(account.baseCurrency);
+        }
+
         this.profileForm.reset({
           fullName: profile.fullName,
           linkedBankName: profile.linkedBankName
