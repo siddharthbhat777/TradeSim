@@ -23,10 +23,11 @@ const USER_MENU: NavItem[] = [
 ];
 
 const ADMIN_MENU: NavItem[] = [
-  { label: 'Dashboard', route: 'admin/dashboard', icon: 'pie-chart' },
-  { label: 'Exchanges', route: 'admin/exchanges', icon: 'globe' },
+  { label: 'Dashboard', route: 'admin/dashboard', icon: 'grid' },
+  { label: 'Approvals', route: 'admin/approvals', icon: 'check-square' },
+  { label: 'Market Ops', route: 'admin/market', icon: 'activity' },
   { label: 'Companies', route: 'admin/companies', icon: 'building' },
-  { label: 'Approvals', route: 'admin/approvals', icon: 'check-circle' }
+  { label: 'Users', route: 'admin/users', icon: 'users' }
 ];
 
 @Component({

@@ -13,8 +13,28 @@ export const adminRoutes: Routes = [
             },
             {
                 path: 'dashboard',
-                loadComponent: () => import('./dashboard/dashboard').then((module) => module.Dashboard),
-                title: 'Dashboard'
+                loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
+                title: 'Admin Dashboard'
+            },
+            {
+                path: 'approvals',
+                loadComponent: () => import('./approvals/approvals').then((m) => m.Approvals),
+                title: 'Approvals Center'
+            },
+            {
+                path: 'market',
+                loadComponent: () => import('./market/market').then((m) => m.Market),
+                title: 'Market Operations'
+            },
+            {
+                path: 'companies',
+                loadComponent: () => import('./companies/companies').then((m) => m.Companies),
+                title: 'Company Directory'
+            },
+            {
+                path: 'users',
+                loadComponent: () => import('./users/users').then((m) => m.Users),
+                title: 'User Management'
             }
         ]
     }
