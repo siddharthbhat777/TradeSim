@@ -12,6 +12,7 @@ import com.siddharth.tradesim_backend.wallet.enums.MultiCurrencyStatus;
 import com.siddharth.tradesim_backend.wallet.model.Wallet;
 import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
 import com.siddharth.tradesim_backend.wallet.model.dto.CurrencyConversionRequest;
+import com.siddharth.tradesim_backend.wallet.model.dto.WalletResponse;
 import com.siddharth.tradesim_backend.wallet.repository.WalletBucketRepository;
 import com.siddharth.tradesim_backend.wallet.repository.WalletRepository;
 import org.junit.jupiter.api.Test;
@@ -162,5 +163,20 @@ class WalletServiceTest {
         assertThat(result.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(result.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
         verify(walletBucketRepository).save(any(WalletBucket.class));
+    }
+
+    @Test
+    void shouldRejectMultiCurrencyAccess() {
+        UUID walletId = UUID.randomUUID();
+        Wallet wallet = Wallet.builder().id(walletId).multiCurrencyStatus(MultiCurrencyStatus.PENDING).build();
+
+        when(walletRepository.findById(walletId)).thenReturn(Optional.of(wallet));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(i -> i.getArgument(0));
+
+        WalletResponse response = walletService.rejectMultiCurrencyAccess(walletId, "Insufficient trading history");
+
+        assertThat(wallet.getMultiCurrencyStatus()).isEqualTo(MultiCurrencyStatus.REJECTED);
+        assertThat(wallet.getRejectionReason()).isEqualTo("Insufficient trading history");
+        assertThat(response.rejectionReason()).isEqualTo("Insufficient trading history");
     }
 }

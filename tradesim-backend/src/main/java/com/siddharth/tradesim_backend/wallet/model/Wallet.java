@@ -29,6 +29,9 @@ public class Wallet extends AuditableEntity {
     @Builder.Default
     private MultiCurrencyStatus multiCurrencyStatus = MultiCurrencyStatus.UNREQUESTED;
 
+    @Column(length = 500)
+    private String rejectionReason;
+
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<WalletBucket> buckets = new ArrayList<>();

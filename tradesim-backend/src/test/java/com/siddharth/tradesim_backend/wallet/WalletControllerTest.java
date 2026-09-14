@@ -6,6 +6,7 @@ import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.wallet.enums.MultiCurrencyStatus;
 import com.siddharth.tradesim_backend.wallet.model.dto.CurrencyConversionRequest;
+import com.siddharth.tradesim_backend.wallet.model.dto.RejectWalletRequest;
 import com.siddharth.tradesim_backend.wallet.model.dto.WalletBucketResponse;
 import com.siddharth.tradesim_backend.wallet.model.dto.WalletResponse;
 import com.siddharth.tradesim_backend.wallet.model.dto.WalletTransactionRequest;
@@ -57,6 +58,7 @@ class WalletControllerTest {
                 UUID.randomUUID(),
                 userId,
                 MultiCurrencyStatus.APPROVED,
+                null,
                 List.of(new WalletBucketResponse(UUID.randomUUID(), "INR", BigDecimal.valueOf(1000), BigDecimal.ZERO, BigDecimal.valueOf(1000)))
         );
 
@@ -75,7 +77,7 @@ class WalletControllerTest {
         UserPrincipal principal = createPrincipal(userId, Role.USER);
         WalletTransactionRequest request = new WalletTransactionRequest(BigDecimal.valueOf(500));
 
-        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.UNREQUESTED, List.of());
+        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.UNREQUESTED, null, List.of());
 
         when(walletService.depositFromBank(eq(userId), any(BigDecimal.class))).thenReturn(response);
 
@@ -91,7 +93,7 @@ class WalletControllerTest {
         UUID userId = UUID.randomUUID();
         UserPrincipal principal = createPrincipal(userId, Role.USER);
 
-        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.PENDING, List.of());
+        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.PENDING, null, List.of());
 
         when(walletService.requestMultiCurrencyAccess(userId)).thenReturn(response);
 
@@ -107,7 +109,7 @@ class WalletControllerTest {
         UserPrincipal principal = createPrincipal(userId, Role.USER);
         CurrencyConversionRequest request = new CurrencyConversionRequest("INR", "USD", BigDecimal.valueOf(1000));
 
-        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.APPROVED, List.of());
+        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.APPROVED, null, List.of());
 
         when(walletService.convertCurrency(eq(userId), any(CurrencyConversionRequest.class))).thenReturn(response);
 
@@ -124,7 +126,7 @@ class WalletControllerTest {
         UUID walletId = UUID.randomUUID();
         UserPrincipal principal = createPrincipal(adminId, Role.ADMIN);
 
-        WalletResponse response = new WalletResponse(walletId, UUID.randomUUID(), MultiCurrencyStatus.APPROVED, List.of());
+        WalletResponse response = new WalletResponse(walletId, UUID.randomUUID(), MultiCurrencyStatus.APPROVED, null, List.of());
 
         when(walletService.approveMultiCurrencyAccess(walletId)).thenReturn(response);
 
@@ -132,6 +134,26 @@ class WalletControllerTest {
                         .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.multiCurrencyStatus").value("APPROVED"));
+    }
+
+    @Test
+    void adminShouldRejectMultiCurrency() throws Exception {
+        UUID adminId = UUID.randomUUID();
+        UUID walletId = UUID.randomUUID();
+        UserPrincipal principal = createPrincipal(adminId, Role.ADMIN);
+        RejectWalletRequest request = new RejectWalletRequest("Insufficient trading history");
+
+        WalletResponse response = new WalletResponse(walletId, UUID.randomUUID(), MultiCurrencyStatus.REJECTED, "Insufficient trading history", List.of());
+
+        when(walletService.rejectMultiCurrencyAccess(walletId, "Insufficient trading history")).thenReturn(response);
+
+        mockMvc.perform(put("/wallet/multi-currency/{walletId}/reject", walletId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.multiCurrencyStatus").value("REJECTED"))
+                .andExpect(jsonPath("$.rejectionReason").value("Insufficient trading history"));
     }
 
     private UserPrincipal createPrincipal(UUID userId, Role role) {

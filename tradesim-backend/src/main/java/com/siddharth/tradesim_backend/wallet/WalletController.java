@@ -2,6 +2,7 @@ package com.siddharth.tradesim_backend.wallet;
 
 import com.siddharth.tradesim_backend.auth.model.UserPrincipal;
 import com.siddharth.tradesim_backend.wallet.model.dto.CurrencyConversionRequest;
+import com.siddharth.tradesim_backend.wallet.model.dto.RejectWalletRequest;
 import com.siddharth.tradesim_backend.wallet.model.dto.WalletResponse;
 import com.siddharth.tradesim_backend.wallet.model.dto.WalletTransactionRequest;
 import jakarta.validation.Valid;
@@ -64,7 +65,7 @@ public class WalletController {
 
     @PutMapping("multi-currency/{walletId}/reject")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<WalletResponse> rejectMultiCurrency(@PathVariable UUID walletId) {
-        return ResponseEntity.ok(walletService.rejectMultiCurrencyAccess(walletId));
+    public ResponseEntity<WalletResponse> rejectMultiCurrency(@PathVariable UUID walletId, @Valid @RequestBody RejectWalletRequest request) {
+        return ResponseEntity.ok(walletService.rejectMultiCurrencyAccess(walletId, request.rejectionReason()));
     }
 }

@@ -9,6 +9,7 @@ public record WalletResponse(
         UUID id,
         UUID userId,
         MultiCurrencyStatus multiCurrencyStatus,
+        String rejectionReason,
         List<WalletBucketResponse> buckets
 ) {
 }
