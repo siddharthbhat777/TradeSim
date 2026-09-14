@@ -1,22 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { IpoService } from './ipo-service';
+import { CompanyService } from './company-service';
 import { environment } from '../../../environment/environment';
 
-describe('IpoService', () => {
-  let service: IpoService;
+describe('CompanyService', () => {
+  let service: CompanyService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        IpoService,
+        CompanyService,
         provideHttpClient(),
         provideHttpClientTesting()
       ]
     });
-    service = TestBed.inject(IpoService);
+    service = TestBed.inject(CompanyService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
@@ -28,9 +28,9 @@ describe('IpoService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get pending IPOs', () => {
-    service.getPendingIpos().subscribe();
-    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/pending`);
+  it('should get companies', () => {
+    service.getCompanies().subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/companies`);
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });

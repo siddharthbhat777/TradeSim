@@ -120,7 +120,7 @@ describe('Settings', () => {
 
     component.revealBalance();
 
-    expect(mockUserService.revealBankBalance).toHaveBeenCalledWith('Password123!');
+    expect(mockUserService.revealBankBalance).toHaveBeenCalledWith({ password: 'Password123!' });
     expect(component.bankBalance()).toBe(75000);
   });
 

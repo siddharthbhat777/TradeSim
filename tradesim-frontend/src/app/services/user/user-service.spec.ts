@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-
 import { UserService } from './user-service';
 import { environment } from '../../../environment/environment';
 import { UserProfile, BankBalanceResponse } from '../../models/user';
@@ -43,6 +42,13 @@ describe('UserService', () => {
     expect(service).toBeTruthy();
   });
 
+  it('should fetch all users', () => {
+    service.getAllUsers().subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users`);
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
   it('should fetch user profile', () => {
     service.getProfile().subscribe((res) => {
       expect(res).toEqual(mockProfile);
@@ -68,7 +74,7 @@ describe('UserService', () => {
   });
 
   it('should initiate email change', () => {
-    service.initiateEmailChange('new@example.com').subscribe();
+    service.initiateEmailChange({ newEmail: 'new@example.com' }).subscribe();
 
     const req = httpMock.expectOne(`${environment.apiBaseURL}/users/email/change/initiate`);
     expect(req.request.method).toBe('POST');
@@ -90,7 +96,7 @@ describe('UserService', () => {
   it('should reveal bank balance on password verification', () => {
     const mockBalance: BankBalanceResponse = { bankBalance: 75000 };
 
-    service.revealBankBalance('secretPass@123').subscribe((res) => {
+    service.revealBankBalance({ password: 'secretPass@123' }).subscribe((res) => {
       expect(res.bankBalance).toBe(75000);
     });
 
@@ -121,5 +127,21 @@ describe('UserService', () => {
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual({ theme: 'DARK' });
     req.flush({ ...mockProfile, themePreference: 'DARK' });
+  });
+
+  it('should change user status', () => {
+    service.changeStatus('user-123', { status: 'BANNED' }).subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users/change/user-123/status`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ status: 'BANNED' });
+    req.flush({});
+  });
+
+  it('should change user role', () => {
+    service.changeRole('user-123', { role: 'ADMIN' }).subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users/change/user-123/role`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ role: 'ADMIN' });
+    req.flush({});
   });
 });

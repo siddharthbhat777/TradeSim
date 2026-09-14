@@ -247,7 +247,7 @@ export class Settings implements OnInit, OnDestroy {
 
     this.isSendingEmailOtp.set(true);
 
-    this.userService.initiateEmailChange(this.emailForm.controls.email.value).subscribe({
+    this.userService.initiateEmailChange({ newEmail: this.emailForm.controls.email.value }).subscribe({
       next: () => {
         this.emailOtpActive.set(true);
         this.emailForm.controls.email.disable();
@@ -317,7 +317,7 @@ export class Settings implements OnInit, OnDestroy {
 
     this.isRevealingBalance.set(true);
 
-    this.userService.revealBankBalance(this.balanceForm.controls.password.value).subscribe({
+    this.userService.revealBankBalance({ password: this.balanceForm.controls.password.value }).subscribe({
       next: ({ bankBalance }) => {
         this.bankBalance.set(bankBalance);
         this.closeBalanceModal();
