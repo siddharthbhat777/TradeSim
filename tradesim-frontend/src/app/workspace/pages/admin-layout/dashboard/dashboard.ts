@@ -205,7 +205,7 @@ export class Dashboard implements OnInit {
             id: w.id,
             type: 'Wallet' as const,
             entityName: `User ID: ${w.userId}`,
-            submittedAt: (w as any).createdAt || now
+            submittedAt: (w as Record<string, any>)['createdAt'] || now
           }))
         ];
 

@@ -4,8 +4,8 @@
         <app-card>
             <div class="kpi-card">
                 <div class="kpi-card__header">
-                    <span class="text-muted font-semibold">Total Users</span>
-                    <div class="kpi-card__icon text-primary">
+                    <span class="kpi-card__title">Total Users</span>
+                    <div class="kpi-card__icon kpi-card__icon--primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
@@ -21,8 +21,8 @@
         <app-card>
             <div class="kpi-card">
                 <div class="kpi-card__header">
-                    <span class="text-muted font-semibold">Active Companies</span>
-                    <div class="kpi-card__icon text-success">
+                    <span class="kpi-card__title">Active Companies</span>
+                    <div class="kpi-card__icon kpi-card__icon--success">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
                             <path d="M9 22v-4h6v4"></path>
@@ -45,8 +45,8 @@
         <app-card [border]="currentStats.pendingApprovals > 0 ? 'warning' : undefined">
             <div class="kpi-card">
                 <div class="kpi-card__header">
-                    <span class="text-muted font-semibold">Pending Approvals</span>
-                    <div class="kpi-card__icon text-warning">
+                    <span class="kpi-card__title">Pending Approvals</span>
+                    <div class="kpi-card__icon kpi-card__icon--warning">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
@@ -60,8 +60,8 @@
         <app-card>
             <div class="kpi-card">
                 <div class="kpi-card__header">
-                    <span class="text-muted font-semibold">Active Exchanges</span>
-                    <div class="kpi-card__icon text-accent">
+                    <span class="kpi-card__title">Active Exchanges</span>
+                    <div class="kpi-card__icon kpi-card__icon--accent">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -79,7 +79,7 @@
 
     <app-card class="market-pulse-card">
         <div class="market-pulse-header">
-            <h2 class="heading-lg m-0">Market Pulse</h2>
+            <h2 class="heading-lg">Market Pulse</h2>
             <div class="market-controls">
                 <app-dropdown [options]="exchangeOptions()" [ngModel]="selectedExchangeId()"
                     (ngModelChange)="onExchangeChange($event)" size="medium" placeholder="Select Exchange"
@@ -117,7 +117,7 @@
     </app-card>
 
     <app-card class="actions-card" variant="default">
-        <h2 class="heading-lg m-0 mb-4">Quick Action Center</h2>
+        <h2 class="heading-lg actions-header">Quick Action Center</h2>
 
         <app-table variant="flush" [columns]="actionColumns()" [data]="pendingActions()" [paginated]="false"
             [interactiveRows]="true" emptyText="No pending approvals at this time." (rowClick)="onActionClick($event)">
@@ -127,11 +127,11 @@
             </ng-template>
 
             <ng-template tableCell="entityName" let-val>
-                <span class="font-medium text-primary">{{ val }}</span>
+                <span class="entity-name">{{ val }}</span>
             </ng-template>
 
             <ng-template tableCell="submittedAt" let-val>
-                <span class="text-muted">{{ val | date:'MMM dd, yyyy - hh:mm a' }}</span>
+                <span class="date-text">{{ val | date:'MMM dd, yyyy - hh:mm a' }}</span>
             </ng-template>
 
             <ng-template tableCell="id">
