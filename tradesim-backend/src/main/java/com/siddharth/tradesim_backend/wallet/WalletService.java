@@ -244,6 +244,13 @@ public class WalletService {
                         bucket.getAvailableBalance()
                 )).toList();
 
-        return new WalletResponse(wallet.getId(), wallet.getUserId(), wallet.getMultiCurrencyStatus(), wallet.getRejectionReason(), bucketResponses);
+        return new WalletResponse(
+                wallet.getId(),
+                wallet.getUserId(),
+                wallet.getMultiCurrencyStatus(),
+                wallet.getRejectionReason(),
+                bucketResponses,
+                wallet.getCreatedAt()
+        );
     }
 }

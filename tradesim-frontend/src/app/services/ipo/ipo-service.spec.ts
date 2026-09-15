@@ -34,4 +34,19 @@ describe('IpoService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
+
+  it('should approve IPO', () => {
+    service.approveIpoOffer('offer-123').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/offer-123/approve`);
+    expect(req.request.method).toBe('PUT');
+    req.flush({});
+  });
+
+  it('should reject IPO', () => {
+    service.rejectIpoOffer('offer-123', 'Incomplete details').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/offer-123/reject`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ rejectionReason: 'Incomplete details' });
+    req.flush({});
+  });
 });

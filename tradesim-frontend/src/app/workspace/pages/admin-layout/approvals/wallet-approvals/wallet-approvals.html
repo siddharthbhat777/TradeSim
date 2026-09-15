@@ -1,0 +1,80 @@
+@if (isLoading()) {
+<app-card [isLoading]="true">
+    <div style="height: 400px;"></div>
+</app-card>
+} @else if (wallets().length === 0) {
+<app-empty-state text="No pending wallet upgrades"
+    subtext="All caught up! There are currently no users requesting multi-currency access.">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+        <line x1="2" y1="10" x2="22" y2="10"></line>
+    </svg>
+</app-empty-state>
+} @else {
+<app-card>
+    <app-table variant="flush" [columns]="columns()" [data]="wallets()" [paginated]="true">
+
+        <ng-template tableCell="userId" let-val let-row="row">
+            <div class="id-cell-wrapper" [class.highlight]="isHighlighted(row.id)">
+                <span class="font-mono text-muted text-sm">{{ val | slice:0:8 }}...</span>
+                <button type="button" class="copy-btn" (click)="copyId(val)" aria-label="Copy User ID">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                </button>
+            </div>
+        </ng-template>
+
+        <ng-template tableCell="userName" let-row="row">
+            <span class="font-medium">{{ userMap().get(row.userId) || 'Unknown User' }}</span>
+        </ng-template>
+
+        <ng-template tableCell="multiCurrencyStatus" let-val>
+            <app-badge color="warning">Pending Approval</app-badge>
+        </ng-template>
+
+        <ng-template tableCell="createdAt" let-val>
+            <span class="text-muted">{{ val | timeAgo }}</span>
+        </ng-template>
+
+        <ng-template tableCell="actions" let-row="row">
+            <div class="action-buttons">
+                <app-button variant="success" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="confirmApprove(row.id)">Approve</app-button>
+                <app-button variant="danger" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="openRejectModal(row.id)">Reject</app-button>
+            </div>
+        </ng-template>
+
+    </app-table>
+</app-card>
+}
+
+@if (showRejectModal()) {
+<app-modal (closed)="closeRejectModal()" ariaLabel="Reject Request">
+    <div class="reject-modal">
+        <div class="reject-modal__header">
+            <h3 class="heading-md m-0">Provide Rejection Reason</h3>
+            <p class="text-muted mb-0">Please explain why this wallet upgrade is being rejected. This will be visible to
+                the user.</p>
+        </div>
+
+        <form [formGroup]="rejectForm" (ngSubmit)="submitRejection()">
+            <div class="reject-modal__body">
+                <app-input label="Reason" [required]="true" errorText="Reason is required (max 500 characters).">
+                    <textarea appInput formControlName="reason" rows="4"
+                        placeholder="Enter reason for rejection..."></textarea>
+                </app-input>
+            </div>
+
+            <div class="reject-modal__footer">
+                <app-button type="button" variant="secondary" [disabled]="isProcessing()"
+                    (buttonClick)="closeRejectModal()">Cancel</app-button>
+                <app-button type="submit" variant="danger" [isLoading]="isProcessing()">Reject Request</app-button>
+            </div>
+        </form>
+    </div>
+</app-modal>
+}

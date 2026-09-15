@@ -40,4 +40,16 @@ export class IpoService {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }
+
+  approveIpoOffer(id: string) {
+    return this.http.put<IpoOfferResponse>(`${this.ipoURL}/${id}/approve`, {}, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  rejectIpoOffer(id: string, rejectionReason: string) {
+    return this.http.put<IpoOfferResponse>(`${this.ipoURL}/${id}/reject`, { rejectionReason }, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
 }

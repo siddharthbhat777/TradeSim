@@ -1,1 +1,19 @@
-<p>approvals works!</p>
+<div class="approvals-container">
+    <div class="approvals-header">
+        <h1 class="heading-xl m-0">Approval Center</h1>
+        <p class="text-body m-0">Review and manage pending requests for listings, IPOs, and wallet upgrades.</p>
+    </div>
+
+    <div class="approvals-controls">
+        <app-segmented-control [options]="tabOptions()" [formControl]="tabControl" size="large" required fullWidth>
+        </app-segmented-control>
+    </div>
+
+    @if (tabControl.value === 'Listing') {
+    <app-listing-approvals [highlightedId]="highlightedId()"></app-listing-approvals>
+    } @else if (tabControl.value === 'IPO') {
+    <app-ipo-approvals [highlightedId]="highlightedId()"></app-ipo-approvals>
+    } @else if (tabControl.value === 'Wallet') {
+    <app-wallet-approvals [highlightedId]="highlightedId()"></app-wallet-approvals>
+    }
+</div>

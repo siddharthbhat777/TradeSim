@@ -46,4 +46,16 @@ export class WalletService {
       context: skipInterceptors({ loader: true })
     });
   }
+
+  approveMultiCurrencyAccess(walletId: string) {
+    return this.http.put<Wallet>(`${this.walletURL}/multi-currency/${walletId}/approve`, {}, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  rejectMultiCurrencyAccess(walletId: string, rejectionReason: string) {
+    return this.http.put<Wallet>(`${this.walletURL}/multi-currency/${walletId}/reject`, { rejectionReason }, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
 }

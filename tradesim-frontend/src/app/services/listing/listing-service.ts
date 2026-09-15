@@ -16,4 +16,16 @@ export class ListingService {
       context: skipInterceptors({ loader: true })
     });
   }
+
+  approveListingRequest(id: string) {
+    return this.http.put<ListingRequestResponse>(`${this.listingURL}/${id}/exchange-approve`, {}, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  rejectListingRequest(id: string, rejectionReason: string) {
+    return this.http.put<ListingRequestResponse>(`${this.listingURL}/${id}/exchange-reject`, { rejectionReason }, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
 }

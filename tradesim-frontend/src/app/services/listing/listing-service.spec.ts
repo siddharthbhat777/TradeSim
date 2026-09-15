@@ -34,4 +34,19 @@ describe('ListingService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
+
+  it('should approve listing request', () => {
+    service.approveListingRequest('listing-123').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/listing-requests/listing-123/exchange-approve`);
+    expect(req.request.method).toBe('PUT');
+    req.flush({});
+  });
+
+  it('should reject listing request', () => {
+    service.rejectListingRequest('listing-123', 'Missing financials').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/listing-requests/listing-123/exchange-reject`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ rejectionReason: 'Missing financials' });
+    req.flush({});
+  });
 });

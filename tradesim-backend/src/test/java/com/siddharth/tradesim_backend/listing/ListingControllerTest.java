@@ -91,6 +91,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -137,6 +138,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -180,6 +182,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -224,6 +227,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -269,6 +273,7 @@ class ListingControllerTest {
                 null,
                 null,
                 "Missing Cap Table",
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -315,6 +320,7 @@ class ListingControllerTest {
                 Instant.now(),
                 stockId,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -360,6 +366,7 @@ class ListingControllerTest {
                 Instant.now(),
                 null,
                 "Incomplete issuer details",
+                "USD",
                 Instant.now(),
                 Instant.now()
         );

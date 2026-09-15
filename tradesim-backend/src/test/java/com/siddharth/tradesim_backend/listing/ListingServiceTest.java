@@ -11,6 +11,7 @@ import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeResponse;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingCapTableEntry;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
@@ -32,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -96,6 +98,18 @@ class ListingServiceTest {
                 .assignmentRole(CompanyRepresentativeAssignmentRole.MANAGER)
                 .build();
 
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(assignmentRepository.findByCompanyIdAndUserId(companyId, managerUserId)).thenReturn(Optional.of(assignment));
         when(stockService.existsBySymbol("INFY")).thenReturn(false);
@@ -105,11 +119,13 @@ class ListingServiceTest {
             listingRequest.setId(UUID.randomUUID());
             return listingRequest;
         });
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.submitListingRequest(companyId, managerUserId, request);
 
         assertThat(response.symbol()).isEqualTo("INFY");
         assertThat(response.status()).isEqualTo(ListingStatus.PENDING_INTERNAL_REVIEW);
+        assertThat(response.currency()).isEqualTo("USD");
         verify(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, managerUserId);
         verify(exchangeService).assertExchangeActive(exchangeId);
     }
@@ -137,6 +153,18 @@ class ListingServiceTest {
                 .assignmentRole(CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT)
                 .build();
 
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(assignmentRepository.findByCompanyIdAndUserId(companyId, primaryContactId)).thenReturn(Optional.of(assignment));
         when(assignmentRepository.existsByCompanyIdAndUserIdAndStatus(companyId, targetUserId, CompanyRepresentativeAssignmentStatus.ACTIVE)).thenReturn(true);
@@ -147,12 +175,14 @@ class ListingServiceTest {
             listingRequest.setId(UUID.randomUUID());
             return listingRequest;
         });
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.submitListingRequest(companyId, primaryContactId, request);
 
         assertThat(response.status()).isEqualTo(ListingStatus.PENDING_EXCHANGE_APPROVAL);
         assertThat(response.totalShares()).isEqualTo(1000);
         assertThat(response.capTable()).hasSize(1);
+        assertThat(response.currency()).isEqualTo("USD");
     }
 
     @Test
@@ -264,6 +294,18 @@ class ListingServiceTest {
                 exchangeId
         );
 
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(stockService.createStockFromListingApproval(
@@ -279,11 +321,13 @@ class ListingServiceTest {
 
         when(positionRepository.findByUserIdAndStockId(founderUserId, stockId)).thenReturn(Optional.empty());
         when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.approveListingRequest(listingRequestId, adminUserId);
 
         assertThat(response.status()).isEqualTo(ListingStatus.APPROVED);
         assertThat(response.approvedStockId()).isEqualTo(stockId);
+        assertThat(response.currency()).isEqualTo("USD");
 
         ArgumentCaptor<Position> positionCaptor = ArgumentCaptor.forClass(Position.class);
         verify(positionRepository).save(positionCaptor.capture());
@@ -316,8 +360,21 @@ class ListingServiceTest {
                 .capTable(new ArrayList<>())
                 .build();
 
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
         when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.rejectListingRequest(listingRequestId, "Incomplete issuer details", adminUserId);
 
@@ -325,6 +382,7 @@ class ListingServiceTest {
         assertThat(response.rejectionReason()).isEqualTo("Incomplete issuer details");
         assertThat(response.reviewedByUserId()).isEqualTo(adminUserId);
         assertThat(response.approvedStockId()).isNull();
+        assertThat(response.currency()).isEqualTo("USD");
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeResponse;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingCapTableEntry;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
@@ -233,6 +234,8 @@ public class ListingService {
                 .map(entry -> new CapTableEntryResponse(entry.getUserId(), entry.getQuantity()))
                 .toList();
 
+        ExchangeResponse exchange = exchangeService.fetchExchange(listingRequest.getExchangeId());
+
         return new ListingRequestResponse(
                 listingRequest.getId(),
                 listingRequest.getCompanyId(),
@@ -249,6 +252,7 @@ public class ListingService {
                 listingRequest.getReviewedAt(),
                 listingRequest.getApprovedStockId(),
                 listingRequest.getRejectionReason(),
+                exchange.currency(),
                 listingRequest.getCreatedAt(),
                 listingRequest.getUpdatedAt()
         );

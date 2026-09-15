@@ -11,6 +11,8 @@ export interface Wallet {
     userId: string;
     multiCurrencyStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'UNREQUESTED';
     buckets: WalletBucket[];
+    rejectionReason: string | null;
+    createdAt: string;
 }
 
 export interface WalletTransactionRequest {

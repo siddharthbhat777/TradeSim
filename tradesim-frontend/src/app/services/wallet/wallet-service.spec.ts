@@ -34,4 +34,19 @@ describe('WalletService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
+
+  it('should approve multi-currency access', () => {
+    service.approveMultiCurrencyAccess('wallet-123').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/wallet/multi-currency/wallet-123/approve`);
+    expect(req.request.method).toBe('PUT');
+    req.flush({});
+  });
+
+  it('should reject multi-currency access', () => {
+    service.rejectMultiCurrencyAccess('wallet-123', 'Insufficient trading history').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/wallet/multi-currency/wallet-123/reject`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ rejectionReason: 'Insufficient trading history' });
+    req.flush({});
+  });
 });

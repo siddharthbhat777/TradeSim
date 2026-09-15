@@ -19,6 +19,7 @@ export interface ListingRequestResponse {
     reviewedAt: string | null;
     approvedStockId: string | null;
     rejectionReason: string | null;
+    currency: string;
     createdAt: string;
     updatedAt: string;
 }

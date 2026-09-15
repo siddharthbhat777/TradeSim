@@ -24,6 +24,7 @@ public record ListingRequestResponse(
         Instant reviewedAt,
         UUID approvedStockId,
         String rejectionReason,
+        String currency,
         Instant createdAt,
         Instant updatedAt
 ) {

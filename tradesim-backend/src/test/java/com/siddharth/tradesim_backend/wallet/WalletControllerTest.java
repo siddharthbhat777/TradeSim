@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,7 +60,8 @@ class WalletControllerTest {
                 userId,
                 MultiCurrencyStatus.APPROVED,
                 null,
-                List.of(new WalletBucketResponse(UUID.randomUUID(), "INR", BigDecimal.valueOf(1000), BigDecimal.ZERO, BigDecimal.valueOf(1000)))
+                List.of(new WalletBucketResponse(UUID.randomUUID(), "INR", BigDecimal.valueOf(1000), BigDecimal.ZERO, BigDecimal.valueOf(1000))),
+                Instant.now()
         );
 
         when(walletService.fetchMyWallet(userId)).thenReturn(response);
@@ -77,7 +79,7 @@ class WalletControllerTest {
         UserPrincipal principal = createPrincipal(userId, Role.USER);
         WalletTransactionRequest request = new WalletTransactionRequest(BigDecimal.valueOf(500));
 
-        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.UNREQUESTED, null, List.of());
+        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.UNREQUESTED, null, List.of(), Instant.now());
 
         when(walletService.depositFromBank(eq(userId), any(BigDecimal.class))).thenReturn(response);
 
@@ -93,7 +95,7 @@ class WalletControllerTest {
         UUID userId = UUID.randomUUID();
         UserPrincipal principal = createPrincipal(userId, Role.USER);
 
-        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.PENDING, null, List.of());
+        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.PENDING, null, List.of(), Instant.now());
 
         when(walletService.requestMultiCurrencyAccess(userId)).thenReturn(response);
 
@@ -109,7 +111,7 @@ class WalletControllerTest {
         UserPrincipal principal = createPrincipal(userId, Role.USER);
         CurrencyConversionRequest request = new CurrencyConversionRequest("INR", "USD", BigDecimal.valueOf(1000));
 
-        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.APPROVED, null, List.of());
+        WalletResponse response = new WalletResponse(UUID.randomUUID(), userId, MultiCurrencyStatus.APPROVED, null, List.of(), Instant.now());
 
         when(walletService.convertCurrency(eq(userId), any(CurrencyConversionRequest.class))).thenReturn(response);
 
@@ -126,7 +128,7 @@ class WalletControllerTest {
         UUID walletId = UUID.randomUUID();
         UserPrincipal principal = createPrincipal(adminId, Role.ADMIN);
 
-        WalletResponse response = new WalletResponse(walletId, UUID.randomUUID(), MultiCurrencyStatus.APPROVED, null, List.of());
+        WalletResponse response = new WalletResponse(walletId, UUID.randomUUID(), MultiCurrencyStatus.APPROVED, null, List.of(), Instant.now());
 
         when(walletService.approveMultiCurrencyAccess(walletId)).thenReturn(response);
 
@@ -143,7 +145,7 @@ class WalletControllerTest {
         UserPrincipal principal = createPrincipal(adminId, Role.ADMIN);
         RejectWalletRequest request = new RejectWalletRequest("Insufficient trading history");
 
-        WalletResponse response = new WalletResponse(walletId, UUID.randomUUID(), MultiCurrencyStatus.REJECTED, "Insufficient trading history", List.of());
+        WalletResponse response = new WalletResponse(walletId, UUID.randomUUID(), MultiCurrencyStatus.REJECTED, "Insufficient trading history", List.of(), Instant.now());
 
         when(walletService.rejectMultiCurrencyAccess(walletId, "Insufficient trading history")).thenReturn(response);
 
