@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
 import { Card } from '../../../../../shared/components/card/card';
 import { Table, TableColumn, TableCellDirective, TableExpandedRowDirective } from '../../../../../shared/components/table/table';
 import { Badge } from '../../../../../shared/components/badge/badge';
@@ -15,8 +14,8 @@ import { DialogService } from '../../../../../shared/components/dialog/dialog.se
 import { FormatCurrencyPipe } from '../../../../../shared/pipes/format-currency-pipe';
 import { TimeAgoPipe } from '../../../../../shared/pipes/time-ago-pipe';
 import { ListingService } from '../../../../../services/listing/listing-service';
-import { UserService } from '../../../../../services/user/user-service';
 import { ListingRequestResponse } from '../../../../../models/listing';
+import { UserListResponse } from '../../../../../models/user';
 
 @Component({
   selector: 'app-listing-approvals',
@@ -40,19 +39,25 @@ import { ListingRequestResponse } from '../../../../../models/listing';
   styleUrl: './listing-approvals.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ListingApprovals implements OnInit {
+export class ListingApprovals {
   readonly highlightedId = input<string | null>(null);
+  readonly data = input.required<ListingRequestResponse[]>();
+  readonly users = input.required<UserListResponse[]>();
+  readonly isLoading = input.required<boolean>();
+  readonly processed = output<string>();
 
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(DialogService);
   private readonly listingService = inject(ListingService);
-  private readonly userService = inject(UserService);
 
-  readonly isLoading = signal(true);
   readonly isProcessing = signal(false);
-  readonly listings = signal<ListingRequestResponse[]>([]);
-  readonly userMap = signal<Map<string, string>>(new Map());
+
+  readonly userMap = computed(() => {
+    const map = new Map<string, string>();
+    this.users().forEach(u => map.set(u.id, u.fullName));
+    return map;
+  });
 
   readonly columns = signal<TableColumn<ListingRequestResponse>[]>([
     { key: 'symbol', header: 'Symbol' },
@@ -71,29 +76,6 @@ export class ListingApprovals implements OnInit {
     reason: ['', [Validators.required, Validators.maxLength(500)]]
   });
 
-  ngOnInit(): void {
-    this.loadData();
-  }
-
-  loadData(): void {
-    this.isLoading.set(true);
-    forkJoin({
-      requests: this.listingService.getPendingExchangeRequests(),
-      users: this.userService.getAllUsers()
-    }).subscribe({
-      next: ({ requests, users }) => {
-        const map = new Map<string, string>();
-        users.forEach(u => map.set(u.id, u.fullName));
-        this.userMap.set(map);
-        this.listings.set(requests);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.isLoading.set(false);
-      }
-    });
-  }
-
   confirmApprove(id: string): void {
     this.dialog.open({
       title: 'Approve Listing Request',
@@ -109,9 +91,9 @@ export class ListingApprovals implements OnInit {
     this.isProcessing.set(true);
     this.listingService.approveListingRequest(id).subscribe({
       next: () => {
-        this.listings.update(arr => arr.filter(i => i.id !== id));
         this.isProcessing.set(false);
         this.toast.success('Listing approved successfully.');
+        this.processed.emit(id);
       },
       error: () => this.isProcessing.set(false)
     });
@@ -141,10 +123,10 @@ export class ListingApprovals implements OnInit {
     this.isProcessing.set(true);
     this.listingService.rejectListingRequest(id, this.rejectForm.controls.reason.value).subscribe({
       next: () => {
-        this.listings.update(arr => arr.filter(i => i.id !== id));
         this.isProcessing.set(false);
         this.closeRejectModal();
         this.toast.success('Listing request rejected successfully.');
+        this.processed.emit(id);
       },
       error: () => this.isProcessing.set(false)
     });

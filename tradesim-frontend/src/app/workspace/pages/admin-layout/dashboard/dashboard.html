@@ -117,7 +117,15 @@
     </app-card>
 
     <app-card class="actions-card" variant="default">
-        <h2 class="heading-lg actions-header">Quick Action Center</h2>
+        <div class="actions-header-wrapper">
+            <h2 class="heading-lg m-0">Quick Action Center</h2>
+            <div class="actions-meta">
+                @if (stats()?.pendingApprovals; as count) {
+                <span class="pending-counter">Pending: {{ count }}</span>
+                }
+                <app-button variant="outline" size="small" (buttonClick)="goToApprovals()">See All</app-button>
+            </div>
+        </div>
 
         <app-table variant="flush" [columns]="actionColumns()" [data]="pendingActions()" [paginated]="false"
             [interactiveRows]="true" emptyText="No pending approvals at this time." (rowClick)="onActionClick($event)">

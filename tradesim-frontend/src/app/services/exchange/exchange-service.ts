@@ -26,4 +26,10 @@ export class ExchangeService {
   getMarketClock(exchangeId: string) {
     return this.http.get<ExchangeMarketClock>(`${this.exchangeURL}/${exchangeId}/market-clock`);
   }
+
+  changeStatus(exchangeId: string, status: string) {
+    return this.http.put<Exchange>(`${this.exchangeURL}/${exchangeId}/status`, { status }, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
 }

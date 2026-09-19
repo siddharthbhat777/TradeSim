@@ -11,6 +11,7 @@ import { Table, TableColumn, TableCellDirective } from '../../../../shared/compo
 import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { CandlestickChart, CandlestickData } from '../../../../shared/components/charts/candlestick-chart/candlestick-chart';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { Button } from '../../../../shared/components/button/button';
 
 import { ExchangeService } from '../../../../services/exchange/exchange-service';
 import { MarketIndexService } from '../../../../services/market-index/market-index-service';
@@ -48,7 +49,8 @@ interface PendingAction {
     TableCellDirective,
     Dropdown,
     CandlestickChart,
-    EmptyState
+    EmptyState,
+    Button
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -150,7 +152,13 @@ export class Dashboard implements OnInit {
   onActionClick(row: PendingAction): void {
     this.router.navigate(['../approvals'], {
       relativeTo: this.route,
-      queryParams: { id: row.id, type: row.type }
+      queryParams: { type: row.type }
+    });
+  }
+
+  goToApprovals(): void {
+    this.router.navigate(['../approvals'], {
+      relativeTo: this.route
     });
   }
 
@@ -198,19 +206,19 @@ export class Dashboard implements OnInit {
           ...pendingIpos.map(i => ({
             id: i.id,
             type: 'IPO' as const,
-            entityName: `Stock ID: ${i.stockId}`,
+            entityName: i.symbol,
             submittedAt: i.createdAt
           })),
           ...pendingWallets.map(w => ({
             id: w.id,
             type: 'Wallet' as const,
             entityName: `User ID: ${w.userId}`,
-            submittedAt: (w as Record<string, any>)['createdAt'] || now
+            submittedAt: w.createdAt || now
           }))
         ];
 
         actions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-        this.pendingActions.set(actions);
+        this.pendingActions.set(actions.slice(0, 5));
       }
     });
   }

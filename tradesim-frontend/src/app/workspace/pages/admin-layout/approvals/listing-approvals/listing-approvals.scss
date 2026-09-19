@@ -43,11 +43,49 @@
   }
 }
 
+.details-grid {
+  display: flex;
+  gap: 3rem;
+  flex-wrap: wrap;
+
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detail-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .detail-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
 .cap-table-grid {
   display: grid;
-  grid-template-columns: 140px minmax(150px, 1fr) 100px;
-  gap: 0.75rem 2rem;
-  max-width: 600px;
+  grid-template-columns: max-content max-content max-content;
+  gap: 0.75rem 1.5rem;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   .cap-table-header {
     font-size: 0.75rem;
@@ -132,4 +170,8 @@
     gap: 1rem;
     margin-top: 2rem;
   }
+}
+
+::ng-deep .approval-card .card {
+  padding-bottom: 0.5rem;
 }

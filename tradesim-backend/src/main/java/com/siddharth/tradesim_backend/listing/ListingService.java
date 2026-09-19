@@ -110,7 +110,7 @@ public class ListingService {
 
     @Transactional(readOnly = true)
     public List<ListingRequestResponse> fetchPendingExchangeListingRequests() {
-        return listingRequestRepository.findByStatusOrderByCreatedAtAsc(ListingStatus.PENDING_EXCHANGE_APPROVAL)
+        return listingRequestRepository.findByStatusOrderByCreatedAtDesc(ListingStatus.PENDING_EXCHANGE_APPROVAL)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -118,7 +118,7 @@ public class ListingService {
 
     @Transactional(readOnly = true)
     public List<ListingRequestResponse> fetchPendingInternalListingRequests(UUID companyId) {
-        return listingRequestRepository.findByCompanyIdAndStatusOrderByCreatedAtAsc(companyId, ListingStatus.PENDING_INTERNAL_REVIEW)
+        return listingRequestRepository.findByCompanyIdAndStatusOrderByCreatedAtDesc(companyId, ListingStatus.PENDING_INTERNAL_REVIEW)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -235,13 +235,16 @@ public class ListingService {
                 .toList();
 
         ExchangeResponse exchange = exchangeService.fetchExchange(listingRequest.getExchangeId());
+        Company company = companyRepository.findById(listingRequest.getCompanyId()).orElseThrow(() -> CompanyException.notFound("Company not found"));
 
         return new ListingRequestResponse(
                 listingRequest.getId(),
                 listingRequest.getCompanyId(),
+                company.getName(),
                 listingRequest.getSubmittedByUserId(),
                 listingRequest.getSymbol(),
                 listingRequest.getExchangeId(),
+                exchange.name(),
                 listingRequest.getReferencePrice(),
                 listingRequest.getSector(),
                 listingRequest.getPriceBandPercent(),

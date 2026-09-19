@@ -1,22 +1,26 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, signal, viewChildren } from '@angular/core';
-import { ControlValueAccessor, NgControl } from '@angular/forms';
-import { generateUniqueId } from '../../utils/id-generator';
+import { ControlValueAccessor, NgControl, FormsModule } from '@angular/forms';
 import { booleanAttribute } from '@angular/core';
+import { generateUniqueId } from '../../utils/id-generator';
+import { Dropdown } from '../dropdown/dropdown';
 
 export interface SegmentOption<T = unknown> {
   label: string;
   value: T;
   disabled?: boolean;
+  badgeCount?: number;
 }
 
 @Component({
   selector: 'app-segmented-control',
+  imports: [Dropdown, FormsModule],
   templateUrl: './segmented-control.html',
   styleUrl: './segmented-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-size]': 'size()',
-    '[class.full-width]': 'fullWidth()'
+    '[class.full-width]': 'fullWidth()',
+    '[class.morph-to-dropdown]': 'enableDropdownOnMobile()'
   }
 })
 export class SegmentedControl<T = unknown> implements ControlValueAccessor {
@@ -30,6 +34,7 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor {
   readonly required = input(false, { transform: booleanAttribute });
   readonly ariaLabel = input<string>('Segmented Control');
   readonly errorMessage = input<string>('Please select an option.');
+  readonly enableDropdownOnMobile = input(true, { transform: booleanAttribute });
 
   readonly labelId = `seg-label-${this.uid}`;
   readonly errorId = `seg-error-${this.uid}`;
@@ -46,6 +51,19 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor {
   readonly segmentButtons = viewChildren<ElementRef<HTMLButtonElement>>('segmentButton');
 
   protected readonly disabledState = computed(() => this.cvaDisabled());
+
+  protected readonly dropdownOptions = computed(() => {
+    return this.options().map(opt => ({
+      ...opt,
+      originalLabel: opt.label,
+      label: (opt.badgeCount && opt.badgeCount > 0) ? `${opt.label} (${opt.badgeCount})` : opt.label
+    }));
+  });
+
+  protected readonly currentValue = computed(() => {
+    const index = this.selectedIndex();
+    return index >= 0 && index < this.options().length ? this.options()[index].value : null;
+  });
 
   protected readonly showError = computed(() => {
     if (!this.required()) return false;
@@ -107,6 +125,17 @@ export class SegmentedControl<T = unknown> implements ControlValueAccessor {
 
     this.justSelected.set(true);
     setTimeout(() => this.justSelected.set(false), 300);
+  }
+
+  protected onDropdownChange(value: T): void {
+    const index = this.options().findIndex(opt => opt.value === value);
+    if (index !== -1) {
+      this.selectIndex(index);
+    } else if (value === null) {
+      this.selectedIndex.set(-1);
+      this.onChange(null);
+      this.markTouched();
+    }
   }
 
   markTouched() {

@@ -6,20 +6,20 @@
 
   &[data-size='small'] {
     --seg-height: 38px;
-    --seg-padding: 0 20px;
-    --seg-font: 0.95rem;
+    --seg-padding: 0 16px;
+    --seg-font: 0.85rem;
   }
 
   &[data-size='medium'] {
     --seg-height: 44px;
-    --seg-padding: 0 24px;
-    --seg-font: 1.05rem;
+    --seg-padding: 0 20px;
+    --seg-font: 0.95rem;
   }
 
   &[data-size='large'] {
     --seg-height: 50px;
-    --seg-padding: 0 32px;
-    --seg-font: 1.15rem;
+    --seg-padding: 0 24px;
+    --seg-font: 1.05rem;
   }
 
   &.full-width {
@@ -28,8 +28,40 @@
 
     .segmented__track {
       width: 100%;
+      min-width: max-content;
     }
   }
+
+  &.morph-to-dropdown {
+    @media (max-width: 768px) {
+      .segmented__track {
+        display: none !important;
+      }
+
+      .segmented__mobile-dropdown {
+        display: block;
+      }
+    }
+  }
+}
+
+.segmented__mobile-dropdown {
+  display: none;
+  width: 100%;
+}
+
+.dropdown-segment-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.dropdown-segment-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .segmented__label {
@@ -40,7 +72,9 @@
 
 .segmented__track {
   position: relative;
-  display: inline-flex;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   background: var(--surface-secondary);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -56,13 +90,12 @@
 }
 
 .segmented__segment {
-  flex: 1;
   position: relative;
   z-index: 2;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 16px;
+  padding: var(--seg-padding);
   height: 100%;
   border: none;
   background: transparent;
@@ -74,6 +107,13 @@
   border-radius: 6px;
   transition: color 0.2s ease;
   min-width: 0;
+
+  .segmented__segment-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
 
   .segmented__segment-text {
     white-space: nowrap;
@@ -110,8 +150,6 @@
   position: absolute;
   top: 4px;
   bottom: 4px;
-  left: calc(8px + (((100% - 16px) / var(--num-options)) * var(--active-index)));
-  width: calc((100% - 16px) / var(--num-options));
   background: var(--surface);
   border-radius: 6px;
   box-shadow:
@@ -125,6 +163,21 @@
   &--pop {
     animation: pop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
+
+.segmented__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 9px;
+  padding: 0 5px;
+  flex-shrink: 0;
 }
 
 @keyframes pop {

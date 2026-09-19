@@ -1,1 +1,440 @@
-<p>market works!</p>
+<div class="market-container">
+    <div class="market-header">
+        <h1 class="heading-xl m-0">Market Operations</h1>
+        <p class="text-body m-0">Global control center for exchanges, stocks, indices, and currencies.</p>
+    </div>
+
+    @if (isLoading()) {
+    <app-card [isLoading]="true">
+        <div style="height: 140px;"></div>
+    </app-card>
+    } @else {
+    <app-card class="exchange-slate-card">
+        <div class="exchange-slate">
+            <div class="exchange-slate__top">
+                <div class="exchange-slate__selector">
+                    <span class="slate-label">Select Exchange</span>
+                    <app-dropdown [options]="exchangeOptions()" [ngModel]="selectedExchangeId()"
+                        (ngModelChange)="onExchangeSelect($event)" size="large" placeholder="Select Exchange"
+                        [showErrors]="false" [reserveMessageSpace]="false">
+                    </app-dropdown>
+                </div>
+
+                @if (currentExchange(); as ex) {
+                <div class="exchange-slate__status-block">
+                    <div class="status-indicator" [class.status-indicator--open]="currentExchangeClock()?.marketOpenNow"
+                        [class.status-indicator--closed]="!currentExchangeClock()?.marketOpenNow">
+                        <span class="status-dot"></span>
+                        <span class="status-text">{{ currentExchangeClock()?.marketOpenNow ? 'MARKET OPEN' : 'MARKET
+                            CLOSED' }}</span>
+                    </div>
+                    <div class="clock-display">
+                        <span class="clock-time font-mono">{{ currentExchangeClock()?.localTime || '--:--:--' }}</span>
+                        <span class="clock-tz text-muted">{{ ex.timezone }}</span>
+                    </div>
+                </div>
+                }
+            </div>
+
+            @if (currentExchange(); as ex) {
+            <div class="exchange-slate__metrics">
+                <div class="slate-metric">
+                    <span class="slate-metric__label">Exchange Code</span>
+                    <span class="slate-metric__value font-semibold">{{ ex.code }}</span>
+                </div>
+                <div class="slate-metric">
+                    <span class="slate-metric__label">Base Currency</span>
+                    <span class="slate-metric__value font-semibold">{{ ex.currency }}</span>
+                </div>
+                <div class="slate-metric">
+                    <span class="slate-metric__label">Listed Stocks</span>
+                    <span class="slate-metric__value font-semibold">{{ exchangeStocks().length }}</span>
+                </div>
+                <div class="slate-metric">
+                    <span class="slate-metric__label">Market Indices</span>
+                    <span class="slate-metric__value font-semibold">{{ exchangeIndices().length }}</span>
+                </div>
+                <div class="slate-metric">
+                    <span class="slate-metric__label">Trading Hours</span>
+                    <span class="slate-metric__value font-mono">{{ ex.marketOpenTime }} - {{ ex.marketCloseTime
+                        }}</span>
+                </div>
+            </div>
+            }
+        </div>
+    </app-card>
+
+    <div class="toolbar">
+        <app-segmented-control [options]="tabOptions()" [formControl]="tabControl" size="medium">
+        </app-segmented-control>
+    </div>
+
+    @if (tabControl.value === 'Stocks') {
+    <section class="market-toolbar">
+        <div class="toolbar-search">
+            <app-input [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search symbol or company..." [(ngModel)]="searchQuery" />
+            </app-input>
+        </div>
+
+        <div class="toolbar-actions">
+            <app-dropdown [options]="sortOptions" [(ngModel)]="sortBy" size="medium"></app-dropdown>
+
+            <app-button variant="secondary" (click)="openFilterDrawer()">
+                <svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filters
+                @if (hasActiveFilters()) {
+                <span class="filter-badge"></span>
+                }
+            </app-button>
+        </div>
+    </section>
+
+    <app-card class="data-card">
+        <app-table variant="flush" [columns]="stockColumns()" [data]="filteredAndSortedStocks()" [paginated]="true"
+            [interactiveRows]="true" emptyText="No stocks found"
+            emptySubtext="No stocks match the selected exchange, search query, or filters.">
+
+            <ng-template tableCell="symbol" let-val>
+                <span class="font-semibold">{{ val }}</span>
+            </ng-template>
+
+            <ng-template tableCell="currentPrice" let-val let-row="row">
+                {{ val | formatCurrency:row.currency:'currency':2 }}
+            </ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge [color]="val === 'ACTIVE' ? 'success' : (val === 'HALTED' ? 'warning' : 'danger')">
+                    {{ val }}
+                </app-badge>
+            </ng-template>
+
+            <ng-template tableCell="actions" let-row="row">
+                <div class="action-buttons">
+                    @if (row.status !== 'ACTIVE' && row.status !== 'DELISTED') {
+                    <app-button variant="success" size="small" [disabled]="isProcessing()"
+                        (buttonClick)="changeStockStatus(row, 'ACTIVE'); $event.stopPropagation()">Activate</app-button>
+                    }
+                    @if (row.status !== 'HALTED' && row.status !== 'DELISTED') {
+                    <app-button variant="warning" size="small" [disabled]="isProcessing()"
+                        (buttonClick)="changeStockStatus(row, 'HALTED'); $event.stopPropagation()">Halt</app-button>
+                    }
+                    @if (row.status !== 'DELISTED') {
+                    <app-button variant="danger" size="small" [disabled]="isProcessing()"
+                        (buttonClick)="changeStockStatus(row, 'DELISTED'); $event.stopPropagation()">Delist</app-button>
+                    }
+                </div>
+            </ng-template>
+
+            <ng-template tableExpandedRow let-row="row">
+                <div class="admin-control-panel">
+                    <div class="panel-section metrics-section">
+                        <h5 class="section-heading">Stock Overview</h5>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <span class="label">Day Volume</span>
+                                <span class="value">{{ row.dayVolume | number }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="label">Market Cap</span>
+                                <span class="value">{{ row.marketCap | formatCurrency:row.currency:'currency':0
+                                    }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="label">Classification</span>
+                                <span class="value">{{ row.marketCapCategory }} CAP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </app-table>
+    </app-card>
+
+    <app-drawer [(isOpen)]="isFilterDrawerOpen" position="right">
+        <div class="drawer-header">
+            <h3>Filters</h3>
+        </div>
+
+        <div class="drawer-body">
+            <div class="filter-group">
+                <div class="filter-label-row">
+                    <span class="label">Price Range</span>
+                    <span class="value">
+                        {{ (draftPriceRange()[0] < draftPriceRange()[1] ? draftPriceRange()[0] : draftPriceRange()[1]) |
+                            formatCurrency:getFallbackCurrency():'currency':0 }} - {{ (draftPriceRange()[0]>
+                            draftPriceRange()[1] ?
+                            draftPriceRange()[0] : draftPriceRange()[1]) |
+                            formatCurrency:getFallbackCurrency():'currency':0 }}
+                    </span>
+                </div>
+                <app-slider [range]="true" [min]="priceRangeBounds().min" [max]="priceRangeBounds().max"
+                    [step]="priceSliderStep()" [ngModel]="draftPriceRange()"
+                    (ngModelChange)="onPriceSliderChange($event)"></app-slider>
+            </div>
+
+            @if (marketCapOptions.length > 0) {
+            <div class="filter-group">
+                <span class="label">Market Cap</span>
+                <app-checkbox-group [options]="marketCapOptions" displayKey="label" valueKey="value"
+                    [(selectedValues)]="draftMarketCapCategories">
+                </app-checkbox-group>
+            </div>
+            }
+
+            @if (sectorOptions().length > 0) {
+            <div class="filter-group">
+                <span class="label">Sectors</span>
+                <app-checkbox-group [options]="sectorOptions()" displayKey="label" valueKey="value"
+                    [(selectedValues)]="draftSectors">
+                </app-checkbox-group>
+            </div>
+            }
+
+            @if (statusOptions.length > 0) {
+            <div class="filter-group">
+                <span class="label">Status</span>
+                <app-checkbox-group [options]="statusOptions" displayKey="label" valueKey="value"
+                    [(selectedValues)]="draftStatuses">
+                </app-checkbox-group>
+            </div>
+            }
+        </div>
+
+        <div class="drawer-footer">
+            <app-button variant="outline" width="100%" (click)="resetDraftFilters()">Reset</app-button>
+            <app-button variant="primary" width="100%" [disabled]="!hasUnsavedFilters()" (click)="applyFilters()">Apply
+                Filters</app-button>
+        </div>
+    </app-drawer>
+
+    } @else if (tabControl.value === 'Indices') {
+
+    <section class="market-toolbar">
+        <div class="toolbar-search">
+            <app-input [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search index name or symbol..."
+                    [(ngModel)]="indexSearchQuery" />
+            </app-input>
+        </div>
+        <div class="toolbar-actions">
+            <app-button variant="primary" (buttonClick)="openCreateIndexModal()">Create Index</app-button>
+        </div>
+    </section>
+
+    <app-card class="data-card">
+        <app-table variant="flush" [columns]="indexColumns()" [data]="filteredIndices()" [paginated]="true"
+            emptyText="No market indices found" emptySubtext="No market indices exist for the selected exchange.">
+
+            <ng-template tableCell="symbol" let-val>
+                <span class="font-semibold">{{ val }}</span>
+            </ng-template>
+
+            <ng-template tableCell="baseValue" let-val>
+                {{ val | formatCurrency:getFallbackCurrency():'decimal':2 }}
+            </ng-template>
+
+            <ng-template tableCell="currentValue" let-val let-row="row">
+                @if (val) {
+                <app-price-indicator [value]="val" [percentage]="row.changePercent" [showArrow]="true"
+                    [valueDecimals]="2"></app-price-indicator>
+                } @else {
+                <span class="text-muted">Uninitialized</span>
+                }
+            </ng-template>
+
+            <ng-template tableCell="actions" let-row="row">
+                <div class="action-buttons">
+                    <app-button variant="primary" size="small" [disabled]="isProcessing()"
+                        (buttonClick)="initializeIndex(row)">Initialize</app-button>
+                </div>
+            </ng-template>
+
+            <ng-template tableExpandedRow let-row="row">
+                <div class="expanded-details">
+                    <div class="expanded-title-row">
+                        <h4 class="expanded-title">Index Constituents</h4>
+                        <app-button variant="outline" size="small" (buttonClick)="openAddConstituentModal(row)">Add
+                            Constituent</app-button>
+                    </div>
+                    @if (constituents().get(row.id); as items) {
+                    @if (items.length > 0) {
+                    <div class="constituents-grid">
+                        @for (item of items; track item.stockId) {
+                        <div class="constituent-tag">
+                            <div class="constituent-tag__info">
+                                <span class="font-semibold">{{ item.symbol }}</span>
+                                <span class="text-muted">{{ item.companyName }}</span>
+                            </div>
+                            <button type="button" class="constituent-tag__remove"
+                                (click)="removeConstituent(row.id, item.stockId)" [disabled]="isProcessing()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        }
+                    </div>
+                    } @else {
+                    <p class="text-muted m-0">No constituents defined for this index.</p>
+                    }
+                    } @else {
+                    <app-inline-loader size="small" variant="muted"></app-inline-loader>
+                    }
+                </div>
+            </ng-template>
+        </app-table>
+    </app-card>
+
+    @if (showCreateIndexModal()) {
+    <app-modal ariaLabel="Create Market Index" [closeOnBackdropClick]="false" (closed)="closeCreateIndexModal()">
+        <form [formGroup]="createIndexForm" (ngSubmit)="submitCreateIndex()" class="modal-form">
+            <h2 class="heading-lg m-0 mb-4">Create Market Index</h2>
+
+            <div class="form-grid">
+                <app-input label="Index Name" [errorText]="inputError(createIndexForm.controls.name)">
+                    <input appInput type="text" formControlName="name" placeholder="e.g. NIFTY 50" />
+                </app-input>
+
+                <app-input label="Symbol" [errorText]="inputError(createIndexForm.controls.symbol)">
+                    <input appInput type="text" formControlName="symbol" placeholder="e.g. NIFTY" />
+                </app-input>
+
+                <app-dropdown label="Exchange" [options]="exchangeOptionsOnly()"
+                    [formControl]="createIndexForm.controls.exchangeId" [showErrors]="false"></app-dropdown>
+
+                <app-input label="Base Value" [errorText]="inputError(createIndexForm.controls.baseValue)">
+                    <input appInput type="number" formControlName="baseValue" min="1" />
+                </app-input>
+            </div>
+
+            <div class="modal-actions">
+                <app-button type="button" variant="outline" (buttonClick)="closeCreateIndexModal()">Cancel</app-button>
+                <app-button type="submit" variant="primary" [isLoading]="isCreatingIndex()">Create Index</app-button>
+            </div>
+        </form>
+    </app-modal>
+    }
+
+    @if (showAddConstituentModal()) {
+    <app-modal ariaLabel="Add Constituent" [closeOnBackdropClick]="false" (closed)="closeAddConstituentModal()">
+        <form [formGroup]="addConstituentForm" (ngSubmit)="submitAddConstituent()" class="modal-form">
+            <h2 class="heading-lg m-0 mb-4">Add Constituent</h2>
+
+            <div class="form-grid">
+                @if (availableStocksOptions().length > 0) {
+                <app-dropdown label="Select Stock" [options]="availableStocksOptions()"
+                    [formControl]="addConstituentForm.controls.stockId" [showErrors]="false"
+                    [searchable]="true"></app-dropdown>
+                } @else {
+                <p class="text-muted">No eligible stocks available for this exchange.</p>
+                }
+            </div>
+
+            <div class="modal-actions">
+                <app-button type="button" variant="outline"
+                    (buttonClick)="closeAddConstituentModal()">Cancel</app-button>
+                <app-button type="submit" variant="primary" [isLoading]="isAddingConstituent()"
+                    [disabled]="availableStocksOptions().length === 0">Add Constituent</app-button>
+            </div>
+        </form>
+    </app-modal>
+    }
+
+    } @else if (tabControl.value === 'Forex') {
+    <div class="forex-layout">
+        <app-card>
+            <div class="forex-calculator">
+                <h3 class="heading-lg m-0">Exchange Rate Calculator</h3>
+                <p class="text-muted">Test live conversion rates across supported currencies.</p>
+
+                <div class="calc-grid">
+                    <app-dropdown label="Source" [options]="currencyOptions()" [formControl]="sourceCurrency"
+                        [searchable]="true" [showErrors]="false"></app-dropdown>
+
+                    <div class="swap-wrapper">
+                        <button type="button" class="swap-btn" (click)="swapCurrencies()" aria-label="Swap currencies">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 3 21 3 21 8"></polyline>
+                                <line x1="4" y1="14" x2="21" y2="3"></line>
+                                <polyline points="8 21 3 21 3 16"></polyline>
+                                <line x1="20" y1="10" x2="3" y2="21"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <app-dropdown label="Target" [options]="currencyOptions()" [formControl]="targetCurrency"
+                        [searchable]="true" [showErrors]="false"></app-dropdown>
+                </div>
+
+                <div class="calc-amount">
+                    <app-input label="Amount" [reserveMessageSpace]="false">
+                        <input appInput type="number" [formControl]="amountToConvert" min="1"
+                            placeholder="Enter amount">
+                        <span suffix class="font-semibold text-muted">{{ sourceCurrency.value }}</span>
+                    </app-input>
+                </div>
+
+                <app-button variant="primary" width="100%" [isLoading]="isCalculating()"
+                    (buttonClick)="calculateRate()">Calculate Rate</app-button>
+
+                @if (convertedRate() !== null && amountToConvert.value !== null) {
+                <div class="calc-result">
+                    <span class="result-label">{{ amountToConvert.value |
+                        formatCurrency:sourceCurrency.value:'currency':2 }} =</span>
+                    <span class="result-value">{{ convertedRate() | formatCurrency:targetCurrency.value:'currency':4
+                        }}</span>
+                </div>
+                }
+            </div>
+        </app-card>
+
+        <app-card>
+            <div class="supported-currencies">
+                <h3 class="heading-lg m-0">Supported Currencies</h3>
+                <p class="text-muted">Currencies actively synced via integration.</p>
+
+                @if (currencies().length === 0) {
+                <div class="empty-state-wrapper">
+                    <app-empty-state text="No currencies available"
+                        subtext="No supported currencies have been synced yet.">
+                        <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </app-empty-state>
+                </div>
+                } @else {
+                <div class="currency-list">
+                    @for (currency of currencies(); track currency) {
+                    <div class="currency-item">
+                        <span class="font-semibold">{{ currency }}</span>
+                        <app-badge color="success">Active</app-badge>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </app-card>
+    </div>
+    }
+    }
+</div>

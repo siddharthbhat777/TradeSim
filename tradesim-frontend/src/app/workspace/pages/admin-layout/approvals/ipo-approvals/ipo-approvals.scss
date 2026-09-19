@@ -4,16 +4,12 @@
   justify-content: flex-end;
 }
 
-.font-mono {
-  font-family: ui-monospace, SFMono-Regular, monospace;
+.font-semibold {
+  font-weight: 600;
 }
 
 .text-muted {
   color: var(--text-muted);
-}
-
-.text-sm {
-  font-size: 0.875rem;
 }
 
 .highlight {
@@ -21,32 +17,42 @@
   font-weight: 700;
 }
 
-.id-cell-wrapper {
-  display: flex;
-  align-items: center;
+.expanded-details {
+  padding: 1.5rem 2rem;
+  background: var(--surface-secondary);
+  border-top: 1px solid var(--border);
+
+  .expanded-title {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 }
 
-.copy-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  margin-left: 4px;
+.details-grid {
+  display: flex;
+  gap: 3rem;
+  flex-wrap: wrap;
 
-  svg {
-    width: 14px;
-    height: 14px;
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
-  &:hover {
-    background: var(--surface-secondary);
-    color: var(--primary);
+  .detail-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .detail-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
   }
 }
 
@@ -87,4 +93,8 @@
     gap: 1rem;
     margin-top: 2rem;
   }
+}
+
+::ng-deep .approval-card .card {
+  padding-bottom: 0.5rem;
 }

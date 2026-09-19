@@ -35,21 +35,43 @@ describe('Approvals', () => {
       imports: [Approvals],
       providers: [
         provideRouter([]),
-        { provide: ListingService, useValue: { getPendingExchangeRequests: () => of([]) } },
-        { provide: IpoService, useValue: { getPendingIpos: () => of([]) } },
-        { provide: WalletService, useValue: { getPendingMultiCurrencyRequests: () => of([]) } },
-        { provide: UserService, useValue: { getAllUsers: () => of([]) } },
-        { provide: ToastService, useValue: { success: () => { }, danger: () => { } } },
-        { provide: DialogService, useValue: { open: () => { } } }
+        { provide: ListingService, useValue: { getPendingExchangeRequests: vi.fn().mockReturnValue(of([])) } },
+        { provide: IpoService, useValue: { getPendingIpos: vi.fn().mockReturnValue(of([])) } },
+        { provide: WalletService, useValue: { getPendingMultiCurrencyRequests: vi.fn().mockReturnValue(of([])) } },
+        { provide: UserService, useValue: { getAllUsers: vi.fn().mockReturnValue(of([])) } },
+        { provide: ToastService, useValue: { success: vi.fn(), danger: vi.fn() } },
+        { provide: DialogService, useValue: { open: vi.fn() } }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Approvals);
     component = fixture.componentInstance;
+    fixture.detectChanges();
     await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should filter out processed listings', () => {
+    component.listings.set([{ id: 'list-1' } as any, { id: 'list-2' } as any]);
+    component.onListingProcessed('list-1');
+    expect(component.listings().length).toBe(1);
+    expect(component.listings()[0].id).toBe('list-2');
+  });
+
+  it('should filter out processed IPOs', () => {
+    component.ipos.set([{ id: 'ipo-1' } as any, { id: 'ipo-2' } as any]);
+    component.onIpoProcessed('ipo-1');
+    expect(component.ipos().length).toBe(1);
+    expect(component.ipos()[0].id).toBe('ipo-2');
+  });
+
+  it('should filter out processed wallets', () => {
+    component.wallets.set([{ id: 'wal-1' } as any, { id: 'wal-2' } as any]);
+    component.onWalletProcessed('wal-1');
+    expect(component.wallets().length).toBe(1);
+    expect(component.wallets()[0].id).toBe('wal-2');
   });
 });

@@ -1119,6 +1119,10 @@
                             [(ngModel)]="selectedPlan">
                         </app-segmented-control>
 
+                        <app-segmented-control label="Notifications (With Badges)" [options]="notificationOptions"
+                            [(ngModel)]="selectedNotifications">
+                        </app-segmented-control>
+
                     </div>
                 </div>
 
@@ -1145,7 +1149,14 @@
   [fullWidth]="true"
   [options]="viewOptions" 
   [(ngModel)]="selectedView"&gt;
-&lt;/app-segmented-control&gt;</code></pre>
+&lt;/app-segmented-control&gt;
+
+&lt;app-segmented-control 
+  label="Notifications (With Badges)" 
+  [options]="notificationOptions" 
+  [(ngModel)]="selectedNotifications"&gt;
+&lt;/app-segmented-control&gt;
+</code></pre>
                         </div>
                     </details>
                 </div>
@@ -1167,7 +1178,8 @@
                                     <td><code>options</code></td>
                                     <td><code>SegmentOption&lt;T&gt;[]</code></td>
                                     <td><code>[]</code></td>
-                                    <td>Required array of objects containing label, value, and disabled properties.</td>
+                                    <td>Required array of objects containing <code>label</code>, <code>value</code>,
+                                        <code>disabled</code>, and optional <code>badge</code> properties.</td>
                                 </tr>
                                 <tr>
                                     <td><code>label</code></td>

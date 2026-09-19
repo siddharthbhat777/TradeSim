@@ -16,4 +16,10 @@ export class StockService {
       context: skipInterceptors({ loader: true })
     });
   }
+
+  changeStockStatus(stockId: string, status: string) {
+    return this.http.put<Stock>(`${this.stocksURL}/change/${stockId}/status`, { status }, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
 }

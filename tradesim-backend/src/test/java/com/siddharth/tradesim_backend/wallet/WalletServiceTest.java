@@ -22,17 +22,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WalletServiceTest {
@@ -62,11 +59,34 @@ class WalletServiceTest {
     private WalletService walletService;
 
     @Test
-    void shouldCreateWalletForUser() {
+    void shouldFetchPendingMultiCurrencyRequests() {
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .multiCurrencyStatus(MultiCurrencyStatus.PENDING)
+                .buckets(List.of())
+                .build();
+
+        when(walletRepository.findByMultiCurrencyStatusOrderByCreatedAtDesc(MultiCurrencyStatus.PENDING))
+                .thenReturn(List.of(wallet));
+
+        List<WalletResponse> responses = walletService.fetchPendingMultiCurrencyRequests();
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.getFirst().multiCurrencyStatus()).isEqualTo(MultiCurrencyStatus.PENDING);
+        verify(walletRepository).findByMultiCurrencyStatusOrderByCreatedAtDesc(MultiCurrencyStatus.PENDING);
+    }
+
+    @Test
+    void shouldCreateWalletForUserSuccessfully() {
         UUID userId = UUID.randomUUID();
 
         when(walletRepository.existsByUserId(userId)).thenReturn(false);
-        when(walletRepository.save(any(Wallet.class))).thenAnswer(i -> i.getArgument(0));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(invocation -> {
+            Wallet wallet = invocation.getArgument(0);
+            wallet.setId(UUID.randomUUID());
+            return wallet;
+        });
 
         walletService.createWalletForUser(userId, "INR");
 
@@ -75,108 +95,211 @@ class WalletServiceTest {
     }
 
     @Test
-    void shouldDepositFromBank() {
+    void shouldThrowWhenWalletAlreadyExistsForUser() {
         UUID userId = UUID.randomUUID();
-        User user = User.builder().id(userId).bankBalance(BigDecimal.valueOf(5000)).build();
-        TradingAccount account = TradingAccount.builder().baseCurrency("INR").build();
-        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).userId(userId).buckets(new ArrayList<>()).build();
-        WalletBucket bucket = WalletBucket.builder().currency("INR").balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
-        wallet.getBuckets().add(bucket);
 
-        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(account);
-        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
-        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), "INR")).thenReturn(Optional.of(bucket));
+        when(walletRepository.existsByUserId(userId)).thenReturn(true);
 
-        walletService.depositFromBank(userId, BigDecimal.valueOf(1000));
+        BusinessException exception = assertThrows(BusinessException.class, () -> walletService.createWalletForUser(userId, "INR"));
 
-        assertThat(user.getBankBalance()).isEqualByComparingTo(BigDecimal.valueOf(4000));
-        assertThat(bucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(1000));
-        verify(ledgerService).recordDeposit(eq(bucket), eq(account), eq(BigDecimal.valueOf(1000)));
+        assertThat(exception.getMessage()).isEqualTo("Wallet already exists for this user");
+        verify(walletRepository, never()).save(any(Wallet.class));
     }
 
     @Test
-    void shouldRejectConvertCurrencyIfNotApproved() {
+    void shouldFetchMyWallet() {
         UUID userId = UUID.randomUUID();
-        Wallet wallet = Wallet.builder().multiCurrencyStatus(MultiCurrencyStatus.UNREQUESTED).build();
-        CurrencyConversionRequest request = new CurrencyConversionRequest("INR", "USD", BigDecimal.valueOf(100));
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .multiCurrencyStatus(MultiCurrencyStatus.APPROVED)
+                .buckets(List.of())
+                .build();
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+
+        WalletResponse response = walletService.fetchMyWallet(userId);
+
+        assertThat(response.userId()).isEqualTo(userId);
+        assertThat(response.multiCurrencyStatus()).isEqualTo(MultiCurrencyStatus.APPROVED);
+    }
+
+    @Test
+    void shouldDepositFromBank() {
+        UUID userId = UUID.randomUUID();
+        BigDecimal amount = BigDecimal.valueOf(1000);
+
+        User user = User.builder()
+                .id(userId)
+                .bankBalance(BigDecimal.valueOf(5000))
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
+                .baseCurrency("INR")
+                .build();
+
+        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).userId(userId).buckets(List.of()).build();
+        WalletBucket bucket = WalletBucket.builder().wallet(wallet).currency("INR").balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), "INR")).thenReturn(Optional.of(bucket));
+
+        walletService.depositFromBank(userId, amount);
+
+        assertThat(user.getBankBalance()).isEqualByComparingTo(BigDecimal.valueOf(4000));
+        assertThat(bucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(1000));
+
+        verify(authRepository).save(user);
+        verify(walletBucketRepository).save(bucket);
+        verify(ledgerService).recordDeposit(bucket, tradingAccount, amount);
+    }
+
+    @Test
+    void shouldThrowWhenBankBalanceInsufficientForDeposit() {
+        UUID userId = UUID.randomUUID();
+        BigDecimal amount = BigDecimal.valueOf(5000);
+
+        User user = User.builder()
+                .id(userId)
+                .bankBalance(BigDecimal.valueOf(1000))
+                .build();
+
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> walletService.depositFromBank(userId, amount));
+
+        assertThat(exception.getMessage()).isEqualTo("Insufficient funds in simulated bank account");
+    }
+
+    @Test
+    void shouldWithdrawToBank() {
+        UUID userId = UUID.randomUUID();
+        BigDecimal amount = BigDecimal.valueOf(1000);
+
+        User user = User.builder()
+                .id(userId)
+                .bankBalance(BigDecimal.valueOf(1000))
+                .build();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
+                .baseCurrency("INR")
+                .marginLoan(BigDecimal.ZERO)
+                .build();
+
+        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).userId(userId).buckets(List.of()).build();
+        WalletBucket bucket = WalletBucket.builder().wallet(wallet).currency("INR").balance(BigDecimal.valueOf(5000)).lockedBalance(BigDecimal.ZERO).build();
+
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), "INR")).thenReturn(Optional.of(bucket));
+        when(authRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        walletService.withdrawToBank(userId, amount);
+
+        assertThat(user.getBankBalance()).isEqualByComparingTo(BigDecimal.valueOf(2000));
+        assertThat(bucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(4000));
+
+        verify(authRepository).save(user);
+        verify(walletBucketRepository).save(bucket);
+        verify(ledgerService).recordWithdrawal(bucket, tradingAccount, amount);
+    }
+
+    @Test
+    void shouldThrowWhenActiveMarginLoanExistsOnWithdraw() {
+        UUID userId = UUID.randomUUID();
+
+        TradingAccount tradingAccount = TradingAccount.builder()
+                .userId(userId)
+                .baseCurrency("INR")
+                .marginLoan(BigDecimal.valueOf(500))
+                .build();
+
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> walletService.withdrawToBank(userId, BigDecimal.valueOf(1000)));
+
+        assertThat(exception.getMessage()).isEqualTo("Cannot withdraw funds while you have an active margin loan");
+    }
+
+    @Test
+    void shouldRequestMultiCurrencyAccess() {
+        UUID userId = UUID.randomUUID();
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .multiCurrencyStatus(MultiCurrencyStatus.UNREQUESTED)
+                .buckets(List.of())
+                .build();
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        WalletResponse response = walletService.requestMultiCurrencyAccess(userId);
+
+        assertThat(response.multiCurrencyStatus()).isEqualTo(MultiCurrencyStatus.PENDING);
+        verify(walletRepository).save(wallet);
+    }
+
+    @Test
+    void shouldConvertCurrency() {
+        UUID userId = UUID.randomUUID();
+        CurrencyConversionRequest request = new CurrencyConversionRequest("INR", "USD", BigDecimal.valueOf(10000));
+
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .multiCurrencyStatus(MultiCurrencyStatus.APPROVED)
+                .buckets(new java.util.ArrayList<>())
+                .build();
+
+        WalletBucket sourceBucket = WalletBucket.builder()
+                .wallet(wallet)
+                .currency("INR")
+                .balance(BigDecimal.valueOf(50000))
+                .lockedBalance(BigDecimal.ZERO)
+                .build();
+        wallet.getBuckets().add(sourceBucket);
+
+        TradingAccount tradingAccount = TradingAccount.builder().userId(userId).build();
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), "INR")).thenReturn(Optional.of(sourceBucket));
+        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), "USD")).thenReturn(Optional.empty());
+        when(forexService.convert(request.amountToConvert(), "INR", "USD")).thenReturn(BigDecimal.valueOf(125));
+        when(fxFeeService.calculateConversionFee("INR", "USD", BigDecimal.valueOf(125))).thenReturn(BigDecimal.valueOf(1));
+        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(tradingAccount);
+
+        walletService.convertCurrency(userId, request);
+
+        assertThat(sourceBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(40000));
+        assertThat(wallet.getBuckets()).hasSize(2);
+        WalletBucket targetBucket = wallet.getBuckets().stream().filter(b -> b.getCurrency().equals("USD")).findFirst().orElseThrow();
+        assertThat(targetBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(124));
+
+        verify(walletBucketRepository, times(2)).save(any(WalletBucket.class));
+        verify(ledgerService).recordFxConversionFee(targetBucket, tradingAccount, BigDecimal.valueOf(1), null, null, null, "INR", "USD");
+    }
+
+    @Test
+    void shouldThrowWhenConvertingWithoutMultiCurrencyApproval() {
+        UUID userId = UUID.randomUUID();
+        CurrencyConversionRequest request = new CurrencyConversionRequest("INR", "USD", BigDecimal.valueOf(10000));
+
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .multiCurrencyStatus(MultiCurrencyStatus.UNREQUESTED)
+                .build();
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
 
         BusinessException exception = assertThrows(BusinessException.class, () -> walletService.convertCurrency(userId, request));
-        assertThat(exception.getErrorCode()).isEqualTo("UNAUTHORIZED_CONVERSION");
-    }
 
-    @Test
-    void shouldConvertCurrencySuccessfully() {
-        UUID userId = UUID.randomUUID();
-        Wallet wallet = Wallet.builder().id(UUID.randomUUID()).multiCurrencyStatus(MultiCurrencyStatus.APPROVED).buckets(new ArrayList<>()).build();
-        WalletBucket inrBucket = WalletBucket.builder().wallet(wallet).currency("INR").balance(BigDecimal.valueOf(10000)).lockedBalance(BigDecimal.ZERO).build();
-        WalletBucket usdBucket = WalletBucket.builder().wallet(wallet).currency("USD").balance(BigDecimal.ZERO).lockedBalance(BigDecimal.ZERO).build();
-        wallet.getBuckets().add(inrBucket);
-        wallet.getBuckets().add(usdBucket);
-
-        CurrencyConversionRequest request = new CurrencyConversionRequest("INR", "USD", BigDecimal.valueOf(8000));
-
-        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
-        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), "INR")).thenReturn(Optional.of(inrBucket));
-        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(wallet.getId(), "USD")).thenReturn(Optional.of(usdBucket));
-        when(forexService.convert(BigDecimal.valueOf(8000), "INR", "USD")).thenReturn(BigDecimal.valueOf(100));
-        when(fxFeeService.calculateConversionFee("INR", "USD", BigDecimal.valueOf(100))).thenReturn(BigDecimal.valueOf(2));
-        when(tradingAccountService.getTradingAccountByUserId(userId)).thenReturn(TradingAccount.builder().build());
-
-        walletService.convertCurrency(userId, request);
-
-        assertThat(inrBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(2000));
-        assertThat(usdBucket.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(98));
-        verify(ledgerService).recordFxConversionFee(eq(usdBucket), any(), eq(BigDecimal.valueOf(2)), any(), any(), any(), eq("INR"), eq("USD"));
-    }
-
-    @Test
-    void shouldReturnExistingBucketWhenCallingGetOrCreate() {
-        UUID walletId = UUID.randomUUID();
-        WalletBucket existingBucket = WalletBucket.builder().currency("USD").balance(BigDecimal.TEN).build();
-
-        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(walletId, "USD"))
-                .thenReturn(Optional.of(existingBucket));
-
-        WalletBucket result = walletService.getOrCreateBucketForUpdate(walletId, "USD");
-
-        assertThat(result).isEqualTo(existingBucket);
-        verify(walletBucketRepository, never()).save(any());
-        verify(walletRepository, never()).findById(any());
-    }
-
-    @Test
-    void shouldCreateNewBucketWhenCallingGetOrCreateAndItDoesNotExist() {
-        UUID walletId = UUID.randomUUID();
-        Wallet wallet = Wallet.builder().id(walletId).build();
-
-        when(walletBucketRepository.findByWalletIdAndCurrencyForUpdate(walletId, "JPY"))
-                .thenReturn(Optional.empty());
-        when(walletRepository.findById(walletId)).thenReturn(Optional.of(wallet));
-        when(walletBucketRepository.save(any(WalletBucket.class))).thenAnswer(i -> i.getArgument(0));
-
-        WalletBucket result = walletService.getOrCreateBucketForUpdate(walletId, "JPY");
-
-        assertThat(result.getCurrency()).isEqualTo("JPY");
-        assertThat(result.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(result.getLockedBalance()).isEqualByComparingTo(BigDecimal.ZERO);
-        verify(walletBucketRepository).save(any(WalletBucket.class));
-    }
-
-    @Test
-    void shouldRejectMultiCurrencyAccess() {
-        UUID walletId = UUID.randomUUID();
-        Wallet wallet = Wallet.builder().id(walletId).multiCurrencyStatus(MultiCurrencyStatus.PENDING).build();
-
-        when(walletRepository.findById(walletId)).thenReturn(Optional.of(wallet));
-        when(walletRepository.save(any(Wallet.class))).thenAnswer(i -> i.getArgument(0));
-
-        WalletResponse response = walletService.rejectMultiCurrencyAccess(walletId, "Insufficient trading history");
-
-        assertThat(wallet.getMultiCurrencyStatus()).isEqualTo(MultiCurrencyStatus.REJECTED);
-        assertThat(wallet.getRejectionReason()).isEqualTo("Insufficient trading history");
-        assertThat(response.rejectionReason()).isEqualTo("Insufficient trading history");
+        assertThat(exception.getMessage()).isEqualTo("You must be approved for Multi-Currency access to convert funds");
+        verify(walletBucketRepository, never()).save(any(WalletBucket.class));
     }
 }

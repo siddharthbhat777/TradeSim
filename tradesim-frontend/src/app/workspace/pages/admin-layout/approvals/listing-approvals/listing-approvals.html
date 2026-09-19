@@ -1,8 +1,8 @@
 @if (isLoading()) {
-<app-card [isLoading]="true">
+<app-card [isLoading]="true" class="approval-card">
     <div style="height: 400px;"></div>
 </app-card>
-} @else if (listings().length === 0) {
+} @else if (data().length === 0) {
 <app-empty-state text="No pending listing requests"
     subtext="All caught up! There are currently no listing requests awaiting exchange approval.">
     <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -15,8 +15,8 @@
     </svg>
 </app-empty-state>
 } @else {
-<app-card>
-    <app-table variant="flush" [columns]="columns()" [data]="listings()" [paginated]="true">
+<app-card class="approval-card">
+    <app-table variant="flush" [columns]="columns()" [data]="data()" [paginated]="true">
 
         <ng-template tableCell="symbol" let-val let-row="row">
             <span class="font-semibold" [class.highlight]="isHighlighted(row.id)">{{ val }}</span>
@@ -27,7 +27,7 @@
         </ng-template>
 
         <ng-template tableCell="totalShares" let-val>
-            {{ val ? val : '-' }}
+            {{ val ? (val | number) : '-' }}
         </ng-template>
 
         <ng-template tableCell="status" let-val>
@@ -49,6 +49,18 @@
 
         <ng-template tableExpandedRow let-row="row">
             <div class="expanded-details">
+                <h4 class="expanded-title">Request Overview</h4>
+                <div class="details-grid mb-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Company Name</span>
+                        <span class="detail-value">{{ row.companyName }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Exchange</span>
+                        <span class="detail-value">{{ row.exchangeName }}</span>
+                    </div>
+                </div>
+
                 <h4 class="expanded-title">Cap Table Distribution</h4>
                 @if (row.capTable && row.capTable.length > 0) {
                 <div class="cap-table-grid">

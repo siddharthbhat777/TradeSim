@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Card } from '../../../../../shared/components/card/card';
-import { Table, TableColumn, TableCellDirective } from '../../../../../shared/components/table/table';
+import { Table, TableColumn, TableCellDirective, TableExpandedRowDirective } from '../../../../../shared/components/table/table';
 import { Badge } from '../../../../../shared/components/badge/badge';
 import { Button } from '../../../../../shared/components/button/button';
 import { Modal } from '../../../../../shared/components/modal/modal';
@@ -24,6 +24,7 @@ import { IpoOfferResponse } from '../../../../../models/ipo';
     Card,
     Table,
     TableCellDirective,
+    TableExpandedRowDirective,
     Badge,
     Button,
     Modal,
@@ -37,20 +38,21 @@ import { IpoOfferResponse } from '../../../../../models/ipo';
   styleUrl: './ipo-approvals.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class IpoApprovals implements OnInit {
+export class IpoApprovals {
   readonly highlightedId = input<string | null>(null);
+  readonly data = input.required<IpoOfferResponse[]>();
+  readonly isLoading = input.required<boolean>();
+  readonly processed = output<string>();
 
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(DialogService);
   private readonly ipoService = inject(IpoService);
 
-  readonly isLoading = signal(true);
   readonly isProcessing = signal(false);
-  readonly ipos = signal<IpoOfferResponse[]>([]);
 
   readonly columns = signal<TableColumn<IpoOfferResponse>[]>([
-    { key: 'stockId', header: 'Stock ID' },
+    { key: 'symbol', header: 'Symbol' },
     { key: 'issuePrice', header: 'Issue Price', align: 'right' },
     { key: 'sharesPerAllottee', header: 'Shares/Allottee', align: 'right' },
     { key: 'totalSharesOffered', header: 'Total Offered', align: 'right' },
@@ -65,23 +67,6 @@ export class IpoApprovals implements OnInit {
   readonly rejectForm = this.fb.nonNullable.group({
     reason: ['', [Validators.required, Validators.maxLength(500)]]
   });
-
-  ngOnInit(): void {
-    this.loadData();
-  }
-
-  loadData(): void {
-    this.isLoading.set(true);
-    this.ipoService.getPendingIpos().subscribe({
-      next: (res) => {
-        this.ipos.set(res);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.isLoading.set(false);
-      }
-    });
-  }
 
   confirmApprove(id: string): void {
     this.dialog.open({
@@ -98,9 +83,9 @@ export class IpoApprovals implements OnInit {
     this.isProcessing.set(true);
     this.ipoService.approveIpoOffer(id).subscribe({
       next: () => {
-        this.ipos.update(arr => arr.filter(i => i.id !== id));
         this.isProcessing.set(false);
         this.toast.success('IPO offer approved successfully.');
+        this.processed.emit(id);
       },
       error: () => this.isProcessing.set(false)
     });
@@ -130,21 +115,13 @@ export class IpoApprovals implements OnInit {
     this.isProcessing.set(true);
     this.ipoService.rejectIpoOffer(id, this.rejectForm.controls.reason.value).subscribe({
       next: () => {
-        this.ipos.update(arr => arr.filter(i => i.id !== id));
         this.isProcessing.set(false);
         this.closeRejectModal();
         this.toast.success('IPO offer rejected successfully.');
+        this.processed.emit(id);
       },
       error: () => this.isProcessing.set(false)
     });
-  }
-
-  copyId(id: string): void {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(id).then(() => {
-        this.toast.success('Stock ID copied to clipboard');
-      });
-    }
   }
 
   isHighlighted(id: string): boolean {

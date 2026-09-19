@@ -13,20 +13,29 @@ describe('HistoryChart', () => {
   let component: HistoryChart;
   let fixture: ComponentFixture<HistoryChart>;
 
-  beforeEach(async () => {
-    vi.stubGlobal('matchMedia', vi.fn().mockImplementation(query => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })));
-
+  beforeAll(() => {
     vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
+
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [HistoryChart]
     }).compileComponents();

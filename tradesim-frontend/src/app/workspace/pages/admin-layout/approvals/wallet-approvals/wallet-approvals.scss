@@ -25,6 +25,51 @@
   font-weight: 700;
 }
 
+.expanded-details {
+  padding: 1.5rem 2rem;
+  background: var(--surface-secondary);
+  border-top: 1px solid var(--border);
+}
+
+.expanded-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  .expanded-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.details-grid {
+  display: flex;
+  gap: 3rem;
+  flex-wrap: wrap;
+
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detail-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .detail-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+}
+
 .id-cell-wrapper {
   display: flex;
   align-items: center;
@@ -49,7 +94,7 @@
   }
 
   &:hover {
-    background: var(--surface-secondary);
+    background: var(--surface);
     color: var(--primary);
   }
 }
@@ -91,4 +136,8 @@
     gap: 1rem;
     margin-top: 2rem;
   }
+}
+
+::ng-deep .approval-card .card {
+  padding-bottom: 0.5rem;
 }

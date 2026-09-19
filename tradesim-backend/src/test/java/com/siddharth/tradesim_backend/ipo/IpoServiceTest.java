@@ -125,18 +125,21 @@ class IpoServiceTest {
 
         Company company = Company.builder()
                 .id(companyId)
+                .name("Apple Inc")
                 .status(CompanyStatus.ACTIVE)
                 .build();
 
         Stock stock = Stock.builder()
                 .id(stockId)
                 .companyId(companyId)
+                .symbol("AAPL")
                 .exchangeId(UUID.randomUUID())
                 .status(StockStatus.HALTED)
                 .build();
 
         Exchange exchange = Exchange.builder()
                 .id(stock.getExchangeId())
+                .name("NYSE")
                 .currency("USD")
                 .build();
 
@@ -155,12 +158,45 @@ class IpoServiceTest {
         assertThat(response.stockId()).isEqualTo(stockId);
         assertThat(response.status()).isEqualTo(IpoOfferStatus.PENDING_APPROVAL);
         assertThat(response.totalSharesOffered()).isEqualTo(500);
+        assertThat(response.symbol()).isEqualTo("AAPL");
+        assertThat(response.exchangeName()).isEqualTo("NYSE");
         verify(companyRepresentativeAssignmentService).assertPrimaryContactAssignment(
                 companyId,
                 primaryContactUserId,
                 "Only an active primary contact can submit IPO offers"
         );
         verify(exchangeService).assertExchangeActive(stock.getExchangeId());
+    }
+
+    @Test
+    void shouldFetchPendingIpoOffers() {
+        IpoOffer offer = IpoOffer.builder()
+                .id(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .stockId(UUID.randomUUID())
+                .submittedByUserId(UUID.randomUUID())
+                .issuePrice(BigDecimal.valueOf(100))
+                .sharesPerAllottee(50)
+                .maxAllottees(10)
+                .subscriptionStartAt(Instant.now())
+                .subscriptionEndAt(Instant.now().plusSeconds(600))
+                .status(IpoOfferStatus.PENDING_APPROVAL)
+                .build();
+
+        Company company = Company.builder().id(offer.getCompanyId()).name("TradeSim").status(CompanyStatus.ACTIVE).build();
+        Stock stock = Stock.builder().id(offer.getStockId()).symbol("TSIM").exchangeId(UUID.randomUUID()).build();
+        Exchange exchange = Exchange.builder().id(stock.getExchangeId()).name("NYSE").currency("USD").build();
+
+        when(ipoOfferRepository.findByStatusOrderByCreatedAtDesc(IpoOfferStatus.PENDING_APPROVAL)).thenReturn(List.of(offer));
+        when(companyRepository.findById(offer.getCompanyId())).thenReturn(Optional.of(company));
+        when(stockRepository.findById(offer.getStockId())).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
+
+        List<IpoOfferResponse> responses = ipoService.fetchPendingIpoOffers();
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.getFirst().symbol()).isEqualTo("TSIM");
+        verify(ipoOfferRepository).findByStatusOrderByCreatedAtDesc(IpoOfferStatus.PENDING_APPROVAL);
     }
 
     @Test
@@ -185,11 +221,13 @@ class IpoServiceTest {
 
         Company company = Company.builder()
                 .id(companyId)
+                .name("Apple Inc")
                 .status(CompanyStatus.ACTIVE)
                 .build();
 
         Stock stock = Stock.builder()
                 .id(stockId)
+                .symbol("AAPL")
                 .companyId(companyId)
                 .exchangeId(UUID.randomUUID())
                 .status(StockStatus.HALTED)
@@ -197,6 +235,7 @@ class IpoServiceTest {
 
         Exchange exchange = Exchange.builder()
                 .id(stock.getExchangeId())
+                .name("NYSE")
                 .currency("USD")
                 .build();
 
@@ -303,6 +342,7 @@ class IpoServiceTest {
 
         Company company = Company.builder()
                 .id(companyId)
+                .name("TradeSim Motors Limited")
                 .status(CompanyStatus.ACTIVE)
                 .build();
 
@@ -359,7 +399,7 @@ class IpoServiceTest {
         Wallet wallet2 = Wallet.builder().id(UUID.randomUUID()).build();
         WalletBucket bucket2 = WalletBucket.builder().balance(BigDecimal.valueOf(12000)).lockedBalance(BigDecimal.valueOf(5000)).build();
 
-        Exchange exchange = Exchange.builder().id(UUID.randomUUID()).currency("USD").build();
+        Exchange exchange = Exchange.builder().id(UUID.randomUUID()).name("NYSE").currency("USD").build();
 
         StockResponse activatedStock = new StockResponse(
                 stockId,

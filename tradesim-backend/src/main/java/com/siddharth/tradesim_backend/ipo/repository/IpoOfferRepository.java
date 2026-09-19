@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface IpoOfferRepository extends JpaRepository<IpoOffer, UUID> {
     boolean existsByStockIdAndStatusIn(UUID stockId, List<IpoOfferStatus> statuses);
     List<IpoOffer> findByStatusOrderByCreatedAtAsc(IpoOfferStatus status);
+    List<IpoOffer> findByStatusOrderByCreatedAtDesc(IpoOfferStatus status);
 }

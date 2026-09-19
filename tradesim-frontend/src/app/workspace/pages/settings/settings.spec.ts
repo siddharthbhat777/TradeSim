@@ -27,7 +27,11 @@ describe('Settings', () => {
   const mockUserService = {
     getProfile: vi.fn().mockReturnValue(of(mockProfile)),
     updateProfile: vi.fn().mockReturnValue(of(mockProfile)),
-    revealBankBalance: vi.fn().mockReturnValue(of({ bankBalance: 75000 }))
+    revealBankBalance: vi.fn().mockReturnValue(of({ bankBalance: 75000 })),
+    updateTheme: vi.fn().mockReturnValue(of(mockProfile)),
+    initiateEmailChange: vi.fn().mockReturnValue(of(void 0)),
+    verifyEmailChange: vi.fn().mockReturnValue(of(mockProfile)),
+    changePassword: vi.fn().mockReturnValue(of(void 0))
   };
 
   const mockTradingAccountService = {
@@ -36,6 +40,9 @@ describe('Settings', () => {
 
   const mockAuthService = {
     currentUser: signal({ role: 'USER', username: 'john' }),
+    requestOtp: vi.fn().mockReturnValue(of(void 0)),
+    resetPassword: vi.fn().mockReturnValue(of(void 0)),
+    deactivateAccount: vi.fn().mockReturnValue(of(void 0)),
     logout: vi.fn(),
     clearSession: vi.fn()
   };
@@ -54,6 +61,22 @@ describe('Settings', () => {
   const mockThemeService = {
     setTheme: vi.fn()
   };
+
+  beforeAll(() => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  });
 
   beforeEach(async () => {
     vi.clearAllMocks();

@@ -233,6 +233,13 @@ export class DesignSystem {
   ];
   selectedPlan = 'free';
 
+  notificationOptions: SegmentOption[] = [
+    { label: 'All', value: 'all', badgeCount: 12 },
+    { label: 'Mentions', value: 'mentions', badgeCount: 3 },
+    { label: 'Archived', value: 'archived' }
+  ];
+  selectedNotifications = 'all';
+
   stepperBasic = 0;
   stepperLimited = 5;
   stepperLarge = 10;

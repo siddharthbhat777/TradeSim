@@ -1,8 +1,8 @@
 @if (isLoading()) {
-<app-card [isLoading]="true">
+<app-card [isLoading]="true" class="approval-card">
     <div style="height: 400px;"></div>
 </app-card>
-} @else if (wallets().length === 0) {
+} @else if (data().length === 0) {
 <app-empty-state text="No pending wallet upgrades"
     subtext="All caught up! There are currently no users requesting multi-currency access.">
     <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -12,8 +12,8 @@
     </svg>
 </app-empty-state>
 } @else {
-<app-card>
-    <app-table variant="flush" [columns]="columns()" [data]="wallets()" [paginated]="true">
+<app-card class="approval-card">
+    <app-table variant="flush" [columns]="columns()" [data]="data()" [paginated]="true">
 
         <ng-template tableCell="userId" let-val let-row="row">
             <div class="id-cell-wrapper" [class.highlight]="isHighlighted(row.id)">
@@ -28,7 +28,7 @@
         </ng-template>
 
         <ng-template tableCell="userName" let-row="row">
-            <span class="font-medium">{{ userMap().get(row.userId) || 'Unknown User' }}</span>
+            <span class="font-medium">{{ getUserDetails(row.userId)?.fullName || 'Unknown User' }}</span>
         </ng-template>
 
         <ng-template tableCell="multiCurrencyStatus" let-val>
@@ -45,6 +45,39 @@
                     (buttonClick)="confirmApprove(row.id)">Approve</app-button>
                 <app-button variant="danger" size="small" [disabled]="isProcessing()"
                     (buttonClick)="openRejectModal(row.id)">Reject</app-button>
+            </div>
+        </ng-template>
+
+        <ng-template tableExpandedRow let-row="row">
+            <div class="expanded-details">
+                <div class="expanded-header-row">
+                    <h4 class="expanded-title m-0">User Snapshot</h4>
+                    <app-button variant="outline" size="small" [routerLink]="['../../users', row.userId]">View Full
+                        Profile</app-button>
+                </div>
+                @if (getUserDetails(row.userId); as user) {
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Full Name</span>
+                        <span class="detail-value">{{ user.fullName }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value">{{ user.email }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Country</span>
+                        <span class="detail-value">{{ user.countryCode }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Account Status</span>
+                        <span class="detail-value">
+                            <app-badge [color]="user.accountStatus === 'ACTIVE' ? 'success' : 'warning'">{{
+                                user.accountStatus }}</app-badge>
+                        </span>
+                    </div>
+                </div>
+                }
             </div>
         </ng-template>
 

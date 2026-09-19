@@ -6,9 +6,11 @@ export interface CapTableEntryResponse {
 export interface ListingRequestResponse {
     id: string;
     companyId: string;
+    companyName: string;
     submittedByUserId: string;
     symbol: string;
     exchangeId: string;
+    exchangeName: string;
     referencePrice: number;
     sector: string;
     priceBandPercent: number;

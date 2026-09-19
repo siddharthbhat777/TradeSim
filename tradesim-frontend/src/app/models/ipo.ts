@@ -6,6 +6,9 @@ export interface IpoOfferResponse {
     id: string;
     companyId: string;
     stockId: string;
+    symbol: string;
+    companyName: string;
+    exchangeName: string;
     submittedByUserId: string;
     issuePrice: number;
     sharesPerAllottee: number;

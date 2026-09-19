@@ -167,7 +167,10 @@ public class WalletService {
 
     @Transactional(readOnly = true)
     public List<WalletResponse> fetchPendingMultiCurrencyRequests() {
-        return walletRepository.findByMultiCurrencyStatusOrderByCreatedAtAsc(MultiCurrencyStatus.PENDING).stream().map(this::toResponse).toList();
+        return walletRepository.findByMultiCurrencyStatusOrderByCreatedAtDesc(MultiCurrencyStatus.PENDING)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
