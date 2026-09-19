@@ -1,0 +1,180 @@
+.market-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.toolbar-search {
+  width: 100%;
+  flex: 1;
+
+  @media (min-width: 1024px) {
+    max-width: 400px;
+  }
+
+  app-input {
+    display: block;
+    width: 100%;
+
+    ::ng-deep .app-form-field {
+      max-width: 100% !important;
+      width: 100%;
+    }
+  }
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+  }
+
+  app-dropdown {
+    width: 100%;
+
+    @media (min-width: 768px) {
+      width: max-content;
+      min-width: 200px;
+    }
+  }
+}
+
+.data-card {
+  ::ng-deep .card {
+    padding-bottom: 0.5rem;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.filter-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  margin-left: 6px;
+  margin-top: -8px;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.admin-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem 2rem;
+  background: var(--surface-secondary);
+  border-top: 1px solid var(--border);
+
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .section-heading {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .metric-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .value {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+.drawer-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+}
+
+.drawer-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  .filter-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .value {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+  }
+}
+
+.drawer-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}

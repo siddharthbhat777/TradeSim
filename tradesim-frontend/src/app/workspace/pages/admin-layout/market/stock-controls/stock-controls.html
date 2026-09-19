@@ -1,0 +1,143 @@
+<section class="market-toolbar">
+    <div class="toolbar-search">
+        <app-input [reserveMessageSpace]="false">
+            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input appInput type="text" placeholder="Search symbol or company..." [(ngModel)]="searchQuery" />
+        </app-input>
+    </div>
+
+    <div class="toolbar-actions">
+        <app-dropdown [options]="sortOptions" [(ngModel)]="sortBy" size="medium"></app-dropdown>
+
+        <app-button variant="secondary" (click)="openFilterDrawer()">
+            <svg button-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Filters
+            @if (hasActiveFilters()) {
+            <span class="filter-badge"></span>
+            }
+        </app-button>
+    </div>
+</section>
+
+<app-card class="data-card">
+    <app-table variant="flush" [columns]="stockColumns()" [data]="filteredAndSortedStocks()" [paginated]="true"
+        [interactiveRows]="true" emptyText="No stocks found"
+        emptySubtext="No stocks match the selected exchange, search query, or filters.">
+
+        <ng-template tableCell="symbol" let-val>
+            <span class="font-semibold">{{ val }}</span>
+        </ng-template>
+
+        <ng-template tableCell="currentPrice" let-val let-row="row">
+            {{ val | formatCurrency:row.currency:'currency':2 }}
+        </ng-template>
+
+        <ng-template tableCell="status" let-val>
+            <app-badge [color]="val === 'ACTIVE' ? 'success' : (val === 'HALTED' ? 'warning' : 'danger')">
+                {{ val }}
+            </app-badge>
+        </ng-template>
+
+        <ng-template tableCell="actions" let-row="row">
+            <div class="action-buttons">
+                @if (row.status !== 'ACTIVE' && row.status !== 'DELISTED') {
+                <app-button variant="success" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="changeStockStatus(row, 'ACTIVE'); $event.stopPropagation()">Activate</app-button>
+                }
+                @if (row.status !== 'HALTED' && row.status !== 'DELISTED') {
+                <app-button variant="warning" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="changeStockStatus(row, 'HALTED'); $event.stopPropagation()">Halt</app-button>
+                }
+                @if (row.status !== 'DELISTED') {
+                <app-button variant="danger" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="changeStockStatus(row, 'DELISTED'); $event.stopPropagation()">Delist</app-button>
+                }
+            </div>
+        </ng-template>
+
+        <ng-template tableExpandedRow let-row="row">
+            <div class="admin-control-panel">
+                <div class="panel-section metrics-section">
+                    <h5 class="section-heading">Stock Overview</h5>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="label">Day Volume</span>
+                            <span class="value">{{ row.dayVolume | number }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Market Cap</span>
+                            <span class="value">{{ row.marketCap | formatCurrency:row.currency:'currency':0 }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Classification</span>
+                            <span class="value">{{ row.marketCapCategory }} CAP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+    </app-table>
+</app-card>
+
+<app-drawer [(isOpen)]="isFilterDrawerOpen" position="right">
+    <div class="drawer-header">
+        <h3>Filters</h3>
+    </div>
+
+    <div class="drawer-body">
+        <div class="filter-group">
+            <div class="filter-label-row">
+                <span class="label">Price Range</span>
+                <span class="value">
+                    {{ (draftPriceRange()[0] < draftPriceRange()[1] ? draftPriceRange()[0] : draftPriceRange()[1]) |
+                        formatCurrency:fallbackCurrency():'currency':0 }} - {{ (draftPriceRange()[0]>
+                        draftPriceRange()[1] ? draftPriceRange()[0] : draftPriceRange()[1]) |
+                        formatCurrency:fallbackCurrency():'currency':0 }}
+                </span>
+            </div>
+            <app-slider [range]="true" [min]="priceRangeBounds().min" [max]="priceRangeBounds().max"
+                [step]="priceSliderStep()" [ngModel]="draftPriceRange()"
+                (ngModelChange)="onPriceSliderChange($event)"></app-slider>
+        </div>
+
+        @if (marketCapOptions.length > 0) {
+        <div class="filter-group">
+            <span class="label">Market Cap</span>
+            <app-checkbox-group [options]="marketCapOptions" displayKey="label" valueKey="value"
+                [(selectedValues)]="draftMarketCapCategories">
+            </app-checkbox-group>
+        </div>
+        }
+
+        @if (sectorOptions().length > 0) {
+        <div class="filter-group">
+            <span class="label">Sectors</span>
+            <app-checkbox-group [options]="sectorOptions()" displayKey="label" valueKey="value"
+                [(selectedValues)]="draftSectors">
+            </app-checkbox-group>
+        </div>
+        }
+
+        @if (statusOptions.length > 0) {
+        <div class="filter-group">
+            <span class="label">Status</span>
+            <app-checkbox-group [options]="statusOptions" displayKey="label" valueKey="value"
+                [(selectedValues)]="draftStatuses">
+            </app-checkbox-group>
+        </div>
+        }
+    </div>
+
+    <div class="drawer-footer">
+        <app-button variant="outline" width="100%" (click)="resetDraftFilters()">Reset</app-button>
+        <app-button variant="primary" width="100%" [disabled]="!hasUnsavedFilters()" (click)="applyFilters()">Apply
+            Filters</app-button>
+    </div>
+</app-drawer>

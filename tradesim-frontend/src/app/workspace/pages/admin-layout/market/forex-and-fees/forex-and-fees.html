@@ -1,0 +1,76 @@
+<div class="forex-layout">
+    <app-card>
+        <div class="forex-calculator">
+            <h3 class="heading-lg m-0">Exchange Rate Calculator</h3>
+            <p class="text-muted m-0">Test live conversion rates across supported currencies.</p>
+
+            <div class="calc-grid">
+                <app-dropdown label="Source" [options]="currencyOptions()" [formControl]="sourceCurrency"
+                    [searchable]="true" [showErrors]="false"></app-dropdown>
+
+                <div class="swap-wrapper">
+                    <button type="button" class="swap-btn" (click)="swapCurrencies()" aria-label="Swap currencies">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 3 21 3 21 8"></polyline>
+                            <line x1="4" y1="14" x2="21" y2="3"></line>
+                            <polyline points="8 21 3 21 3 16"></polyline>
+                            <line x1="20" y1="10" x2="3" y2="21"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <app-dropdown label="Target" [options]="currencyOptions()" [formControl]="targetCurrency"
+                    [searchable]="true" [showErrors]="false"></app-dropdown>
+            </div>
+
+            <div class="calc-amount">
+                <app-input label="Amount" [reserveMessageSpace]="false">
+                    <input appInput type="number" [formControl]="amountToConvert" min="1" placeholder="Enter amount">
+                    <span suffix class="font-semibold text-muted">{{ sourceCurrency.value }}</span>
+                </app-input>
+            </div>
+
+            <app-button variant="primary" width="100%" [isLoading]="isCalculating()"
+                (buttonClick)="calculateRate()">Calculate Rate</app-button>
+
+            @if (convertedRate() !== null && amountToConvert.value !== null) {
+            <div class="calc-result">
+                <span class="result-label">{{ amountToConvert.value | formatCurrency:sourceCurrency.value:'currency':2
+                    }} =</span>
+                <span class="result-value">{{ convertedRate() | formatCurrency:targetCurrency.value:'currency':4
+                    }}</span>
+            </div>
+            }
+        </div>
+    </app-card>
+
+    <app-card>
+        <div class="supported-currencies">
+            <h3 class="heading-lg m-0">Supported Currencies</h3>
+            <p class="text-muted m-0">Currencies actively synced via integration.</p>
+
+            @if (currencies().length === 0) {
+            <div class="empty-state-wrapper">
+                <app-empty-state text="No currencies available" subtext="No supported currencies have been synced yet.">
+                    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </app-empty-state>
+            </div>
+            } @else {
+            <div class="currency-list">
+                @for (currency of currencies(); track currency) {
+                <div class="currency-item">
+                    <span class="font-semibold">{{ currency }}</span>
+                    <app-badge color="success">Active</app-badge>
+                </div>
+                }
+            </div>
+            }
+        </div>
+    </app-card>
+</div>

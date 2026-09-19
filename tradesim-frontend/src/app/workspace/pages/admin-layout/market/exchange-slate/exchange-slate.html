@@ -1,0 +1,54 @@
+<app-card class="exchange-slate-card">
+    <div class="exchange-slate">
+        <div class="exchange-slate__top">
+            <div class="exchange-slate__selector">
+                <span class="slate-label">Select Exchange</span>
+                <app-dropdown [options]="exchangeOptions()" [ngModel]="selectedExchangeId()"
+                    (ngModelChange)="onExchangeSelect($event)" size="large" placeholder="Select Exchange"
+                    [showErrors]="false" [reserveMessageSpace]="false">
+                </app-dropdown>
+            </div>
+
+            @if (currentExchange(); as ex) {
+            <div class="exchange-slate__status-block">
+                <div class="status-indicator" [class.status-indicator--open]="currentExchangeClock()?.marketOpenNow"
+                    [class.status-indicator--closed]="!currentExchangeClock()?.marketOpenNow">
+                    <span class="status-dot"></span>
+                    <span class="status-text">{{ currentExchangeClock()?.marketOpenNow ? 'MARKET OPEN' : 'MARKET
+                        CLOSED' }}</span>
+                </div>
+                <div class="clock-display">
+                    <span class="clock-time font-mono">{{ currentExchangeClock()?.localTime || '--:--:--' }}</span>
+                    <span class="clock-tz text-muted">{{ ex.timezone }}</span>
+                </div>
+            </div>
+            }
+        </div>
+
+        @if (currentExchange(); as ex) {
+        <div class="exchange-slate__metrics">
+            <div class="slate-metric">
+                <span class="slate-metric__label">Exchange Code</span>
+                <span class="slate-metric__value font-semibold">{{ ex.code }}</span>
+            </div>
+            <div class="slate-metric">
+                <span class="slate-metric__label">Base Currency</span>
+                <span class="slate-metric__value font-semibold">{{ ex.currency }}</span>
+            </div>
+            <div class="slate-metric">
+                <span class="slate-metric__label">Listed Stocks</span>
+                <span class="slate-metric__value font-semibold">{{ stocksCount() }}</span>
+            </div>
+            <div class="slate-metric">
+                <span class="slate-metric__label">Market Indices</span>
+                <span class="slate-metric__value font-semibold">{{ indicesCount() }}</span>
+            </div>
+            <div class="slate-metric">
+                <span class="slate-metric__label">Trading Hours</span>
+                <span class="slate-metric__value font-mono">{{ ex.marketOpenTime }} - {{ ex.marketCloseTime
+                    }}</span>
+            </div>
+        </div>
+        }
+    </div>
+</app-card>
