@@ -158,6 +158,7 @@ export class Settings implements OnInit, OnDestroy {
 
   private emailTimer?: Subscription;
   private forgotTimer?: Subscription;
+  private hasInteractedWithTheme = false;
 
   ngOnInit(): void {
     const userRole = this.authService.currentUser()?.role;
@@ -197,6 +198,10 @@ export class Settings implements OnInit, OnDestroy {
     this.forgotTimer?.unsubscribe();
   }
 
+  markThemeInteraction(): void {
+    this.hasInteractedWithTheme = true;
+  }
+
   saveProfile(): void {
     if (this.profileForm.invalid || this.profileForm.pristine) {
       this.profileForm.markAllAsTouched();
@@ -223,6 +228,20 @@ export class Settings implements OnInit, OnDestroy {
   }
 
   updateTheme(newTheme: string): void {
+    const currentProfileTheme = this.profile()?.themePreference;
+
+    if (!this.hasInteractedWithTheme) {
+      if (newTheme !== currentProfileTheme && currentProfileTheme) {
+        this.selectedTheme.set('');
+        setTimeout(() => this.selectedTheme.set(currentProfileTheme));
+      }
+      return;
+    }
+
+    if (!currentProfileTheme || newTheme === currentProfileTheme) {
+      return;
+    }
+
     this.selectedTheme.set(newTheme);
     this.isUpdatingTheme.set(true);
 
@@ -234,6 +253,7 @@ export class Settings implements OnInit, OnDestroy {
         this.toast.success('Theme preference updated.');
       },
       error: (error) => {
+        this.selectedTheme.set(currentProfileTheme);
         this.isUpdatingTheme.set(false);
         this.toast.danger(this.errorMessage(error));
       }

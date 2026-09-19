@@ -91,9 +91,12 @@
         <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem; font-size: 0.9rem;">
             Customize how TradeSim looks on your device.
         </p>
-        <app-segmented-control [options]="themeOptions" [ngModel]="selectedTheme()"
-            (ngModelChange)="updateTheme($event)" [fullWidth]="true" required>
-        </app-segmented-control>
+        <div (mousedown)="markThemeInteraction()" (touchstart)="markThemeInteraction()"
+            (keydown)="markThemeInteraction()">
+            <app-segmented-control [options]="themeOptions" [ngModel]="selectedTheme()"
+                (ngModelChange)="updateTheme($event)" [fullWidth]="true" required>
+            </app-segmented-control>
+        </div>
     </app-card>
 
     @if (!isAdmin()) {
