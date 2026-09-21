@@ -36,6 +36,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserListResponse> fetchAllUsers() {
         return authRepository.findAll().stream()
+                .filter(user -> user.getRole() != Role.ADMIN)
                 .map(user -> new UserListResponse(
                         user.getId(),
                         user.getFullName(),

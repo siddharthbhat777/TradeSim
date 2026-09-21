@@ -1179,7 +1179,8 @@
                                     <td><code>SegmentOption&lt;T&gt;[]</code></td>
                                     <td><code>[]</code></td>
                                     <td>Required array of objects containing <code>label</code>, <code>value</code>,
-                                        <code>disabled</code>, and optional <code>badge</code> properties.</td>
+                                        <code>disabled</code>, and optional <code>badge</code> properties.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>label</code></td>
@@ -3355,6 +3356,80 @@ this.dialogService.open(&#123;
                                     <td><code>2</code></td>
                                     <td>The maximum amount of decimal places to show. Passing 0 forces integers only
                                         safely.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="country-name" class="doc-section">
+            <div class="section-header">
+                <h2>Country Name Pipe</h2>
+                <p>A pure Angular pipe that transforms 2-letter ISO country codes into full country names with an
+                    optional flag emoji.</p>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card__preview">
+                    <div
+                        style="max-width: 500px; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Standard (US)</span>
+                            <strong style="color: var(--text-primary);">{{ 'US' | countryName }}</strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">With Flag (IN)</span>
+                            <strong style="color: var(--text-primary);">{{ 'IN' | countryName:true }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Fallback (Unknown)</span>
+                            <strong style="color: var(--text-primary);">{{ 'XX' | countryName }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-card__code-block">
+                    <details>
+                        <summary class="code-summary">View Source</summary>
+                        <div class="code-content">
+                            <button class="copy-btn" (click)="copyCode('Country Name snippet copied')">Copy</button>
+                            <pre ngNonBindable><code>&lt;!-- Standard Name --&gt;
+&lt;span&gt;{{ 'US' | countryName }}&lt;/span&gt;
+
+&lt;!-- With Flag Emoji --&gt;
+&lt;span&gt;{{ 'IN' | countryName:true }}&lt;/span&gt;</code></pre>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="doc-card__api">
+                    <h3 style="margin-top: 0;">Usage <code>countryName</code></h3>
+                    <div class="table-container">
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Argument</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>value</code></td>
+                                    <td><code>string</code></td>
+                                    <td><span style="color: var(--danger);">Required</span></td>
+                                    <td>The 2-letter ISO country code.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>showFlag</code></td>
+                                    <td><code>boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>If true, prepends the corresponding country flag emoji to the name.</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -53,7 +53,7 @@ export class CustomInput {
   }
 
   shouldShowError(): boolean {
-    return this.showErrors() && !!this.inputDirective()?.isInvalid();
+    return this.showErrors() && !!this.inputDirective()?.isInvalidState();
   }
 
   getErrorMessage(): string {

@@ -32,6 +32,11 @@ export const adminRoutes: Routes = [
                 title: 'Company Directory'
             },
             {
+                path: 'companies/:id',
+                loadComponent: () => import('./companies/company-details/company-details').then((m) => m.CompanyDetails),
+                title: 'Company Details'
+            },
+            {
                 path: 'users',
                 loadComponent: () => import('./users/users').then((m) => m.Users),
                 title: 'User Management'

@@ -1,0 +1,199 @@
+.companies-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  container-type: inline-size;
+  container-name: companies;
+}
+
+.companies-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.companies-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 300px;
+}
+
+.country-filter {
+  width: 100%;
+  max-width: 220px;
+}
+
+@container companies (max-width: 950px) {
+  .companies-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .toolbar-right {
+    align-self: flex-end;
+    order: -1;
+    margin-bottom: 0.5rem;
+  }
+  .toolbar-left {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .companies-toolbar {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .toolbar-right {
+    align-self: stretch;
+    order: 0;
+    margin-bottom: 0;
+    width: 100%;
+    app-button {
+      display: block;
+      width: 100%;
+    }
+  }
+  .toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .search-input,
+  .country-filter {
+    max-width: 100%;
+  }
+  app-segmented-control {
+    order: 1;
+    width: 100%;
+    ::ng-deep .segmented-control {
+      display: flex;
+      width: 100%;
+    }
+    ::ng-deep .segmented-control__segment {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+  .country-filter {
+    order: 2;
+  }
+  .search-input {
+    order: 3;
+  }
+}
+
+.m-0 {
+  margin: 0;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.highlight {
+  color: var(--primary);
+}
+
+.drawer-header {
+  padding: 1.5rem 2.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.drawer-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.drawer-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: var(--surface);
+}
+
+.toggle-section {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px dashed var(--border);
+
+  app-toggle {
+    display: block;
+    width: 100%;
+
+    ::ng-deep .toggle-wrapper {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    ::ng-deep .toggle__label {
+      flex: 1;
+      white-space: normal;
+      word-break: break-word;
+      padding-right: 1rem;
+      line-height: 1.4;
+    }
+  }
+}
+
+.section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.otp-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+
+  app-button {
+    margin-bottom: 24px;
+  }
+}
+
+.flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}

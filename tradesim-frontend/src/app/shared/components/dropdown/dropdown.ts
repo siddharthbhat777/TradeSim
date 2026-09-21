@@ -26,6 +26,7 @@ export interface DropdownOption<T = unknown> {
   value: T;
   icon?: string;
   disabled?: boolean;
+  searchText?: string;
   [key: string]: unknown;
 }
 
@@ -107,7 +108,10 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (!query) {
       return this.options();
     }
-    return this.options().filter((option) => option.label.toLowerCase().includes(query));
+    return this.options().filter((option) => {
+      const targetString = option.searchText ? option.searchText.toLowerCase() : option.label.toLowerCase();
+      return targetString.includes(query);
+    });
   });
 
   protected readonly activeOptionId = computed(() => {
@@ -369,6 +373,29 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     }
   }
 
+  private handleTypeAhead(key: string): void {
+    if (this.typeAheadTimeout) {
+      clearTimeout(this.typeAheadTimeout);
+    }
+    this.typeAheadBuffer += key.toLowerCase();
+
+    const options = this.filteredOptions();
+    const matchIndex = options.findIndex((option) =>
+      !option.disabled && option.label.toLowerCase().startsWith(this.typeAheadBuffer)
+    );
+
+    if (matchIndex !== -1) {
+      this.activeIndex.set(matchIndex);
+      const elementId = this.optionId(matchIndex);
+      const optionElement = this.document.getElementById(elementId);
+      optionElement?.scrollIntoView({ block: 'nearest' });
+    }
+
+    this.typeAheadTimeout = setTimeout(() => {
+      this.typeAheadBuffer = '';
+    }, 500);
+  }
+
   private enabledIndices(): number[] {
     return this.filteredOptions().reduce<number[]>((acc, option, index) => {
       if (!option.disabled) {
@@ -415,36 +442,21 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     }
   }
 
-  private handleTypeAhead(char: string): void {
-    clearTimeout(this.typeAheadTimeout);
-    this.typeAheadBuffer += char.toLowerCase();
-    const options = this.filteredOptions();
-    const startFrom = this.activeIndex() + 1;
-    const ordered = [...options.slice(startFrom), ...options.slice(0, startFrom)];
-    const match = ordered.find(
-      (option) => !option.disabled && option.label.toLowerCase().startsWith(this.typeAheadBuffer),
-    );
-    if (match) {
-      this.activeIndex.set(options.indexOf(match));
-    }
-    this.typeAheadTimeout = setTimeout(() => {
-      this.typeAheadBuffer = '';
-    }, 600);
-  }
-
-  writeValue(value: T | null | undefined): void {
+  writeValue(value: T): void {
     if (value === null || value === undefined) {
       this.selected.set(null);
       this.pendingValue = null;
       return;
     }
-
-    const found = this.options().find((option) => option.value === value);
-    if (found) {
-      this.selected.set(found);
-      this.pendingValue = null;
+    const opts = this.options();
+    if (opts && opts.length > 0) {
+      const found = opts.find((option) => option.value === value);
+      if (found) {
+        this.selected.set(found);
+      } else {
+        this.pendingValue = value;
+      }
     } else {
-      this.selected.set(null);
       this.pendingValue = value;
     }
   }

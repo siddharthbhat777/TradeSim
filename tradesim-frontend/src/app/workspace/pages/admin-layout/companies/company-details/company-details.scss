@@ -1,0 +1,196 @@
+.details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.back-nav {
+  display: flex;
+  align-items: center;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.company-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.company-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.company-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+
+  &.code {
+    font-weight: 700;
+    color: var(--primary);
+  }
+}
+
+.company-actions {
+  display: flex;
+  align-items: center;
+}
+
+.rep-management-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.rep-management-title {
+  flex: 1;
+  min-width: 250px;
+}
+
+.assign-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dropdown-wrapper {
+  width: 320px;
+  max-width: 100%;
+}
+
+.user-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.user-option-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-option-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-option-email {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.user-option-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--danger);
+
+  &.eligible {
+    color: var(--success);
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+::ng-deep .icon-only-btn .button__text {
+  display: none;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.m-0 {
+  margin: 0;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.id-cell-wrapper,
+.id-display {
+  display: flex;
+  align-items: center;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    background: var(--surface-secondary);
+    color: var(--primary);
+  }
+}
