@@ -4,7 +4,9 @@ import { OrderService } from '../../../../services/order/order-service';
 import { WalletService } from '../../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../../services/trading-account/trading-account-service';
 import { ForexService } from '../../../../services/forex/forex-service';
+import { StockService } from '../../../../services/stock/stock-service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
+import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
@@ -24,6 +26,7 @@ describe('StockDetails', () => {
   let walletServiceSpy: any;
   let tradingAccountServiceSpy: any;
   let forexServiceSpy: any;
+  let stockServiceSpy: any;
   let toastServiceSpy: any;
 
   const mockStock: Stock = {
@@ -94,6 +97,10 @@ describe('StockDetails', () => {
       getSupportedCurrencies: vi.fn().mockReturnValue(of(['USD', 'EUR']))
     };
 
+    stockServiceSpy = {
+      getStock: vi.fn().mockReturnValue(of(mockStock))
+    };
+
     toastServiceSpy = {
       success: vi.fn(),
       danger: vi.fn()
@@ -106,27 +113,25 @@ describe('StockDetails', () => {
         { provide: WalletService, useValue: walletServiceSpy },
         { provide: TradingAccountService, useValue: tradingAccountServiceSpy },
         { provide: ForexService, useValue: forexServiceSpy },
-        { provide: ToastService, useValue: toastServiceSpy }
+        { provide: StockService, useValue: stockServiceSpy },
+        { provide: ToastService, useValue: toastServiceSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { paramMap: { get: () => 's-1' } }
+          }
+        }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(StockDetails);
     component = fixture.componentInstance;
-
-    fixture.componentRef.setInput('stock', mockStock);
-
     fixture.detectChanges();
     await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should emit back event when onBack is called', () => {
-    const emitSpy = vi.spyOn(component.back, 'emit');
-    component.onBack();
-    expect(emitSpy).toHaveBeenCalled();
   });
 
   it('should call OrderService and show review modal on reviewOrder', () => {

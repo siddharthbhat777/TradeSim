@@ -21,7 +21,6 @@ import { Slider } from '../../../shared/components/slider/slider';
 import { CheckboxGroup } from '../../../shared/components/checkbox/checkbox-group/checkbox-group';
 import { CandlestickChart, CandlestickData } from '../../../shared/components/charts/candlestick-chart/candlestick-chart';
 import { Clock } from './clock/clock';
-import { StockDetails } from './stock-details/stock-details';
 import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency-pipe';
 
 @Component({
@@ -43,7 +42,6 @@ import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency-pipe';
     CheckboxGroup,
     CandlestickChart,
     Clock,
-    StockDetails,
     FormatCurrencyPipe
   ],
   templateUrl: './market.html',
@@ -67,7 +65,6 @@ export class Market implements OnInit {
   readonly selectedIndexId = signal<string | null>(null);
 
   readonly rawStocks = signal<Stock[]>([]);
-  readonly selectedStock = signal<Stock | null>(null);
   readonly indexChartData = signal<CandlestickData[]>([]);
 
   readonly searchQuery = signal<string>('');
@@ -282,18 +279,6 @@ export class Market implements OnInit {
         this.indexChartData.set([]);
       }
     });
-
-    this.route.queryParamMap.subscribe(params => {
-      const stockId = params.get('stockId');
-      if (stockId) {
-        const found = this.rawStocks().find(s => s.id === stockId);
-        if (found) {
-          this.selectedStock.set(found);
-        }
-      } else {
-        this.selectedStock.set(null);
-      }
-    });
   }
 
   ngOnInit(): void {
@@ -308,32 +293,13 @@ export class Market implements OnInit {
     this.stockService.getStocks().subscribe(data => {
       this.rawStocks.set(data);
       this.isLoadingStocks.set(false);
-
-      const targetStockId = this.route.snapshot.queryParamMap.get('stockId');
-      if (targetStockId) {
-        const found = data.find(s => s.id === targetStockId);
-        if (found) {
-          this.selectedStock.set(found);
-        }
-      }
     });
   }
 
   onSelectStock(stock: Stock): void {
-    this.selectedStock.set(stock);
-    this.router.navigate([], {
+    this.router.navigate([stock.id], {
       relativeTo: this.route,
-      queryParams: { stockId: stock.id },
-      queryParamsHandling: 'merge'
-    });
-  }
-
-  onBackToMarket(): void {
-    this.selectedStock.set(null);
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { stockId: null },
-      queryParamsHandling: 'merge'
+      state: { stock: stock }
     });
   }
 

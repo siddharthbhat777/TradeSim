@@ -72,12 +72,14 @@
         </div>
 
         <app-table variant="flush" [columns]="columns()" [data]="representatives()" [paginated]="true"
-            emptyText="No representatives assigned to this company.">
+            emptyText="No representatives assigned to this company." [interactiveRows]="true"
+            (rowClick)="goToUser($event)">
 
             <ng-template tableCell="userId" let-val>
                 <div class="id-cell-wrapper">
                     <span class="font-mono text-muted text-sm">{{ val | slice:0:8 }}...</span>
-                    <button type="button" class="copy-btn" (click)="copyId(val)" aria-label="Copy User ID">
+                    <button type="button" class="copy-btn" (click)="copyId(val); $event.stopPropagation()"
+                        aria-label="Copy User ID">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -111,7 +113,7 @@
             </ng-template>
 
             <ng-template tableCell="actions" let-row="row">
-                <div class="action-buttons">
+                <div class="action-buttons" (click)="$event.stopPropagation()">
                     @if (row.status === 'ACTIVE' && row.assignmentRole === 'MANAGER') {
                     <app-button variant="outline" size="small" [disabled]="isProcessing()"
                         (buttonClick)="transferPrimary(row.userId)">Make Primary</app-button>

@@ -54,6 +54,16 @@ describe('StockService', () => {
     req.flush([mockStock]);
   });
 
+  it('should fetch a single stock by id', () => {
+    service.getStock('stk-123').subscribe((res) => {
+      expect(res).toEqual(mockStock);
+    });
+
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/stocks/stk-123`);
+    expect(req.request.method).toBe('GET');
+    req.flush(mockStock);
+  });
+
   it('should change stock status', () => {
     const updatedStock = { ...mockStock, status: 'HALTED' };
 

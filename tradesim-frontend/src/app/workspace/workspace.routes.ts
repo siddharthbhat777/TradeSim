@@ -37,6 +37,12 @@ export const workspaceRoutes: Routes = [
                 title: 'Market'
             },
             {
+                path: 'market/:id',
+                canMatch: [userGuard],
+                loadComponent: () => import('./pages/market/stock-details/stock-details').then((module) => module.StockDetails),
+                title: 'Stock Details'
+            },
+            {
                 path: 'ipo',
                 canMatch: [userGuard],
                 loadComponent: () => import('./pages/ipo/ipo').then((module) => module.Ipo),

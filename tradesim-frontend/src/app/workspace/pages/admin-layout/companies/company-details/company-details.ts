@@ -157,6 +157,10 @@ export class CompanyDetails implements OnInit {
     this.router.navigate(['/app/admin/companies']);
   }
 
+  goToUser(row: CompanyRepresentativeAssignmentResponse): void {
+    this.router.navigate(['/app/admin/users'], { queryParams: { id: row.userId } });
+  }
+
   toggleStatus(isActive: boolean): void {
     const newStatus = isActive ? 'ACTIVE' : 'INACTIVE';
     this.isChangingStatus.set(true);

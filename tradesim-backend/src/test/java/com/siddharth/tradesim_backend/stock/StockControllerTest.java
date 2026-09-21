@@ -58,4 +58,31 @@ class StockControllerTest {
                 .andExpect(jsonPath("$[0].currentPrice").value(150.25))
                 .andExpect(jsonPath("$[0].status").value(StockStatus.ACTIVE.name()));
     }
+
+    @Test
+    void shouldReturnStockById() throws Exception {
+        UUID stockId = UUID.randomUUID();
+        StockResponse stock = new StockResponse(
+                stockId,
+                "AAPL",
+                "Apple Inc",
+                BigDecimal.valueOf(150.25),
+                Sector.TECHNOLOGY,
+                StockStatus.ACTIVE,
+                0L,
+                BigDecimal.ZERO,
+                MarketCapCategory.UNKNOWN,
+                "USD",
+                UUID.randomUUID()
+        );
+
+        when(stockService.getStock(stockId)).thenReturn(stock);
+
+        mockMvc.perform(get("/stocks/" + stockId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.symbol").value("AAPL"))
+                .andExpect(jsonPath("$.companyName").value("Apple Inc"))
+                .andExpect(jsonPath("$.currentPrice").value(150.25))
+                .andExpect(jsonPath("$.status").value(StockStatus.ACTIVE.name()));
+    }
 }

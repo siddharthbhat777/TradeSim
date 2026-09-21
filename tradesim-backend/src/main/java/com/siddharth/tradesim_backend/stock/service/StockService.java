@@ -44,6 +44,13 @@ public class StockService {
     private record StockCap(UUID stockId, BigDecimal marketCap) {}
 
     @Transactional(readOnly = true)
+    public StockResponse getStock(UUID stockId) {
+        Stock stock = stockRepository.findById(stockId)
+                .orElseThrow(() -> StockException.notFound("Stock not found"));
+        return toResponse(stock);
+    }
+
+    @Transactional(readOnly = true)
     public List<StockResponse> fetchStocks() {
         List<Stock> allStocks = stockRepository.findAll();
         List<Exchange> allExchanges = exchangeRepository.findAll();

@@ -1,1 +1,163 @@
-<p>users works!</p>
+<div class="users-container">
+    <div class="users-header">
+        <h1 class="heading-xl m-0">User Management</h1>
+        <p class="text-body m-0">Global directory for user access, role assignments, and account security.</p>
+    </div>
+
+    <div class="users-toolbar">
+        <div class="toolbar-left">
+            <app-input class="search-input" [reserveMessageSpace]="false">
+                <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search by name, email, username or ID..."
+                    [(ngModel)]="searchQuery" />
+            </app-input>
+
+            <app-segmented-control [options]="roleOptions" [(ngModel)]="roleFilter"></app-segmented-control>
+
+            <app-dropdown class="status-filter" [options]="statusOptions" [(ngModel)]="statusFilter"
+                [showErrors]="false" [reserveMessageSpace]="false"></app-dropdown>
+        </div>
+    </div>
+
+    <app-card class="data-card">
+        @if (filteredUsers().length === 0 && !isLoading()) {
+        <div class="empty-state-wrapper">
+            <app-empty-state text="No users found" subtext="Adjust your filters or search query to find users.">
+                <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </app-empty-state>
+        </div>
+        } @else {
+        <app-table variant="flush" [columns]="columns()" [data]="filteredUsers()" [paginated]="true"
+            [isLoading]="isLoading()" [interactiveRows]="true">
+
+            <ng-template tableCell="user" let-val let-row="row">
+                <div class="user-meta" [id]="'user-row-' + row.id">
+                    <span class="font-semibold" [class.highlight]="isHighlighted(row.id)">{{ row.fullName }}</span>
+                    <span class="text-muted text-small">{{ row.email }}</span>
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="username" let-val let-row="row">
+                <div class="id-cell-wrapper">
+                    <span class="font-medium">&#64;{{ row.username }}</span>
+                    <button class="copy-btn" (click)="copyId(row.id); $event.stopPropagation()" aria-label="Copy ID">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="country" let-val let-row="row">
+                <span>{{ row.countryCode | countryName:true }}</span>
+            </ng-template>
+
+            <ng-template tableCell="role" let-val let-row="row">
+                <app-badge [color]="row.role === 'COMPANY_REPRESENTATIVE' ? 'accent' : 'primary'">
+                    {{ row.role === 'COMPANY_REPRESENTATIVE' ? 'REPRESENTATIVE' : 'USER' }}
+                </app-badge>
+            </ng-template>
+
+            <ng-template tableCell="status" let-val let-row="row">
+                <app-badge
+                    [color]="row.accountStatus === 'ACTIVE' ? 'success' : (row.accountStatus === 'BANNED' ? 'danger' : (row.accountStatus === 'SUSPENDED' ? 'warning' : 'secondary'))">
+                    {{ row.accountStatus }}
+                </app-badge>
+            </ng-template>
+
+            <ng-template tableExpandedRow let-row="row">
+                <div class="expanded-details">
+                    <div class="expanded-grid">
+                        <div class="metrics-column">
+                            <h4 class="expanded-title">User Metrics</h4>
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <span class="label">User ID</span>
+                                    <div class="id-cell-wrapper" style="margin-top: -2px;">
+                                        <span class="value font-mono">{{ row.id | slice:0:8 }}...</span>
+                                        <button class="copy-btn copy-btn--small"
+                                            (click)="copyId(row.id); $event.stopPropagation()" aria-label="Copy ID">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="label">Joined</span>
+                                    <span class="value">{{ row.createdAt | timeAgo }}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="label">Last Login</span>
+                                    <span class="value">{{ row.lastLogin ? (row.lastLogin | timeAgo) : 'Never' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions-column">
+                            <h4 class="expanded-title">Admin Controls</h4>
+                            <div class="action-zone">
+                                <div class="action-group">
+                                    <span class="group-label">Role Assignment</span>
+                                    @if (row.role === 'USER') {
+                                    <app-button variant="outline" size="small" [disabled]="isProcessing()"
+                                        (buttonClick)="changeRole(row, 'COMPANY_REPRESENTATIVE')">
+                                        Promote to Representative
+                                    </app-button>
+                                    } @else {
+                                    <app-button variant="outline" size="small" [disabled]="isProcessing()"
+                                        (buttonClick)="changeRole(row, 'USER')">
+                                        Demote to User
+                                    </app-button>
+                                    }
+                                </div>
+
+                                <div class="action-group">
+                                    <span class="group-label">Security Restrictions</span>
+                                    <div class="security-buttons">
+                                        @if (row.accountStatus === 'ACTIVE') {
+                                        <app-button variant="warning" size="small" [disabled]="isProcessing()"
+                                            (buttonClick)="changeStatus(row, 'SUSPENDED')">Suspend</app-button>
+                                        }
+
+                                        @if (row.accountStatus === 'SUSPENDED') {
+                                        <app-button variant="success" size="small" [disabled]="isProcessing()"
+                                            (buttonClick)="changeStatus(row, 'ACTIVE')">Reactivate</app-button>
+                                        }
+
+                                        @if (row.accountStatus !== 'BANNED' && row.accountStatus !== 'DEACTIVATED') {
+                                        <app-button variant="danger" size="small" [disabled]="isProcessing()"
+                                            (buttonClick)="changeStatus(row, 'BANNED')">Ban User</app-button>
+                                        }
+
+                                        @if (row.accountStatus === 'BANNED') {
+                                        <span class="text-danger font-medium">This account is permanently banned.</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+
+        </app-table>
+        }
+    </app-card>
+</div>
