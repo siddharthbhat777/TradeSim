@@ -22,7 +22,7 @@ import { forkJoin, interval, Subscription, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { Card } from '../../../shared/components/card/card';
-import { CustomInput } from '../../../shared/components/input/input';
+import { CustomInput, InputErrorMessages } from '../../../shared/components/input/input';
 import { InputDirective } from '../../../shared/directives/input';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
@@ -109,6 +109,20 @@ export class Settings implements OnInit, OnDestroy {
     { label: 'Light Mode', value: 'LIGHT' },
     { label: 'Dark Mode', value: 'DARK' }
   ];
+
+  readonly commonErrorMessages: InputErrorMessages = {
+    server: (err: unknown) => String(err)
+  };
+
+  readonly otpErrorMessages: InputErrorMessages = {
+    pattern: 'Enter the six-digit OTP.',
+    server: (err: unknown) => String(err)
+  };
+
+  readonly passwordErrorMessages: InputErrorMessages = {
+    pattern: 'Use 8+ characters with uppercase, number, and special character.',
+    server: (err: unknown) => String(err)
+  };
 
   readonly profileForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -480,24 +494,6 @@ export class Settings implements OnInit, OnDestroy {
         this.setServerError(this.deactivateForm.controls.password, this.errorMessage(error));
       }
     });
-  }
-
-  inputError(control: AbstractControl, type: 'text' | 'email' | 'otp' | 'password' | 'confirm'): string {
-    if (!control.invalid || !(control.touched || control.dirty)) {
-      return '';
-    }
-
-    if (control.errors?.['server']) return String(control.errors['server']);
-    if (control.errors?.['required']) return 'This field is required.';
-    if (control.errors?.['email']) return 'Enter a valid email address.';
-    if (control.errors?.['maxlength']) return 'Maximum 100 characters allowed.';
-    if (type === 'otp') return 'Enter the six-digit OTP.';
-    if (type === 'password') {
-      return 'Use 8+ characters with uppercase, number, and special character.';
-    }
-    if (type === 'confirm') return 'Passwords do not match.';
-
-    return 'Enter a valid value.';
   }
 
   clearServerError(control: AbstractControl): void {

@@ -1,5 +1,5 @@
 import { booleanAttribute, Directive, DoCheck, ElementRef, inject, input, signal } from '@angular/core';
-import { NgControl } from '@angular/forms';
+import { NgControl, ValidationErrors } from '@angular/forms';
 
 export type InputSize = 'small' | 'medium' | 'large';
 export type InputValidationMode = 'touched' | 'dirty' | 'touchedOrDirty' | 'always';
@@ -28,6 +28,7 @@ export class InputDirective implements DoCheck {
   protected readonly isTextarea = this.elementRef.nativeElement.tagName.toLowerCase() === 'textarea';
 
   readonly isInvalidState = signal(false);
+  readonly controlErrors = signal<ValidationErrors | null>(null);
 
   size = input<InputSize>('medium', { alias: 'appInputSize' });
   validationMode = input<InputValidationMode>('touched', { alias: 'appInputValidationMode' });
@@ -49,6 +50,7 @@ export class InputDirective implements DoCheck {
 
   ngDoCheck(): void {
     this.isInvalidState.set(this.calculateInvalid());
+    this.controlErrors.set(this.control?.errors ?? null);
   }
 
   private calculateInvalid(): boolean {
