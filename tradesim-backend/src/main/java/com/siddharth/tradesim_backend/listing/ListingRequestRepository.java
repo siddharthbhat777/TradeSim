@@ -12,5 +12,7 @@ import java.util.UUID;
 public interface ListingRequestRepository extends JpaRepository<ListingRequest, UUID> {
     boolean existsBySymbolAndStatusIn(String symbol, List<ListingStatus> statuses);
     List<ListingRequest> findByStatusOrderByCreatedAtAsc(ListingStatus status);
+    List<ListingRequest> findByStatusOrderByCreatedAtDesc(ListingStatus status);
     List<ListingRequest> findByCompanyIdAndStatusOrderByCreatedAtAsc(UUID companyId, ListingStatus status);
+    List<ListingRequest> findByCompanyIdAndStatusOrderByCreatedAtDesc(UUID companyId, ListingStatus status);
 }

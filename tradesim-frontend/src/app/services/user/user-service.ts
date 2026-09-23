@@ -1,13 +1,18 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
 import { environment } from '../../../environment/environment';
-import { TradingAccountResponse } from '../../models/trading-account';
 import { skipInterceptors } from '../../shared/utils/http-context';
 import {
   BankBalanceResponse, ChangePasswordRequest,
   EditProfileRequest, UserProfile,
-  VerifyEmailChangeRequest
+  VerifyEmailChangeRequest,
+  UserListResponse,
+  InitiateEmailChangeRequest,
+  BankBalanceRequest,
+  ChangeUserStatusRequest,
+  ChangeUserStatusResponse,
+  ChangeUserRoleRequest,
+  ChangeUserRoleResponse
 } from '../../models/user';
 
 @Injectable({
@@ -17,14 +22,14 @@ export class UserService {
   private readonly http = inject(HttpClient);
   private readonly usersUrl = `${environment.apiBaseURL}/users`;
 
-  getProfile() {
-    return this.http.get<UserProfile>(`${this.usersUrl}/profile`, {
+  getAllUsers() {
+    return this.http.get<UserListResponse[]>(this.usersUrl, {
       context: skipInterceptors({ loader: true })
     });
   }
 
-  getTradingAccount() {
-    return this.http.get<TradingAccountResponse>(`${environment.apiBaseURL}/trading-account`, {
+  getProfile() {
+    return this.http.get<UserProfile>(`${this.usersUrl}/profile`, {
       context: skipInterceptors({ loader: true })
     });
   }
@@ -35,8 +40,8 @@ export class UserService {
     });
   }
 
-  initiateEmailChange(newEmail: string) {
-    return this.http.post<void>(`${this.usersUrl}/email/change/initiate`, { newEmail }, {
+  initiateEmailChange(request: InitiateEmailChangeRequest) {
+    return this.http.post<void>(`${this.usersUrl}/email/change/initiate`, request, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }
@@ -47,8 +52,8 @@ export class UserService {
     });
   }
 
-  revealBankBalance(password: string) {
-    return this.http.post<BankBalanceResponse>(`${this.usersUrl}/profile/bank-balance`, { password }, {
+  revealBankBalance(request: BankBalanceRequest) {
+    return this.http.post<BankBalanceResponse>(`${this.usersUrl}/profile/bank-balance`, request, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }
@@ -61,6 +66,18 @@ export class UserService {
 
   updateTheme(theme: string) {
     return this.http.put<UserProfile>(`${this.usersUrl}/profile/theme`, { theme }, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  changeStatus(userId: string, request: ChangeUserStatusRequest) {
+    return this.http.put<ChangeUserStatusResponse>(`${this.usersUrl}/change/${userId}/status`, request, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  changeRole(userId: string, request: ChangeUserRoleRequest) {
+    return this.http.put<ChangeUserRoleResponse>(`${this.usersUrl}/change/${userId}/role`, request, {
       context: skipInterceptors({ loader: true, toast: true })
     });
   }

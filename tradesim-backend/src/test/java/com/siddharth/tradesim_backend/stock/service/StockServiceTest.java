@@ -372,4 +372,38 @@ class StockServiceTest {
         assertThat(responses).hasSize(1);
         assertThat(responses.getFirst().currentPrice()).isEqualByComparingTo(BigDecimal.valueOf(150));
     }
+
+    @Test
+    void shouldReturnStockById() {
+        UUID stockId = UUID.randomUUID();
+        UUID exchangeId = UUID.randomUUID();
+
+        Stock stock = Stock.builder()
+                .id(stockId)
+                .symbol("AAPL")
+                .exchangeId(exchangeId)
+                .totalIssuedShares(1000)
+                .lastTradedPrice(BigDecimal.valueOf(150))
+                .build();
+
+        Exchange exchange = Exchange.builder().id(exchangeId).currency("USD").build();
+
+        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(exchangeId)).thenReturn(Optional.of(exchange));
+        when(marketStateService.calculateIndicativePrice(stockId)).thenReturn(BigDecimal.valueOf(150));
+        when(stockRepository.findByExchangeId(exchangeId)).thenReturn(List.of(stock));
+
+        StockResponse response = stockService.getStock(stockId);
+
+        assertThat(response.symbol()).isEqualTo("AAPL");
+        assertThat(response.currentPrice()).isEqualByComparingTo(BigDecimal.valueOf(150));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenStockNotFoundById() {
+        UUID stockId = UUID.randomUUID();
+        when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
+
+        assertThrows(StockException.class, () -> stockService.getStock(stockId));
+    }
 }

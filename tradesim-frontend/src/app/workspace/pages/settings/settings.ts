@@ -18,10 +18,11 @@ import {
 } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { forkJoin, interval, Subscription } from 'rxjs';
+import { forkJoin, interval, Subscription, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { Card } from '../../../shared/components/card/card';
-import { CustomInput } from '../../../shared/components/input/input';
+import { CustomInput, InputErrorMessages } from '../../../shared/components/input/input';
 import { InputDirective } from '../../../shared/directives/input';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
@@ -30,9 +31,10 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { AuthService } from '../../../services/auth/auth-service';
 import { UserService } from '../../../services/user/user-service';
+import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { ThemeService } from '../../../services/theme-service';
 import { ResetPasswordRequest, SendOtpRequest, UserProfile } from '../../../models/user';
-import { OtpPurpose } from '../../../constants/auth';
+import { OtpPurpose, Role } from '../../../constants/auth';
 import { SegmentedControl, SegmentOption } from '../../../shared/components/segmented-control/segmented-control';
 import { InlineLoader } from '../../../shared/components/loaders/inline-loader/inline-loader';
 
@@ -67,6 +69,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 export class Settings implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
+  private readonly tradingAccountService = inject(TradingAccountService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(DialogService);
@@ -76,6 +79,8 @@ export class Settings implements OnInit, OnDestroy {
   readonly profile = signal<UserProfile | null>(null);
   readonly baseCurrency = signal('INR');
   readonly isLoading = signal(true);
+
+  readonly isAdmin = computed(() => this.profile()?.role === Role.admin);
 
   readonly isSavingProfile = signal(false);
   readonly isSendingEmailOtp = signal(false);
@@ -104,6 +109,20 @@ export class Settings implements OnInit, OnDestroy {
     { label: 'Light Mode', value: 'LIGHT' },
     { label: 'Dark Mode', value: 'DARK' }
   ];
+
+  readonly commonErrorMessages: InputErrorMessages = {
+    server: (err: unknown) => String(err)
+  };
+
+  readonly otpErrorMessages: InputErrorMessages = {
+    pattern: 'Enter the six-digit OTP.',
+    server: (err: unknown) => String(err)
+  };
+
+  readonly passwordErrorMessages: InputErrorMessages = {
+    pattern: 'Use 8+ characters with uppercase, number, and special character.',
+    server: (err: unknown) => String(err)
+  };
 
   readonly profileForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -153,17 +172,27 @@ export class Settings implements OnInit, OnDestroy {
 
   private emailTimer?: Subscription;
   private forgotTimer?: Subscription;
+  private hasInteractedWithTheme = false;
 
   ngOnInit(): void {
+    const userRole = this.authService.currentUser()?.role;
+    const accountRequest = userRole === Role.admin
+      ? of(null)
+      : this.tradingAccountService.getTradingAccount().pipe(catchError(() => of(null)));
+
     forkJoin({
       profile: this.userService.getProfile(),
-      account: this.userService.getTradingAccount()
+      account: accountRequest
     }).subscribe({
       next: ({ profile, account }) => {
         this.profile.set(profile);
         this.selectedTheme.set(profile.themePreference);
         this.themeService.setTheme(profile.themePreference);
-        this.baseCurrency.set(account.baseCurrency);
+
+        if (account) {
+          this.baseCurrency.set(account.baseCurrency);
+        }
+
         this.profileForm.reset({
           fullName: profile.fullName,
           linkedBankName: profile.linkedBankName
@@ -181,6 +210,10 @@ export class Settings implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.emailTimer?.unsubscribe();
     this.forgotTimer?.unsubscribe();
+  }
+
+  markThemeInteraction(): void {
+    this.hasInteractedWithTheme = true;
   }
 
   saveProfile(): void {
@@ -209,6 +242,20 @@ export class Settings implements OnInit, OnDestroy {
   }
 
   updateTheme(newTheme: string): void {
+    const currentProfileTheme = this.profile()?.themePreference;
+
+    if (!this.hasInteractedWithTheme) {
+      if (newTheme !== currentProfileTheme && currentProfileTheme) {
+        this.selectedTheme.set('');
+        setTimeout(() => this.selectedTheme.set(currentProfileTheme));
+      }
+      return;
+    }
+
+    if (!currentProfileTheme || newTheme === currentProfileTheme) {
+      return;
+    }
+
     this.selectedTheme.set(newTheme);
     this.isUpdatingTheme.set(true);
 
@@ -220,6 +267,7 @@ export class Settings implements OnInit, OnDestroy {
         this.toast.success('Theme preference updated.');
       },
       error: (error) => {
+        this.selectedTheme.set(currentProfileTheme);
         this.isUpdatingTheme.set(false);
         this.toast.danger(this.errorMessage(error));
       }
@@ -233,7 +281,7 @@ export class Settings implements OnInit, OnDestroy {
 
     this.isSendingEmailOtp.set(true);
 
-    this.userService.initiateEmailChange(this.emailForm.controls.email.value).subscribe({
+    this.userService.initiateEmailChange({ newEmail: this.emailForm.controls.email.value }).subscribe({
       next: () => {
         this.emailOtpActive.set(true);
         this.emailForm.controls.email.disable();
@@ -303,7 +351,7 @@ export class Settings implements OnInit, OnDestroy {
 
     this.isRevealingBalance.set(true);
 
-    this.userService.revealBankBalance(this.balanceForm.controls.password.value).subscribe({
+    this.userService.revealBankBalance({ password: this.balanceForm.controls.password.value }).subscribe({
       next: ({ bankBalance }) => {
         this.bankBalance.set(bankBalance);
         this.closeBalanceModal();
@@ -446,24 +494,6 @@ export class Settings implements OnInit, OnDestroy {
         this.setServerError(this.deactivateForm.controls.password, this.errorMessage(error));
       }
     });
-  }
-
-  inputError(control: AbstractControl, type: 'text' | 'email' | 'otp' | 'password' | 'confirm'): string {
-    if (!control.invalid || !(control.touched || control.dirty)) {
-      return '';
-    }
-
-    if (control.errors?.['server']) return String(control.errors['server']);
-    if (control.errors?.['required']) return 'This field is required.';
-    if (control.errors?.['email']) return 'Enter a valid email address.';
-    if (control.errors?.['maxlength']) return 'Maximum 100 characters allowed.';
-    if (type === 'otp') return 'Enter the six-digit OTP.';
-    if (type === 'password') {
-      return 'Use 8+ characters with uppercase, number, and special character.';
-    }
-    if (type === 'confirm') return 'Passwords do not match.';
-
-    return 'Enter a valid value.';
   }
 
   clearServerError(control: AbstractControl): void {

@@ -1,5 +1,10 @@
+@if (isLoading()) {
+<app-card [isLoading]="true">
+    <div style="height: 400px;"></div>
+</app-card>
+} @else if (stock(); as s) {
 <div class="stock-details">
-    <app-stock-header [stock]="stock()" (back)="onBack()"></app-stock-header>
+    <app-stock-header [stock]="s" (back)="onBack()"></app-stock-header>
 
     <div class="stock-details__layout">
         <div class="stock-details__main">
@@ -11,34 +16,34 @@
             <div class="stock-details__stats-grid">
                 <app-card variant="surface">
                     <span class="stat-label">Sector</span>
-                    <strong class="stat-value">{{ stock().sector }}</strong>
+                    <strong class="stat-value">{{ s.sector }}</strong>
                 </app-card>
 
                 <app-card variant="surface">
                     <span class="stat-label">Market Cap</span>
-                    <strong class="stat-value">{{ stock().marketCap | currency:'USD':'symbol':'1.0-0' }}</strong>
+                    <strong class="stat-value">{{ s.marketCap | currency:'USD':'symbol':'1.0-0' }}</strong>
                 </app-card>
 
                 <app-card variant="surface">
                     <span class="stat-label">Day Volume</span>
-                    <strong class="stat-value">{{ stock().dayVolume | number }}</strong>
+                    <strong class="stat-value">{{ s.dayVolume | number }}</strong>
                 </app-card>
 
                 <app-card variant="surface">
                     <span class="stat-label">Classification</span>
-                    <strong class="stat-value">{{ stock().marketCapCategory }}</strong>
+                    <strong class="stat-value">{{ s.marketCapCategory }}</strong>
                 </app-card>
             </div>
         </div>
 
-        <app-order-ticket [stock]="stock()" [wallet]="walletService.wallet()" [baseCurrency]="baseCurrency()"
+        <app-order-ticket [stock]="s" [wallet]="walletService.wallet()" [baseCurrency]="baseCurrency()"
             [supportedCurrencies]="supportedCurrencies()" (reviewOrder)="onReviewOrder($event)"
             (openDeposit)="onOpenDeposit($event)">
         </app-order-ticket>
     </div>
 </div>
 
-<app-order-review-modal [(isOpen)]="showReviewModal" [payload]="activeOrderPayload()" [stockSymbol]="stock().symbol"
+<app-order-review-modal [(isOpen)]="showReviewModal" [payload]="activeOrderPayload()" [stockSymbol]="s.symbol"
     [baseCurrency]="baseCurrency()" [isEstimatingOrder]="isEstimatingOrder()" [orderEstimate]="orderEstimate()"
     [isFetchingRate]="isFetchingRate()" [isSubmittingOrder]="isSubmittingOrder()" (openDeposit)="onOpenDeposit()"
     (executeOrder)="onExecuteOrder()">
@@ -62,7 +67,7 @@
         <p class="success-message">
             @if (activeOrderPayload(); as p) {
             Your {{ p.orderSide === 'BUY' ? 'buy' : 'sell' }} order for <strong>{{ p.orderQuantity }}</strong> share(s)
-            of <strong>{{ stock().symbol }}</strong> has been submitted.
+            of <strong>{{ s.symbol }}</strong> has been submitted.
             }
         </p>
         <div class="success-actions">
@@ -71,3 +76,4 @@
         </div>
     </div>
 </app-drawer>
+}

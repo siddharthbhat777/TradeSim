@@ -1,0 +1,135 @@
+<section class="market-toolbar">
+    <div class="toolbar-search">
+        <app-input [reserveMessageSpace]="false">
+            <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input appInput type="text" placeholder="Search index name or symbol..." [(ngModel)]="indexSearchQuery" />
+        </app-input>
+    </div>
+    <div class="toolbar-actions">
+        <app-button variant="primary" (buttonClick)="openCreateIndexModal()">Create Index</app-button>
+    </div>
+</section>
+
+<app-card class="data-card">
+    <app-table variant="flush" [columns]="indexColumns()" [data]="filteredIndices()" [paginated]="true"
+        emptyText="No market indices found" emptySubtext="No market indices exist for the selected exchange.">
+
+        <ng-template tableCell="symbol" let-val>
+            <span class="font-semibold">{{ val }}</span>
+        </ng-template>
+
+        <ng-template tableCell="baseValue" let-val>
+            {{ val | formatCurrency:fallbackCurrency():'decimal':2 }}
+        </ng-template>
+
+        <ng-template tableCell="currentValue" let-val let-row="row">
+            @if (val) {
+            <app-price-indicator [value]="val" [percentage]="row.changePercent" [showArrow]="true"
+                [valueDecimals]="2"></app-price-indicator>
+            } @else {
+            <span class="text-muted">Uninitialized</span>
+            }
+        </ng-template>
+
+        <ng-template tableCell="actions" let-row="row">
+            <div class="action-buttons">
+                <app-button variant="primary" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="initializeIndex(row)">Initialize</app-button>
+            </div>
+        </ng-template>
+
+        <ng-template tableExpandedRow let-row="row">
+            <div class="expanded-details">
+                <div class="expanded-title-row">
+                    <h4 class="expanded-title m-0">Index Constituents</h4>
+                    <app-button variant="outline" size="small" (buttonClick)="openAddConstituentModal(row)">Add
+                        Constituent</app-button>
+                </div>
+                @if (constituents().get(row.id); as items) {
+                @if (items.length > 0) {
+                <div class="constituents-grid">
+                    @for (item of items; track item.stockId) {
+                    <div class="constituent-tag">
+                        <div class="constituent-tag__info">
+                            <span class="font-semibold">{{ item.symbol }}</span>
+                            <span class="text-muted">{{ item.companyName }}</span>
+                        </div>
+                        <button type="button" class="constituent-tag__remove"
+                            (click)="removeConstituent(row.id, item.stockId)" [disabled]="isProcessing()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    }
+                </div>
+                } @else {
+                <p class="text-muted m-0">No constituents defined for this index.</p>
+                }
+                } @else {
+                <app-inline-loader size="small" variant="muted"></app-inline-loader>
+                }
+            </div>
+        </ng-template>
+    </app-table>
+</app-card>
+
+@if (showCreateIndexModal()) {
+<app-modal ariaLabel="Create Market Index" [closeOnBackdropClick]="false" (closed)="closeCreateIndexModal()">
+    <form [formGroup]="createIndexForm" (ngSubmit)="submitCreateIndex()" class="modal-form">
+        <h2 class="heading-lg m-0 mb-4">Create Market Index</h2>
+
+        <div class="form-grid">
+            <app-input label="Index Name" [errorText]="inputError(createIndexForm.controls.name)">
+                <input appInput type="text" formControlName="name" placeholder="e.g. NIFTY 50" />
+            </app-input>
+
+            <app-input label="Symbol" [errorText]="inputError(createIndexForm.controls.symbol)">
+                <input appInput type="text" formControlName="symbol" placeholder="e.g. NIFTY" />
+            </app-input>
+
+            <app-dropdown label="Exchange" [options]="exchangeOptionsOnly()"
+                [formControl]="createIndexForm.controls.exchangeId" [showErrors]="false"></app-dropdown>
+
+            <app-input label="Base Value" [errorText]="inputError(createIndexForm.controls.baseValue)">
+                <input appInput type="number" formControlName="baseValue" min="1" />
+            </app-input>
+        </div>
+
+        <div class="modal-actions">
+            <app-button type="button" variant="outline" (buttonClick)="closeCreateIndexModal()">Cancel</app-button>
+            <app-button type="submit" variant="primary" [isLoading]="isCreatingIndex()">Create Index</app-button>
+        </div>
+    </form>
+</app-modal>
+}
+
+@if (showAddConstituentModal()) {
+<app-modal ariaLabel="Add Constituent" [closeOnBackdropClick]="false" (closed)="closeAddConstituentModal()">
+    <form [formGroup]="addConstituentForm" (ngSubmit)="submitAddConstituent()" class="modal-form">
+        <h2 class="heading-lg m-0 mb-4">Add Constituent</h2>
+
+        <div class="form-grid">
+            @if (availableStocksOptions().length > 0) {
+            <app-dropdown label="Select Stock" [options]="availableStocksOptions()"
+                [formControl]="addConstituentForm.controls.stockId" [showErrors]="false"
+                [searchable]="true"></app-dropdown>
+            } @else {
+            <p class="text-muted">No eligible stocks available for this exchange.</p>
+            }
+        </div>
+
+        <div class="modal-actions">
+            <app-button type="button" variant="outline" (buttonClick)="closeAddConstituentModal()">Cancel</app-button>
+            <app-button type="submit" variant="primary" [isLoading]="isAddingConstituent()"
+                [disabled]="availableStocksOptions().length === 0">Add Constituent</app-button>
+        </div>
+    </form>
+</app-modal>
+}

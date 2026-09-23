@@ -10,6 +10,7 @@ import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeResponse;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingCapTableEntry;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
@@ -109,7 +110,7 @@ public class ListingService {
 
     @Transactional(readOnly = true)
     public List<ListingRequestResponse> fetchPendingExchangeListingRequests() {
-        return listingRequestRepository.findByStatusOrderByCreatedAtAsc(ListingStatus.PENDING_EXCHANGE_APPROVAL)
+        return listingRequestRepository.findByStatusOrderByCreatedAtDesc(ListingStatus.PENDING_EXCHANGE_APPROVAL)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -117,7 +118,7 @@ public class ListingService {
 
     @Transactional(readOnly = true)
     public List<ListingRequestResponse> fetchPendingInternalListingRequests(UUID companyId) {
-        return listingRequestRepository.findByCompanyIdAndStatusOrderByCreatedAtAsc(companyId, ListingStatus.PENDING_INTERNAL_REVIEW)
+        return listingRequestRepository.findByCompanyIdAndStatusOrderByCreatedAtDesc(companyId, ListingStatus.PENDING_INTERNAL_REVIEW)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -233,12 +234,17 @@ public class ListingService {
                 .map(entry -> new CapTableEntryResponse(entry.getUserId(), entry.getQuantity()))
                 .toList();
 
+        ExchangeResponse exchange = exchangeService.fetchExchange(listingRequest.getExchangeId());
+        Company company = companyRepository.findById(listingRequest.getCompanyId()).orElseThrow(() -> CompanyException.notFound("Company not found"));
+
         return new ListingRequestResponse(
                 listingRequest.getId(),
                 listingRequest.getCompanyId(),
+                company.getName(),
                 listingRequest.getSubmittedByUserId(),
                 listingRequest.getSymbol(),
                 listingRequest.getExchangeId(),
+                exchange.name(),
                 listingRequest.getReferencePrice(),
                 listingRequest.getSector(),
                 listingRequest.getPriceBandPercent(),
@@ -249,6 +255,7 @@ public class ListingService {
                 listingRequest.getReviewedAt(),
                 listingRequest.getApprovedStockId(),
                 listingRequest.getRejectionReason(),
+                exchange.currency(),
                 listingRequest.getCreatedAt(),
                 listingRequest.getUpdatedAt()
         );

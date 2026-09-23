@@ -1,0 +1,36 @@
+<div class="market-container">
+    <div class="market-header">
+        <h1 class="heading-xl m-0">Market Operations</h1>
+        <p class="text-body m-0">Global control center for exchanges, stocks, indices, and currencies.</p>
+    </div>
+
+    @if (isLoading()) {
+    <app-card [isLoading]="true">
+        <div style="height: 140px;"></div>
+    </app-card>
+    } @else {
+    <app-exchange-slate [exchanges]="exchanges()" [selectedExchangeId]="selectedExchangeId()" [clocks]="clocks()"
+        [stocksCount]="exchangeStocks().length" [indicesCount]="exchangeIndices().length"
+        (exchangeChange)="onExchangeSelect($event)">
+    </app-exchange-slate>
+
+    <div class="toolbar">
+        <app-segmented-control [options]="tabOptions()" [(ngModel)]="activeTab" required size="medium">
+        </app-segmented-control>
+    </div>
+
+    @if (activeTab() === 'Stocks') {
+    <app-stock-controls [stocks]="exchangeStocks()" [selectedExchangeId]="selectedExchangeId()"
+        [fallbackCurrency]="getFallbackCurrency()" (stockUpdated)="onStockUpdated($event)">
+    </app-stock-controls>
+    } @else if (activeTab() === 'Indices') {
+    <app-market-indices [indices]="exchangeIndices()" [stocks]="stocks()" [exchanges]="exchanges()"
+        [selectedExchangeId]="selectedExchangeId()" [fallbackCurrency]="getFallbackCurrency()"
+        [constituents]="constituents()" (indexCreated)="onIndexCreated($event)"
+        (indexInitialized)="onIndexInitialized($event)" (reloadConstituents)="loadConstituents($event)">
+    </app-market-indices>
+    } @else if (activeTab() === 'Forex') {
+    <app-forex-and-fees [currencies]="currencies()"></app-forex-and-fees>
+    }
+    }
+</div>

@@ -60,16 +60,21 @@
                         <line x1="18" y1="17" x2="18" y2="7"></line>
                         }
                         @case ('wallet') {
-                        <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5">
-                        </path>
+                        <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"></path>
                         <path d="M16 10h5v4h-5z"></path>
                         }
-                        @case ('globe') {
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path
-                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
-                        </path>
+                        @case ('grid') {
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                        }
+                        @case ('check-square') {
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        }
+                        @case ('activity') {
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                         }
                         @case ('building') {
                         <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
@@ -84,9 +89,11 @@
                         <path d="M8 10h.01"></path>
                         <path d="M8 14h.01"></path>
                         }
-                        @case ('check-circle') {
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        @case ('users') {
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         }
                         @default {
                         <circle cx="12" cy="12" r="10"></circle>

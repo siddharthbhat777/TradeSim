@@ -34,6 +34,24 @@ public class UserService {
     private final OtpService otpService;
 
     @Transactional(readOnly = true)
+    public List<UserListResponse> fetchAllUsers() {
+        return authRepository.findAll().stream()
+                .filter(user -> user.getRole() != Role.ADMIN)
+                .map(user -> new UserListResponse(
+                        user.getId(),
+                        user.getFullName(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getRole(),
+                        user.getAccountStatus(),
+                        user.getCountryCode(),
+                        user.getLastLogin(),
+                        user.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public UserProfileResponse fetchUserProfile(UUID userId) {
         User user = authRepository.findById(userId).orElseThrow(() -> UserException.notFound("User not found"));
         return toProfileResponse(user);

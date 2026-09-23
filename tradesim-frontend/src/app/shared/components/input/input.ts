@@ -15,7 +15,7 @@ export type InputErrorMessages = Record<
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomInput {
-  private readonly inputDirective = contentChild(InputDirective);
+  readonly inputDirective = contentChild(InputDirective);
 
   label = input('');
   helperText = input('');
@@ -32,40 +32,33 @@ export class CustomInput {
       return this.reserveMessageSpace() as boolean;
     }
 
-    const control = this.inputDirective()?.control;
+    const directive = this.inputDirective();
+    const control = directive?.control;
 
     return !!(
       this.errorText() ||
       this.helperText() ||
       Object.keys(this.errorMessages()).length ||
-      this.inputDirective()?.required ||
+      directive?.required ||
       control?.validator ||
       control?.asyncValidator
     );
   });
 
-  inputId(): string | null {
-    return this.inputDirective()?.inputId ?? null;
-  }
+  shouldShowError = computed(() => {
+    return this.showErrors() && !!this.inputDirective()?.isInvalidState();
+  });
 
-  isRequired(): boolean {
-    return this.required() || !!this.inputDirective()?.required;
-  }
-
-  shouldShowError(): boolean {
-    return this.showErrors() && !!this.inputDirective()?.isInvalid();
-  }
-
-  getErrorMessage(): string {
+  errorMessage = computed(() => {
     if (this.errorText()) {
       return this.errorText();
     }
 
-    const errors = this.inputDirective()?.control?.errors;
+    const directive = this.inputDirective();
+    if (!directive) return 'Invalid value';
 
-    if (!errors) {
-      return 'Invalid value';
-    }
+    const errors = directive.controlErrors();
+    if (!errors) return 'Invalid value';
 
     const firstErrorKey = Object.keys(errors)[0];
     const customMessage = this.errorMessages()[firstErrorKey];
@@ -75,6 +68,14 @@ export class CustomInput {
     }
 
     return customMessage ?? this.getDefaultErrorMessage(firstErrorKey, errors[firstErrorKey]);
+  });
+
+  inputId(): string | null {
+    return this.inputDirective()?.inputId ?? null;
+  }
+
+  isRequired(): boolean {
+    return this.required() || !!this.inputDirective()?.required;
   }
 
   private getDefaultErrorMessage(errorKey: string, error: unknown): string {

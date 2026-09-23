@@ -25,6 +25,11 @@ public class StockController {
         return ResponseEntity.ok(stockService.fetchStocks());
     }
 
+    @GetMapping("{stockId}")
+    public ResponseEntity<StockResponse> getStock(@PathVariable UUID stockId) {
+        return ResponseEntity.ok(stockService.getStock(stockId));
+    }
+
     @PostMapping("add")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StockResponse> addStock(@Valid @RequestBody CreateStockRequest request) {

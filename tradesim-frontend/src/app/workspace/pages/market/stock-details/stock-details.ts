@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Stock } from '../../../../models/stock';
 import { OrderService } from '../../../../services/order/order-service';
 import { WalletService } from '../../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../../services/trading-account/trading-account-service';
 import { ForexService } from '../../../../services/forex/forex-service';
+import { StockService } from '../../../../services/stock/stock-service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { Card } from '../../../../shared/components/card/card';
 import { CandlestickChart, CandlestickData } from '../../../../shared/components/charts/candlestick-chart/candlestick-chart';
@@ -36,14 +38,17 @@ import { FundManagerModal } from './fund-manager-modal/fund-manager-modal';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StockDetails implements OnInit {
-  readonly stock = input.required<Stock>();
-  readonly back = output<void>();
-
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly stockService = inject(StockService);
   private readonly orderService = inject(OrderService);
   readonly walletService = inject(WalletService);
   private readonly tradingAccountService = inject(TradingAccountService);
   private readonly forexService = inject(ForexService);
   private readonly toastService = inject(ToastService);
+
+  readonly stock = signal<Stock | null>(null);
+  readonly isLoading = signal<boolean>(true);
 
   readonly supportedCurrencies = signal<string[]>([]);
   readonly chartData = signal<CandlestickData[]>([]);
@@ -73,11 +78,19 @@ export class StockDetails implements OnInit {
 
   constructor() {
     effect(() => {
-      this.generateHistoricalData(this.stock().currentPrice);
+      const currentStock = this.stock();
+      if (currentStock) {
+        this.generateHistoricalData(currentStock.currentPrice);
+      }
     });
   }
 
   ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadStock(id);
+    }
+
     if (!this.walletService.wallet()) {
       this.walletService.loadWallet();
     }
@@ -90,11 +103,37 @@ export class StockDetails implements OnInit {
     });
   }
 
+  loadStock(id: string): void {
+    this.isLoading.set(true);
+
+    const navState = history.state;
+    if (navState && navState.stock && navState.stock.id === id) {
+      this.stock.set(navState.stock);
+      this.isLoading.set(false);
+      return;
+    }
+
+    this.stockService.getStock(id).subscribe({
+      next: (data) => {
+        this.stock.set(data);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.toastService.danger('Failed to load stock details.');
+        this.onBack();
+      }
+    });
+  }
+
   onBack(): void {
-    this.back.emit();
+    this.router.navigate(['../'], { relativeTo: this.route });
   }
 
   onReviewOrder(payload: OrderTicketPayload): void {
+    const currentStock = this.stock();
+    if (!currentStock) return;
+
     if (payload.orderType === 'LIMIT' && (!payload.limitPrice || payload.limitPrice <= 0)) {
       this.toastService.danger('Please enter a valid limit price.');
       return;
@@ -111,7 +150,7 @@ export class StockDetails implements OnInit {
     this.orderEstimate.set(null);
 
     this.orderService.estimateOrder({
-      stockId: this.stock().id,
+      stockId: currentStock.id,
       quantity: payload.orderQuantity,
       side: payload.orderSide,
       orderType: payload.orderType,
@@ -132,12 +171,13 @@ export class StockDetails implements OnInit {
 
   onExecuteOrder(): void {
     const payload = this.activeOrderPayload();
-    if (!payload) return;
+    const currentStock = this.stock();
+    if (!payload || !currentStock) return;
 
     this.isSubmittingOrder.set(true);
 
     this.orderService.createOrder({
-      stockId: this.stock().id,
+      stockId: currentStock.id,
       quantity: payload.orderQuantity,
       side: payload.orderSide,
       orderType: payload.orderType,
@@ -172,7 +212,8 @@ export class StockDetails implements OnInit {
   }
 
   private refreshEstimateAfterFunding(): void {
-    if (!this.orderEstimate() || !this.activeOrderPayload()) {
+    const currentStock = this.stock();
+    if (!this.orderEstimate() || !this.activeOrderPayload() || !currentStock) {
       return;
     }
 
@@ -180,7 +221,7 @@ export class StockDetails implements OnInit {
     this.isEstimatingOrder.set(true);
 
     this.orderService.estimateOrder({
-      stockId: this.stock().id,
+      stockId: currentStock.id,
       quantity: p.orderQuantity,
       side: p.orderSide,
       orderType: p.orderType,

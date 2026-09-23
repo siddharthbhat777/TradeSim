@@ -1,5 +1,5 @@
-import { booleanAttribute, Directive, ElementRef, inject, input } from '@angular/core';
-import { NgControl } from '@angular/forms';
+import { booleanAttribute, Directive, DoCheck, ElementRef, inject, input, signal } from '@angular/core';
+import { NgControl, ValidationErrors } from '@angular/forms';
 
 export type InputSize = 'small' | 'medium' | 'large';
 export type InputValidationMode = 'touched' | 'dirty' | 'touchedOrDirty' | 'always';
@@ -15,17 +15,20 @@ let nextInputId = 0;
     '[class.app-input--medium]': "size() === 'medium'",
     '[class.app-input--large]': "size() === 'large'",
     '[class.app-input--full-width]': 'fullWidth()',
-    '[class.app-input--invalid]': 'isInvalid()',
+    '[class.app-input--invalid]': 'isInvalidState()',
     '[class.app-input--textarea]': 'isTextarea',
-    '[attr.aria-invalid]': "isInvalid() ? 'true' : null"
+    '[attr.aria-invalid]': "isInvalidState() ? 'true' : null"
   }
 })
-export class InputDirective {
+export class InputDirective implements DoCheck {
   private readonly elementRef = inject(ElementRef<HTMLElement>);
   private readonly ngControl = inject(NgControl, { optional: true, self: true });
   private readonly generatedId = `app-input-${nextInputId++}`;
 
   protected readonly isTextarea = this.elementRef.nativeElement.tagName.toLowerCase() === 'textarea';
+
+  readonly isInvalidState = signal(false);
+  readonly controlErrors = signal<ValidationErrors | null>(null);
 
   size = input<InputSize>('medium', { alias: 'appInputSize' });
   validationMode = input<InputValidationMode>('touched', { alias: 'appInputValidationMode' });
@@ -45,7 +48,12 @@ export class InputDirective {
     return this.ngControl?.control ?? null;
   }
 
-  isInvalid(): boolean {
+  ngDoCheck(): void {
+    this.isInvalidState.set(this.calculateInvalid());
+    this.controlErrors.set(this.control?.errors ?? null);
+  }
+
+  private calculateInvalid(): boolean {
     if (this.invalid()) {
       return true;
     }

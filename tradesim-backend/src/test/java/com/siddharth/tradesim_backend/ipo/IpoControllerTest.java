@@ -76,7 +76,9 @@ class IpoControllerTest {
         IpoOfferResponse response = new IpoOfferResponse(
                 ipoOfferId,
                 companyId,
+                "Apple Inc",
                 stockId,
+                "AAPL",
                 primaryContactUserId,
                 BigDecimal.valueOf(125.50),
                 100,
@@ -90,6 +92,7 @@ class IpoControllerTest {
                 null,
                 null,
                 null,
+                "NYSE",
                 "USD",
                 Instant.now(),
                 Instant.now()
@@ -122,7 +125,9 @@ class IpoControllerTest {
         IpoOfferResponse response = new IpoOfferResponse(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
+                "Apple Inc",
                 UUID.randomUUID(),
+                "AAPL",
                 UUID.randomUUID(),
                 BigDecimal.valueOf(125.50),
                 100,
@@ -136,6 +141,7 @@ class IpoControllerTest {
                 null,
                 null,
                 null,
+                "NYSE",
                 "USD",
                 Instant.now(),
                 Instant.now()
@@ -167,7 +173,9 @@ class IpoControllerTest {
         IpoOfferResponse response = new IpoOfferResponse(
                 ipoOfferId,
                 UUID.randomUUID(),
+                "Apple Inc",
                 UUID.randomUUID(),
+                "AAPL",
                 UUID.randomUUID(),
                 BigDecimal.valueOf(125.50),
                 100,
@@ -181,6 +189,7 @@ class IpoControllerTest {
                 null,
                 null,
                 null,
+                "NYSE",
                 "USD",
                 Instant.now(),
                 Instant.now()
@@ -252,7 +261,9 @@ class IpoControllerTest {
         IpoOfferResponse response = new IpoOfferResponse(
                 ipoOfferId,
                 UUID.randomUUID(),
+                "Apple Inc",
                 UUID.randomUUID(),
+                "AAPL",
                 UUID.randomUUID(),
                 BigDecimal.valueOf(125.50),
                 100,
@@ -266,6 +277,7 @@ class IpoControllerTest {
                 adminId,
                 Instant.now(),
                 null,
+                "NYSE",
                 "USD",
                 Instant.now(),
                 Instant.now()
@@ -329,7 +341,9 @@ class IpoControllerTest {
         IpoOfferResponse response = new IpoOfferResponse(
                 ipoOfferId,
                 UUID.randomUUID(),
+                "Apple Inc",
                 UUID.randomUUID(),
+                "AAPL",
                 UUID.randomUUID(),
                 BigDecimal.valueOf(125.50),
                 100,
@@ -343,6 +357,7 @@ class IpoControllerTest {
                 null,
                 null,
                 "IPO disclosures are incomplete",
+                "NYSE",
                 "USD",
                 Instant.now(),
                 Instant.now()

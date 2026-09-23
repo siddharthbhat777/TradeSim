@@ -11,9 +11,11 @@ import java.util.UUID;
 public record ListingRequestResponse(
         UUID id,
         UUID companyId,
+        String companyName,
         UUID submittedByUserId,
         String symbol,
         UUID exchangeId,
+        String exchangeName,
         BigDecimal referencePrice,
         Sector sector,
         BigDecimal priceBandPercent,
@@ -24,6 +26,7 @@ public record ListingRequestResponse(
         Instant reviewedAt,
         UUID approvedStockId,
         String rejectionReason,
+        String currency,
         Instant createdAt,
         Instant updatedAt
 ) {

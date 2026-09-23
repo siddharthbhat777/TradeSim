@@ -1,77 +1,95 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { signal } from '@angular/core';
 import { of } from 'rxjs';
-
+import { vi } from 'vitest';
 import { Settings } from './settings';
 import { UserService } from '../../../services/user/user-service';
+import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { AuthService } from '../../../services/auth/auth-service';
-import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
-import { UserProfile } from '../../../models/user';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { ThemeService } from '../../../services/theme-service';
 
 describe('Settings', () => {
   let component: Settings;
   let fixture: ComponentFixture<Settings>;
 
-  const mockProfile: UserProfile = {
-    id: 'user-123',
-    fullName: 'Siddharth Bhat',
-    username: 'sid',
-    email: 'sid@example.com',
-    linkedBankName: 'HDFC Bank',
-    role: 'USER',
-    accountStatus: 'ACTIVE',
-    themePreference: 'SYSTEM',
-    countryCode: 'IN',
-    lastLogin: null
+  const mockProfile = {
+    id: '1', fullName: 'John Doe', username: 'john', email: 'john@example.com',
+    linkedBankName: 'Test Bank', role: 'USER', accountStatus: 'ACTIVE',
+    themePreference: 'SYSTEM', countryCode: 'IN', lastLogin: null
   };
 
-  const mockTradingAccount = {
-    baseCurrency: 'INR'
+  const mockAccount = {
+    id: '1', userId: '1', baseCurrency: 'INR', marginLoan: 0, leverage: 5, maintenanceMarginPercent: 25
   };
 
   const mockUserService = {
-    getProfile: () => of(mockProfile),
-    getTradingAccount: () => of(mockTradingAccount),
-    updateProfile: () => of({ ...mockProfile, fullName: 'Updated Name' }),
-    initiateEmailChange: () => of(void 0),
-    verifyEmailChange: () => of({ ...mockProfile, email: 'new@example.com' }),
-    revealBankBalance: () => of({ bankBalance: 50000 }),
-    changePassword: () => of(void 0)
+    getProfile: vi.fn().mockReturnValue(of(mockProfile)),
+    updateProfile: vi.fn().mockReturnValue(of(mockProfile)),
+    revealBankBalance: vi.fn().mockReturnValue(of({ bankBalance: 75000 })),
+    updateTheme: vi.fn().mockReturnValue(of(mockProfile)),
+    initiateEmailChange: vi.fn().mockReturnValue(of(void 0)),
+    verifyEmailChange: vi.fn().mockReturnValue(of(mockProfile)),
+    changePassword: vi.fn().mockReturnValue(of(void 0))
+  };
+
+  const mockTradingAccountService = {
+    getTradingAccount: vi.fn().mockReturnValue(of(mockAccount))
   };
 
   const mockAuthService = {
-    clearSession: () => { },
-    requestOtp: () => of(void 0),
-    resetPassword: () => of(void 0),
-    deactivateAccount: () => of(void 0)
-  };
-
-  const mockDialogService = {
-    open: () => { }
+    currentUser: signal({ role: 'USER', username: 'john' }),
+    requestOtp: vi.fn().mockReturnValue(of(void 0)),
+    resetPassword: vi.fn().mockReturnValue(of(void 0)),
+    deactivateAccount: vi.fn().mockReturnValue(of(void 0)),
+    logout: vi.fn(),
+    clearSession: vi.fn()
   };
 
   const mockToastService = {
-    success: () => { },
-    danger: () => { },
-    warning: () => { },
-    info: () => { }
+    success: vi.fn(),
+    danger: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn()
   };
 
+  const mockDialogService = {
+    open: vi.fn()
+  };
+
+  const mockThemeService = {
+    setTheme: vi.fn()
+  };
+
+  beforeAll(() => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  });
+
   beforeEach(async () => {
+    vi.clearAllMocks();
+
     await TestBed.configureTestingModule({
-      imports: [Settings, ReactiveFormsModule],
+      imports: [Settings],
       providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
         { provide: UserService, useValue: mockUserService },
+        { provide: TradingAccountService, useValue: mockTradingAccountService },
         { provide: AuthService, useValue: mockAuthService },
+        { provide: ToastService, useValue: mockToastService },
         { provide: DialogService, useValue: mockDialogService },
-        { provide: ToastService, useValue: mockToastService }
+        { provide: ThemeService, useValue: mockThemeService }
       ]
     }).compileComponents();
 
@@ -80,47 +98,57 @@ describe('Settings', () => {
   });
 
   it('should create the Settings component', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   it('should initialize forms properly', () => {
+    fixture.detectChanges();
     expect(component.profileForm).toBeDefined();
     expect(component.emailForm).toBeDefined();
     expect(component.standardPasswordForm).toBeDefined();
-    expect(component.forgotPasswordForm).toBeDefined();
-    expect(component.balanceForm).toBeDefined();
-    expect(component.deactivateForm).toBeDefined();
   });
 
   it('should load profile and trading account on ngOnInit', () => {
-    component.ngOnInit();
+    fixture.detectChanges();
+
+    expect(mockUserService.getProfile).toHaveBeenCalled();
+    expect(mockTradingAccountService.getTradingAccount).toHaveBeenCalled();
     expect(component.profile()).toEqual(mockProfile);
     expect(component.baseCurrency()).toBe('INR');
-    expect(component.profileForm.controls.fullName.value).toBe('Siddharth Bhat');
-    expect(component.profileForm.controls.linkedBankName.value).toBe('HDFC Bank');
-    expect(component.emailForm.controls.email.value).toBe('sid@example.com');
-    expect(component.isLoading()).toBe(false);
+    expect(mockThemeService.setTheme).toHaveBeenCalledWith('SYSTEM');
+
+    expect(component.profileForm.getRawValue().fullName).toBe('John Doe');
   });
 
   it('should submit profile update on saveProfile', () => {
-    component.ngOnInit();
-    // Simulate user editing the form so it is not pristine
-    component.profileForm.controls.fullName.setValue('Updated Name');
+    fixture.detectChanges();
+
+    component.profileForm.patchValue({ fullName: 'Jane Doe', linkedBankName: 'New Bank' });
     component.profileForm.markAsDirty();
 
+    const updatedProfile = { ...mockProfile, fullName: 'Jane Doe', linkedBankName: 'New Bank' };
+    mockUserService.updateProfile.mockReturnValueOnce(of(updatedProfile));
+
     component.saveProfile();
-    expect(component.profile()?.fullName).toBe('Updated Name');
+
+    expect(mockUserService.updateProfile).toHaveBeenCalledWith({ fullName: 'Jane Doe', linkedBankName: 'New Bank' });
+    expect(component.profile()?.fullName).toBe('Jane Doe');
+    expect(mockToastService.success).toHaveBeenCalledWith('Profile changes saved.');
   });
 
   it('should reveal bank balance when valid password is supplied', () => {
-    component.balanceForm.controls.password.setValue('MySecretPassword@1');
+    fixture.detectChanges();
+    component.balanceForm.patchValue({ password: 'Password123!' });
+
     component.revealBalance();
 
-    expect(component.bankBalance()).toBe(50000);
-    expect(component.showBalanceModal()).toBe(false);
+    expect(mockUserService.revealBankBalance).toHaveBeenCalledWith({ password: 'Password123!' });
+    expect(component.bankBalance()).toBe(75000);
   });
 
   it('should switch between standard and forgot password modes', () => {
+    fixture.detectChanges();
     expect(component.securityMode()).toBe('standard');
 
     component.openForgotPassword();

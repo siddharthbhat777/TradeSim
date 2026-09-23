@@ -17,10 +17,31 @@
     <button #segmentButton type="button" role="radio" class="segmented__segment" aria-checked="false"
         [attr.aria-checked]="index === selectedIndex() ? 'true' : 'false'" [tabindex]="index === focusIndex() ? 0 : -1"
         [disabled]="disabledState() || option.disabled" (click)="selectIndex(index)">
-        <span class="segmented__segment-text">{{ option.label }}</span>
+        <span class="segmented__segment-content">
+            <span class="segmented__segment-text">{{ option.label }}</span>
+            @if (option.badgeCount && option.badgeCount > 0) {
+            <span class="segmented__badge">{{ option.badgeCount }}</span>
+            }
+        </span>
     </button>
     }
 </div>
+
+@if (enableDropdownOnMobile()) {
+<div class="segmented__mobile-dropdown">
+    <app-dropdown [options]="dropdownOptions()" [ngModel]="currentValue()" (ngModelChange)="onDropdownChange($event)"
+        [size]="size()" [fullWidth]="true" [disabled]="disabledState()" [showErrors]="false" [ariaLabel]="ariaLabel()">
+        <ng-template #optionTemplate let-option>
+            <span class="dropdown-segment-option">
+                <span class="dropdown-segment-text">{{ option.originalLabel }}</span>
+                @if (option.badgeCount && option.badgeCount > 0) {
+                <span class="segmented__badge">{{ option.badgeCount }}</span>
+                }
+            </span>
+        </ng-template>
+    </app-dropdown>
+</div>
+}
 
 @if (shouldReserveMessageSpace()) {
 <span class="segmented__error" [id]="errorId" [class.segmented__error--visible]="showError()" role="alert">

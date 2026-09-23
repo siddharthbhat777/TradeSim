@@ -1,0 +1,171 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__title {
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    opacity: 0.8;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    &--primary {
+      color: var(--primary);
+    }
+
+    &--success {
+      color: var(--success);
+    }
+
+    &--warning {
+      color: var(--warning);
+    }
+
+    &--accent {
+      color: var(--accent);
+    }
+  }
+
+  &__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+}
+
+.market-pulse-card {
+  ::ng-deep .card {
+    padding: 1.5rem 0 0 0;
+    overflow: hidden;
+  }
+}
+
+.market-pulse-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1.5rem 1.5rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.market-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    width: auto;
+    min-width: 320px;
+  }
+
+  app-dropdown {
+    flex: 1;
+  }
+}
+
+.market-chart-wrapper {
+  width: 100%;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.actions-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.actions-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pending-counter {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.entity-name {
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.date-text {
+  color: var(--text-muted);
+}
+
+.action-cell {
+  display: flex;
+  justify-content: flex-end;
+  color: var(--text-muted);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    transition:
+      transform 0.2s ease,
+      color 0.2s ease;
+  }
+}
+
+.m-0 {
+  margin: 0;
+}
+
+::ng-deep .app-table__row:hover .action-cell svg {
+  transform: translateX(4px);
+  color: var(--primary);
+}

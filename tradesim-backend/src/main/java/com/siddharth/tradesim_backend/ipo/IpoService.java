@@ -99,7 +99,10 @@ public class IpoService {
 
     @Transactional(readOnly = true)
     public List<IpoOfferResponse> fetchPendingIpoOffers() {
-        return ipoOfferRepository.findByStatusOrderByCreatedAtAsc(IpoOfferStatus.PENDING_APPROVAL).stream().map(this::toOfferResponse).toList();
+        return ipoOfferRepository.findByStatusOrderByCreatedAtDesc(IpoOfferStatus.PENDING_APPROVAL)
+                .stream()
+                .map(this::toOfferResponse)
+                .toList();
     }
 
     @Transactional
@@ -187,9 +190,15 @@ public class IpoService {
         BigDecimal totalLock = subscriptionAmountInUserCurrency.add(fxFee);
 
         if ("IN".equalsIgnoreCase(user.getCountryCode())) {
+            if (user.getBankBalance().compareTo(totalLock) < 0) {
+                throw IpoException.conflict("Insufficient funds in bank balance for UPI mandate");
+            }
             user.setBankBalance(user.getBankBalance().subtract(totalLock));
             authRepository.save(user);
         } else {
+            if (bucket.getAvailableBalance().compareTo(totalLock) < 0) {
+                throw IpoException.conflict("Insufficient available balance. Required: " + totalLock + " " + userCurrency);
+            }
             bucket.setLockedBalance(bucket.getLockedBalance().add(totalLock));
         }
 
@@ -445,13 +454,16 @@ public class IpoService {
     }
 
     private IpoOfferResponse toOfferResponse(IpoOffer ipoOffer) {
+        Company company = companyRepository.findById(ipoOffer.getCompanyId()).orElseThrow(() -> CompanyException.notFound("Company not found"));
         Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
         Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
         return new IpoOfferResponse(
                 ipoOffer.getId(),
                 ipoOffer.getCompanyId(),
+                company.getName(),
                 ipoOffer.getStockId(),
+                stock.getSymbol(),
                 ipoOffer.getSubmittedByUserId(),
                 ipoOffer.getIssuePrice(),
                 ipoOffer.getSharesPerAllottee(),
@@ -465,6 +477,7 @@ public class IpoService {
                 ipoOffer.getFinalizedByUserId(),
                 ipoOffer.getFinalizedAt(),
                 ipoOffer.getRejectionReason(),
+                exchange.getName(),
                 exchange.getCurrency(),
                 ipoOffer.getCreatedAt(),
                 ipoOffer.getUpdatedAt()

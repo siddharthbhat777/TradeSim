@@ -1,0 +1,138 @@
+<div class="companies-container">
+    <div class="companies-header">
+        <h1 class="heading-xl m-0">Companies</h1>
+        <p class="text-body m-0">Manage organizations and their representatives.</p>
+    </div>
+
+    <div class="companies-toolbar">
+        <div class="toolbar-left">
+            <app-input class="search-input" [reserveMessageSpace]="false">
+                <svg prefix viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input appInput type="text" placeholder="Search by name or code..." [ngModel]="searchQuery()"
+                    (ngModelChange)="searchQuery.set($event)" />
+            </app-input>
+
+            <app-segmented-control [options]="statusOptions" [ngModel]="statusFilter()"
+                (ngModelChange)="statusFilter.set($event)">
+            </app-segmented-control>
+
+            <app-dropdown class="country-filter" [options]="countryOptions()" [ngModel]="filterCountry()"
+                (ngModelChange)="filterCountry.set($event)" [showErrors]="false" [reserveMessageSpace]="false"
+                [searchable]="true" searchPlaceholder="Search country..." placeholder="All Countries">
+            </app-dropdown>
+        </div>
+
+        <div class="toolbar-right">
+            <app-button variant="primary" (buttonClick)="openCreationDrawer()">
+                Add Company
+            </app-button>
+        </div>
+    </div>
+
+    <app-card [isLoading]="isLoading()">
+        <app-table variant="flush" [columns]="columns()" [data]="filteredCompanies()" [paginated]="true"
+            [interactiveRows]="true" (rowClick)="goToDetails($event)">
+
+            <ng-template tableCell="code" let-val>
+                <span class="font-bold highlight">{{ val }}</span>
+            </ng-template>
+
+            <ng-template tableCell="country" let-val>
+                {{ val | countryName }}
+            </ng-template>
+
+            <ng-template tableCell="status" let-val>
+                @if (val === 'ACTIVE') {
+                <app-badge color="success">Active</app-badge>
+                } @else {
+                <app-badge color="secondary">Inactive</app-badge>
+                }
+            </ng-template>
+
+        </app-table>
+    </app-card>
+</div>
+
+<app-drawer [(isOpen)]="showDrawer" position="right" [closeOnBackdrop]="false">
+    <div class="drawer-header">
+        <h2 class="heading-lg m-0">{{ isOnboarding() ? 'Onboard Company' : 'Create Company' }}</h2>
+        <p class="text-muted m-0">Enter the details for the new organization.</p>
+    </div>
+
+    <div class="drawer-body">
+        <div class="toggle-section">
+            <app-toggle label="Include Primary Contact (Full Onboarding)" [ngModel]="isOnboarding()"
+                (ngModelChange)="isOnboarding.set($event)">
+            </app-toggle>
+        </div>
+
+        <form [formGroup]="companyForm" class="form-stack">
+            <h3 class="section-title">Company Details</h3>
+
+            <app-input label="Company Name" [required]="true" errorText="Company name is required.">
+                <input appInput type="text" formControlName="name" placeholder="e.g. Reliance Industries">
+            </app-input>
+
+            <app-input label="Company Code" [required]="true" helperText="Uppercase letters and numbers only."
+                errorText="Valid company code is required.">
+                <input appInput type="text" formControlName="code" placeholder="e.g. RELIANCE">
+            </app-input>
+
+            <app-input label="Country Code" [required]="true" helperText="2-letter ISO code (e.g., IN, US)"
+                errorText="Valid 2-letter ISO country code is required.">
+                <input appInput type="text" formControlName="country" placeholder="e.g. IN" maxlength="2">
+            </app-input>
+        </form>
+
+        @if (isOnboarding()) {
+        <form [formGroup]="repForm" class="form-stack">
+            <h3 class="section-title">Primary Contact</h3>
+
+            <app-input label="Full Name" [required]="true" errorText="Full name is required.">
+                <input appInput type="text" formControlName="fullName">
+            </app-input>
+
+            <app-input label="Username" [required]="true" errorText="Username is required.">
+                <input appInput type="text" formControlName="username">
+            </app-input>
+
+            <div class="otp-group">
+                <app-input class="flex-1" label="Email Address" [required]="true"
+                    errorText="Valid email address is required.">
+                    <input appInput type="email" formControlName="email">
+                </app-input>
+                <app-button type="button" variant="secondary" [isLoading]="isSendingOtp()"
+                    (buttonClick)="sendOtp()">Send OTP</app-button>
+            </div>
+
+            <app-input label="OTP" [required]="true" errorText="OTP is required.">
+                <input appInput type="text" formControlName="otp">
+            </app-input>
+
+            <app-input label="Password" [required]="true" errorText="Password is required (min 8 characters).">
+                <input appInput type="password" formControlName="password">
+            </app-input>
+
+            <app-input label="Linked Bank Name" [required]="true" errorText="Linked bank name is required.">
+                <input appInput type="text" formControlName="linkedBankName">
+            </app-input>
+
+            <app-input label="Base Currency" [required]="true" helperText="3-letter currency code (e.g., INR, USD)"
+                errorText="Valid 3-letter currency code is required.">
+                <input appInput type="text" formControlName="baseCurrency" placeholder="e.g. INR" maxlength="3">
+            </app-input>
+        </form>
+        }
+    </div>
+
+    <div class="drawer-footer">
+        <app-button variant="secondary" [disabled]="isSubmitting()" (buttonClick)="closeDrawer()">Cancel</app-button>
+        <app-button variant="primary" [isLoading]="isSubmitting()" (buttonClick)="submitForm()">
+            {{ isOnboarding() ? 'Onboard Company' : 'Create Company' }}
+        </app-button>
+    </div>
+</app-drawer>

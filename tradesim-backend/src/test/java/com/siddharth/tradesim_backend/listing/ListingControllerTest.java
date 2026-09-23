@@ -78,9 +78,11 @@ class ListingControllerTest {
         ListingRequestResponse response = new ListingRequestResponse(
                 listingRequestId,
                 companyId,
+                "Infosys",
                 representativeUserId,
                 "INFY",
                 exchangeId,
+                "NSE",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
@@ -91,6 +93,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -124,9 +127,11 @@ class ListingControllerTest {
         ListingRequestResponse response = new ListingRequestResponse(
                 UUID.randomUUID(),
                 companyId,
+                "Infosys",
                 UUID.randomUUID(),
                 "INFY",
                 exchangeId,
+                "NSE",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
@@ -137,6 +142,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -167,9 +173,11 @@ class ListingControllerTest {
         ListingRequestResponse response = new ListingRequestResponse(
                 UUID.randomUUID(),
                 companyId,
+                "Infosys",
                 UUID.randomUUID(),
                 "INFY",
                 exchangeId,
+                "NSE",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
@@ -180,6 +188,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -211,9 +220,11 @@ class ListingControllerTest {
         ListingRequestResponse response = new ListingRequestResponse(
                 listingRequestId,
                 UUID.randomUUID(),
+                "Infosys",
                 UUID.randomUUID(),
                 "INFY",
                 exchangeId,
+                "NSE",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
@@ -224,6 +235,7 @@ class ListingControllerTest {
                 null,
                 null,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -256,9 +268,11 @@ class ListingControllerTest {
         ListingRequestResponse response = new ListingRequestResponse(
                 listingRequestId,
                 UUID.randomUUID(),
+                "Infosys",
                 UUID.randomUUID(),
                 "INFY",
                 exchangeId,
+                "NSE",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
@@ -269,6 +283,7 @@ class ListingControllerTest {
                 null,
                 null,
                 "Missing Cap Table",
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -302,9 +317,11 @@ class ListingControllerTest {
         ListingRequestResponse response = new ListingRequestResponse(
                 listingRequestId,
                 UUID.randomUUID(),
+                "Infosys",
                 UUID.randomUUID(),
                 "INFY",
                 UUID.randomUUID(),
+                "NSE",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
@@ -315,6 +332,7 @@ class ListingControllerTest {
                 Instant.now(),
                 stockId,
                 null,
+                "USD",
                 Instant.now(),
                 Instant.now()
         );
@@ -347,9 +365,11 @@ class ListingControllerTest {
         ListingRequestResponse response = new ListingRequestResponse(
                 listingRequestId,
                 UUID.randomUUID(),
+                "Infosys",
                 UUID.randomUUID(),
                 "INFY",
                 UUID.randomUUID(),
+                "NSE",
                 BigDecimal.valueOf(1500.25),
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
@@ -360,6 +380,7 @@ class ListingControllerTest {
                 Instant.now(),
                 null,
                 "Incomplete issuer details",
+                "USD",
                 Instant.now(),
                 Instant.now()
         );

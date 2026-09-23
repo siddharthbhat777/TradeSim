@@ -89,4 +89,13 @@ describe('Market', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should navigate to stock details on row click', () => {
+    const mockStock = { id: 's-1', symbol: 'AAPL', companyName: 'Apple Inc', currentPrice: 150, sector: 'TECHNOLOGY', status: 'ACTIVE', dayVolume: 100, marketCap: 10000000000, marketCapCategory: 'LARGE', currency: 'USD', exchangeId: 'ex-1' } as any;
+    component.onSelectStock(mockStock);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['s-1'], {
+      relativeTo: routeSpy,
+      state: { stock: mockStock }
+    });
+  });
 });

@@ -1,11 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-
 import { UserService } from './user-service';
 import { environment } from '../../../environment/environment';
 import { UserProfile, BankBalanceResponse } from '../../models/user';
-import { TradingAccountResponse } from '../../models/trading-account';
 
 describe('UserService', () => {
   let service: UserService;
@@ -44,6 +42,13 @@ describe('UserService', () => {
     expect(service).toBeTruthy();
   });
 
+  it('should fetch all users', () => {
+    service.getAllUsers().subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users`);
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
   it('should fetch user profile', () => {
     service.getProfile().subscribe((res) => {
       expect(res).toEqual(mockProfile);
@@ -53,26 +58,6 @@ describe('UserService', () => {
     const req = httpMock.expectOne(`${environment.apiBaseURL}/users/profile`);
     expect(req.request.method).toBe('GET');
     req.flush(mockProfile);
-  });
-
-  it('should fetch trading account', () => {
-    const mockAccount: TradingAccountResponse = {
-      id: 'acc-1',
-      userId: 'user-123',
-      baseCurrency: 'INR',
-      marginLoan: 0,
-      leverage: 5,
-      maintenanceMarginPercent: 25
-    };
-
-    service.getTradingAccount().subscribe((res) => {
-      expect(res.baseCurrency).toBe('INR');
-      expect(res.leverage).toBe(5);
-    });
-
-    const req = httpMock.expectOne(`${environment.apiBaseURL}/trading-account`);
-    expect(req.request.method).toBe('GET');
-    req.flush(mockAccount);
   });
 
   it('should update profile', () => {
@@ -89,7 +74,7 @@ describe('UserService', () => {
   });
 
   it('should initiate email change', () => {
-    service.initiateEmailChange('new@example.com').subscribe();
+    service.initiateEmailChange({ newEmail: 'new@example.com' }).subscribe();
 
     const req = httpMock.expectOne(`${environment.apiBaseURL}/users/email/change/initiate`);
     expect(req.request.method).toBe('POST');
@@ -111,7 +96,7 @@ describe('UserService', () => {
   it('should reveal bank balance on password verification', () => {
     const mockBalance: BankBalanceResponse = { bankBalance: 75000 };
 
-    service.revealBankBalance('secretPass@123').subscribe((res) => {
+    service.revealBankBalance({ password: 'secretPass@123' }).subscribe((res) => {
       expect(res.bankBalance).toBe(75000);
     });
 
@@ -131,5 +116,32 @@ describe('UserService', () => {
       newPassword: 'NewPass@123'
     });
     req.flush(null);
+  });
+
+  it('should update theme', () => {
+    service.updateTheme('DARK').subscribe((res) => {
+      expect(res.themePreference).toBe('DARK');
+    });
+
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users/profile/theme`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ theme: 'DARK' });
+    req.flush({ ...mockProfile, themePreference: 'DARK' });
+  });
+
+  it('should change user status', () => {
+    service.changeStatus('user-123', { status: 'BANNED' }).subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users/change/user-123/status`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ status: 'BANNED' });
+    req.flush({});
+  });
+
+  it('should change user role', () => {
+    service.changeRole('user-123', { role: 'ADMIN' }).subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/users/change/user-123/role`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ role: 'ADMIN' });
+    req.flush({});
   });
 });

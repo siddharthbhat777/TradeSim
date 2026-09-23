@@ -47,19 +47,6 @@
   }
 }
 
-.field-with-error {
-  min-width: 0;
-}
-
-.manual-error {
-  min-height: 1.1rem;
-  margin: 0.35rem 0 0;
-  color: var(--danger);
-  font-size: 0.8rem;
-  font-weight: 500;
-  line-height: 1.35;
-}
-
 .profile-actions,
 .security-actions,
 .inline-actions {
@@ -99,7 +86,7 @@
 .email-row {
   display: grid;
   grid-template-columns: 1fr;
-  align-items: end;
+  align-items: flex-start;
   gap: 0.75rem;
 
   app-button {
@@ -112,15 +99,8 @@
 
     app-button {
       width: auto;
+      margin-top: 26px;
     }
-  }
-}
-
-.email-error {
-  width: 100%;
-
-  @container settingsPanel (min-width: 540px) {
-    width: min(100%, 400px);
   }
 }
 

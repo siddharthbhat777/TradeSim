@@ -160,26 +160,32 @@ public class WalletService {
         }
 
         wallet.setMultiCurrencyStatus(MultiCurrencyStatus.PENDING);
+        wallet.setRejectionReason(null);
         walletRepository.save(wallet);
         return toResponse(wallet);
     }
 
     @Transactional(readOnly = true)
     public List<WalletResponse> fetchPendingMultiCurrencyRequests() {
-        return walletRepository.findByMultiCurrencyStatusOrderByCreatedAtAsc(MultiCurrencyStatus.PENDING).stream().map(this::toResponse).toList();
+        return walletRepository.findByMultiCurrencyStatusOrderByCreatedAtDesc(MultiCurrencyStatus.PENDING)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
     public WalletResponse approveMultiCurrencyAccess(UUID walletId) {
         Wallet wallet = walletRepository.findById(walletId).orElseThrow();
         wallet.setMultiCurrencyStatus(MultiCurrencyStatus.APPROVED);
+        wallet.setRejectionReason(null);
         return toResponse(walletRepository.save(wallet));
     }
 
     @Transactional
-    public WalletResponse rejectMultiCurrencyAccess(UUID walletId) {
+    public WalletResponse rejectMultiCurrencyAccess(UUID walletId, String rejectionReason) {
         Wallet wallet = walletRepository.findById(walletId).orElseThrow();
         wallet.setMultiCurrencyStatus(MultiCurrencyStatus.REJECTED);
+        wallet.setRejectionReason(rejectionReason);
         return toResponse(walletRepository.save(wallet));
     }
 
@@ -241,6 +247,13 @@ public class WalletService {
                         bucket.getAvailableBalance()
                 )).toList();
 
-        return new WalletResponse(wallet.getId(), wallet.getUserId(), wallet.getMultiCurrencyStatus(), bucketResponses);
+        return new WalletResponse(
+                wallet.getId(),
+                wallet.getUserId(),
+                wallet.getMultiCurrencyStatus(),
+                wallet.getRejectionReason(),
+                bucketResponses,
+                wallet.getCreatedAt()
+        );
     }
 }

@@ -11,6 +11,18 @@ export interface UserProfile {
     lastLogin: string | null;
 }
 
+export interface UserListResponse {
+    id: string;
+    fullName: string;
+    username: string;
+    email: string;
+    role: string;
+    accountStatus: string;
+    countryCode: string;
+    lastLogin: string | null;
+    createdAt: string;
+}
+
 export interface EditProfileRequest {
     fullName: string;
     linkedBankName: string;
@@ -43,4 +55,36 @@ export interface ResetPasswordRequest {
 
 export interface UpdateThemeRequest {
     theme: string;
+}
+
+export interface InitiateEmailChangeRequest {
+    newEmail: string;
+}
+
+export interface BankBalanceRequest {
+    password: string;
+}
+
+export interface ChangeUserStatusRequest {
+    status: string;
+}
+
+export interface ChangeUserRoleRequest {
+    role: string;
+}
+
+export interface ChangeUserStatusResponse {
+    id: string;
+    username: string;
+    email: string;
+    role: string;
+    accountStatus: string;
+}
+
+export interface ChangeUserRoleResponse {
+    id: string;
+    username: string;
+    email: string;
+    role: string;
+    accountStatus: string;
 }

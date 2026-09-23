@@ -14,4 +14,5 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
     Optional<Wallet> findByUserId(UUID userId);
     boolean existsByUserId(UUID userId);
     List<Wallet> findByMultiCurrencyStatusOrderByCreatedAtAsc(MultiCurrencyStatus status);
+    List<Wallet> findByMultiCurrencyStatusOrderByCreatedAtDesc(MultiCurrencyStatus status);
 }

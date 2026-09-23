@@ -11,6 +11,7 @@ import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.service.CompanyRepresentativeAssignmentService;
 import com.siddharth.tradesim_backend.exchange.ExchangeService;
+import com.siddharth.tradesim_backend.exchange.model.dto.ExchangeResponse;
 import com.siddharth.tradesim_backend.listing.enums.ListingStatus;
 import com.siddharth.tradesim_backend.listing.model.ListingCapTableEntry;
 import com.siddharth.tradesim_backend.listing.model.ListingRequest;
@@ -32,6 +33,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -96,6 +99,18 @@ class ListingServiceTest {
                 .assignmentRole(CompanyRepresentativeAssignmentRole.MANAGER)
                 .build();
 
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(assignmentRepository.findByCompanyIdAndUserId(companyId, managerUserId)).thenReturn(Optional.of(assignment));
         when(stockService.existsBySymbol("INFY")).thenReturn(false);
@@ -105,11 +120,13 @@ class ListingServiceTest {
             listingRequest.setId(UUID.randomUUID());
             return listingRequest;
         });
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.submitListingRequest(companyId, managerUserId, request);
 
         assertThat(response.symbol()).isEqualTo("INFY");
         assertThat(response.status()).isEqualTo(ListingStatus.PENDING_INTERNAL_REVIEW);
+        assertThat(response.currency()).isEqualTo("USD");
         verify(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, managerUserId);
         verify(exchangeService).assertExchangeActive(exchangeId);
     }
@@ -131,11 +148,23 @@ class ListingServiceTest {
                 List.of(new CapTableEntryRequest(targetUserId, 1000))
         );
 
-        Company company = Company.builder().id(companyId).status(CompanyStatus.ACTIVE).build();
+        Company company = Company.builder().id(companyId).name("Slack Tech").status(CompanyStatus.ACTIVE).build();
 
         CompanyRepresentativeAssignment assignment = CompanyRepresentativeAssignment.builder()
                 .assignmentRole(CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT)
                 .build();
+
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
 
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(assignmentRepository.findByCompanyIdAndUserId(companyId, primaryContactId)).thenReturn(Optional.of(assignment));
@@ -147,12 +176,14 @@ class ListingServiceTest {
             listingRequest.setId(UUID.randomUUID());
             return listingRequest;
         });
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.submitListingRequest(companyId, primaryContactId, request);
 
         assertThat(response.status()).isEqualTo(ListingStatus.PENDING_EXCHANGE_APPROVAL);
         assertThat(response.totalShares()).isEqualTo(1000);
         assertThat(response.capTable()).hasSize(1);
+        assertThat(response.currency()).isEqualTo("USD");
     }
 
     @Test
@@ -215,6 +246,77 @@ class ListingServiceTest {
     }
 
     @Test
+    void shouldFetchPendingExchangeListingRequests() {
+        ListingRequest request = ListingRequest.builder()
+                .id(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .submittedByUserId(UUID.randomUUID())
+                .symbol("INFY")
+                .exchangeId(UUID.randomUUID())
+                .referencePrice(BigDecimal.valueOf(1500))
+                .sector(Sector.TECHNOLOGY)
+                .priceBandPercent(BigDecimal.TEN)
+                .status(ListingStatus.PENDING_EXCHANGE_APPROVAL)
+                .capTable(List.of())
+                .build();
+        request.setCreatedAt(Instant.now());
+        request.setUpdatedAt(Instant.now());
+
+        Company company = Company.builder().id(request.getCompanyId()).name("Infosys").status(CompanyStatus.ACTIVE).build();
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                request.getExchangeId(), "Test Exchange", "TST", "US", "UTC", "USD",
+                LocalTime.of(9, 30), LocalTime.of(16, 0), com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
+        when(listingRequestRepository.findByStatusOrderByCreatedAtDesc(ListingStatus.PENDING_EXCHANGE_APPROVAL))
+                .thenReturn(List.of(request));
+        when(companyRepository.findById(request.getCompanyId())).thenReturn(Optional.of(company));
+        when(exchangeService.fetchExchange(request.getExchangeId())).thenReturn(exchangeResponse);
+
+        List<ListingRequestResponse> responses = listingService.fetchPendingExchangeListingRequests();
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.getFirst().symbol()).isEqualTo("INFY");
+        verify(listingRequestRepository).findByStatusOrderByCreatedAtDesc(ListingStatus.PENDING_EXCHANGE_APPROVAL);
+    }
+
+    @Test
+    void shouldFetchPendingInternalListingRequests() {
+        UUID companyId = UUID.randomUUID();
+        ListingRequest request = ListingRequest.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .submittedByUserId(UUID.randomUUID())
+                .symbol("INFY")
+                .exchangeId(UUID.randomUUID())
+                .referencePrice(BigDecimal.valueOf(1500))
+                .sector(Sector.TECHNOLOGY)
+                .priceBandPercent(BigDecimal.TEN)
+                .status(ListingStatus.PENDING_INTERNAL_REVIEW)
+                .capTable(List.of())
+                .build();
+        request.setCreatedAt(Instant.now());
+        request.setUpdatedAt(Instant.now());
+
+        Company company = Company.builder().id(companyId).name("Infosys").status(CompanyStatus.ACTIVE).build();
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                request.getExchangeId(), "Test Exchange", "TST", "US", "UTC", "USD",
+                LocalTime.of(9, 30), LocalTime.of(16, 0), com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
+        when(listingRequestRepository.findByCompanyIdAndStatusOrderByCreatedAtDesc(companyId, ListingStatus.PENDING_INTERNAL_REVIEW))
+                .thenReturn(List.of(request));
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(exchangeService.fetchExchange(request.getExchangeId())).thenReturn(exchangeResponse);
+
+        List<ListingRequestResponse> responses = listingService.fetchPendingInternalListingRequests(companyId);
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.getFirst().symbol()).isEqualTo("INFY");
+        verify(listingRequestRepository).findByCompanyIdAndStatusOrderByCreatedAtDesc(companyId, ListingStatus.PENDING_INTERNAL_REVIEW);
+    }
+
+    @Test
     void shouldApproveListingRequestAndInjectSharesForDirectListing() {
         UUID listingRequestId = UUID.randomUUID();
         UUID companyId = UUID.randomUUID();
@@ -264,6 +366,18 @@ class ListingServiceTest {
                 exchangeId
         );
 
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(stockService.createStockFromListingApproval(
@@ -279,11 +393,13 @@ class ListingServiceTest {
 
         when(positionRepository.findByUserIdAndStockId(founderUserId, stockId)).thenReturn(Optional.empty());
         when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.approveListingRequest(listingRequestId, adminUserId);
 
         assertThat(response.status()).isEqualTo(ListingStatus.APPROVED);
         assertThat(response.approvedStockId()).isEqualTo(stockId);
+        assertThat(response.currency()).isEqualTo("USD");
 
         ArgumentCaptor<Position> positionCaptor = ArgumentCaptor.forClass(Position.class);
         verify(positionRepository).save(positionCaptor.capture());
@@ -316,8 +432,24 @@ class ListingServiceTest {
                 .capTable(new ArrayList<>())
                 .build();
 
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
+                exchangeId,
+                "Test Exchange",
+                "TST",
+                "US",
+                "UTC",
+                "USD",
+                LocalTime.of(9, 30),
+                LocalTime.of(16, 0),
+                com.siddharth.tradesim_backend.exchange.enums.ExchangeStatus.ACTIVE
+        );
+
+        Company company = Company.builder().id(companyId).name("Infosys").status(CompanyStatus.ACTIVE).build();
+
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(listingRequestRepository.findById(listingRequestId)).thenReturn(Optional.of(listingRequest));
         when(listingRequestRepository.save(any(ListingRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(exchangeService.fetchExchange(exchangeId)).thenReturn(exchangeResponse);
 
         ListingRequestResponse response = listingService.rejectListingRequest(listingRequestId, "Incomplete issuer details", adminUserId);
 
@@ -325,6 +457,7 @@ class ListingServiceTest {
         assertThat(response.rejectionReason()).isEqualTo("Incomplete issuer details");
         assertThat(response.reviewedByUserId()).isEqualTo(adminUserId);
         assertThat(response.approvedStockId()).isNull();
+        assertThat(response.currency()).isEqualTo("USD");
     }
 
     @Test

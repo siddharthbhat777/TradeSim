@@ -1,0 +1,119 @@
+@if (isLoading()) {
+<app-card [isLoading]="true" class="approval-card">
+    <div style="height: 400px;"></div>
+</app-card>
+} @else if (data().length === 0) {
+<app-empty-state text="No pending listing requests"
+    subtext="All caught up! There are currently no listing requests awaiting exchange approval.">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+</app-empty-state>
+} @else {
+<app-card class="approval-card">
+    <app-table variant="flush" [columns]="columns()" [data]="data()" [paginated]="true">
+
+        <ng-template tableCell="symbol" let-val let-row="row">
+            <span class="font-semibold" [class.highlight]="isHighlighted(row.id)">{{ val }}</span>
+        </ng-template>
+
+        <ng-template tableCell="referencePrice" let-val let-row="row">
+            {{ val | formatCurrency:row.currency:'currency':2 }}
+        </ng-template>
+
+        <ng-template tableCell="totalShares" let-val>
+            {{ val ? (val | number) : '-' }}
+        </ng-template>
+
+        <ng-template tableCell="status" let-val>
+            <app-badge color="warning">Pending</app-badge>
+        </ng-template>
+
+        <ng-template tableCell="createdAt" let-val>
+            <span class="text-muted">{{ val | timeAgo }}</span>
+        </ng-template>
+
+        <ng-template tableCell="actions" let-row="row">
+            <div class="action-buttons">
+                <app-button variant="success" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="confirmApprove(row.id)">Approve</app-button>
+                <app-button variant="danger" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="openRejectModal(row.id)">Reject</app-button>
+            </div>
+        </ng-template>
+
+        <ng-template tableExpandedRow let-row="row">
+            <div class="expanded-details">
+                <h4 class="expanded-title">Request Overview</h4>
+                <div class="details-grid mb-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Company Name</span>
+                        <span class="detail-value">{{ row.companyName }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Exchange</span>
+                        <span class="detail-value">{{ row.exchangeName }}</span>
+                    </div>
+                </div>
+
+                <h4 class="expanded-title">Cap Table Distribution</h4>
+                @if (row.capTable && row.capTable.length > 0) {
+                <div class="cap-table-grid">
+                    <div class="cap-table-header">User ID</div>
+                    <div class="cap-table-header">User Name</div>
+                    <div class="cap-table-header text-right">Quantity</div>
+                    @for (entry of row.capTable; track entry.userId) {
+                    <div class="cap-table-cell text-muted id-cell-wrapper">
+                        <span class="font-mono">{{ entry.userId | slice:0:8 }}...</span>
+                        <button type="button" class="copy-btn" (click)="copyId(entry.userId)" aria-label="Copy User ID">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="cap-table-cell font-medium">{{ userMap().get(entry.userId) || 'Unknown User' }}</div>
+                    <div class="cap-table-cell text-right font-mono">{{ entry.quantity }}</div>
+                    }
+                </div>
+                } @else {
+                <p class="text-muted m-0">No cap table data provided.</p>
+                }
+            </div>
+        </ng-template>
+
+    </app-table>
+</app-card>
+}
+
+@if (showRejectModal()) {
+<app-modal (closed)="closeRejectModal()" ariaLabel="Reject Request">
+    <div class="reject-modal">
+        <div class="reject-modal__header">
+            <h3 class="heading-md m-0">Provide Rejection Reason</h3>
+            <p class="text-muted mb-0">Please explain why this request is being rejected. This will be visible to the
+                applicant.</p>
+        </div>
+
+        <form [formGroup]="rejectForm" (ngSubmit)="submitRejection()">
+            <div class="reject-modal__body">
+                <app-input label="Reason" [required]="true" errorText="Reason is required (max 500 characters).">
+                    <textarea appInput formControlName="reason" rows="4"
+                        placeholder="Enter reason for rejection..."></textarea>
+                </app-input>
+            </div>
+
+            <div class="reject-modal__footer">
+                <app-button type="button" variant="secondary" [disabled]="isProcessing()"
+                    (buttonClick)="closeRejectModal()">Cancel</app-button>
+                <app-button type="submit" variant="danger" [isLoading]="isProcessing()">Reject Request</app-button>
+            </div>
+        </form>
+    </div>
+</app-modal>
+}
