@@ -71,9 +71,9 @@ public class IpoController {
     }
 
     @GetMapping("{ipoOfferId}/subscriptions")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<IpoSubscriptionResponse>> getSubscriptionsForOffer(@PathVariable UUID ipoOfferId) {
-        return ResponseEntity.ok(ipoService.fetchSubscriptionsForOffer(ipoOfferId));
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_REPRESENTATIVE')")
+    public ResponseEntity<List<IpoSubscriptionResponse>> getSubscriptionsForOffer(@PathVariable UUID ipoOfferId, @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(ipoService.fetchSubscriptionsForOffer(ipoOfferId, principal.getUserId()));
     }
 
     @PutMapping("{ipoOfferId}/finalize")

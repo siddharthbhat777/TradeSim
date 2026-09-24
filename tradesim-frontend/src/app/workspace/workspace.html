@@ -21,6 +21,15 @@
             </div>
         </div>
 
+        @if (isCompanyRepresentative()) {
+        <div class="workspace__context-switcher">
+            <app-segmented-control [options]="contextOptions" [ngModel]="currentContext()"
+                (ngModelChange)="onContextChange($event)" size="small" [fullWidth]="true"
+                [enableDropdownOnMobile]="false">
+            </app-segmented-control>
+        </div>
+        }
+
         <nav class="workspace__nav">
             @for (item of menuItems(); track item.route) {
             <a [routerLink]="item.route" routerLinkActive="workspace__nav-link--active" class="workspace__nav-link"

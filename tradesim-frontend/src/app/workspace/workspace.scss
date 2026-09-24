@@ -151,6 +151,20 @@
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.workspace__context-switcher {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.2s ease;
+  opacity: 1;
+
+  .workspace__sidebar--collapsed & {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    visibility: hidden;
+  }
+}
+
 .workspace__nav {
   flex: 1;
   overflow-y: auto;

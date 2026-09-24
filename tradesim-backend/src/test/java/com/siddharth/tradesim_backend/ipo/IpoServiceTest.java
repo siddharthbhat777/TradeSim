@@ -5,6 +5,7 @@ import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import com.siddharth.tradesim_backend.auth.repository.AuthRepository;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.CompanyException;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
@@ -543,5 +544,78 @@ class IpoServiceTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> ipoService.submitIpoOffer(companyId, stockId, primaryContactUserId, request));
 
         assertThat(exception.getMessage()).isEqualTo("Exchange is not active");
+    }
+
+    @Test
+    void shouldFetchSubscriptionsForOfferWhenAdmin() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+
+        IpoOffer ipoOffer = IpoOffer.builder().id(ipoOfferId).companyId(companyId).stockId(UUID.randomUUID()).build();
+        User admin = User.builder().id(adminId).role(Role.ADMIN).build();
+
+        Stock stock = Stock.builder().id(ipoOffer.getStockId()).exchangeId(UUID.randomUUID()).build();
+        Exchange exchange = Exchange.builder().currency("USD").build();
+
+        IpoSubscription subscription = IpoSubscription.builder().id(UUID.randomUUID()).ipoOfferId(ipoOfferId).build();
+
+        when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
+        when(authRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(subscription));
+        when(stockRepository.findById(ipoOffer.getStockId())).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
+
+        List<IpoSubscriptionResponse> responses = ipoService.fetchSubscriptionsForOffer(ipoOfferId, adminId);
+
+        assertThat(responses).hasSize(1);
+        verify(companyRepresentativeAssignmentService, never()).assertActiveRepresentativeAssignment(any(), any());
+    }
+
+    @Test
+    void shouldFetchSubscriptionsForOfferWhenAssignedCompanyRepresentative() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID crId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+
+        IpoOffer ipoOffer = IpoOffer.builder().id(ipoOfferId).companyId(companyId).stockId(UUID.randomUUID()).build();
+        User cr = User.builder().id(crId).role(Role.COMPANY_REPRESENTATIVE).build();
+
+        Stock stock = Stock.builder().id(ipoOffer.getStockId()).exchangeId(UUID.randomUUID()).build();
+        Exchange exchange = Exchange.builder().currency("USD").build();
+
+        IpoSubscription subscription = IpoSubscription.builder().id(UUID.randomUUID()).ipoOfferId(ipoOfferId).build();
+
+        when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
+        when(authRepository.findById(crId)).thenReturn(Optional.of(cr));
+        when(ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)).thenReturn(List.of(subscription));
+        when(stockRepository.findById(ipoOffer.getStockId())).thenReturn(Optional.of(stock));
+        when(exchangeRepository.findById(stock.getExchangeId())).thenReturn(Optional.of(exchange));
+        doNothing().when(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, crId);
+
+        List<IpoSubscriptionResponse> responses = ipoService.fetchSubscriptionsForOffer(ipoOfferId, crId);
+
+        assertThat(responses).hasSize(1);
+        verify(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, crId);
+    }
+
+    @Test
+    void shouldThrowWhenFetchingSubscriptionsAsUnassignedCompanyRepresentative() {
+        UUID ipoOfferId = UUID.randomUUID();
+        UUID crId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+
+        IpoOffer ipoOffer = IpoOffer.builder().id(ipoOfferId).companyId(companyId).build();
+        User cr = User.builder().id(crId).role(Role.COMPANY_REPRESENTATIVE).build();
+
+        when(ipoOfferRepository.findById(ipoOfferId)).thenReturn(Optional.of(ipoOffer));
+        when(authRepository.findById(crId)).thenReturn(Optional.of(cr));
+        doThrow(CompanyException.forbidden("Only an active assigned company representative can perform this action"))
+                .when(companyRepresentativeAssignmentService).assertActiveRepresentativeAssignment(companyId, crId);
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> ipoService.fetchSubscriptionsForOffer(ipoOfferId, crId));
+
+        assertThat(exception.getMessage()).isEqualTo("Only an active assigned company representative can perform this action");
+        verify(ipoSubscriptionRepository, never()).findByIpoOfferIdOrderByCreatedAtAsc(any());
     }
 }

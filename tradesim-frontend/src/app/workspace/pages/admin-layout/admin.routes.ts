@@ -13,32 +13,32 @@ export const adminRoutes: Routes = [
             },
             {
                 path: 'dashboard',
-                loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
+                loadComponent: () => import('./dashboard/dashboard').then((module) => module.Dashboard),
                 title: 'Admin Dashboard'
             },
             {
                 path: 'approvals',
-                loadComponent: () => import('./approvals/approvals').then((m) => m.Approvals),
+                loadComponent: () => import('./approvals/approvals').then((module) => module.Approvals),
                 title: 'Approvals Center'
             },
             {
                 path: 'market',
-                loadComponent: () => import('./market/market').then((m) => m.Market),
+                loadComponent: () => import('./market/market').then((module) => module.Market),
                 title: 'Market Operations'
             },
             {
                 path: 'companies',
-                loadComponent: () => import('./companies/companies').then((m) => m.Companies),
+                loadComponent: () => import('./companies/companies').then((module) => module.Companies),
                 title: 'Company Directory'
             },
             {
                 path: 'companies/:id',
-                loadComponent: () => import('./companies/company-details/company-details').then((m) => m.CompanyDetails),
+                loadComponent: () => import('./companies/company-details/company-details').then((module) => module.CompanyDetails),
                 title: 'Company Details'
             },
             {
                 path: 'users',
-                loadComponent: () => import('./users/users').then((m) => m.Users),
+                loadComponent: () => import('./users/users').then((module) => module.Users),
                 title: 'User Management'
             }
         ]

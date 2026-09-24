@@ -373,4 +373,79 @@ class IpoControllerTest {
                 .andExpect(jsonPath("$.status").value("REJECTED"))
                 .andExpect(jsonPath("$.rejectionReason").value("IPO disclosures are incomplete"));
     }
+
+    @Test
+    void adminShouldFetchSubscriptionsForOffer() throws Exception {
+        UUID adminId = UUID.randomUUID();
+        UUID ipoOfferId = UUID.randomUUID();
+
+        User admin = User.builder()
+                .id(adminId)
+                .username("admin")
+                .password("password")
+                .role(Role.ADMIN)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(admin);
+
+        IpoSubscriptionResponse response = new IpoSubscriptionResponse(
+                UUID.randomUUID(), ipoOfferId, UUID.randomUUID(), UUID.randomUUID(),
+                BigDecimal.valueOf(125.50), 100, BigDecimal.valueOf(12550), 0,
+                IpoSubscriptionStatus.SUBMITTED, Instant.now().plusSeconds(600), "USD", Instant.now(), Instant.now()
+        );
+
+        when(ipoService.fetchSubscriptionsForOffer(eq(ipoOfferId), eq(adminId))).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/ipo-offers/{ipoOfferId}/subscriptions", ipoOfferId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].lockedAmount").value(12550));
+    }
+
+    @Test
+    void companyRepresentativeShouldFetchSubscriptionsForOwnOffer() throws Exception {
+        UUID crId = UUID.randomUUID();
+        UUID ipoOfferId = UUID.randomUUID();
+
+        User cr = User.builder()
+                .id(crId)
+                .username("manager")
+                .password("password")
+                .role(Role.COMPANY_REPRESENTATIVE)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(cr);
+
+        IpoSubscriptionResponse response = new IpoSubscriptionResponse(
+                UUID.randomUUID(), ipoOfferId, UUID.randomUUID(), UUID.randomUUID(),
+                BigDecimal.valueOf(125.50), 100, BigDecimal.valueOf(12550), 0,
+                IpoSubscriptionStatus.SUBMITTED, Instant.now().plusSeconds(600), "USD", Instant.now(), Instant.now()
+        );
+
+        when(ipoService.fetchSubscriptionsForOffer(eq(ipoOfferId), eq(crId))).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/ipo-offers/{ipoOfferId}/subscriptions", ipoOfferId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].lockedAmount").value(12550));
+    }
+
+    @Test
+    void userShouldNotFetchSubscriptionsForOffer() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID ipoOfferId = UUID.randomUUID();
+
+        User user = User.builder()
+                .id(userId)
+                .username("normal_user")
+                .password("password")
+                .role(Role.USER)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(user);
+
+        mockMvc.perform(get("/ipo-offers/{ipoOfferId}/subscriptions", ipoOfferId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+                .andExpect(status().isForbidden());
+    }
 }

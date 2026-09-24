@@ -237,8 +237,13 @@ public class IpoService {
     }
 
     @Transactional(readOnly = true)
-    public List<IpoSubscriptionResponse> fetchSubscriptionsForOffer(UUID ipoOfferId) {
+    public List<IpoSubscriptionResponse> fetchSubscriptionsForOffer(UUID ipoOfferId, UUID actingUserId) {
         IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> UserException.notFound("User not found"));
+
+        if (actingUser.getRole() != Role.ADMIN) {
+            companyRepresentativeAssignmentService.assertActiveRepresentativeAssignment(ipoOffer.getCompanyId(), actingUserId);
+        }
 
         return ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)
                 .stream()
