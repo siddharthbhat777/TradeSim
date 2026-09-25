@@ -53,7 +53,7 @@ class CompanyOnboardingServiceTest {
         CompanyResponse companyResponse = new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE, null);
         RegisterResponse representativeResponse = new RegisterResponse(representativeId, "Apple Rep", "apple_representative", "apple_representative@example.com", "Silicon Valley Bank", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE);
         CompanyRepresentativeAssignmentResponse assignmentResponse = new CompanyRepresentativeAssignmentResponse(
-                UUID.randomUUID(), companyId, representativeId, adminUserId,
+                UUID.randomUUID(), companyId, representativeId, "Apple Rep", "apple_representative@example.com", adminUserId,
                 CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,
                 CompanyRepresentativeAssignmentStatus.ACTIVE, null, null
         );

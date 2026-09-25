@@ -54,7 +54,7 @@ public class CompanyRepresentativeAssignmentService {
                         .build());
 
         CompanyRepresentativeAssignment saved = companyRepresentativeAssignmentRepository.save(assignment);
-        return toResponse(saved);
+        return toResponse(saved, targetUser);
     }
 
     @Transactional(readOnly = true)
@@ -68,7 +68,10 @@ public class CompanyRepresentativeAssignmentService {
         return companyRepresentativeAssignmentRepository.findByCompanyIdAndStatus(companyId, CompanyRepresentativeAssignmentStatus.ACTIVE)
                 .stream()
                 .sorted(Comparator.comparing((CompanyRepresentativeAssignment assignment) -> assignment.getAssignmentRole() != CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT))
-                .map(this::toResponse)
+                .map(assignment -> {
+                    User targetUser = authRepository.findById(assignment.getUserId()).orElseThrow(() -> UserException.notFound("User not found"));
+                    return toResponse(assignment, targetUser);
+                })
                 .toList();
     }
 
@@ -118,6 +121,8 @@ public class CompanyRepresentativeAssignmentService {
     public CompanyRepresentativeAssignmentResponse revokeRepresentative(UUID companyId, UUID targetUserId, UUID actingUserId) {
         assertCanManageRepresentatives(companyId, actingUserId);
 
+        User targetUser = authRepository.findById(targetUserId).orElseThrow(() -> UserException.notFound("User not found"));
+
         CompanyRepresentativeAssignment assignment = companyRepresentativeAssignmentRepository
                 .findByCompanyIdAndUserId(companyId, targetUserId)
                 .orElseThrow(() -> CompanyException.notFound("Company representative assignment not found"));
@@ -135,7 +140,7 @@ public class CompanyRepresentativeAssignmentService {
         assignment.setRevokedByUserId(actingUserId);
 
         CompanyRepresentativeAssignment saved = companyRepresentativeAssignmentRepository.save(assignment);
-        return toResponse(saved);
+        return toResponse(saved, targetUser);
     }
 
     @Transactional
@@ -252,11 +257,13 @@ public class CompanyRepresentativeAssignmentService {
         return activePrimaryContactExists ? CompanyRepresentativeAssignmentRole.MANAGER : CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT;
     }
 
-    private CompanyRepresentativeAssignmentResponse toResponse(CompanyRepresentativeAssignment assignment) {
+    private CompanyRepresentativeAssignmentResponse toResponse(CompanyRepresentativeAssignment assignment, User user) {
         return new CompanyRepresentativeAssignmentResponse(
                 assignment.getId(),
                 assignment.getCompanyId(),
                 assignment.getUserId(),
+                user.getFullName(),
+                user.getEmail(),
                 assignment.getAssignedByUserId(),
                 assignment.getAssignmentRole(),
                 assignment.getStatus(),

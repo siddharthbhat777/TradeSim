@@ -75,7 +75,7 @@ class CompanyOnboardingControllerTest {
                 new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE, representativeId),
                 new RegisterResponse(representativeId, "Apple Rep", "apple_representative", "apple_representative@example.com", "Silicon Valley Bank", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
                 new CompanyRepresentativeAssignmentResponse(
-                        UUID.randomUUID(), companyId, representativeId, adminId,
+                        UUID.randomUUID(), companyId, representativeId, "Apple Rep", "apple_representative@example.com", adminId,
                         CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,
                         CompanyRepresentativeAssignmentStatus.ACTIVE, null, null
                 )

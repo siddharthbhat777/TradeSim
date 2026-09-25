@@ -48,7 +48,7 @@ class CompanyRepresentativeAssignmentServiceTest {
         UUID adminUserId = UUID.randomUUID();
 
         User admin = User.builder().id(adminUserId).role(Role.ADMIN).accountStatus(AccountStatus.ACTIVE).build();
-        User representative = User.builder().id(representativeUserId).role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
+        User representative = User.builder().id(representativeUserId).fullName("Rep Name").email("rep@test.com").role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
 
         when(companyRepository.existsById(companyId)).thenReturn(true);
         when(authRepository.findById(adminUserId)).thenReturn(Optional.of(admin));
@@ -76,7 +76,7 @@ class CompanyRepresentativeAssignmentServiceTest {
         UUID adminUserId = UUID.randomUUID();
 
         User admin = User.builder().id(adminUserId).role(Role.ADMIN).accountStatus(AccountStatus.ACTIVE).build();
-        User representative = User.builder().id(representativeUserId).role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
+        User representative = User.builder().id(representativeUserId).fullName("Rep Name").email("rep@test.com").role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
 
         CompanyRepresentativeAssignment primaryContact = CompanyRepresentativeAssignment.builder()
                 .id(UUID.randomUUID())
@@ -110,7 +110,7 @@ class CompanyRepresentativeAssignmentServiceTest {
         UUID targetRepresentativeUserId = UUID.randomUUID();
 
         User managerUser = User.builder().id(managerUserId).role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
-        User targetRepresentative = User.builder().id(targetRepresentativeUserId).role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
+        User targetRepresentative = User.builder().id(targetRepresentativeUserId).fullName("Rep Name").email("rep@test.com").role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
 
         CompanyRepresentativeAssignment managerAssignment = CompanyRepresentativeAssignment.builder()
                 .id(UUID.randomUUID())
@@ -179,6 +179,7 @@ class CompanyRepresentativeAssignmentServiceTest {
         UUID adminUserId = UUID.randomUUID();
 
         User admin = User.builder().id(adminUserId).role(Role.ADMIN).accountStatus(AccountStatus.ACTIVE).build();
+        User primaryContactUser = User.builder().id(primaryContactUserId).role(Role.COMPANY_REPRESENTATIVE).accountStatus(AccountStatus.ACTIVE).build();
 
         CompanyRepresentativeAssignment primaryContactAssignment = CompanyRepresentativeAssignment.builder()
                 .id(UUID.randomUUID())
@@ -190,6 +191,7 @@ class CompanyRepresentativeAssignmentServiceTest {
                 .build();
 
         when(authRepository.findById(adminUserId)).thenReturn(Optional.of(admin));
+        when(authRepository.findById(primaryContactUserId)).thenReturn(Optional.of(primaryContactUser));
         when(companyRepresentativeAssignmentRepository.findByCompanyIdAndUserId(companyId, primaryContactUserId)).thenReturn(Optional.of(primaryContactAssignment));
 
         BusinessException exception = assertThrows(BusinessException.class, () -> companyRepresentativeAssignmentService.revokeRepresentative(companyId, primaryContactUserId, adminUserId));

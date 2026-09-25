@@ -68,7 +68,7 @@ class CompanyRepresentativeAssignmentControllerTest {
 
         AssignCompanyRepresentativeRequest request = new AssignCompanyRepresentativeRequest(representativeUserId);
         CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
-                UUID.randomUUID(), companyId, representativeUserId, adminId,
+                UUID.randomUUID(), companyId, representativeUserId, "Rep Name", "rep@example.com", adminId,
                 CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,
                 CompanyRepresentativeAssignmentStatus.ACTIVE, null, null
         );
@@ -116,7 +116,7 @@ class CompanyRepresentativeAssignmentControllerTest {
         UserPrincipal principal = new UserPrincipal(admin);
 
         CompanyRepresentativeAssignmentResponse response = new CompanyRepresentativeAssignmentResponse(
-                UUID.randomUUID(), companyId, UUID.randomUUID(), adminId,
+                UUID.randomUUID(), companyId, UUID.randomUUID(), "Rep Name", "rep@example.com", adminId,
                 CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT,
                 CompanyRepresentativeAssignmentStatus.ACTIVE, null, null
         );

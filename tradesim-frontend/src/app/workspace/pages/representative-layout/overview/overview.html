@@ -1,1 +1,200 @@
-<p>overview works!</p>
+<div class="overview-container">
+    <header class="overview-header">
+        <h1 class="heading-xl m-0">Company Overview</h1>
+        <p class="text-body m-0 text-muted">Command center for your corporate identity and market performance.</p>
+    </header>
+
+    @if (isLoading()) {
+    <app-card [isLoading]="true">
+        <div style="height: 400px;"></div>
+    </app-card>
+    } @else if (company(); as comp) {
+
+    @if (needsOnboardingAlert()) {
+    <app-alert variant="warning" title="Action Required">
+        Your company or associated stock is currently not fully active. Please ensure all onboarding forms, IPO
+        subscriptions, and exchange approvals are completed.
+    </app-alert>
+    }
+
+    <div class="metrics-row">
+        <app-card>
+            <span class="metric-label">Current Price</span>
+            @if (stock(); as stk) {
+            <div class="metric-value">
+                <app-price-indicator [value]="stk.currentPrice" [showArrow]="false" [currency]="stk.currency"
+                    [valueDecimals]="2"></app-price-indicator>
+            </div>
+            } @else {
+            <span class="metric-value text-muted">--</span>
+            }
+        </app-card>
+
+        <app-card>
+            <span class="metric-label">Market Cap</span>
+            @if (stock(); as stk) {
+            <div class="metric-value font-mono font-semibold text-primary">
+                {{ stk.marketCap | formatCurrency:stk.currency:'currency':0 }}
+            </div>
+            <span class="metric-subtext">{{ stk.marketCapCategory }} CAP</span>
+            } @else {
+            <span class="metric-value text-muted">--</span>
+            }
+        </app-card>
+
+        <app-card>
+            <span class="metric-label">Day Volume</span>
+            @if (stock(); as stk) {
+            <div class="metric-value font-mono font-semibold text-primary">
+                {{ stk.dayVolume | formatCurrency:stk.currency:'decimal':0 }}
+            </div>
+            <span class="metric-subtext">Shares Traded Today</span>
+            } @else {
+            <span class="metric-value text-muted">--</span>
+            }
+        </app-card>
+
+        <app-card>
+            <span class="metric-label">Trading Status</span>
+            <div class="metric-value" style="margin-top: 4px;">
+                @if (stock(); as stk) {
+                <app-badge
+                    [color]="stk.status === 'ACTIVE' ? 'success' : (stk.status === 'HALTED' ? 'warning' : 'danger')">
+                    {{ stk.status }}
+                </app-badge>
+                } @else {
+                <app-badge color="accent">PRE-IPO</app-badge>
+                }
+            </div>
+        </app-card>
+    </div>
+
+    <div class="content-grid">
+        <app-card class="identity-card">
+            <h2 class="section-title m-0">Corporate Identity</h2>
+            <hr class="divider" />
+
+            <div class="detail-list">
+                <div class="detail-group">
+                    <span class="detail-label">Legal Entity Name</span>
+                    <span class="detail-value font-semibold">{{ comp.name }}</span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Trading Code / Symbol</span>
+                    <span class="detail-value">{{ comp.code }}</span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Country of Origin</span>
+                    <span class="detail-value">{{ comp.country }}</span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Primary Sector</span>
+                    <span class="detail-value">{{ stock()?.sector || '--' }}</span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Listed Exchange</span>
+                    <span class="detail-value">{{ exchange()?.name || '--' }}</span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Primary Contact ID</span>
+                    <div class="copyable-id">
+                        <span class="detail-value font-mono text-sm">{{ comp.primaryContactId ? (comp.primaryContactId |
+                            slice:0:8) + '...' : 'Unassigned' }}</span>
+                        @if (comp.primaryContactId) {
+                        <button type="button" class="icon-btn"
+                            (click)="copyToClipboard(comp.primaryContactId, 'Primary Contact ID')" aria-label="Copy ID"
+                            title="Copy full ID">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                            </svg>
+                        </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </app-card>
+
+        <app-card class="chart-card">
+            <h2 class="section-title m-0">Performance Snapshot</h2>
+            <hr class="divider" />
+
+            @if (chartData().length > 0 && stock()) {
+            <div class="chart-wrapper">
+                <app-area-chart [data]="chartData()" [width]="700" [height]="320" [currency]="stock()!.currency">
+                </app-area-chart>
+            </div>
+            } @else {
+            <div class="chart-empty-state">
+                <span class="text-muted">No trading data available for visualization.</span>
+            </div>
+            }
+        </app-card>
+    </div>
+
+    <app-card class="team-card">
+        <div class="team-header">
+            <div>
+                <h2 class="section-title m-0">Authorized Representatives</h2>
+                <p class="text-body text-muted m-0" style="margin-top: 0.25rem;">
+                    Users actively managing the corporate lifecycle for {{ comp.name }}.
+                </p>
+            </div>
+            <div class="search-wrapper">
+                <app-input [reserveMessageSpace]="false">
+                    <svg prefix xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input appInput type="text" placeholder="Search representatives..." [value]="searchQuery()"
+                        (input)="updateSearch($event)" />
+                </app-input>
+            </div>
+        </div>
+
+        <app-table variant="flush" [columns]="representativeColumns()" [data]="filteredRepresentatives()"
+            emptyText="No representatives found" emptySubtext="Try adjusting your search criteria.">
+
+            <ng-template tableCell="name" let-val let-row="row">
+                <span class="font-semibold">{{ row.fullName || '--' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="email" let-val let-row="row">
+                <span class="text-muted">{{ row.email || '--' }}</span>
+            </ng-template>
+
+            <ng-template tableCell="userId" let-val>
+                <div class="copyable-id">
+                    <span class="font-mono text-muted text-sm">{{ val | slice:0:8 }}...</span>
+                    <button type="button" class="icon-btn" (click)="copyToClipboard(val, 'User ID')"
+                        aria-label="Copy ID" title="Copy full ID">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                        </svg>
+                    </button>
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="assignmentRole" let-val>
+                <app-badge [color]="val === 'PRIMARY_CONTACT' ? 'accent' : 'primary'">
+                    {{ val === 'PRIMARY_CONTACT' ? 'PRIMARY' : val }}
+                </app-badge>
+            </ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge [color]="val === 'ACTIVE' ? 'success' : 'danger'">{{ val }}</app-badge>
+            </ng-template>
+        </app-table>
+    </app-card>
+    }
+</div>

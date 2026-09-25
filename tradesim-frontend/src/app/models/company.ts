@@ -11,6 +11,8 @@ export interface CompanyRepresentativeAssignmentResponse {
     id: string;
     companyId: string;
     userId: string;
+    fullName: string;
+    email: string;
     assignedByUserId: string;
     assignmentRole: 'PRIMARY_CONTACT' | 'MANAGER';
     status: 'ACTIVE' | 'REVOKED';
