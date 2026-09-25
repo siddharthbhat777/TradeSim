@@ -72,7 +72,7 @@ class CompanyOnboardingControllerTest {
         );
 
         CompanyOnboardingResponse response = new CompanyOnboardingResponse(
-                new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE),
+                new CompanyResponse(companyId, "Apple Inc", "APPLE", "United States", CompanyStatus.ACTIVE, representativeId),
                 new RegisterResponse(representativeId, "Apple Rep", "apple_representative", "apple_representative@example.com", "Silicon Valley Bank", Role.COMPANY_REPRESENTATIVE, AccountStatus.ACTIVE),
                 new CompanyRepresentativeAssignmentResponse(
                         UUID.randomUUID(), companyId, representativeId, adminId,

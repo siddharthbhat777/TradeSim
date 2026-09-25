@@ -36,6 +36,13 @@ describe('CompanyService', () => {
     req.flush([]);
   });
 
+  it('should get assigned companies', () => {
+    service.getAssignedCompanies().subscribe();
+    const req = httpMock.expectOne(`${baseUrl}/assigned`);
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
   it('should get a company by id', () => {
     service.getCompany('comp-1').subscribe();
     const req = httpMock.expectOne(`${baseUrl}/comp-1`);

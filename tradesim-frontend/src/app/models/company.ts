@@ -4,6 +4,7 @@ export interface CompanyResponse {
     code: string;
     country: string;
     status: string;
+    primaryContactId: string | null;
 }
 
 export interface CompanyRepresentativeAssignmentResponse {

@@ -1,11 +1,15 @@
 package com.siddharth.tradesim_backend.company.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
+import com.siddharth.tradesim_backend.company.model.CompanyRepresentativeAssignment;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +33,9 @@ class CompanyServiceTest {
     @Mock
     private CompanyRepository companyRepository;
 
+    @Mock
+    private CompanyRepresentativeAssignmentRepository companyRepresentativeAssignmentRepository;
+
     @InjectMocks
     private CompanyService companyService;
 
@@ -43,12 +50,46 @@ class CompanyServiceTest {
                 .build();
 
         when(companyRepository.findAll()).thenReturn(List.of(company));
+        when(companyRepresentativeAssignmentRepository.findByCompanyIdAndStatusAndAssignmentRole(
+                company.getId(), CompanyRepresentativeAssignmentStatus.ACTIVE, CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT))
+                .thenReturn(Optional.empty());
 
         List<CompanyResponse> responses = companyService.fetchCompanies();
 
         assertThat(responses).hasSize(1);
         assertThat(responses.getFirst().code()).isEqualTo("APPLE");
         assertThat(responses.getFirst().country()).isEqualTo("United States");
+        assertThat(responses.getFirst().primaryContactId()).isNull();
+    }
+
+    @Test
+    void shouldFetchAssignedCompaniesForRepresentative() {
+        UUID repId = UUID.randomUUID();
+        Company company = Company.builder()
+                .id(UUID.randomUUID())
+                .name("Apple Inc")
+                .code("APPLE")
+                .country("United States")
+                .status(CompanyStatus.ACTIVE)
+                .build();
+
+        CompanyRepresentativeAssignment assignment = CompanyRepresentativeAssignment.builder()
+                .companyId(company.getId())
+                .userId(repId)
+                .build();
+
+        when(companyRepresentativeAssignmentRepository.findByUserIdAndStatus(repId, CompanyRepresentativeAssignmentStatus.ACTIVE))
+                .thenReturn(List.of(assignment));
+        when(companyRepository.findAllById(List.of(company.getId()))).thenReturn(List.of(company));
+        when(companyRepresentativeAssignmentRepository.findByCompanyIdAndStatusAndAssignmentRole(
+                company.getId(), CompanyRepresentativeAssignmentStatus.ACTIVE, CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT))
+                .thenReturn(Optional.of(assignment));
+
+        List<CompanyResponse> responses = companyService.fetchAssignedCompanies(repId);
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.getFirst().code()).isEqualTo("APPLE");
+        assertThat(responses.getFirst().primaryContactId()).isEqualTo(repId);
     }
 
     @Test
@@ -67,6 +108,9 @@ class CompanyServiceTest {
             company.setId(companyId);
             return company;
         });
+        when(companyRepresentativeAssignmentRepository.findByCompanyIdAndStatusAndAssignmentRole(
+                companyId, CompanyRepresentativeAssignmentStatus.ACTIVE, CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT))
+                .thenReturn(Optional.empty());
 
         CompanyResponse response = companyService.createCompany(request);
 
@@ -87,12 +131,19 @@ class CompanyServiceTest {
                 .status(CompanyStatus.ACTIVE)
                 .build();
 
+        UUID primaryContactId = UUID.randomUUID();
+        CompanyRepresentativeAssignment assignment = CompanyRepresentativeAssignment.builder().userId(primaryContactId).build();
+
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(companyRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(companyRepresentativeAssignmentRepository.findByCompanyIdAndStatusAndAssignmentRole(
+                companyId, CompanyRepresentativeAssignmentStatus.ACTIVE, CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT))
+                .thenReturn(Optional.of(assignment));
 
         CompanyResponse response = companyService.changeStatus(companyId, CompanyStatus.INACTIVE);
 
         assertThat(response.status()).isEqualTo(CompanyStatus.INACTIVE);
+        assertThat(response.primaryContactId()).isEqualTo(primaryContactId);
     }
 
     @Test

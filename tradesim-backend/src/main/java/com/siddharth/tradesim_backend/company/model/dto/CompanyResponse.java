@@ -9,6 +9,7 @@ public record CompanyResponse(
         String name,
         String code,
         String country,
-        CompanyStatus status
+        CompanyStatus status,
+        UUID primaryContactId
 ) {
 }

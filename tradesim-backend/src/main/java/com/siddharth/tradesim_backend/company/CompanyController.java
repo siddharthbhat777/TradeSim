@@ -37,6 +37,12 @@ public class CompanyController {
         return ResponseEntity.ok(companyService.fetchCompanies());
     }
 
+    @GetMapping("assigned")
+    @PreAuthorize("hasRole('COMPANY_REPRESENTATIVE')")
+    public ResponseEntity<List<CompanyResponse>> getAssignedCompanies(@AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(companyService.fetchAssignedCompanies(principal.getUserId()));
+    }
+
     @GetMapping("{companyId}")
     public ResponseEntity<CompanyResponse> getCompany(@PathVariable UUID companyId) {
         return ResponseEntity.ok(companyService.fetchCompany(companyId));

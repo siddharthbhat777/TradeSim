@@ -49,7 +49,8 @@ describe('Dashboard', () => {
       name: 'Acme Corp',
       code: 'ACME',
       country: 'USA',
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      primaryContactId: null
     }
   ];
 
@@ -261,7 +262,6 @@ describe('Dashboard', () => {
     const callArgs = navigateSpy.mock.calls[0];
 
     expect(callArgs[0]).toEqual(['../approvals']);
-
     expect(callArgs[1]?.queryParams).toEqual(
       expect.objectContaining({ type: targetAction.type })
     );

@@ -17,6 +17,12 @@ export class CompanyService {
     });
   }
 
+  getAssignedCompanies() {
+    return this.http.get<CompanyResponse[]>(`${this.companyURL}/assigned`, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
   getCompany(id: string) {
     return this.http.get<CompanyResponse>(`${this.companyURL}/${id}`, {
       context: skipInterceptors({ loader: true })

@@ -1,11 +1,15 @@
 package com.siddharth.tradesim_backend.company.service;
 
 import com.siddharth.tradesim_backend.company.CompanyException;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentRole;
+import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.enums.CompanyStatus;
 import com.siddharth.tradesim_backend.company.model.Company;
+import com.siddharth.tradesim_backend.company.model.CompanyRepresentativeAssignment;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
+import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -18,10 +22,22 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CompanyService {
     private final CompanyRepository companyRepository;
+    private final CompanyRepresentativeAssignmentRepository companyRepresentativeAssignmentRepository;
 
     @Transactional(readOnly = true)
     public List<CompanyResponse> fetchCompanies() {
         return companyRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CompanyResponse> fetchAssignedCompanies(UUID userId) {
+        List<UUID> assignedCompanyIds = companyRepresentativeAssignmentRepository
+                .findByUserIdAndStatus(userId, CompanyRepresentativeAssignmentStatus.ACTIVE)
+                .stream()
+                .map(CompanyRepresentativeAssignment::getCompanyId)
+                .toList();
+
+        return companyRepository.findAllById(assignedCompanyIds).stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -69,12 +85,22 @@ public class CompanyService {
     }
 
     private CompanyResponse toResponse(Company company) {
+        UUID primaryContactId = companyRepresentativeAssignmentRepository
+                .findByCompanyIdAndStatusAndAssignmentRole(
+                        company.getId(),
+                        CompanyRepresentativeAssignmentStatus.ACTIVE,
+                        CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT
+                )
+                .map(CompanyRepresentativeAssignment::getUserId)
+                .orElse(null);
+
         return new CompanyResponse(
                 company.getId(),
                 company.getName(),
                 company.getCode(),
                 company.getCountry(),
-                company.getStatus()
+                company.getStatus(),
+                primaryContactId
         );
     }
 }

@@ -152,10 +152,28 @@
 }
 
 .workspace__context-switcher {
-  padding: 16px;
+  padding: 16px 16px 8px 16px;
   border-bottom: 1px solid var(--border);
   transition: opacity 0.2s ease;
   opacity: 1;
+
+  &--no-border {
+    border-bottom: none;
+    padding-bottom: 8px;
+  }
+
+  .workspace__sidebar--collapsed & {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    visibility: hidden;
+  }
+}
+
+.workspace__company-selector {
+  padding: 0 16px 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.2s ease;
 
   .workspace__sidebar--collapsed & {
     opacity: 0;

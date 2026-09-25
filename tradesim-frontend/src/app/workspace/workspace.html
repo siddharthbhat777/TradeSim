@@ -22,12 +22,22 @@
         </div>
 
         @if (isCompanyRepresentative()) {
-        <div class="workspace__context-switcher">
+        <div class="workspace__context-switcher"
+            [class.workspace__context-switcher--no-border]="currentContext() === 'company'">
             <app-segmented-control [options]="contextOptions" [ngModel]="currentContext()"
                 (ngModelChange)="onContextChange($event)" size="small" [fullWidth]="true"
                 [enableDropdownOnMobile]="false">
             </app-segmented-control>
         </div>
+
+        @if (currentContext() === 'company') {
+        <div class="workspace__company-selector">
+            <app-dropdown [options]="companyOptions()" [ngModel]="selectedCompanyId()"
+                (ngModelChange)="onCompanyChange($event)" size="small" [searchable]="true" [showErrors]="false"
+                [reserveMessageSpace]="false" required placeholder="Select Company">
+            </app-dropdown>
+        </div>
+        }
         }
 
         <nav class="workspace__nav">

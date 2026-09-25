@@ -7,27 +7,22 @@ export const representativeRoutes: Routes = [
         component: RepresentativeLayout,
         children: [
             {
-                path: '',
-                pathMatch: 'full',
-                redirectTo: 'overview'
-            },
-            {
-                path: 'overview',
+                path: ':companyId/overview',
                 loadComponent: () => import('./overview/overview').then((module) => module.Overview),
                 title: 'Company Overview'
             },
             {
-                path: 'listing',
+                path: ':companyId/listing',
                 loadComponent: () => import('./listing/listing').then((module) => module.Listing),
                 title: 'Listing'
             },
             {
-                path: 'ipo',
+                path: ':companyId/ipo',
                 loadComponent: () => import('./ipo/ipo').then((module) => module.Ipo),
                 title: 'IPO'
             },
             {
-                path: 'team',
+                path: ':companyId/team',
                 loadComponent: () => import('./team/team').then((module) => module.Team),
                 title: 'Team'
             }

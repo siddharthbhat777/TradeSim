@@ -294,7 +294,7 @@ export class Dropdown<T = unknown> implements ControlValueAccessor {
     if (option.disabled || this.disabledState()) {
       return;
     }
-    if (this.placeholder() && this.selected() === option) {
+    if (this.placeholder() && !this.required() && this.selected() === option) {
       this.selected.set(null);
       this.onChange(null);
     } else {
