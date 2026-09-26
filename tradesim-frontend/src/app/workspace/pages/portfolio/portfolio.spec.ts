@@ -8,12 +8,6 @@ import { PortfolioService } from '../../../services/portfolio/portfolio-service'
 import { RiskService } from '../../../services/risk/risk-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 
-class ResizeObserverMock {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-
 describe('Portfolio', () => {
   let component: Portfolio;
   let fixture: ComponentFixture<Portfolio>;
@@ -26,7 +20,15 @@ describe('Portfolio', () => {
   let mockTradingAccountService: any;
 
   beforeEach(async () => {
-    vi.stubGlobal('matchMedia', vi.fn().mockImplementation(query => ({
+    TestBed.resetTestingModule();
+
+    window.ResizeObserver = class {
+      observe() { }
+      unobserve() { }
+      disconnect() { }
+    } as any;
+
+    window.matchMedia = window.matchMedia || vi.fn().mockImplementation(query => ({
       matches: false,
       media: query,
       onchange: null,
@@ -35,9 +37,7 @@ describe('Portfolio', () => {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
-    })));
-
-    vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+    }));
 
     mockPortfolioSignal = signal(null);
     mockTradingAccountSignal = signal(null);

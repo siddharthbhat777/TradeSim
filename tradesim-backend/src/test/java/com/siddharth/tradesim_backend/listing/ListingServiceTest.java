@@ -187,7 +187,7 @@ class ListingServiceTest {
     }
 
     @Test
-    void shouldRejectDirectListingIfCapTableMathIsWrong() {
+    void shouldRejectListingIfCapTableExceedsTotalShares() {
         UUID companyId = UUID.randomUUID();
         UUID primaryContactId = UUID.randomUUID();
         UUID exchangeId = UUID.randomUUID();
@@ -200,7 +200,7 @@ class ListingServiceTest {
                 Sector.TECHNOLOGY,
                 BigDecimal.TEN,
                 1000,
-                List.of(new CapTableEntryRequest(targetUserId, 500))
+                List.of(new CapTableEntryRequest(targetUserId, 1500))
         );
 
         Company company = Company.builder().id(companyId).status(CompanyStatus.ACTIVE).build();
@@ -211,7 +211,7 @@ class ListingServiceTest {
         when(assignmentRepository.findByCompanyIdAndUserId(companyId, primaryContactId)).thenReturn(Optional.of(assignment));
 
         BusinessException exception = assertThrows(BusinessException.class, () -> listingService.submitListingRequest(companyId, primaryContactId, request));
-        assertThat(exception.getMessage()).isEqualTo("Sum of cap table quantities must equal total shares");
+        assertThat(exception.getMessage()).isEqualTo("Sum of cap table quantities cannot exceed total shares");
     }
 
     @Test

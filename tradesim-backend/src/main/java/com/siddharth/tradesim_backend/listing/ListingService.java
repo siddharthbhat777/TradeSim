@@ -80,12 +80,12 @@ public class ListingService {
 
         if (request.capTable() != null && !request.capTable().isEmpty()) {
             if (request.totalShares() == null) {
-                throw ListingException.badRequest("Total shares must be specified for a direct listing");
+                throw ListingException.badRequest("Total shares must be specified when providing a cap table");
             }
 
             int totalQuantity = request.capTable().stream().mapToInt(CapTableEntryRequest::quantity).sum();
-            if (totalQuantity != request.totalShares()) {
-                throw ListingException.badRequest("Sum of cap table quantities must equal total shares");
+            if (totalQuantity > request.totalShares()) {
+                throw ListingException.badRequest("Sum of cap table quantities cannot exceed total shares");
             }
 
             List<ListingCapTableEntry> capTableEntries = request.capTable().stream().map(entry -> {
@@ -106,6 +106,14 @@ public class ListingService {
 
         ListingRequest saved = listingRequestRepository.save(listingRequest);
         return toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ListingRequestResponse> fetchCompanyListingRequests(UUID companyId) {
+        return listingRequestRepository.findByCompanyIdOrderByCreatedAtDesc(companyId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -168,9 +176,13 @@ public class ListingService {
 
         exchangeService.assertExchangeActive(listingRequest.getExchangeId());
 
-        StockStatus initialStockStatus = (listingRequest.getCapTable() != null && !listingRequest.getCapTable().isEmpty())
-                ? StockStatus.ACTIVE
-                : StockStatus.HALTED;
+        int capTableSum = listingRequest.getCapTable() == null ? 0 :
+                listingRequest.getCapTable().stream().mapToInt(ListingCapTableEntry::getQuantity).sum();
+
+        boolean hasIpoComponent = listingRequest.getTotalShares() == null || capTableSum < listingRequest.getTotalShares();
+
+        StockStatus initialStockStatus = hasIpoComponent ? StockStatus.HALTED : StockStatus.ACTIVE;
+        Integer initialShares = capTableSum > 0 ? capTableSum : null;
 
         StockResponse createdStock = stockService.createStockFromListingApproval(
                 listingRequest.getCompanyId(),
@@ -179,7 +191,7 @@ public class ListingService {
                 listingRequest.getReferencePrice(),
                 listingRequest.getSector(),
                 listingRequest.getPriceBandPercent(),
-                listingRequest.getTotalShares(),
+                initialShares,
                 initialStockStatus
         );
 

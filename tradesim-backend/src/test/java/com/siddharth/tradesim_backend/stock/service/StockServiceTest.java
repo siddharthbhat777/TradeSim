@@ -63,6 +63,12 @@ class StockServiceTest {
     private StockService stockService;
 
     @Test
+    void shouldFetchSectors() {
+        List<String> response = stockService.fetchSectors();
+        assertThat(response).contains("TECHNOLOGY", "FINANCE", "HEALTHCARE");
+    }
+
+    @Test
     void shouldChangeStockStatusWhenValid() {
         UUID stockId = UUID.randomUUID();
         UUID exchangeId = UUID.randomUUID();

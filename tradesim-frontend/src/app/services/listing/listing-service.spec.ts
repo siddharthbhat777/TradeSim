@@ -73,4 +73,43 @@ describe('ListingService', () => {
     expect(req.request.body).toEqual({ rejectionReason: 'Missing financials' });
     req.flush({ ...mockListing, status: 'REJECTED', rejectionReason: 'Missing financials' });
   });
+
+  it('should get company requests', () => {
+    service.getCompanyRequests('cmp-1').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/listing-requests/company/cmp-1`);
+    expect(req.request.method).toBe('GET');
+    req.flush([mockListing]);
+  });
+
+  it('should submit listing request', () => {
+    const payload = {
+      symbol: 'ACME',
+      exchangeId: 'ex-1',
+      referencePrice: 150,
+      sector: 'TECHNOLOGY',
+      priceBandPercent: 10,
+      totalShares: 1000000,
+      capTable: []
+    };
+    service.submitListingRequest('cmp-1', payload as any).subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/listing-requests/cmp-1`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(payload);
+    req.flush(mockListing);
+  });
+
+  it('should approve internal request', () => {
+    service.approveInternalRequest('listing-123').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/listing-requests/listing-123/internal-approve`);
+    expect(req.request.method).toBe('PUT');
+    req.flush({ ...mockListing, status: 'PENDING_EXCHANGE_APPROVAL' });
+  });
+
+  it('should reject internal request', () => {
+    service.rejectInternalRequest('listing-123', 'Incomplete cap table').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/listing-requests/listing-123/internal-reject`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ rejectionReason: 'Incomplete cap table' });
+    req.flush({ ...mockListing, status: 'REJECTED', rejectionReason: 'Incomplete cap table' });
+  });
 });

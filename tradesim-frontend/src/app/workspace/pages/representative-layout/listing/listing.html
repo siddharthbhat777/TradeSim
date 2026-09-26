@@ -1,1 +1,263 @@
-<p>listing works!</p>
+<div class="listing-container">
+    @if (isLoading()) {
+    <app-card [isLoading]="true">
+        <div style="height: 400px;"></div>
+    </app-card>
+    } @else {
+
+    <header class="page-header">
+        <div>
+            <h1 class="heading-xl m-0">Corporate Listing</h1>
+            <p class="text-body text-muted m-0">Manage your company's exchange listing and IPO lifecycle.</p>
+        </div>
+        @if (!isApplying()) {
+        <app-button variant="primary" (buttonClick)="isApplying.set(true)">
+            Draft New Listing
+        </app-button>
+        }
+    </header>
+
+    @if (!isApplying()) {
+    <div class="tabs-row">
+        <app-segmented-control [options]="tabOptions" [ngModel]="activeTab()" (ngModelChange)="activeTab.set($event)">
+        </app-segmented-control>
+    </div>
+
+    @if (activeTab() === 'OVERVIEW') {
+    <div class="overview-grid">
+
+        @for (item of overviewTimeline(); track item.id) {
+        @if (item.type === 'STOCK') {
+        <app-card class="status-card active">
+            <div class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg></div>
+            <div class="status-content">
+                <div class="header-row">
+                    <h2 class="heading-lg m-0">Listed & Active</h2>
+                    <span class="symbol-badge active">{{ item.symbol }}</span>
+                </div>
+                <p class="text-muted mt-2">Your company's shares are officially trading publicly on the market.</p>
+            </div>
+        </app-card>
+        } @else {
+        <app-card class="status-card pending">
+            <div class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg></div>
+            <div class="status-content">
+                <div class="header-row">
+                    <h2 class="heading-lg m-0">Application in Progress</h2>
+                    <span class="symbol-badge pending">{{ item.symbol }}</span>
+                </div>
+                <p class="text-muted mt-2">Target Exchange: <strong>{{ item.request?.exchangeName }}</strong></p>
+                <div class="progress-track mt-4">
+                    <div class="step" [class.completed]="true">Drafted</div>
+                    <div class="step" [class.completed]="item.request?.status === 'PENDING_EXCHANGE_APPROVAL'"
+                        [class.active]="item.request?.status === 'PENDING_INTERNAL_REVIEW'">Internal Review</div>
+                    <div class="step" [class.active]="item.request?.status === 'PENDING_EXCHANGE_APPROVAL'">Exchange
+                        Approval</div>
+                </div>
+            </div>
+        </app-card>
+        }
+        }
+
+        @if (overviewTimeline().length === 0) {
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <h3 class="heading-md mt-2">No Active Listings</h3>
+            <p class="text-muted">Your company has not yet applied for an exchange listing.</p>
+        </div>
+        }
+    </div>
+    }
+
+    @if (activeTab() === 'APPROVALS') {
+    <app-card>
+        <app-table variant="flush" [columns]="columns()" [data]="pendingApprovals()"
+            emptyText="No pending internal approvals.">
+
+            <ng-template tableCell="symbol" let-val><span class="font-bold">{{ val }}</span></ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge color="warning">Awaiting Primary Contact</app-badge>
+            </ng-template>
+
+            <ng-template tableCell="createdAt" let-val>{{ val | date:'mediumDate' }}</ng-template>
+
+            <ng-template tableCell="actions" let-row="row">
+                @if (rejectingId() === row.id) {
+                <div class="reject-inline">
+                    <app-input [reserveMessageSpace]="false">
+                        <input appInput type="text" placeholder="Reason for rejection..."
+                            [ngModel]="rejectionReasonInput()" (ngModelChange)="rejectionReasonInput.set($event)">
+                    </app-input>
+                    <app-button variant="danger" size="small" (buttonClick)="confirmReject(row.id)">Confirm</app-button>
+                    <app-button variant="secondary" size="small" (buttonClick)="cancelReject()">Cancel</app-button>
+                </div>
+                } @else if (isPrimaryContact()) {
+                <div class="action-buttons">
+                    <app-button variant="primary" size="small"
+                        (buttonClick)="approveRequest(row.id)">Approve</app-button>
+                    <app-button variant="danger" size="small" (buttonClick)="initiateReject(row.id)">Reject</app-button>
+                </div>
+                }
+            </ng-template>
+        </app-table>
+    </app-card>
+    }
+
+    @if (activeTab() === 'HISTORY') {
+    <app-card>
+        <app-table variant="flush" [columns]="historyColumns()" [data]="listingRequests()"
+            emptyText="No listing history found.">
+
+            <ng-template tableCell="symbol" let-val><span class="font-bold">{{ val }}</span></ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge [color]="val === 'REJECTED' ? 'danger' : (val === 'APPROVED' ? 'success' : 'secondary')">{{
+                    val }}</app-badge>
+            </ng-template>
+
+            <ng-template tableCell="rejectionReason" let-val let-row="row">
+                <div class="reason-cell">
+                    <span class="text-muted">{{ val || '--' }}</span>
+                    @if (row.status === 'REJECTED') {
+                    <app-button variant="outline" size="small" (buttonClick)="redraft(row)">Re-draft</app-button>
+                    }
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="createdAt" let-val>{{ val | date:'mediumDate' }}</ng-template>
+        </app-table>
+    </app-card>
+    }
+
+    } @else {
+    <div class="application-view">
+        <div class="app-sidebar">
+            <button class="back-btn" (click)="isApplying.set(false)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </button>
+
+            <div class="info-block mt-4">
+                <h3 class="heading-md">Hybrid Listing Architecture</h3>
+                <p class="text-body text-muted mt-2">TradeSim supports dual-track listings. You can issue shares
+                    directly to existing stakeholders via the Cap Table, while simultaneously holding back shares for a
+                    public IPO.</p>
+
+                <div class="math-box mt-4">
+                    <div class="math-row">
+                        <span>Total Shares Declared:</span>
+                        <strong>{{ formValue().totalShares || 0 }}</strong>
+                    </div>
+                    <div class="math-row" [class.deduction]="capTableSum() > 0">
+                        <span>Direct Allocation (Cap Table):</span>
+                        <strong>{{ capTableSum() > 0 ? '- ' + capTableSum() : capTableSum() }}</strong>
+                    </div>
+                    <hr>
+                    <div class="math-row final">
+                        <span>Reserved for Public IPO:</span>
+                        <strong>{{ remainingShares() }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-main">
+            <app-card>
+                <form [formGroup]="listingForm" (ngSubmit)="submitApplication()">
+                    <h2 class="heading-lg m-0 mb-4">Draft Listing Application</h2>
+
+                    <div class="form-grid">
+                        <app-input label="Stock Symbol" [required]="true"
+                            helperText="Max 10 uppercase alphanumeric chars.">
+                            <input appInput type="text" formControlName="symbol" placeholder="e.g. ACME">
+                        </app-input>
+
+                        <app-dropdown label="Target Exchange" [required]="true" [options]="exchangeOptions()"
+                            formControlName="exchangeId" placeholder="Select exchange">
+                        </app-dropdown>
+
+                        <app-input label="Reference Price" [required]="true" helperText="Initial derived book price.">
+                            <input appInput type="number" formControlName="referencePrice" placeholder="0.00"
+                                step="0.01">
+                        </app-input>
+
+                        <app-dropdown label="Primary Sector" [required]="true" [options]="sectorOptions()"
+                            formControlName="sector" placeholder="Select sector">
+                        </app-dropdown>
+
+                        <app-input label="Price Band %" [required]="true" helperText="Default is 10%. Max 50%.">
+                            <input appInput type="number" formControlName="priceBandPercent" placeholder="10.00"
+                                step="0.1">
+                        </app-input>
+
+                        <app-input label="Total Shares" [required]="true" helperText="Total volume of shares to exist.">
+                            <input appInput type="number" formControlName="totalShares" placeholder="1000000">
+                        </app-input>
+                    </div>
+
+                    <div class="cap-table-section mt-4">
+                        <div class="section-header">
+                            <h3 class="heading-md m-0">Cap Table (Direct Issuance)</h3>
+                            <app-button type="button" variant="outline" size="small"
+                                (buttonClick)="addCapTableEntry()">Add Shareholder</app-button>
+                        </div>
+
+                        <div formArrayName="capTable" class="cap-table-rows mt-2">
+                            @for (ctrl of capTableControls; track $index) {
+                            <div [formGroupName]="$index" class="cap-row">
+                                <app-dropdown class="flex-2" [options]="getAvailableRepresentatives($index)"
+                                    formControlName="userId" [reserveMessageSpace]="false"
+                                    placeholder="Select Representative">
+                                </app-dropdown>
+
+                                <app-input class="flex-1" [reserveMessageSpace]="false"
+                                    errorText="Quantity exceeds available total.">
+                                    <input appInput type="number" formControlName="quantity" placeholder="Quantity">
+                                </app-input>
+
+                                <button type="button" class="icon-btn danger" (click)="removeCapTableEntry($index)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                            }
+                            @if (capTableControls.length === 0) {
+                            <p class="text-muted text-sm text-center py-4 border-dashed">No private shareholders added.
+                                100% of shares will be reserved for public IPO.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-footer mt-5">
+                        <app-button type="button" variant="secondary" (buttonClick)="isApplying.set(false)"
+                            [disabled]="isSubmitting()">Cancel</app-button>
+                        <app-button type="submit" variant="primary" [isLoading]="isSubmitting()">Submit
+                            Application</app-button>
+                    </div>
+                </form>
+            </app-card>
+        </div>
+    </div>
+    }
+    }
+</div>

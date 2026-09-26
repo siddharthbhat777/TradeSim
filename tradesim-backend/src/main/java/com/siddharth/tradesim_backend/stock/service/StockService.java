@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,12 @@ public class StockService {
     private final CompanyRepository companyRepository;
 
     private record StockCap(UUID stockId, BigDecimal marketCap) {}
+
+    public List<String> fetchSectors() {
+        return Arrays.stream(Sector.values())
+                .map(Enum::name)
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public StockResponse getStock(UUID stockId) {
@@ -161,8 +168,8 @@ public class StockService {
     }
 
     @Transactional
-    public StockResponse activateStockFromIpoAllotment(UUID stockId, int totalIssuedShares, int tradableFloatShares) {
-        if (tradableFloatShares > totalIssuedShares) {
+    public StockResponse activateStockFromIpoAllotment(UUID stockId, int newlyIssuedShares, int newlyTradableFloatShares) {
+        if (newlyTradableFloatShares > newlyIssuedShares) {
             throw StockException.badRequest("Tradable float shares cannot exceed total issued shares");
         }
 
@@ -172,12 +179,11 @@ public class StockService {
             throw StockException.conflict("Only HALTED stocks can be activated through IPO allotment");
         }
 
-        if (stock.getTotalIssuedShares() != null || stock.getTradableFloatShares() != null) {
-            throw StockException.conflict("Initial share allocation has already been applied to this stock");
-        }
+        int currentIssued = stock.getTotalIssuedShares() != null ? stock.getTotalIssuedShares() : 0;
+        int currentFloat = stock.getTradableFloatShares() != null ? stock.getTradableFloatShares() : 0;
 
-        stock.setTotalIssuedShares(totalIssuedShares);
-        stock.setTradableFloatShares(tradableFloatShares);
+        stock.setTotalIssuedShares(currentIssued + newlyIssuedShares);
+        stock.setTradableFloatShares(currentFloat + newlyTradableFloatShares);
         stock.setStatus(StockStatus.ACTIVE);
 
         Stock saved = stockRepository.save(stock);

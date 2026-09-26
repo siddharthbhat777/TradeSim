@@ -27,6 +27,12 @@ public class ListingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(listingService.submitListingRequest(companyId, principal.getUserId(), request));
     }
 
+    @GetMapping("company/{companyId}")
+    @PreAuthorize("hasRole('COMPANY_REPRESENTATIVE')")
+    public ResponseEntity<List<ListingRequestResponse>> getCompanyListingRequests(@PathVariable UUID companyId) {
+        return ResponseEntity.ok(listingService.fetchCompanyListingRequests(companyId));
+    }
+
     @GetMapping("pending-exchange")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ListingRequestResponse>> getPendingExchangeListingRequests() {
