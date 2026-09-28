@@ -36,7 +36,13 @@ describe('Approvals', () => {
       providers: [
         provideRouter([]),
         { provide: ListingService, useValue: { getPendingExchangeRequests: vi.fn().mockReturnValue(of([])) } },
-        { provide: IpoService, useValue: { getPendingIpos: vi.fn().mockReturnValue(of([])) } },
+        {
+          provide: IpoService,
+          useValue: {
+            getPendingIpos: vi.fn().mockReturnValue(of([])),
+            getReadyIpos: vi.fn().mockReturnValue(of([]))
+          }
+        },
         { provide: WalletService, useValue: { getPendingMultiCurrencyRequests: vi.fn().mockReturnValue(of([])) } },
         { provide: UserService, useValue: { getAllUsers: vi.fn().mockReturnValue(of([])) } },
         { provide: ToastService, useValue: { success: vi.fn(), danger: vi.fn() } },
@@ -61,11 +67,18 @@ describe('Approvals', () => {
     expect(component.listings()[0].id).toBe('list-2');
   });
 
-  it('should filter out processed IPOs', () => {
-    component.ipos.set([{ id: 'ipo-1' } as any, { id: 'ipo-2' } as any]);
+  it('should filter out processed pending IPOs', () => {
+    component.iposPending.set([{ id: 'ipo-1' } as any, { id: 'ipo-2' } as any]);
     component.onIpoProcessed('ipo-1');
-    expect(component.ipos().length).toBe(1);
-    expect(component.ipos()[0].id).toBe('ipo-2');
+    expect(component.iposPending().length).toBe(1);
+    expect(component.iposPending()[0].id).toBe('ipo-2');
+  });
+
+  it('should filter out finalized IPOs', () => {
+    component.iposReady.set([{ id: 'ipo-1' } as any, { id: 'ipo-2' } as any]);
+    component.onIpoFinalized('ipo-1');
+    expect(component.iposReady().length).toBe(1);
+    expect(component.iposReady()[0].id).toBe('ipo-2');
   });
 
   it('should filter out processed wallets', () => {

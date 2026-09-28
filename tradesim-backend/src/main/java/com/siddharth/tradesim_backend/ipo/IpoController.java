@@ -34,6 +34,18 @@ public class IpoController {
         return ResponseEntity.ok(ipoService.fetchPendingIpoOffers());
     }
 
+    @GetMapping("ready")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<IpoOfferResponse>> getReadyIpoOffers() {
+        return ResponseEntity.ok(ipoService.fetchReadyForAllotmentIpoOffers());
+    }
+
+    @GetMapping("company/{companyId}")
+    @PreAuthorize("hasRole('COMPANY_REPRESENTATIVE')")
+    public ResponseEntity<List<IpoOfferResponse>> getCompanyIpoOffers(@PathVariable UUID companyId) {
+        return ResponseEntity.ok(ipoService.fetchCompanyIpoOffers(companyId));
+    }
+
     @PutMapping("{ipoOfferId}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<IpoOfferResponse> approveIpoOffer(@PathVariable UUID ipoOfferId, @AuthenticationPrincipal UserPrincipal principal) {

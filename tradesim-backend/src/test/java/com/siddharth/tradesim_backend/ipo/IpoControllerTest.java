@@ -110,6 +110,35 @@ class IpoControllerTest {
     }
 
     @Test
+    void companyRepresentativeShouldFetchCompanyIpoOffers() throws Exception {
+        UUID companyId = UUID.randomUUID();
+        UUID crId = UUID.randomUUID();
+
+        User cr = User.builder()
+                .id(crId)
+                .username("manager")
+                .password("password")
+                .role(Role.COMPANY_REPRESENTATIVE)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(cr);
+
+        IpoOfferResponse response = new IpoOfferResponse(
+                UUID.randomUUID(), companyId, "Apple Inc", UUID.randomUUID(), "AAPL", UUID.randomUUID(),
+                BigDecimal.valueOf(125.50), 100, 5, 500, Instant.now().minusSeconds(60), Instant.now().plusSeconds(600),
+                IpoOfferStatus.PENDING_APPROVAL, null, null, null, null, null, "NYSE", "USD", Instant.now(), Instant.now()
+        );
+
+        when(ipoService.fetchCompanyIpoOffers(eq(companyId))).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/ipo-offers/company/{companyId}", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("PENDING_APPROVAL"))
+                .andExpect(jsonPath("$[0].totalSharesOffered").value(500));
+    }
+
+    @Test
     void adminShouldFetchPendingIpoOffers() throws Exception {
         UUID adminId = UUID.randomUUID();
 
@@ -154,6 +183,52 @@ class IpoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("PENDING_APPROVAL"))
                 .andExpect(jsonPath("$[0].totalSharesOffered").value(500));
+    }
+
+    @Test
+    void adminShouldFetchReadyIpoOffers() throws Exception {
+        UUID adminId = UUID.randomUUID();
+
+        User admin = User.builder()
+                .id(adminId)
+                .username("admin")
+                .password("password")
+                .role(Role.ADMIN)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+        UserPrincipal principal = new UserPrincipal(admin);
+
+        IpoOfferResponse response = new IpoOfferResponse(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "Apple Inc",
+                UUID.randomUUID(),
+                "AAPL",
+                UUID.randomUUID(),
+                BigDecimal.valueOf(125.50),
+                100,
+                5,
+                500,
+                Instant.now().minusSeconds(600),
+                Instant.now().minusSeconds(60),
+                IpoOfferStatus.SUBSCRIPTION_OPEN,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "NYSE",
+                "USD",
+                Instant.now(),
+                Instant.now()
+        );
+
+        when(ipoService.fetchReadyForAllotmentIpoOffers()).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/ipo-offers/ready")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("SUBSCRIPTION_OPEN"));
     }
 
     @Test
@@ -220,19 +295,9 @@ class IpoControllerTest {
         UserPrincipal principal = new UserPrincipal(user);
 
         IpoSubscriptionResponse response = new IpoSubscriptionResponse(
-                UUID.randomUUID(),
-                ipoOfferId,
-                stockId,
-                userId,
-                BigDecimal.valueOf(125.50),
-                100,
-                BigDecimal.valueOf(12550),
-                0,
-                IpoSubscriptionStatus.SUBMITTED,
-                Instant.now().plusSeconds(600),
-                "USD",
-                Instant.now(),
-                Instant.now()
+                UUID.randomUUID(), ipoOfferId, stockId, "AAPL", userId, "ipo_user", "user@example.com",
+                BigDecimal.valueOf(125.50), 100, BigDecimal.valueOf(12550), 0,
+                IpoSubscriptionStatus.SUBMITTED, Instant.now().plusSeconds(600), "USD", Instant.now(), Instant.now()
         );
 
         when(ipoService.subscribeToIpo(eq(ipoOfferId), eq(userId))).thenReturn(response);
@@ -389,7 +454,7 @@ class IpoControllerTest {
         UserPrincipal principal = new UserPrincipal(admin);
 
         IpoSubscriptionResponse response = new IpoSubscriptionResponse(
-                UUID.randomUUID(), ipoOfferId, UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), ipoOfferId, UUID.randomUUID(), "AAPL", UUID.randomUUID(), "ipo_user", "user@example.com",
                 BigDecimal.valueOf(125.50), 100, BigDecimal.valueOf(12550), 0,
                 IpoSubscriptionStatus.SUBMITTED, Instant.now().plusSeconds(600), "USD", Instant.now(), Instant.now()
         );
@@ -417,7 +482,7 @@ class IpoControllerTest {
         UserPrincipal principal = new UserPrincipal(cr);
 
         IpoSubscriptionResponse response = new IpoSubscriptionResponse(
-                UUID.randomUUID(), ipoOfferId, UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), ipoOfferId, UUID.randomUUID(), "AAPL", UUID.randomUUID(), "ipo_user", "user@example.com",
                 BigDecimal.valueOf(125.50), 100, BigDecimal.valueOf(12550), 0,
                 IpoSubscriptionStatus.SUBMITTED, Instant.now().plusSeconds(600), "USD", Instant.now(), Instant.now()
         );

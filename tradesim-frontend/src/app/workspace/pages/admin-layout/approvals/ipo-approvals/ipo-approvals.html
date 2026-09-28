@@ -1,8 +1,14 @@
+<div class="tabs-row">
+    <app-segmented-control [options]="tabOptions" [ngModel]="activeTab()" (ngModelChange)="activeTab.set($event)"
+        required></app-segmented-control>
+</div>
+
+@if (activeTab() === 'PENDING') {
 @if (isLoading()) {
 <app-card [isLoading]="true" class="approval-card">
     <div style="height: 400px;"></div>
 </app-card>
-} @else if (data().length === 0) {
+} @else if (pendingData().length === 0) {
 <app-empty-state text="No pending IPO offers"
     subtext="All caught up! There are currently no initial public offerings awaiting your review.">
     <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -16,7 +22,7 @@
 </app-empty-state>
 } @else {
 <app-card class="approval-card">
-    <app-table variant="flush" [columns]="columns()" [data]="data()" [paginated]="true">
+    <app-table variant="flush" [columns]="pendingColumns()" [data]="pendingData()" [paginated]="true">
 
         <ng-template tableCell="symbol" let-val let-row="row">
             <span class="font-semibold" [class.highlight]="isHighlighted(row.id)">{{ val }}</span>
@@ -74,6 +80,76 @@
 
     </app-table>
 </app-card>
+}
+} @else {
+@if (isLoading()) {
+<app-card [isLoading]="true" class="approval-card">
+    <div style="height: 400px;"></div>
+</app-card>
+} @else if (readyData().length === 0) {
+<app-empty-state text="No IPOs ready for allotment"
+    subtext="There are no open IPOs whose subscription windows have fully closed.">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+</app-empty-state>
+} @else {
+<app-card class="approval-card">
+    <app-table variant="flush" [columns]="readyColumns()" [data]="readyData()" [paginated]="true">
+
+        <ng-template tableCell="symbol" let-val let-row="row">
+            <span class="font-semibold" [class.highlight]="isHighlighted(row.id)">{{ val }}</span>
+        </ng-template>
+
+        <ng-template tableCell="issuePrice" let-val let-row="row">
+            {{ val | formatCurrency:row.currency:'currency':2 }}
+        </ng-template>
+
+        <ng-template tableCell="totalSharesOffered" let-val>
+            {{ val ? (val | number) : '-' }}
+        </ng-template>
+
+        <ng-template tableCell="subscriptionEndAt" let-val>
+            <span class="font-medium">{{ val | date:'medium' }}</span>
+        </ng-template>
+
+        <ng-template tableCell="status" let-val>
+            <app-badge color="success">Window Closed</app-badge>
+        </ng-template>
+
+        <ng-template tableCell="actions" let-row="row">
+            <div class="action-buttons">
+                <app-button variant="primary" size="small" [disabled]="isProcessing()"
+                    (buttonClick)="confirmFinalize(row.id)">Finalize</app-button>
+            </div>
+        </ng-template>
+
+        <ng-template tableExpandedRow let-row="row">
+            <div class="expanded-details">
+                <h4 class="expanded-title">Allotment Requirements</h4>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Company Name</span>
+                        <span class="detail-value">{{ row.companyName }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Required Subscribers</span>
+                        <span class="detail-value font-bold">{{ row.maxAllottees }} minimum required</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Total Funding Target</span>
+                        <span class="detail-value">{{ (row.issuePrice * row.totalSharesOffered) |
+                            formatCurrency:row.currency:'currency':0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+
+    </app-table>
+</app-card>
+}
 }
 
 @if (showRejectModal()) {

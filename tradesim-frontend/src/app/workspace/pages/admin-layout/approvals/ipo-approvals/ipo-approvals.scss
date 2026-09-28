@@ -1,3 +1,9 @@
+.tabs-row {
+  display: flex;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
 .action-buttons {
   display: flex;
   gap: 0.5rem;
@@ -6,6 +12,14 @@
 
 .font-semibold {
   font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-medium {
+  font-weight: 500;
 }
 
 .text-muted {

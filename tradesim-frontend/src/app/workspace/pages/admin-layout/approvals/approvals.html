@@ -13,8 +13,8 @@
         [isLoading]="isLoading()" (processed)="onListingProcessed($event)">
     </app-listing-approvals>
     } @else if (tabControl.value === 'IPO') {
-    <app-ipo-approvals [highlightedId]="highlightedId()" [data]="ipos()" [isLoading]="isLoading()"
-        (processed)="onIpoProcessed($event)">
+    <app-ipo-approvals [highlightedId]="highlightedId()" [pendingData]="iposPending()" [readyData]="iposReady()"
+        [isLoading]="isLoading()" (processed)="onIpoProcessed($event)" (finalized)="onIpoFinalized($event)">
     </app-ipo-approvals>
     } @else if (tabControl.value === 'Wallet') {
     <app-wallet-approvals [highlightedId]="highlightedId()" [data]="wallets()" [users]="users()"

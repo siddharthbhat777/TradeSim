@@ -1,1 +1,292 @@
-<p>ipo works!</p>
+<div class="ipo-container">
+    @if (isLoading()) {
+    <app-card [isLoading]="true">
+        <div style="height: 400px;"></div>
+    </app-card>
+    } @else {
+
+    <header class="page-header">
+        <div>
+            <h1 class="heading-xl m-0">IPO Management</h1>
+            <p class="text-body text-muted m-0">Control your company's initial public offering lifecycle.</p>
+        </div>
+        @if (!isApplying()) {
+        <app-button variant="primary" [disabled]="!isPrimaryContact()" (buttonClick)="isApplying.set(true)">
+            Draft New IPO
+        </app-button>
+        }
+    </header>
+
+    @if (!isApplying()) {
+    <div class="tabs-row">
+        <app-segmented-control [options]="tabOptions" [ngModel]="activeTab()" (ngModelChange)="activeTab.set($event)">
+        </app-segmented-control>
+    </div>
+
+    @if (activeTab() === 'OVERVIEW') {
+    <div class="overview-grid">
+        @if (activeIpo(); as ipo) {
+        <app-card class="status-card" [class.open]="ipo.status === 'SUBSCRIPTION_OPEN'"
+            [class.pending]="ipo.status === 'PENDING_APPROVAL'">
+            <div class="status-icon">
+                @if (ipo.status === 'SUBSCRIPTION_OPEN') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                }
+            </div>
+            <div class="status-content">
+                <div class="header-row">
+                    <h2 class="heading-lg m-0">{{ ipo.status === 'SUBSCRIPTION_OPEN' ? 'Subscription Open' : 'Awaiting
+                        Approval' }}</h2>
+                    <span class="symbol-badge" [class.open]="ipo.status === 'SUBSCRIPTION_OPEN'"
+                        [class.pending]="ipo.status === 'PENDING_APPROVAL'">{{ ipo.symbol }}</span>
+                </div>
+                <div class="ipo-metrics mt-3">
+                    <div class="metric">
+                        <span class="metric-label">Issue Price</span>
+                        <span class="metric-value">{{ ipo.issuePrice }} {{ ipo.currency }}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Shares per Allottee</span>
+                        <span class="metric-value">{{ ipo.sharesPerAllottee }}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Max Allottees</span>
+                        <span class="metric-value">{{ ipo.maxAllottees }}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Total Offered</span>
+                        <span class="metric-value">{{ ipo.totalSharesOffered }}</span>
+                    </div>
+                </div>
+                <div class="progress-track mt-4">
+                    <div class="step completed">Drafted</div>
+                    <div class="step" [class.completed]="ipo.status === 'SUBSCRIPTION_OPEN'"
+                        [class.active]="ipo.status === 'PENDING_APPROVAL'">Admin Approval</div>
+                    <div class="step" [class.active]="ipo.status === 'SUBSCRIPTION_OPEN'">Subscription Window</div>
+                    <div class="step">Allotted</div>
+                </div>
+            </div>
+        </app-card>
+        } @else {
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+            <h3 class="heading-md mt-2">No Active IPO</h3>
+            <p class="text-muted">Your company currently has no active Initial Public Offering.</p>
+            @if (!isPrimaryContact()) {
+            <p class="text-sm text-warning mt-2">Only the Primary Contact can draft a new IPO.</p>
+            }
+        </div>
+        }
+    </div>
+    }
+
+    @if (activeTab() === 'SUBSCRIPTIONS') {
+    <app-card>
+        <app-table variant="flush" [columns]="subscriptionColumns()" [data]="subscriptions()" [paginated]="true"
+            [interactiveRows]="true" emptyText="No subscriptions received yet.">
+
+            <ng-template tableCell="user" let-val let-row="row">
+                <div class="user-meta">
+                    <span class="font-semibold">{{ row.userName }}</span>
+                    <span class="text-small text-muted">{{ row.userEmail }}</span>
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="symbol" let-val>
+                <span class="font-bold">{{ val }}</span>
+            </ng-template>
+
+            <ng-template tableCell="lockedAmount" let-val let-row="row">
+                <span class="font-semibold">{{ val | number:'1.2-2' }} {{ row.currency }}</span>
+            </ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge [color]="val === 'SUBMITTED' ? 'primary' : (val === 'ALLOTTED' ? 'success' : 'danger')">{{
+                    val }}</app-badge>
+            </ng-template>
+
+            <ng-template tableCell="createdAt" let-val>{{ val | date:'mediumDate' }}</ng-template>
+
+            <ng-template tableExpandedRow let-row="row">
+                <div class="expanded-details">
+                    <div class="expanded-grid">
+                        <div class="metric-item">
+                            <span class="label">Subscriber ID</span>
+                            <div class="id-cell-wrapper" style="margin-top: -2px;">
+                                <span class="value font-mono">{{ row.userId | slice:0:8 }}...</span>
+                                <button class="copy-btn copy-btn--small"
+                                    (click)="copyId(row.userId); $event.stopPropagation()" aria-label="Copy ID">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">IPO Symbol</span>
+                            <span class="value font-bold">{{ row.symbol }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Shares Requested</span>
+                            <span class="value">{{ row.sharesPerAllottee }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Issue Price</span>
+                            <span class="value">{{ row.issuePrice | number:'1.2-2' }} {{ row.currency }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Allotted Shares</span>
+                            <span class="value" [class.text-success]="row.allottedShares > 0">{{ row.allottedShares
+                                }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Subscription Deadline</span>
+                            <span class="value">{{ row.subscriptionEndAt | date:'medium' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+
+        </app-table>
+    </app-card>
+    }
+
+    @if (activeTab() === 'HISTORY') {
+    <app-card>
+        <app-table variant="flush" [columns]="historyColumns()" [data]="historyIpos()"
+            emptyText="No IPO history found.">
+            <ng-template tableCell="symbol" let-val><span class="font-bold">{{ val }}</span></ng-template>
+
+            <ng-template tableCell="issuePrice" let-val let-row="row">
+                <span>{{ val | number:'1.2-2' }} {{ row.currency }}</span>
+            </ng-template>
+
+            <ng-template tableCell="totalSharesOffered" let-val>
+                <span>{{ val | number }}</span>
+            </ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge [color]="val === 'REJECTED' ? 'danger' : 'success'">{{ val }}</app-badge>
+            </ng-template>
+
+            <ng-template tableCell="rejectionReason" let-val let-row="row">
+                <div class="reason-cell">
+                    <span class="text-muted">{{ val || '--' }}</span>
+                    @if (row.status === 'REJECTED' && isPrimaryContact()) {
+                    <app-button variant="outline" size="small" (buttonClick)="redraft(row)">Re-draft</app-button>
+                    }
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="createdAt" let-val>{{ val | date:'mediumDate' }}</ng-template>
+        </app-table>
+    </app-card>
+    }
+
+    } @else {
+    <div class="application-view">
+        <div class="app-sidebar">
+            <button class="back-btn" (click)="isApplying.set(false)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </button>
+
+            <div class="info-block mt-4">
+                <h3 class="heading-md">Public Offering Math</h3>
+                <p class="text-body text-muted mt-2">The total shares offered to the public is derived by multiplying
+                    the shares allocated to a single winning subscriber by the maximum number of winning subscribers.
+                </p>
+
+                <div class="math-box mt-4">
+                    <div class="math-row">
+                        <span>Shares per Allottee:</span>
+                        <strong>{{ formValue().sharesPerAllottee || 0 }}</strong>
+                    </div>
+                    <div class="math-row">
+                        <span>Max Allottees:</span>
+                        <strong>× {{ formValue().maxAllottees || 0 }}</strong>
+                    </div>
+                    <hr>
+                    <div class="math-row final">
+                        <span>Total Shares Offered:</span>
+                        <strong>{{ totalSharesOffered() }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-main">
+            <app-card>
+                <form [formGroup]="ipoForm" (ngSubmit)="submitApplication()">
+                    <h2 class="heading-lg m-0 mb-4">Configure Initial Public Offering</h2>
+
+                    @if (eligibleStocks().length === 0) {
+                    <div class="empty-state" style="padding: 2rem 1rem;">
+                        <p class="text-danger m-0 font-medium">No eligible HALTED stocks available for IPO. Please
+                            ensure a corporate listing has been approved first.</p>
+                    </div>
+                    } @else {
+                    <div class="form-grid">
+                        <app-dropdown label="Target Stock" [required]="true" [options]="stockOptions()"
+                            formControlName="stockId" placeholder="Select halted stock">
+                        </app-dropdown>
+
+                        <app-input label="Issue Price" [required]="true"
+                            helperText="Fixed price per share for public investors.">
+                            <input appInput type="number" formControlName="issuePrice" placeholder="0.00" step="0.01">
+                        </app-input>
+
+                        <app-input label="Lot Size (Shares per Allottee)" [required]="true"
+                            helperText="How many shares a single winning ticket receives.">
+                            <input appInput type="number" formControlName="sharesPerAllottee" placeholder="e.g. 50">
+                        </app-input>
+
+                        <app-input label="Max Allottees" [required]="true"
+                            helperText="Maximum number of winning subscribers.">
+                            <input appInput type="number" formControlName="maxAllottees" placeholder="e.g. 1000">
+                        </app-input>
+
+                        <app-input label="Subscription Start Time" [required]="true"
+                            helperText="When users can start placing hold mandates.">
+                            <input appInput type="datetime-local" formControlName="subscriptionStartAt">
+                        </app-input>
+
+                        <app-input label="Subscription End Time" [required]="true"
+                            helperText="When the subscription window rigidly closes.">
+                            <input appInput type="datetime-local" formControlName="subscriptionEndAt">
+                        </app-input>
+                    </div>
+
+                    <div class="form-footer mt-5">
+                        <app-button type="button" variant="secondary" (buttonClick)="isApplying.set(false)"
+                            [disabled]="isSubmitting()">Cancel</app-button>
+                        <app-button type="submit" variant="primary" [isLoading]="isSubmitting()">Submit IPO
+                            configuration</app-button>
+                    </div>
+                    }
+                </form>
+            </app-card>
+        </div>
+    </div>
+    }
+    }
+</div>

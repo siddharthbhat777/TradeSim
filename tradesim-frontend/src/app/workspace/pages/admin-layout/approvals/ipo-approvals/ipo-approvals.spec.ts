@@ -60,7 +60,8 @@ describe('IpoApprovals', () => {
   beforeEach(async () => {
     ipoServiceMock = {
       approveIpoOffer: vi.fn().mockReturnValue(of({ ...mockIpo, status: 'SUBSCRIPTION_OPEN' })),
-      rejectIpoOffer: vi.fn().mockReturnValue(of({ ...mockIpo, status: 'REJECTED' }))
+      rejectIpoOffer: vi.fn().mockReturnValue(of({ ...mockIpo, status: 'REJECTED' })),
+      finalizeIpoOffer: vi.fn().mockReturnValue(of({ ...mockIpo, status: 'ALLOTTED' }))
     };
 
     dialogServiceMock = {
@@ -88,7 +89,8 @@ describe('IpoApprovals', () => {
     fixture = TestBed.createComponent(IpoApprovals);
     component = fixture.componentInstance;
 
-    fixture.componentRef.setInput('data', [mockIpo]);
+    fixture.componentRef.setInput('pendingData', [mockIpo]);
+    fixture.componentRef.setInput('readyData', [{ ...mockIpo, status: 'SUBSCRIPTION_OPEN', id: 'ipo-2' }]);
     fixture.componentRef.setInput('isLoading', false);
 
     fixture.detectChanges();
@@ -107,6 +109,17 @@ describe('IpoApprovals', () => {
     expect(ipoServiceMock.approveIpoOffer).toHaveBeenCalledWith('ipo-1');
     expect(toastServiceMock.success).toHaveBeenCalledWith('IPO offer approved successfully.');
     expect(processedSpy).toHaveBeenCalledWith('ipo-1');
+  });
+
+  it('should finalize an IPO and emit finalized event', () => {
+    const finalizedSpy = vi.spyOn(component.finalized, 'emit');
+
+    component.confirmFinalize('ipo-2');
+
+    expect(dialogServiceMock.open).toHaveBeenCalled();
+    expect(ipoServiceMock.finalizeIpoOffer).toHaveBeenCalledWith('ipo-2');
+    expect(toastServiceMock.success).toHaveBeenCalledWith('IPO finalized and stock activated successfully.');
+    expect(finalizedSpy).toHaveBeenCalledWith('ipo-2');
   });
 
   it('should reject an IPO and emit processed event', () => {
