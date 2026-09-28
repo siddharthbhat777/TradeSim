@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignm
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.model.CompanyRepresentativeAssignment;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
+import com.siddharth.tradesim_backend.company.model.dto.EligibleRepresentativeResponse;
 import com.siddharth.tradesim_backend.company.model.dto.PrimaryContactTransferResponse;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
@@ -72,6 +73,20 @@ public class CompanyRepresentativeAssignmentService {
                     User targetUser = authRepository.findById(assignment.getUserId()).orElseThrow(() -> UserException.notFound("User not found"));
                     return toResponse(assignment, targetUser);
                 })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EligibleRepresentativeResponse> fetchEligibleRepresentatives() {
+        return authRepository.findAll().stream()
+                .filter(user -> user.getRole() == Role.COMPANY_REPRESENTATIVE)
+                .map(user -> new EligibleRepresentativeResponse(
+                        user.getId(),
+                        user.getFullName(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getAccountStatus()
+                ))
                 .toList();
     }
 

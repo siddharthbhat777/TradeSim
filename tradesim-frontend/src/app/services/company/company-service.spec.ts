@@ -76,6 +76,13 @@ describe('CompanyService', () => {
     req.flush({});
   });
 
+  it('should get eligible representatives', () => {
+    service.getEligibleRepresentatives().subscribe();
+    const req = httpMock.expectOne(`${baseUrl}/representatives/eligible`);
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
   it('should get representatives', () => {
     service.getRepresentatives('comp-1').subscribe();
     const req = httpMock.expectOne(`${baseUrl}/comp-1/representatives`);

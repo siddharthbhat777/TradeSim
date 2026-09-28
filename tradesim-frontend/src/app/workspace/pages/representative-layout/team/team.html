@@ -1,1 +1,126 @@
-<p>team works!</p>
+<div class="team-container">
+    @if (isLoading()) {
+    <app-card [isLoading]="true">
+        <div style="height: 400px;"></div>
+    </app-card>
+    } @else {
+
+    <header class="page-header">
+        <div>
+            <h1 class="heading-xl m-0">Corporate Representatives</h1>
+            <p class="text-body text-muted m-0">Manage users with access to your company dashboard.</p>
+        </div>
+        @if (isPrimaryContact()) {
+        <app-button variant="primary" (buttonClick)="openAddModal()">
+            Add Representative
+        </app-button>
+        }
+    </header>
+
+    <div class="metrics-row">
+        <app-card class="metric-card">
+            <div class="metric-content">
+                <span class="metric-label">Active Team Members</span>
+                <span class="metric-value">{{ activeRepsCount() }}</span>
+            </div>
+            <div class="metric-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+        </app-card>
+    </div>
+
+    <app-card>
+        <app-table variant="flush" [columns]="columns()" [data]="representatives()"
+            emptyText="No representatives found.">
+
+            <ng-template tableCell="user" let-row="row">
+                <div class="user-meta">
+                    <span class="font-semibold">{{ row.fullName || 'Unknown User' }}</span>
+                    <span class="text-small text-muted">{{ row.email || 'No email provided' }}</span>
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="userId" let-val>
+                <div class="id-cell-wrapper">
+                    <span class="font-mono">{{ val | slice:0:8 }}...</span>
+                    <button class="copy-btn copy-btn--small" (click)="copyId(val)" aria-label="Copy ID">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </ng-template>
+
+            <ng-template tableCell="assignmentRole" let-val>
+                @if (val === 'PRIMARY_CONTACT') {
+                <app-badge color="accent">Primary Contact</app-badge>
+                } @else {
+                <app-badge color="primary">Manager</app-badge>
+                }
+            </ng-template>
+
+            <ng-template tableCell="status" let-val>
+                <app-badge [color]="val === 'ACTIVE' ? 'success' : 'danger'">{{ val }}</app-badge>
+            </ng-template>
+
+            <ng-template tableCell="actions" let-row="row">
+                @if (isPrimaryContact() && row.assignmentRole !== 'PRIMARY_CONTACT' && row.status === 'ACTIVE') {
+                <div class="action-buttons">
+                    <app-button variant="outline" size="small"
+                        (buttonClick)="confirmTransfer(row.userId, row.fullName || 'this user')">Transfer
+                        Role</app-button>
+                    <app-button variant="danger" size="small"
+                        (buttonClick)="confirmRevoke(row.userId, row.fullName || 'this user')">Revoke</app-button>
+                </div>
+                }
+            </ng-template>
+
+        </app-table>
+    </app-card>
+
+    @if (showAddModal()) {
+    <app-modal (closed)="closeAddModal()" ariaLabel="Add Representative">
+        <div class="add-modal">
+            <div class="add-modal__header">
+                <h3 class="heading-md m-0">Add Representative</h3>
+                <p class="text-muted mb-0">Search and select the user you wish to assign as a Manager.</p>
+            </div>
+
+            <form [formGroup]="addRepForm" (ngSubmit)="submitAddRep()">
+                <div class="add-modal__body">
+                    <app-dropdown label="User to Assign" [options]="availableUsersOptions()" formControlName="userId"
+                        placeholder="Search users to assign..." [searchable]="true"
+                        searchPlaceholder="Search by name, username, or email..." [required]="true"
+                        errorText="Please select an eligible representative.">
+                        <ng-template #optionTemplate let-option>
+                            <div class="user-option">
+                                <div class="user-option-main">
+                                    <span class="user-option-label">{{ option.label }}</span>
+                                    <span class="user-option-email">{{ option.email }}</span>
+                                </div>
+                                <span class="user-option-status" [class.eligible]="option.isEligible">{{
+                                    option.statusText }}</span>
+                            </div>
+                        </ng-template>
+                    </app-dropdown>
+                </div>
+
+                <div class="add-modal__footer">
+                    <app-button type="button" variant="secondary" [disabled]="isProcessing()"
+                        (buttonClick)="closeAddModal()">Cancel</app-button>
+                    <app-button type="submit" variant="primary" [isLoading]="isProcessing()">Assign
+                        Representative</app-button>
+                </div>
+            </form>
+        </div>
+    </app-modal>
+    }
+    }
+</div>

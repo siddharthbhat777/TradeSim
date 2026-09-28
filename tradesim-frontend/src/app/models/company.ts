@@ -33,3 +33,11 @@ export interface CompanyOnboardingResponse {
     representative: any;
     assignment: CompanyRepresentativeAssignmentResponse;
 }
+
+export interface EligibleRepresentativeResponse {
+    id: string;
+    fullName: string;
+    username: string;
+    email: string;
+    accountStatus: string;
+}

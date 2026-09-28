@@ -8,6 +8,7 @@ import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAss
 import com.siddharth.tradesim_backend.company.model.dto.CompanyResponse;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyOnboardingRequest;
 import com.siddharth.tradesim_backend.company.model.dto.CreateCompanyRequest;
+import com.siddharth.tradesim_backend.company.model.dto.EligibleRepresentativeResponse;
 import com.siddharth.tradesim_backend.company.model.dto.PrimaryContactTransferResponse;
 import com.siddharth.tradesim_backend.company.model.dto.TransferPrimaryContactRequest;
 import com.siddharth.tradesim_backend.company.service.CompanyOnboardingService;
@@ -64,6 +65,12 @@ public class CompanyController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CompanyResponse> changeStatus(@PathVariable UUID companyId, @Valid @RequestBody ChangeCompanyStatusRequest request) {
         return ResponseEntity.ok(companyService.changeStatus(companyId, request.status()));
+    }
+
+    @GetMapping("representatives/eligible")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_REPRESENTATIVE')")
+    public ResponseEntity<List<EligibleRepresentativeResponse>> getEligibleRepresentatives() {
+        return ResponseEntity.ok(companyRepresentativeAssignmentService.fetchEligibleRepresentatives());
     }
 
     @PostMapping("{companyId}/representatives")
