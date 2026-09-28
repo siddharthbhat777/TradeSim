@@ -19,7 +19,8 @@
 
     @if (!isApplying()) {
     <div class="tabs-row">
-        <app-segmented-control [options]="tabOptions" [ngModel]="activeTab()" (ngModelChange)="activeTab.set($event)">
+        <app-segmented-control [options]="tabOptions" [ngModel]="activeTab()" (ngModelChange)="activeTab.set($event)"
+            required>
         </app-segmented-control>
     </div>
 
