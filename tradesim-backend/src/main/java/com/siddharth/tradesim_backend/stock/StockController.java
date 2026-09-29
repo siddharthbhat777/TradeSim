@@ -25,6 +25,11 @@ public class StockController {
         return ResponseEntity.ok(stockService.fetchStocks());
     }
 
+    @GetMapping("sectors")
+    public ResponseEntity<List<String>> getSectors() {
+        return ResponseEntity.ok(stockService.fetchSectors());
+    }
+
     @GetMapping("{stockId}")
     public ResponseEntity<StockResponse> getStock(@PathVariable UUID stockId) {
         return ResponseEntity.ok(stockService.getStock(stockId));

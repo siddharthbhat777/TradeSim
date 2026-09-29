@@ -4,12 +4,15 @@ export interface CompanyResponse {
     code: string;
     country: string;
     status: string;
+    primaryContactId: string | null;
 }
 
 export interface CompanyRepresentativeAssignmentResponse {
     id: string;
     companyId: string;
     userId: string;
+    fullName: string;
+    email: string;
     assignedByUserId: string;
     assignmentRole: 'PRIMARY_CONTACT' | 'MANAGER';
     status: 'ACTIVE' | 'REVOKED';
@@ -29,4 +32,12 @@ export interface CompanyOnboardingResponse {
     company: CompanyResponse;
     representative: any;
     assignment: CompanyRepresentativeAssignmentResponse;
+}
+
+export interface EligibleRepresentativeResponse {
+    id: string;
+    fullName: string;
+    username: string;
+    email: string;
+    accountStatus: string;
 }

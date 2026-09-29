@@ -1,4 +1,4 @@
-import { CompanyResponse, CompanyRepresentativeAssignmentResponse, PrimaryContactTransferResponse, CompanyOnboardingResponse } from '../../models/company';
+import { CompanyResponse, CompanyRepresentativeAssignmentResponse, PrimaryContactTransferResponse, CompanyOnboardingResponse, EligibleRepresentativeResponse } from '../../models/company';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environment/environment';
@@ -13,6 +13,12 @@ export class CompanyService {
 
   getCompanies() {
     return this.http.get<CompanyResponse[]>(this.companyURL, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  getAssignedCompanies() {
+    return this.http.get<CompanyResponse[]>(`${this.companyURL}/assigned`, {
       context: skipInterceptors({ loader: true })
     });
   }
@@ -38,6 +44,12 @@ export class CompanyService {
   changeStatus(id: string, status: string) {
     return this.http.put<CompanyResponse>(`${this.companyURL}/${id}/status`, { status }, {
       context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
+  getEligibleRepresentatives() {
+    return this.http.get<EligibleRepresentativeResponse[]>(`${this.companyURL}/representatives/eligible`, {
+      context: skipInterceptors({ loader: true })
     });
   }
 

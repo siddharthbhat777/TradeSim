@@ -105,6 +105,24 @@ public class IpoService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<IpoOfferResponse> fetchReadyForAllotmentIpoOffers() {
+        Instant now = Instant.now();
+        return ipoOfferRepository.findByStatusOrderByCreatedAtAsc(IpoOfferStatus.SUBSCRIPTION_OPEN)
+                .stream()
+                .filter(offer -> !now.isBefore(offer.getSubscriptionEndAt()))
+                .map(this::toOfferResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<IpoOfferResponse> fetchCompanyIpoOffers(UUID companyId) {
+        return ipoOfferRepository.findByCompanyIdOrderByCreatedAtDesc(companyId)
+                .stream()
+                .map(this::toOfferResponse)
+                .toList();
+    }
+
     @Transactional
     public IpoOfferResponse approveIpoOffer(UUID ipoOfferId, UUID adminUserId) {
         IpoOffer ipoOffer = findPendingIpoOffer(ipoOfferId);
@@ -237,8 +255,13 @@ public class IpoService {
     }
 
     @Transactional(readOnly = true)
-    public List<IpoSubscriptionResponse> fetchSubscriptionsForOffer(UUID ipoOfferId) {
+    public List<IpoSubscriptionResponse> fetchSubscriptionsForOffer(UUID ipoOfferId, UUID actingUserId) {
         IpoOffer ipoOffer = ipoOfferRepository.findById(ipoOfferId).orElseThrow(() -> IpoException.notFound("IPO offer not found"));
+        User actingUser = authRepository.findById(actingUserId).orElseThrow(() -> UserException.notFound("User not found"));
+
+        if (actingUser.getRole() != Role.ADMIN) {
+            companyRepresentativeAssignmentService.assertActiveRepresentativeAssignment(ipoOffer.getCompanyId(), actingUserId);
+        }
 
         return ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId)
                 .stream()
@@ -269,7 +292,7 @@ public class IpoService {
 
         List<IpoSubscription> subscriptions = ipoSubscriptionRepository.findByIpoOfferIdOrderByCreatedAtAsc(ipoOfferId);
         if (subscriptions.size() < ipoOffer.getMaxAllottees()) {
-            throw IpoException.conflict("Not enough subscriptions to finalize this IPO offer");
+            throw IpoException.conflict("Not enough subscriptions to finalize this IPO offer. Current Subscriptions: " + subscriptions.size() + ", Required: " + ipoOffer.getMaxAllottees());
         }
 
         List<IpoSubscription> shuffledSubscriptions = new ArrayList<>(subscriptions);
@@ -488,11 +511,23 @@ public class IpoService {
         Stock stock = stockRepository.findById(ipoOffer.getStockId()).orElseThrow(() -> StockException.notFound("Stock not found"));
         Exchange exchange = exchangeRepository.findById(stock.getExchangeId()).orElseThrow(() -> ExchangeException.notFound("Exchange not found"));
 
+        String userName = "Unknown";
+        String userEmail = "Unknown";
+
+        Optional<User> userOpt = authRepository.findById(ipoSubscription.getUserId());
+        if (userOpt.isPresent()) {
+            userName = userOpt.get().getUsername();
+            userEmail = userOpt.get().getEmail();
+        }
+
         return new IpoSubscriptionResponse(
                 ipoSubscription.getId(),
                 ipoSubscription.getIpoOfferId(),
                 ipoOffer.getStockId(),
+                stock.getSymbol(),
                 ipoSubscription.getUserId(),
+                userName,
+                userEmail,
                 ipoOffer.getIssuePrice(),
                 ipoOffer.getSharesPerAllottee(),
                 ipoSubscription.getLockedAmount(),

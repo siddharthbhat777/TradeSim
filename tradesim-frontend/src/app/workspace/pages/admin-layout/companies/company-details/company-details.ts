@@ -17,6 +17,13 @@ import { CompanyResponse, CompanyRepresentativeAssignmentResponse } from '../../
 import { UserListResponse } from '../../../../../models/user';
 import { CountryNamePipe } from '../../../../../shared/pipes/country-name-pipe';
 
+export interface UserDropdownOption extends DropdownOption<string> {
+  email: string;
+  statusText: string;
+  isEligible: boolean;
+  hasRole: boolean;
+}
+
 @Component({
   selector: 'app-company-details',
   imports: [
@@ -68,7 +75,7 @@ export class CompanyDetails implements OnInit {
     userId: ['', Validators.required]
   });
 
-  readonly availableUsersOptions = computed<DropdownOption<string>[]>(() => {
+  readonly availableUsersOptions = computed<UserDropdownOption[]>(() => {
     const activeReps = new Set(
       this.representatives()
         .filter(r => r.status === 'ACTIVE')

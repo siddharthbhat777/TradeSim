@@ -34,6 +34,16 @@ class StockControllerTest {
     private StockService stockService;
 
     @Test
+    void shouldReturnSectors() throws Exception {
+        when(stockService.fetchSectors()).thenReturn(List.of("TECHNOLOGY", "FINANCE"));
+
+        mockMvc.perform(get("/stocks/sectors"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("TECHNOLOGY"))
+                .andExpect(jsonPath("$[1]").value("FINANCE"));
+    }
+
+    @Test
     void shouldReturnStocks() throws Exception {
         StockResponse stock = new StockResponse(
                 UUID.randomUUID(),

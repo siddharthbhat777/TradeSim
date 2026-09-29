@@ -47,7 +47,8 @@ export class Approvals implements OnInit {
   readonly highlightedId = signal<string | null>(null);
 
   readonly listings = signal<ListingRequestResponse[]>([]);
-  readonly ipos = signal<IpoOfferResponse[]>([]);
+  readonly iposPending = signal<IpoOfferResponse[]>([]);
+  readonly iposReady = signal<IpoOfferResponse[]>([]);
   readonly wallets = signal<Wallet[]>([]);
   readonly users = signal<UserListResponse[]>([]);
   readonly isLoading = signal(true);
@@ -56,7 +57,7 @@ export class Approvals implements OnInit {
 
   readonly tabOptions = computed<SegmentOption<ApprovalTab>[]>(() => {
     const lCount = this.listings().length;
-    const iCount = this.ipos().length;
+    const iCount = this.iposPending().length + this.iposReady().length;
     const wCount = this.wallets().length;
 
     if (this.isMobile()) {
@@ -114,17 +115,20 @@ export class Approvals implements OnInit {
     this.isLoading.set(true);
     forkJoin({
       listings: this.listingService.getPendingExchangeRequests(),
-      ipos: this.ipoService.getPendingIpos(),
+      pendingIpos: this.ipoService.getPendingIpos(),
+      readyIpos: this.ipoService.getReadyIpos(),
       wallets: this.walletService.getPendingMultiCurrencyRequests(),
       users: this.userService.getAllUsers()
     }).subscribe({
-      next: ({ listings, ipos, wallets, users }) => {
+      next: ({ listings, pendingIpos, readyIpos, wallets, users }) => {
         listings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        ipos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        pendingIpos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        readyIpos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         wallets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         this.listings.set(listings);
-        this.ipos.set(ipos);
+        this.iposPending.set(pendingIpos);
+        this.iposReady.set(readyIpos);
         this.wallets.set(wallets);
         this.users.set(users);
         this.isLoading.set(false);
@@ -140,7 +144,11 @@ export class Approvals implements OnInit {
   }
 
   onIpoProcessed(id: string): void {
-    this.ipos.update(arr => arr.filter(i => i.id !== id));
+    this.iposPending.update(arr => arr.filter(i => i.id !== id));
+  }
+
+  onIpoFinalized(id: string): void {
+    this.iposReady.update(arr => arr.filter(i => i.id !== id));
   }
 
   onWalletProcessed(id: string): void {

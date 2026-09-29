@@ -25,3 +25,18 @@ export interface ListingRequestResponse {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface CapTableEntryRequest {
+    userId: string;
+    quantity: number;
+}
+
+export interface CreateListingRequest {
+    symbol: string;
+    exchangeId: string;
+    referencePrice: number;
+    sector: string;
+    priceBandPercent: number;
+    totalShares: number;
+    capTable: CapTableEntryRequest[];
+}

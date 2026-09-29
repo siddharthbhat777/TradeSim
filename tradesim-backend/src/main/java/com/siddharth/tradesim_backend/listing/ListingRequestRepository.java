@@ -15,4 +15,5 @@ public interface ListingRequestRepository extends JpaRepository<ListingRequest, 
     List<ListingRequest> findByStatusOrderByCreatedAtDesc(ListingStatus status);
     List<ListingRequest> findByCompanyIdAndStatusOrderByCreatedAtAsc(UUID companyId, ListingStatus status);
     List<ListingRequest> findByCompanyIdAndStatusOrderByCreatedAtDesc(UUID companyId, ListingStatus status);
+    List<ListingRequest> findByCompanyIdOrderByCreatedAtDesc(UUID companyId);
 }

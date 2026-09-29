@@ -31,7 +31,10 @@ export interface IpoSubscriptionResponse {
     id: string;
     ipoOfferId: string;
     stockId: string;
+    symbol: string;
     userId: string;
+    userName: string;
+    userEmail: string;
     issuePrice: number;
     sharesPerAllottee: number;
     lockedAmount: number;

@@ -10,6 +10,8 @@ public record CompanyRepresentativeAssignmentResponse(
         UUID id,
         UUID companyId,
         UUID userId,
+        String fullName,
+        String email,
         UUID assignedByUserId,
         CompanyRepresentativeAssignmentRole assignmentRole,
         CompanyRepresentativeAssignmentStatus status,

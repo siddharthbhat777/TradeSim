@@ -61,6 +61,34 @@ describe('IpoService', () => {
     req.flush([mockIpo]);
   });
 
+  it('should get ready IPOs', () => {
+    service.getReadyIpos().subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/ready`);
+    expect(req.request.method).toBe('GET');
+    req.flush([mockIpo]);
+  });
+
+  it('should get company IPOs', () => {
+    service.getCompanyIpoOffers('cmp-1').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/company/cmp-1`);
+    expect(req.request.method).toBe('GET');
+    req.flush([mockIpo]);
+  });
+
+  it('should get subscriptions for offer', () => {
+    service.getSubscriptionsForOffer('offer-123').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/offer-123/subscriptions`);
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('should submit IPO offer', () => {
+    service.submitIpoOffer('cmp-1', 'stk-1', {}).subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/cmp-1/stocks/stk-1`);
+    expect(req.request.method).toBe('POST');
+    req.flush(mockIpo);
+  });
+
   it('should approve IPO', () => {
     service.approveIpoOffer('offer-123').subscribe();
     const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/offer-123/approve`);
@@ -74,5 +102,12 @@ describe('IpoService', () => {
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual({ rejectionReason: 'Incomplete details' });
     req.flush({ ...mockIpo, status: 'REJECTED', rejectionReason: 'Incomplete details' });
+  });
+
+  it('should finalize IPO', () => {
+    service.finalizeIpoOffer('offer-123').subscribe();
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/ipo-offers/offer-123/finalize`);
+    expect(req.request.method).toBe('PUT');
+    req.flush({ ...mockIpo, status: 'ALLOTTED' });
   });
 });

@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface CompanyRepresentativeAssignmentRepository extends JpaRepository<CompanyRepresentativeAssignment, UUID> {
     Optional<CompanyRepresentativeAssignment> findByCompanyIdAndUserId(UUID companyId, UUID userId);
     List<CompanyRepresentativeAssignment> findByCompanyIdAndStatus(UUID companyId, CompanyRepresentativeAssignmentStatus status);
+    List<CompanyRepresentativeAssignment> findByUserIdAndStatus(UUID userId, CompanyRepresentativeAssignmentStatus status);
     Optional<CompanyRepresentativeAssignment> findByCompanyIdAndStatusAndAssignmentRole(UUID companyId, CompanyRepresentativeAssignmentStatus status, CompanyRepresentativeAssignmentRole assignmentRole);
     boolean existsByUserIdAndStatus(UUID userId, CompanyRepresentativeAssignmentStatus status);
     boolean existsByCompanyIdAndUserIdAndStatus(UUID companyId, UUID userId, CompanyRepresentativeAssignmentStatus status);

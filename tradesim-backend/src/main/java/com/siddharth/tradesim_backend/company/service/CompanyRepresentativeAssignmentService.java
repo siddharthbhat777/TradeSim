@@ -9,6 +9,7 @@ import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignm
 import com.siddharth.tradesim_backend.company.enums.CompanyRepresentativeAssignmentStatus;
 import com.siddharth.tradesim_backend.company.model.CompanyRepresentativeAssignment;
 import com.siddharth.tradesim_backend.company.model.dto.CompanyRepresentativeAssignmentResponse;
+import com.siddharth.tradesim_backend.company.model.dto.EligibleRepresentativeResponse;
 import com.siddharth.tradesim_backend.company.model.dto.PrimaryContactTransferResponse;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepresentativeAssignmentRepository;
 import com.siddharth.tradesim_backend.company.repository.CompanyRepository;
@@ -54,7 +55,7 @@ public class CompanyRepresentativeAssignmentService {
                         .build());
 
         CompanyRepresentativeAssignment saved = companyRepresentativeAssignmentRepository.save(assignment);
-        return toResponse(saved);
+        return toResponse(saved, targetUser);
     }
 
     @Transactional(readOnly = true)
@@ -68,7 +69,24 @@ public class CompanyRepresentativeAssignmentService {
         return companyRepresentativeAssignmentRepository.findByCompanyIdAndStatus(companyId, CompanyRepresentativeAssignmentStatus.ACTIVE)
                 .stream()
                 .sorted(Comparator.comparing((CompanyRepresentativeAssignment assignment) -> assignment.getAssignmentRole() != CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT))
-                .map(this::toResponse)
+                .map(assignment -> {
+                    User targetUser = authRepository.findById(assignment.getUserId()).orElseThrow(() -> UserException.notFound("User not found"));
+                    return toResponse(assignment, targetUser);
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EligibleRepresentativeResponse> fetchEligibleRepresentatives() {
+        return authRepository.findAll().stream()
+                .filter(user -> user.getRole() == Role.COMPANY_REPRESENTATIVE)
+                .map(user -> new EligibleRepresentativeResponse(
+                        user.getId(),
+                        user.getFullName(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getAccountStatus()
+                ))
                 .toList();
     }
 
@@ -118,6 +136,8 @@ public class CompanyRepresentativeAssignmentService {
     public CompanyRepresentativeAssignmentResponse revokeRepresentative(UUID companyId, UUID targetUserId, UUID actingUserId) {
         assertCanManageRepresentatives(companyId, actingUserId);
 
+        User targetUser = authRepository.findById(targetUserId).orElseThrow(() -> UserException.notFound("User not found"));
+
         CompanyRepresentativeAssignment assignment = companyRepresentativeAssignmentRepository
                 .findByCompanyIdAndUserId(companyId, targetUserId)
                 .orElseThrow(() -> CompanyException.notFound("Company representative assignment not found"));
@@ -135,7 +155,7 @@ public class CompanyRepresentativeAssignmentService {
         assignment.setRevokedByUserId(actingUserId);
 
         CompanyRepresentativeAssignment saved = companyRepresentativeAssignmentRepository.save(assignment);
-        return toResponse(saved);
+        return toResponse(saved, targetUser);
     }
 
     @Transactional
@@ -252,11 +272,13 @@ public class CompanyRepresentativeAssignmentService {
         return activePrimaryContactExists ? CompanyRepresentativeAssignmentRole.MANAGER : CompanyRepresentativeAssignmentRole.PRIMARY_CONTACT;
     }
 
-    private CompanyRepresentativeAssignmentResponse toResponse(CompanyRepresentativeAssignment assignment) {
+    private CompanyRepresentativeAssignmentResponse toResponse(CompanyRepresentativeAssignment assignment, User user) {
         return new CompanyRepresentativeAssignmentResponse(
                 assignment.getId(),
                 assignment.getCompanyId(),
                 assignment.getUserId(),
+                user.getFullName(),
+                user.getEmail(),
                 assignment.getAssignedByUserId(),
                 assignment.getAssignmentRole(),
                 assignment.getStatus(),

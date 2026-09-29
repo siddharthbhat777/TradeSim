@@ -8,11 +8,17 @@ import { Stock } from '../../models/stock';
   providedIn: 'root'
 })
 export class StockService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly stocksURL = `${environment.apiBaseURL}/stocks`;
 
   getStocks() {
     return this.http.get<Stock[]>(this.stocksURL, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  getSectors() {
+    return this.http.get<string[]>(`${this.stocksURL}/sectors`, {
       context: skipInterceptors({ loader: true })
     });
   }

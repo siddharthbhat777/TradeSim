@@ -54,6 +54,18 @@ describe('StockService', () => {
     req.flush([mockStock]);
   });
 
+  it('should fetch all sectors', () => {
+    const mockSectors = ['TECHNOLOGY', 'FINANCE'];
+
+    service.getSectors().subscribe((res) => {
+      expect(res).toEqual(mockSectors);
+    });
+
+    const req = httpMock.expectOne(`${environment.apiBaseURL}/stocks/sectors`);
+    expect(req.request.method).toBe('GET');
+    req.flush(mockSectors);
+  });
+
   it('should fetch a single stock by id', () => {
     service.getStock('stk-123').subscribe((res) => {
       expect(res).toEqual(mockStock);

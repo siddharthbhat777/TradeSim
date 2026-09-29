@@ -8,11 +8,23 @@ import { IpoOfferResponse, IpoSubscriptionResponse } from '../../models/ipo';
   providedIn: 'root'
 })
 export class IpoService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly ipoURL = `${environment.apiBaseURL}/ipo-offers`;
 
   getPendingIpos() {
     return this.http.get<IpoOfferResponse[]>(`${this.ipoURL}/pending`, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  getReadyIpos() {
+    return this.http.get<IpoOfferResponse[]>(`${this.ipoURL}/ready`, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  getCompanyIpoOffers(companyId: string) {
+    return this.http.get<IpoOfferResponse[]>(`${this.ipoURL}/company/${companyId}`, {
       context: skipInterceptors({ loader: true })
     });
   }
@@ -35,6 +47,18 @@ export class IpoService {
     });
   }
 
+  getSubscriptionsForOffer(ipoOfferId: string) {
+    return this.http.get<IpoSubscriptionResponse[]>(`${this.ipoURL}/${ipoOfferId}/subscriptions`, {
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  submitIpoOffer(companyId: string, stockId: string, payload: any) {
+    return this.http.post<IpoOfferResponse>(`${this.ipoURL}/${companyId}/stocks/${stockId}`, payload, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
   subscribeToIpo(ipoOfferId: string) {
     return this.http.post<IpoSubscriptionResponse>(`${this.ipoURL}/${ipoOfferId}/subscriptions`, {}, {
       context: skipInterceptors({ loader: true, toast: true })
@@ -43,13 +67,19 @@ export class IpoService {
 
   approveIpoOffer(id: string) {
     return this.http.put<IpoOfferResponse>(`${this.ipoURL}/${id}/approve`, {}, {
-      context: skipInterceptors({ loader: true, toast: true })
+      context: skipInterceptors({ loader: true })
     });
   }
 
   rejectIpoOffer(id: string, rejectionReason: string) {
     return this.http.put<IpoOfferResponse>(`${this.ipoURL}/${id}/reject`, { rejectionReason }, {
-      context: skipInterceptors({ loader: true, toast: true })
+      context: skipInterceptors({ loader: true })
+    });
+  }
+
+  finalizeIpoOffer(id: string) {
+    return this.http.put<IpoOfferResponse>(`${this.ipoURL}/${id}/finalize`, {}, {
+      context: skipInterceptors({ loader: true })
     });
   }
 }
