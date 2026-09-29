@@ -11,7 +11,15 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
 
     const isApiRequest = req.url.startsWith(environment.apiBaseURL);
-    const isAuthRequest = req.url.startsWith(`${environment.apiBaseURL}/auth`);
+    const publicAuthEndpoints = [
+        '/auth/login',
+        '/auth/register',
+        '/auth/reactivate',
+        '/auth/refresh',
+        '/auth/otp/send',
+        '/auth/password/reset'
+    ];
+    const isPublicAuthRequest = publicAuthEndpoints.some(endpoint => req.url.includes(endpoint));
     const token = authService.getAccessToken();
 
     const addTokenHeader = (request: any, tokenString: string | null) => {
@@ -20,26 +28,26 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
         });
     };
 
-    const authReq = isApiRequest && !isAuthRequest && token ? addTokenHeader(req, token) : req;
+    const authRequest = isApiRequest && !isPublicAuthRequest && token ? addTokenHeader(req, token) : req;
 
-    return next(authReq).pipe(
+    return next(authRequest).pipe(
         catchError((error) => {
-            if (error instanceof HttpErrorResponse && error.status === 401 && isApiRequest && !isAuthRequest) {
+            if (error instanceof HttpErrorResponse && error.status === 401 && isApiRequest && !isPublicAuthRequest) {
                 if (!isRefreshing) {
                     isRefreshing = true;
                     refreshTokenSubject.next(null);
 
                     return authService.refreshSession().pipe(
+                        catchError((refreshError) => {
+                            isRefreshing = false;
+                            authService.logout().subscribe();;
+                            return throwError(() => refreshError);
+                        }),
                         switchMap(() => {
                             isRefreshing = false;
                             const newToken = authService.getAccessToken();
                             refreshTokenSubject.next(newToken);
                             return next(addTokenHeader(req, newToken));
-                        }),
-                        catchError((refreshError) => {
-                            isRefreshing = false;
-                            authService.logout();
-                            return throwError(() => refreshError);
                         })
                     );
                 } else {
