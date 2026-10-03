@@ -2,7 +2,10 @@ package com.siddharth.tradesim_backend.forex.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
+import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryResponse;
 import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
+import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,10 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -22,6 +25,9 @@ class ForexServiceTest {
 
     @Mock
     private ExchangeRateRepository exchangeRateRepository;
+
+    @Mock
+    private SupportedCurrencyRepository supportedCurrencyRepository;
 
     @InjectMocks
     private ForexService forexService;
@@ -75,5 +81,44 @@ class ForexServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
         assertEquals("FOREX_RATE_NOT_FOUND", exception.getErrorCode());
+    }
+
+    @Test
+    void fetchActiveSupportedCurrencies_ReturnsActiveAndAlwaysIncludesInr() {
+        SupportedCurrency usd = SupportedCurrency.builder().code("USD").isActive(true).build();
+        SupportedCurrency eur = SupportedCurrency.builder().code("EUR").isActive(false).build();
+
+        when(supportedCurrencyRepository.findAll()).thenReturn(List.of(usd, eur));
+
+        List<String> result = forexService.fetchActiveSupportedCurrencies();
+
+        assertTrue(result.contains("USD"));
+        assertFalse(result.contains("EUR"));
+        assertTrue(result.contains("INR"));
+    }
+
+    @Test
+    void fetchAllCountries_ReturnsValidList() {
+        List<CountryResponse> result = forexService.fetchAllCountries();
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.stream().anyMatch(c -> c.code().equals("IN") && c.name().equals("India")));
+    }
+
+    @Test
+    void resolveNativeCurrencyFromCountryCode_ValidCode_ReturnsCurrency() {
+        String resultUpper = forexService.resolveNativeCurrencyFromCountryCode("IN");
+        assertEquals("INR", resultUpper);
+
+        String resultLower = forexService.resolveNativeCurrencyFromCountryCode("us");
+        assertEquals("USD", resultLower);
+    }
+
+    @Test
+    void resolveNativeCurrencyFromCountryCode_InvalidCode_ReturnsNull() {
+        assertNull(forexService.resolveNativeCurrencyFromCountryCode(null));
+        assertNull(forexService.resolveNativeCurrencyFromCountryCode(""));
+        assertNull(forexService.resolveNativeCurrencyFromCountryCode("INVALID"));
     }
 }

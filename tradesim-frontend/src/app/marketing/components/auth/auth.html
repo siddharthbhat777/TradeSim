@@ -1,33 +1,303 @@
-<app-modal (closed)="closeAuth()" [ariaLabel]="currentAuthStatus() === authStatus.Login ? 'Login' : 'Sign up'">
-    <div class="forms-layout">
-        <div class="close-button" (click)="closeAuth()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" stroke='#000' strokeWidth='0.5'
-                fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                <path
-                    d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
+<div class="auth-overlay">
+    <div class="auth-backdrop" (click)="closeAuth()"></div>
+
+    <div class="auth-modal">
+        <button class="close-btn" (click)="closeAuth()" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
-        </div>
+        </button>
+
         @if(currentAuthStatus() === authStatus.Login) {
-        <form [formGroup]="loginForm" (ngSubmit)="loginSubmit()">
-            <input type="text" placeholder="username or email" formControlName="usernameOrEmail">
-            <input type="password" placeholder="password" formControlName="password">
-            <button type="submit">Login</button>
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p>Sign in to your TradeSim account</p>
+        </div>
+        <form [formGroup]="loginForm" (ngSubmit)="loginSubmit()" class="auth-form">
+            <div class="input-group"
+                [class.has-error]="loginForm.controls.usernameOrEmail.invalid && loginForm.controls.usernameOrEmail.touched">
+                <label for="loginUsername">Username or Email</label>
+                <input id="loginUsername" type="text" placeholder="Enter your credentials"
+                    formControlName="usernameOrEmail">
+                @if (loginForm.controls.usernameOrEmail.invalid && loginForm.controls.usernameOrEmail.touched) {
+                <span class="error-text">Valid credentials are required.</span>
+                }
+            </div>
+            <div class="input-group"
+                [class.has-error]="loginForm.controls.password.invalid && loginForm.controls.password.touched">
+                <label for="loginPassword">Password</label>
+                <input id="loginPassword" type="password" placeholder="••••••••" formControlName="password">
+                @if (loginForm.controls.password.touched) {
+                @if (loginForm.controls.password.errors?.['required']) {
+                <span class="error-text">Password is required.</span>
+                }
+                }
+            </div>
+            <button type="submit" class="btn-primary" [disabled]="isProcessing()">
+                {{ isProcessing() ? 'Authenticating...' : 'Log In' }}
+            </button>
         </form>
-        } @else if(currentAuthStatus() === authStatus.Register) {
-        <form [formGroup]="registerForm" (ngSubmit)="registerSubmit()">
-            <input type="text" placeholder="username" formControlName="username">
-            <input type="email" placeholder="email" formControlName="email">
-            <input type="password" placeholder="password" formControlName="password">
-            <button type="submit">Sign up</button>
+        <div class="auth-footer">
+            <p>New to TradeSim? <button class="link-btn" (click)="switchMode(authStatus.Register)">Create an
+                    account</button></p>
+        </div>
+        }
+
+        @else if(currentAuthStatus() === authStatus.Register) {
+        <div class="auth-header">
+            <h2>Create Account</h2>
+            <p>Join the world's most advanced market simulator</p>
+        </div>
+        <form [formGroup]="registerForm" (ngSubmit)="registerSubmit()" class="auth-form">
+
+            <div class="form-grid">
+                <div class="input-group"
+                    [class.has-error]="registerForm.controls.firstName.invalid && registerForm.controls.firstName.touched">
+                    <label for="regFirstName">First Name</label>
+                    <input id="regFirstName" type="text" placeholder="e.g. Siddharth" formControlName="firstName">
+                    @if (registerForm.controls.firstName.invalid && registerForm.controls.firstName.touched) {
+                    <span class="error-text">First name is required.</span>
+                    }
+                </div>
+                <div class="input-group"
+                    [class.has-error]="registerForm.controls.lastName.invalid && registerForm.controls.lastName.touched">
+                    <label for="regLastName">Last Name</label>
+                    <input id="regLastName" type="text" placeholder="e.g. Bhat" formControlName="lastName">
+                    @if (registerForm.controls.lastName.invalid && registerForm.controls.lastName.touched) {
+                    <span class="error-text">Last name is required.</span>
+                    }
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group"
+                    [class.has-error]="registerForm.controls.username.invalid && registerForm.controls.username.touched">
+                    <label for="regUsername">Username</label>
+                    <input id="regUsername" type="text" placeholder="e.g. tradesim_user" formControlName="username">
+                    @if (registerForm.controls.username.invalid && registerForm.controls.username.touched) {
+                    <span class="error-text">Username is required.</span>
+                    }
+                </div>
+                <div class="input-group"
+                    [class.has-error]="registerForm.controls.linkedBankName.invalid && registerForm.controls.linkedBankName.touched">
+                    <label for="regBankName">Linked Bank Name</label>
+                    <input id="regBankName" type="text" placeholder="e.g. HDFC Bank, ICICI Bank"
+                        formControlName="linkedBankName">
+                    @if (registerForm.controls.linkedBankName.invalid && registerForm.controls.linkedBankName.touched) {
+                    <span class="error-text">Linked bank name is required.</span>
+                    }
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group"
+                    [class.has-error]="registerForm.controls.password.invalid && registerForm.controls.password.touched">
+                    <label for="regPassword">Password</label>
+                    <input id="regPassword" type="password" placeholder="Min 8 chars, 1 uppercase, 1 special"
+                        formControlName="password">
+                    @if (registerForm.controls.password.touched) {
+                    @if (registerForm.controls.password.errors?.['required']) {
+                    <span class="error-text">Password is required.</span>
+                    } @else if (registerForm.controls.password.errors?.['pattern']) {
+                    <span class="error-text">Must be 8+ chars with 1 uppercase, 1 number, and 1 special character
+                        (!@#$%^&*).</span>
+                    }
+                    }
+                </div>
+                <div class="input-group"
+                    [class.has-error]="(registerForm.controls.confirmPassword.invalid || registerForm.hasError('passwordMismatch')) && registerForm.controls.confirmPassword.touched">
+                    <label for="regConfirmPassword">Confirm Password</label>
+                    <input id="regConfirmPassword" type="password" placeholder="••••••••"
+                        formControlName="confirmPassword">
+                    @if (registerForm.controls.confirmPassword.touched) {
+                    @if (registerForm.controls.confirmPassword.errors?.['required']) {
+                    <span class="error-text">Confirmation is required.</span>
+                    } @else if (registerForm.hasError('passwordMismatch')) {
+                    <span class="error-text">Passwords do not match.</span>
+                    }
+                    }
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group"
+                    [class.has-error]="registerForm.controls.countryCode.invalid && registerForm.controls.countryCode.touched">
+                    <label id="regCountryLabel">Country</label>
+                    <div class="custom-dropdown-container" [class.is-open]="isCountryDropdownOpen()">
+                        <button type="button" class="custom-dropdown-trigger" id="countryTrigger"
+                            aria-labelledby="regCountryLabel" aria-haspopup="listbox"
+                            [attr.aria-expanded]="isCountryDropdownOpen()" (click)="toggleCountryDropdown($event)"
+                            (keydown)="onCountryKeydown($event)">
+                            <span [class.placeholder]="!registerForm.controls.countryCode.value">
+                                {{ forexService.getCountryName(registerForm.controls.countryCode.value) || 'Select
+                                Country' }}
+                            </span>
+                            @if (isResolvingCurrency()) {
+                            <div class="inline-spinner"></div>
+                            } @else {
+                            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6" />
+                            </svg>
+                            }
+                        </button>
+
+                        @if (isCountryDropdownOpen()) {
+                        <div class="dropdown-backdrop" (click)="closeCountryDropdown()"></div>
+                        <div class="custom-dropdown-panel" aria-labelledby="regCountryLabel"
+                            [class.open-upwards]="isCountryDropdownUp()">
+                            <div class="dropdown-search-wrapper" (click)="$event.stopPropagation()">
+                                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input #countrySearchInput type="text" class="dropdown-search-input"
+                                    placeholder="Search country..." [value]="countrySearchQuery()"
+                                    (input)="onCountrySearchInput($event)" (keydown)="onCountrySearchKeydown($event)"
+                                    aria-label="Search country">
+                            </div>
+                            <div class="custom-dropdown-options-container country-options-list" role="listbox"
+                                aria-labelledby="regCountryLabel">
+                                @for (country of filteredCountries(); track country.code; let i = $index) {
+                                <div class="custom-dropdown-option" role="option"
+                                    [attr.aria-selected]="registerForm.controls.countryCode.value === country.code"
+                                    [class.selected]="registerForm.controls.countryCode.value === country.code"
+                                    [class.active]="activeCountryDropdownIndex() === i" (click)="selectCountry(country)"
+                                    (mouseenter)="activeCountryDropdownIndex.set(i)">
+                                    <span class="country-name">{{ country.name }}</span>
+                                    <span class="country-code-badge">{{ country.code }}</span>
+                                </div>
+                                } @empty {
+                                <div class="custom-dropdown-empty">No countries found</div>
+                                }
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    @if (registerForm.controls.countryCode.invalid && registerForm.controls.countryCode.touched) {
+                    <span class="error-text">Country selection is required.</span>
+                    }
+                </div>
+
+                @if (needsBaseCurrencySelection()) {
+                <div class="input-group"
+                    [class.has-error]="registerForm.controls.baseCurrency.invalid && registerForm.controls.baseCurrency.touched">
+                    <label id="baseCurrencyLabel">Base Currency</label>
+                    <div class="custom-dropdown-container" [class.is-open]="isCurrencyDropdownOpen()">
+                        <button type="button" class="custom-dropdown-trigger" aria-labelledby="baseCurrencyLabel"
+                            aria-haspopup="listbox" [attr.aria-expanded]="isCurrencyDropdownOpen()"
+                            (click)="toggleCurrencyDropdown($event)" (keydown)="onCurrencyKeydown($event)">
+                            <span [class.placeholder]="!registerForm.controls.baseCurrency.value">
+                                {{ registerForm.controls.baseCurrency.value || 'Select Currency' }}
+                            </span>
+                            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6" />
+                            </svg>
+                        </button>
+
+                        @if (isCurrencyDropdownOpen()) {
+                        <div class="dropdown-backdrop" (click)="closeCurrencyDropdown()"></div>
+                        <div class="custom-dropdown-list" role="listbox" aria-labelledby="baseCurrencyLabel"
+                            [class.open-upwards]="isCurrencyDropdownUp()">
+                            @for (currency of supportedCurrencies(); track currency.value; let i = $index) {
+                            <div class="custom-dropdown-option" role="option"
+                                [attr.aria-selected]="registerForm.controls.baseCurrency.value === currency.value"
+                                [class.selected]="registerForm.controls.baseCurrency.value === currency.value"
+                                [class.active]="activeDropdownIndex() === i" (click)="selectCurrency(currency.value)"
+                                (mouseenter)="activeDropdownIndex.set(i)">
+                                {{ currency.label }}
+                            </div>
+                            } @empty {
+                            <div class="custom-dropdown-empty">No currencies found</div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    @if (registerForm.controls.baseCurrency.invalid && registerForm.controls.baseCurrency.touched) {
+                    <span class="error-text">Currency code required.</span>
+                    }
+                </div>
+                }
+            </div>
+
+            <div class="input-group"
+                [class.has-error]="registerForm.controls.email.invalid && registerForm.controls.email.touched">
+                <label for="regEmail">Email Address</label>
+                <div class="verify-row">
+                    <input id="regEmail" type="email" placeholder="name@company.com" formControlName="email">
+                    <button type="button" class="btn-secondary verify-btn"
+                        [disabled]="isSendingOtp() || (isOtpSent() && !isOtpExpired())" (click)="sendOtp()">
+                        {{ isSendingOtp() ? 'Sending...' : (isOtpSent() ? 'Resend' : 'Verify') }}
+                    </button>
+                </div>
+                @if (registerForm.controls.email.invalid && registerForm.controls.email.touched) {
+                <span class="error-text">Valid email address is required.</span>
+                }
+            </div>
+
+            @if (isOtpSent()) {
+            <div class="input-group"
+                [class.has-error]="registerForm.controls.otp.invalid && registerForm.controls.otp.touched">
+                <label for="regOtp">Verification Code (OTP)</label>
+                <input id="regOtp" type="text" inputmode="numeric" placeholder="6-digit code" maxlength="6"
+                    formControlName="otp" (input)="onOtpInput($event)">
+
+                @if (!isOtpExpired()) {
+                <div class="otp-timer-container">
+                    <div class="otp-progress-bar">
+                        <div class="otp-progress-fill" [style.width.%]="(otpTimeRemaining() / 120) * 100"></div>
+                    </div>
+                    <span class="otp-time-text">Code expires in {{ formatTime(otpTimeRemaining()) }}</span>
+                </div>
+                } @else {
+                <span class="otp-expired-text">Verification code expired. Please request a new one.</span>
+                }
+
+                @if (registerForm.controls.otp.invalid && registerForm.controls.otp.touched) {
+                <span class="error-text">Valid 6-digit numeric OTP is required.</span>
+                }
+            </div>
+            }
+
+            <button type="submit" class="btn-primary mt-4"
+                [disabled]="isProcessing() || registerForm.invalid || registerForm.controls.otp.disabled || isOtpExpired()">
+                {{ isProcessing() ? 'Creating Account...' : 'Complete Registration' }}
+            </button>
         </form>
-        } @else if (currentAuthStatus() === authStatus.Reactivate) {
-        <form [formGroup]="loginForm" (ngSubmit)="reactivateSubmit()">
-            <p>Your account is deactivated. Reactivate it to continue.</p>
-            <input type="text" placeholder="username or email" formControlName="usernameOrEmail">
-            <input type="password" placeholder="password" formControlName="password">
-            <button type="submit">Reactivate account</button>
-            <button type="button" (click)="currentAuthStatus.set(authStatus.Login)">Back to login</button>
+        <div class="auth-footer">
+            <p>Already have an account? <button class="link-btn" (click)="switchMode(authStatus.Login)">Log In</button>
+            </p>
+        </div>
+        }
+
+        @else if (currentAuthStatus() === authStatus.Reactivate) {
+        <div class="auth-header">
+            <h2>Account Deactivated</h2>
+            <p>Your account is currently deactivated. Confirm your credentials below to restore your access.</p>
+        </div>
+        <form [formGroup]="loginForm" (ngSubmit)="reactivateSubmit()" class="auth-form">
+            <div class="input-group">
+                <label for="reactivateUsername">Username or Email</label>
+                <input id="reactivateUsername" type="text" formControlName="usernameOrEmail" readonly>
+            </div>
+            <div class="input-group"
+                [class.has-error]="loginForm.controls.password.invalid && loginForm.controls.password.touched">
+                <label for="reactivatePassword">Confirm Password</label>
+                <input id="reactivatePassword" type="password" placeholder="••••••••" formControlName="password">
+                @if (loginForm.controls.password.touched) {
+                @if (loginForm.controls.password.errors?.['required']) {
+                <span class="error-text">Password is required.</span>
+                }
+                }
+            </div>
+            <button type="submit" class="btn-primary" [disabled]="isProcessing()">
+                {{ isProcessing() ? 'Reactivating...' : 'Reactivate Account' }}
+            </button>
         </form>
+        <div class="auth-footer">
+            <button class="link-btn" (click)="switchMode(authStatus.Login)">← Back to Login</button>
+        </div>
         }
     </div>
-</app-modal>
+</div>

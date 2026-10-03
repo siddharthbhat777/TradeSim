@@ -1,18 +1,47 @@
-<p>landing-page works!</p>
-@if(!isLoggedIn()) {
-<section>
-    <button (click)="showAuthDialog(authStatus.Login)">Login</button>
-    <button (click)="showAuthDialog(authStatus.Register)">Signup</button>
-</section>
-} @else {
-<section>
-    <h1>Hello {{ userDetails()?.username }}</h1>
-    <button (click)="logoutUser()">Logout</button>
-</section>
-}
-<br>
+<div class="landing-wrapper">
+    <nav class="marketing-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <app-logo [size]="isMobile() ? 'small' : 'medium'" [showText]="!isMobile()"></app-logo>
+            </div>
 
-@if(showAuth()) {
-<app-auth (showAuth)="closeAuth()" />
-}
-<button routerLink="app">Go to app</button>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#markets">Markets</a>
+                <a href="#ipo">Corporate</a>
+            </div>
+
+            <div class="nav-actions">
+                @if (!isLoggedIn()) {
+                <button class="btn-ghost" (click)="showAuthDialog(authStatus.Login)">Log In</button>
+                <button class="btn-primary" (click)="showAuthDialog(authStatus.Register)">Start Trading</button>
+                } @else {
+                <button class="btn-ghost" (click)="logoutUser()">Log Out</button>
+                <button class="btn-primary" routerLink="/app">Dashboard</button>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-content">
+            <div class="hero-badge">Simulator 2.0 is Live</div>
+            <h1 class="hero-title">Institutional-Grade<br>Trading. Zero Risk.</h1>
+            <p class="hero-subtitle">Experience real-time market execution, algorithmic order types, and exclusive
+                corporate IPOs in the world's most advanced stock market simulator.</p>
+
+            <div class="hero-cta">
+                @if (!isLoggedIn()) {
+                <button class="btn-primary btn-large" (click)="showAuthDialog(authStatus.Register)">Open Free
+                    Account</button>
+                } @else {
+                <button class="btn-primary btn-large" routerLink="/app">Enter Exchange</button>
+                }
+            </div>
+        </div>
+    </header>
+
+    @if(showAuth()) {
+    <app-auth (showAuth)="closeAuth()" />
+    }
+</div>

@@ -52,7 +52,10 @@ public class SecurityConfig {
                                 "/auth/reactivate",
                                 "/auth/refresh",
                                 "/auth/otp/send",
-                                "/auth/password/reset"
+                                "/auth/password/reset",
+                                "/forex/currencies",
+                                "/forex/countries",
+                                "/forex/country-currency/*"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.forex.service;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryResponse;
 import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
 import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +48,26 @@ public class ForexService {
         }
 
         return currencies;
+    }
+
+    public List<CountryResponse> fetchAllCountries() {
+        return Arrays.stream(Locale.getISOCountries())
+                .map(code -> new CountryResponse(code, Locale.of("", code).getDisplayCountry(Locale.ENGLISH)))
+                .filter(country -> country.name() != null && !country.name().isBlank())
+                .sorted(Comparator.comparing(CountryResponse::name))
+                .toList();
+    }
+
+    public String resolveNativeCurrencyFromCountryCode(String countryCode) {
+        if (countryCode == null || countryCode.isBlank()) {
+            return null;
+        }
+        try {
+            Locale locale = Locale.of("", countryCode.trim().toUpperCase());
+            return Currency.getInstance(locale).getCurrencyCode();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private BigDecimal getInrRate(String currency) {

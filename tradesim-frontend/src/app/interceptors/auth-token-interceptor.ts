@@ -11,15 +11,22 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
 
     const isApiRequest = req.url.startsWith(environment.apiBaseURL);
+
     const publicAuthEndpoints = [
         '/auth/login',
         '/auth/register',
         '/auth/reactivate',
         '/auth/refresh',
         '/auth/otp/send',
-        '/auth/password/reset'
+        '/auth/password/reset',
+        '/forex/currencies',
+        '/forex/countries',
+        '/forex/country-currency'
     ];
+
     const isPublicAuthRequest = publicAuthEndpoints.some(endpoint => req.url.includes(endpoint));
+    const isLogoutRequest = req.url.includes('/auth/logout');
+
     const token = authService.getAccessToken();
 
     const addTokenHeader = (request: any, tokenString: string | null) => {
@@ -32,7 +39,7 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
 
     return next(authRequest).pipe(
         catchError((error) => {
-            if (error instanceof HttpErrorResponse && error.status === 401 && isApiRequest && !isPublicAuthRequest) {
+            if (error instanceof HttpErrorResponse && error.status === 401 && isApiRequest && !isPublicAuthRequest && !isLogoutRequest) {
                 if (!isRefreshing) {
                     isRefreshing = true;
                     refreshTokenSubject.next(null);
@@ -40,7 +47,7 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
                     return authService.refreshSession().pipe(
                         catchError((refreshError) => {
                             isRefreshing = false;
-                            authService.logout().subscribe();;
+                            authService.logout().subscribe();
                             return throwError(() => refreshError);
                         }),
                         switchMap(() => {
