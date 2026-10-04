@@ -1,1 +1,87 @@
-<p>features works!</p>
+<section class="features-section" id="capabilities">
+    <div class="background-decor">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <div class="features-container">
+        <div class="section-header">
+            <h2>Core Infrastructure</h2>
+            <p>Built on a resilient, high-precision Spring Boot micro-architecture.</p>
+        </div>
+
+        <div class="bento-grid" #featuresGrid [class.animate-in]="isVisible()">
+            <div class="bento-card card-wide delay-1">
+                <div class="card-glow"></div>
+                <div class="card-content">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="text-wrapper">
+                        <h3>Live Matching Engine</h3>
+                        <p>A high-speed algorithmic execution engine processing Limit and Market orders with strict
+                            time-in-force logic and price-band safety constraints.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card delay-2">
+                <div class="card-glow"></div>
+                <div class="card-content">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="text-wrapper">
+                        <h3>Global & Local Wallets</h3>
+                        <p>Hold balances across multiple currencies with live FX routing, or leverage native UPI mandate
+                            simulation for Indian accounts.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card delay-3">
+                <div class="card-glow"></div>
+                <div class="card-content">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <polyline points="9 12 11 14 15 10"></polyline>
+                        </svg>
+                    </div>
+                    <div class="text-wrapper">
+                        <h3>Algorithmic Liquidation</h3>
+                        <p>Automated risk management sweeps portfolios continuously, liquidating over-leveraged
+                            positions to enforce simulated market stability.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card card-wide delay-4">
+                <div class="card-glow"></div>
+                <div class="card-content">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div class="text-wrapper">
+                        <h3>Role-Based Market Access</h3>
+                        <p>Distinct, segregated workflows ensuring Retail Traders, Corporate Representatives, and
+                            Platform Administrators operate in completely independent ecosystems.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

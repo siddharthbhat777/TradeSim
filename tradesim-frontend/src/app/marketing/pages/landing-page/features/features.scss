@@ -1,0 +1,229 @@
+$bg-color: #050814;
+$surface-color: #0f172a;
+$text-primary: #f8fafc;
+$text-secondary: #94a3b8;
+$accent-blue: #3b82f6;
+
+.features-section {
+  padding: 120px 1.5rem;
+  background-color: $bg-color;
+  position: relative;
+  overflow: hidden;
+}
+
+.background-decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    z-index: 0;
+  }
+
+  .orb-1 {
+    top: 20%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background: $accent-blue;
+    animation: drift 15s ease-in-out infinite alternate;
+  }
+
+  .orb-2 {
+    bottom: -10%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: #60a5fa;
+    animation: drift 20s ease-in-out infinite alternate-reverse;
+  }
+}
+
+.features-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 80px;
+
+  h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: $text-primary;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.5px;
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bento-card {
+  position: relative;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s ease;
+
+  &.card-wide {
+    @media (min-width: 769px) {
+      grid-column: span 2;
+
+      .card-content {
+        flex-direction: row;
+        align-items: center;
+        gap: 3rem;
+      }
+
+      .text-wrapper {
+        flex: 1;
+      }
+
+      .icon-wrapper {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .card-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: rgba(59, 130, 246, 0.3);
+
+    .card-glow {
+      opacity: 1;
+    }
+
+    .icon-wrapper {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: #fff;
+      transform: scale(1.05);
+    }
+  }
+}
+
+.card-content {
+  position: relative;
+  z-index: 1;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 640px) {
+    padding: 2rem;
+  }
+}
+
+.icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $accent-blue;
+  margin-bottom: 2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.text-wrapper {
+  h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 1rem 0;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.animate-in {
+  .bento-card {
+    animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+.delay-1 {
+  animation-delay: 0.1s !important;
+}
+.delay-2 {
+  animation-delay: 0.25s !important;
+}
+.delay-3 {
+  animation-delay: 0.4s !important;
+}
+.delay-4 {
+  animation-delay: 0.55s !important;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(30px, 40px);
+  }
+  100% {
+    transform: translate(-20px, -20px);
+  }
+}
