@@ -1,1 +1,31 @@
-<p>cta works!</p>
+<section class="cta-section">
+    <div class="cta-container">
+        <div class="cta-glow"></div>
+        <div class="cta-content">
+            <h2>Ready to enter the sandbox?</h2>
+            <p>Join the simulation and test your market strategies today.</p>
+
+            <div class="cta-actions">
+                @if (!isLoggedIn()) {
+                <button class="btn-primary btn-large" (click)="openAuth.emit()">
+                    <span>Start Trading</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="btn-icon">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+                } @else {
+                <button class="btn-primary btn-large" routerLink="/app">
+                    <span>Go to Dashboard</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="btn-icon">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+                }
+            </div>
+        </div>
+    </div>
+</section>

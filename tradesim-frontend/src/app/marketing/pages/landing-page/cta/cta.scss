@@ -1,0 +1,114 @@
+$bg-color: #050814;
+$surface-color: #0f172a;
+$text-primary: #f8fafc;
+$text-secondary: #94a3b8;
+$accent-blue: #3b82f6;
+$accent-hover: #2563eb;
+
+.cta-section {
+  padding: 80px 1.5rem 120px;
+  background-color: $bg-color;
+  display: flex;
+  justify-content: center;
+}
+
+.cta-container {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 32px;
+  padding: 5rem 2rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.cta-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+
+  h2 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: $text-primary;
+    margin: 0;
+    letter-spacing: -1px;
+
+    @media (max-width: 640px) {
+      font-size: 2.25rem;
+    }
+  }
+
+  p {
+    font-size: 1.15rem;
+    color: $text-secondary;
+    margin: 0;
+    max-width: 500px;
+  }
+}
+
+.cta-actions {
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  background: $accent-blue;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  .btn-icon {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background: $accent-hover;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+
+    .btn-icon {
+      transform: translateX(4px);
+    }
+  }
+
+  &.btn-large {
+    padding: 0.875rem 2.25rem;
+    font-size: 1.05rem;
+    border-radius: 100px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+
+    .btn-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}

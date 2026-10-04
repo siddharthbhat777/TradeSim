@@ -28,7 +28,8 @@
 
     <app-mechanics></app-mechanics>
     <app-features></app-features>
-    <app-cta></app-cta>
+    <app-cta [isLoggedIn]="isLoggedIn()" (openAuth)="showAuthDialog(authStatus.Register)">
+    </app-cta>
 
     @if(showAuth()) {
     <app-auth (showAuth)="closeAuth()" />
