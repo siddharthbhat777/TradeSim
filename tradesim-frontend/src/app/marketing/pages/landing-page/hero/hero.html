@@ -1,0 +1,39 @@
+<header class="hero-section">
+    <div class="hero-bg-wrapper">
+        <div class="hero-glow"></div>
+        <div class="hero-grid"></div>
+    </div>
+
+    <div class="hero-content">
+        <div class="hero-badge animate-fade-in-up">Live Market Environment</div>
+
+        <h1 class="hero-title animate-fade-in-up delay-1">A Realistic Market Sandbox.</h1>
+
+        <p class="hero-subtitle animate-fade-in-up delay-2">
+            A dedicated platform to simulate equity trading, manage multi-currency portfolios, and navigate corporate
+            IPOs in a strictly controlled environment.
+        </p>
+
+        <div class="hero-cta animate-fade-in-up delay-3">
+            @if (!isLoggedIn()) {
+            <button class="btn-primary btn-large" (click)="openAuth.emit()">
+                <span>Open Free Account</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" class="btn-icon">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+            } @else {
+            <button class="btn-primary btn-large" routerLink="/app">
+                <span>Enter Exchange</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" class="btn-icon">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+            }
+        </div>
+    </div>
+</header>

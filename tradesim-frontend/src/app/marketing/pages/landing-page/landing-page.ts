@@ -6,10 +6,14 @@ import { AuthService } from '../../../services/auth/auth-service';
 import { AuthStatus } from '../../../constants/auth';
 import { Logo } from '../../../shared/components/logo/logo';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { Hero } from './hero/hero';
+import { Mechanics } from './mechanics/mechanics';
+import { Features } from './features/features';
+import { Cta } from './cta/cta';
 
 @Component({
   selector: 'app-landing-page',
-  imports: [CommonModule, RouterLink, Auth, Logo],
+  imports: [CommonModule, RouterLink, Auth, Logo, Hero, Mechanics, Features, Cta],
   templateUrl: './landing-page.html',
   styleUrl: './landing-page.scss',
 })

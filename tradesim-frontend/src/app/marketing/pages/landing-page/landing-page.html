@@ -23,23 +23,12 @@
         </div>
     </nav>
 
-    <header class="hero-section">
-        <div class="hero-content">
-            <div class="hero-badge">Simulator 2.0 is Live</div>
-            <h1 class="hero-title">Institutional-Grade<br>Trading. Zero Risk.</h1>
-            <p class="hero-subtitle">Experience real-time market execution, algorithmic order types, and exclusive
-                corporate IPOs in the world's most advanced stock market simulator.</p>
+    <app-hero [isLoggedIn]="isLoggedIn()" (openAuth)="showAuthDialog(authStatus.Register)">
+    </app-hero>
 
-            <div class="hero-cta">
-                @if (!isLoggedIn()) {
-                <button class="btn-primary btn-large" (click)="showAuthDialog(authStatus.Register)">Open Free
-                    Account</button>
-                } @else {
-                <button class="btn-primary btn-large" routerLink="/app">Enter Exchange</button>
-                }
-            </div>
-        </div>
-    </header>
+    <app-mechanics></app-mechanics>
+    <app-features></app-features>
+    <app-cta></app-cta>
 
     @if(showAuth()) {
     <app-auth (showAuth)="closeAuth()" />
