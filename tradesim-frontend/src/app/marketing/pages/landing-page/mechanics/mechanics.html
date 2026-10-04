@@ -1,1 +1,100 @@
-<p>mechanics works!</p>
+<section class="mechanics-section" id="features">
+    <div class="mechanics-container">
+        <div class="section-header">
+            <h2>Platform Mechanics</h2>
+            <p>Engineered for strict accuracy and realistic market simulation.</p>
+        </div>
+
+        <div class="stepper-wrapper">
+            <div class="stepper-line">
+                <div class="stepper-progress" [style.height]="(activeStep() * 50) + '%'"></div>
+            </div>
+
+            <div class="step-item" #stepItem [class.active]="activeStep() === 0">
+                <div class="step-indicator"></div>
+                <div class="step-content">
+                    <div class="step-text">
+                        <h3>The Retail Trader</h3>
+                        <p>Execute trades across a live order book using Limit and Market orders. Manage multi-currency
+                            wallets with dynamic Forex routing and trade on calculated margin.</p>
+                    </div>
+                    <div class="step-visual">
+                        <div class="abstract-ui order-book">
+                            <div class="ob-row ask"><span class="ob-price">{{ formattedAsk1() }}</span><span
+                                    class="ob-qty">500</span></div>
+                            <div class="ob-row ask"><span class="ob-price">{{ formattedAsk2() }}</span><span
+                                    class="ob-qty">250</span></div>
+                            <div class="ob-divider"></div>
+                            <div class="ob-row bid"><span class="ob-price">{{ formattedBid1() }}</span><span
+                                    class="ob-qty">100</span></div>
+                            <div class="ob-row bid"><span class="ob-price">{{ formattedBid2() }}</span><span
+                                    class="ob-qty">800</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-item" #stepItem [class.active]="activeStep() === 1">
+                <div class="step-indicator"></div>
+                <div class="step-content">
+                    <div class="step-text">
+                        <h3>Corporate Ecosystem & IPOs</h3>
+                        <p>Experience the full corporate lifecycle. Companies can submit listing requests with cap
+                            tables, while users subscribe to IPOs using simulated ASBA and UPI mandates.</p>
+                    </div>
+                    <div class="step-visual">
+                        <div class="abstract-ui ipo-card">
+                            <div class="ipo-header">
+                                <div class="ipo-badge">SUBSCRIPTION OPEN</div>
+                            </div>
+                            <div class="ipo-body">
+                                <div class="ipo-bar-bg">
+                                    <div class="ipo-bar-fill"></div>
+                                </div>
+                                <div class="ipo-stats">
+                                    <span>Oversubscribed</span>
+                                    <span>2.4x</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-item" #stepItem [class.active]="activeStep() === 2">
+                <div class="step-indicator"></div>
+                <div class="step-content">
+                    <div class="step-text">
+                        <h3>The Unified Ledger</h3>
+                        <p>Every action is meticulously tracked. A strictly numeric, double-entry ledger instantly
+                            settles margin locks, trade proceeds, FX fees, and margin loans with zero floating-point
+                            errors.</p>
+                    </div>
+                    <div class="step-visual">
+                        <div class="abstract-ui ledger-table">
+                            <div class="ledger-row">
+                                <div class="l-icon success"></div>
+                                <div class="l-details"><span class="l-title">Trade Proceeds Credit</span><span
+                                        class="l-time">10:42 AM</span></div>
+                                <div class="l-amount success">{{ formattedProceeds() }}</div>
+                            </div>
+                            <div class="ledger-row">
+                                <div class="l-icon warning"></div>
+                                <div class="l-details"><span class="l-title">Margin Loan Increase</span><span
+                                        class="l-time">10:38 AM</span></div>
+                                <div class="l-amount warning">{{ formattedLoan() }}</div>
+                            </div>
+                            <div class="ledger-row">
+                                <div class="l-icon danger"></div>
+                                <div class="l-details"><span class="l-title">FX Conversion Fee</span><span
+                                        class="l-time">10:15 AM</span></div>
+                                <div class="l-amount danger">{{ formattedFee() }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

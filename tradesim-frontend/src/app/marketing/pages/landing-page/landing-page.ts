@@ -15,7 +15,7 @@ import { Cta } from './cta/cta';
   selector: 'app-landing-page',
   imports: [CommonModule, RouterLink, Auth, Logo, Hero, Mechanics, Features, Cta],
   templateUrl: './landing-page.html',
-  styleUrl: './landing-page.scss',
+  styleUrl: './landing-page.scss'
 })
 export class LandingPage {
   showAuth = signal(false);
