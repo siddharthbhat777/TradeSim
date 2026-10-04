@@ -2,13 +2,21 @@
     <nav class="marketing-nav">
         <div class="nav-container">
             <div class="nav-brand">
-                <app-logo [size]="isMobile() ? 'small' : 'medium'" [showText]="!isMobile()"></app-logo>
+                <a href="#home" class="static-logo">
+                    <svg viewBox="0 0 100 100" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 10 20 H 90 L 70 40 H 50 V 60 L 30 80 V 40 H 10 Z" fill="#f8fafc" />
+                        <path d="M 38 80 L 52 66 V 80 Z" fill="#3b82f6" />
+                        <path d="M 57 80 V 61 L 71 47 V 80 Z" fill="#3b82f6" />
+                        <path d="M 76 80 V 42 L 90 28 V 80 Z" fill="#3b82f6" />
+                    </svg>
+                    <span class="logo-text">Trade<span class="accent">Sim</span></span>
+                </a>
             </div>
 
             <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#markets">Markets</a>
-                <a href="#ipo">Corporate</a>
+                <a href="#home">Home</a>
+                <a href="#mechanics">Mechanics</a>
+                <a href="#infrastructure">Infrastructure</a>
             </div>
 
             <div class="nav-actions">
@@ -28,6 +36,7 @@
 
     <app-mechanics></app-mechanics>
     <app-features></app-features>
+
     <app-cta [isLoggedIn]="isLoggedIn()" (openAuth)="showAuthDialog(authStatus.Register)">
     </app-cta>
 

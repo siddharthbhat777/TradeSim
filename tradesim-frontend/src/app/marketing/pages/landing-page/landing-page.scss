@@ -1,3 +1,7 @@
+::ng-deep html {
+  scroll-behavior: smooth;
+}
+
 $bg-color: #050814;
 $surface-color: #0f172a;
 $text-primary: #f8fafc;
@@ -52,20 +56,24 @@ $accent-hover: #2563eb;
   align-items: center;
   color: $text-primary;
   flex-shrink: 0;
+}
 
-  @media (max-width: 480px) {
-    ::ng-deep .logo-wrapper {
-      gap: 0 !important;
+.static-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
 
-      .logo-svg {
-        width: 45px !important;
-        height: 45px !important;
-      }
+  .logo-text {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: $text-primary;
+    letter-spacing: -0.5px;
+  }
 
-      .logo-text-container {
-        display: none !important;
-      }
-    }
+  .accent {
+    color: $accent-blue;
   }
 }
 
