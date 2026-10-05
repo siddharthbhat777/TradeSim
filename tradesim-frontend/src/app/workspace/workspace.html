@@ -9,16 +9,16 @@
             </svg>
         </button>
 
-        <div class="workspace__mobile-brand">
+        <a routerLink="/" class="workspace__mobile-brand">
             <app-logo size="small" [showText]="true"></app-logo>
-        </div>
+        </a>
     </header>
 
     <ng-template #sidebarContent>
         <div class="workspace__brand">
-            <div class="workspace__brand-logo">
+            <a routerLink="/" class="workspace__brand-logo">
                 <app-logo size="small" [showText]="true"></app-logo>
-            </div>
+            </a>
         </div>
 
         @if (isCompanyRepresentative()) {
