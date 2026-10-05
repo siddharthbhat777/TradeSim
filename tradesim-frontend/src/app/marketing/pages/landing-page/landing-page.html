@@ -31,14 +31,12 @@
         </div>
     </nav>
 
-    <app-hero [isLoggedIn]="isLoggedIn()" (openAuth)="showAuthDialog(authStatus.Register)">
-    </app-hero>
+    <app-hero [isLoggedIn]="isLoggedIn()" (openAuth)="showAuthDialog(authStatus.Register)"></app-hero>
 
     <app-mechanics></app-mechanics>
-    <app-features></app-features>
+    <app-infrastructure></app-infrastructure>
 
-    <app-cta [isLoggedIn]="isLoggedIn()" (openAuth)="showAuthDialog(authStatus.Register)">
-    </app-cta>
+    <app-cta [isLoggedIn]="isLoggedIn()" (openAuth)="showAuthDialog(authStatus.Register)"></app-cta>
 
     @if(showAuth()) {
     <app-auth (showAuth)="closeAuth()" />

@@ -4,7 +4,7 @@ $text-primary: #f8fafc;
 $text-secondary: #94a3b8;
 $accent-blue: #3b82f6;
 
-.features-section {
+.infrastructure-section {
   padding: 120px 1.5rem;
   background-color: $bg-color;
   position: relative;
@@ -16,6 +16,14 @@ $accent-blue: #3b82f6;
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 15%,
+    black 85%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
 
   .orb {
     position: absolute;
@@ -26,8 +34,8 @@ $accent-blue: #3b82f6;
   }
 
   .orb-1 {
-    top: 20%;
-    left: -10%;
+    top: 10%;
+    left: -15%;
     width: 600px;
     height: 600px;
     background: $accent-blue;
@@ -35,8 +43,8 @@ $accent-blue: #3b82f6;
   }
 
   .orb-2 {
-    bottom: -10%;
-    right: -10%;
+    bottom: 5%;
+    right: -25%;
     width: 500px;
     height: 500px;
     background: #60a5fa;
@@ -44,7 +52,7 @@ $accent-blue: #3b82f6;
   }
 }
 
-.features-container {
+.infrastructure-container {
   max-width: 1100px;
   margin: 0 auto;
   position: relative;

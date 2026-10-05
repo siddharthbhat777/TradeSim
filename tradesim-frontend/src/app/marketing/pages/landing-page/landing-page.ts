@@ -7,12 +7,12 @@ import { AuthStatus } from '../../../constants/auth';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { Hero } from './hero/hero';
 import { Mechanics } from './mechanics/mechanics';
-import { Features } from './features/features';
+import { Infrastructure } from './infrastructure/infrastructure';
 import { Cta } from './cta/cta';
 
 @Component({
   selector: 'app-landing-page',
-  imports: [CommonModule, RouterLink, Auth, Hero, Mechanics, Features, Cta],
+  imports: [CommonModule, RouterLink, Auth, Hero, Mechanics, Infrastructure, Cta],
   templateUrl: './landing-page.html',
   styleUrl: './landing-page.scss'
 })
