@@ -27,7 +27,28 @@
             <div class="input-group"
                 [class.has-error]="loginForm.controls.password.invalid && loginForm.controls.password.touched">
                 <label for="loginPassword">Password</label>
-                <input id="loginPassword" type="password" placeholder="••••••••" formControlName="password">
+                <div class="password-wrapper">
+                    <input id="loginPassword" [type]="showLoginPassword() ? 'text' : 'password'" placeholder="••••••••"
+                        formControlName="password">
+                    <button type="button" class="toggle-password-btn" (click)="showLoginPassword.update(v => !v)"
+                        tabindex="-1" aria-label="Toggle password visibility">
+                        @if (showLoginPassword()) {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                            <line x1="2" y1="2" x2="22" y2="22" />
+                        </svg>
+                        }
+                    </button>
+                </div>
                 @if (loginForm.controls.password.touched) {
                 @if (loginForm.controls.password.errors?.['required']) {
                 <span class="error-text">Password is required.</span>
@@ -55,7 +76,7 @@
                 <div class="input-group"
                     [class.has-error]="registerForm.controls.firstName.invalid && registerForm.controls.firstName.touched">
                     <label for="regFirstName">First Name</label>
-                    <input id="regFirstName" type="text" placeholder="e.g. Siddharth" formControlName="firstName">
+                    <input id="regFirstName" type="text" placeholder="e.g. John" formControlName="firstName">
                     @if (registerForm.controls.firstName.invalid && registerForm.controls.firstName.touched) {
                     <span class="error-text">First name is required.</span>
                     }
@@ -63,7 +84,7 @@
                 <div class="input-group"
                     [class.has-error]="registerForm.controls.lastName.invalid && registerForm.controls.lastName.touched">
                     <label for="regLastName">Last Name</label>
-                    <input id="regLastName" type="text" placeholder="e.g. Bhat" formControlName="lastName">
+                    <input id="regLastName" type="text" placeholder="e.g. Doe" formControlName="lastName">
                     @if (registerForm.controls.lastName.invalid && registerForm.controls.lastName.touched) {
                     <span class="error-text">Last name is required.</span>
                     }
@@ -90,34 +111,73 @@
                 </div>
             </div>
 
-            <div class="form-grid">
-                <div class="input-group"
-                    [class.has-error]="registerForm.controls.password.invalid && registerForm.controls.password.touched">
-                    <label for="regPassword">Password</label>
-                    <input id="regPassword" type="password" placeholder="Min 8 chars, 1 uppercase, 1 special"
-                        formControlName="password">
-                    @if (registerForm.controls.password.touched) {
-                    @if (registerForm.controls.password.errors?.['required']) {
-                    <span class="error-text">Password is required.</span>
-                    } @else if (registerForm.controls.password.errors?.['pattern']) {
-                    <span class="error-text">Must be 8+ chars with 1 uppercase, 1 number, and 1 special character
-                        (!@#$%^&*).</span>
-                    }
-                    }
+            <div class="input-group"
+                [class.has-error]="registerForm.controls.password.invalid && registerForm.controls.password.touched">
+                <label for="regPassword">Password</label>
+                <div class="password-wrapper">
+                    <input id="regPassword" [type]="showRegPassword() ? 'text' : 'password'"
+                        placeholder="Min 8 chars, 1 uppercase, 1 special" formControlName="password">
+                    <button type="button" class="toggle-password-btn" (click)="showRegPassword.update(v => !v)"
+                        tabindex="-1" aria-label="Toggle password visibility">
+                        @if (showRegPassword()) {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                            <line x1="2" y1="2" x2="22" y2="22" />
+                        </svg>
+                        }
+                    </button>
                 </div>
-                <div class="input-group"
-                    [class.has-error]="(registerForm.controls.confirmPassword.invalid || registerForm.hasError('passwordMismatch')) && registerForm.controls.confirmPassword.touched">
-                    <label for="regConfirmPassword">Confirm Password</label>
-                    <input id="regConfirmPassword" type="password" placeholder="••••••••"
-                        formControlName="confirmPassword">
-                    @if (registerForm.controls.confirmPassword.touched) {
-                    @if (registerForm.controls.confirmPassword.errors?.['required']) {
-                    <span class="error-text">Confirmation is required.</span>
-                    } @else if (registerForm.hasError('passwordMismatch')) {
-                    <span class="error-text">Passwords do not match.</span>
-                    }
-                    }
+                @if (registerForm.controls.password.touched) {
+                @if (registerForm.controls.password.errors?.['required']) {
+                <span class="error-text">Password is required.</span>
+                } @else if (registerForm.controls.password.errors?.['pattern']) {
+                <span class="error-text">Must be 8+ chars with 1 uppercase, 1 number, and 1 special character
+                    (!@#$%^&*).</span>
+                }
+                }
+            </div>
+
+            <div class="input-group"
+                [class.has-error]="(registerForm.controls.confirmPassword.invalid || registerForm.hasError('passwordMismatch')) && registerForm.controls.confirmPassword.touched">
+                <label for="regConfirmPassword">Confirm Password</label>
+                <div class="password-wrapper">
+                    <input id="regConfirmPassword" [type]="showRegConfirmPassword() ? 'text' : 'password'"
+                        placeholder="••••••••" formControlName="confirmPassword">
+                    <button type="button" class="toggle-password-btn" (click)="showRegConfirmPassword.update(v => !v)"
+                        tabindex="-1" aria-label="Toggle confirm password visibility">
+                        @if (showRegConfirmPassword()) {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                            <line x1="2" y1="2" x2="22" y2="22" />
+                        </svg>
+                        }
+                    </button>
                 </div>
+                @if (registerForm.controls.confirmPassword.touched) {
+                @if (registerForm.controls.confirmPassword.errors?.['required']) {
+                <span class="error-text">Confirmation is required.</span>
+                } @else if (registerForm.hasError('passwordMismatch')) {
+                <span class="error-text">Passwords do not match.</span>
+                }
+                }
             </div>
 
             <div class="form-grid">
@@ -284,7 +344,28 @@
             <div class="input-group"
                 [class.has-error]="loginForm.controls.password.invalid && loginForm.controls.password.touched">
                 <label for="reactivatePassword">Confirm Password</label>
-                <input id="reactivatePassword" type="password" placeholder="••••••••" formControlName="password">
+                <div class="password-wrapper">
+                    <input id="reactivatePassword" [type]="showReactivatePassword() ? 'text' : 'password'"
+                        placeholder="••••••••" formControlName="password">
+                    <button type="button" class="toggle-password-btn" (click)="showReactivatePassword.update(v => !v)"
+                        tabindex="-1" aria-label="Toggle password visibility">
+                        @if (showReactivatePassword()) {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                            <line x1="2" y1="2" x2="22" y2="22" />
+                        </svg>
+                        }
+                    </button>
+                </div>
                 @if (loginForm.controls.password.touched) {
                 @if (loginForm.controls.password.errors?.['required']) {
                 <span class="error-text">Password is required.</span>

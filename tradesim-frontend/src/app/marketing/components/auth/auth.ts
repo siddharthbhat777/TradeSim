@@ -36,6 +36,11 @@ export class Auth implements OnInit, OnDestroy {
   readonly isOtpSent = signal(false);
   readonly isProcessing = signal(false);
 
+  readonly showLoginPassword = signal(false);
+  readonly showRegPassword = signal(false);
+  readonly showRegConfirmPassword = signal(false);
+  readonly showReactivatePassword = signal(false);
+
   readonly otpTimeRemaining = signal(0);
   readonly isOtpExpired = signal(true);
   private otpTimerSub?: Subscription;
@@ -471,10 +476,14 @@ export class Auth implements OnInit, OnDestroy {
     this.isCountryDropdownUp.set(false);
     this.isCurrencyDropdownUp.set(false);
     this.isResolvingCurrency.set(false);
+    this.showRegPassword.set(false);
+    this.showRegConfirmPassword.set(false);
   }
 
   closeAuth() {
     this.resetRegisterState();
+    this.showLoginPassword.set(false);
+    this.showReactivatePassword.set(false);
     this.showAuth.emit();
   }
 }
