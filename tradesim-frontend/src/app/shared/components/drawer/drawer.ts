@@ -64,7 +64,7 @@ export class Drawer implements OnDestroy {
     this.closed.emit();
   }
 
-  onBackdropClick(event: MouseEvent) {
+  onBackdropClick() {
     if (this.closeOnBackdrop()) {
       this.close();
     }

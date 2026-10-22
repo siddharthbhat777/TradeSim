@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.forex.service;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryDefaultsResponse;
 import com.siddharth.tradesim_backend.forex.model.dto.CountryResponse;
 import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
 import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
@@ -107,18 +108,31 @@ class ForexServiceTest {
     }
 
     @Test
-    void resolveNativeCurrencyFromCountryCode_ValidCode_ReturnsCurrency() {
-        String resultUpper = forexService.resolveNativeCurrencyFromCountryCode("IN");
-        assertEquals("INR", resultUpper);
+    void resolveCountryDefaults_ValidCode_ReturnsCurrencyAndTimezones() {
+        CountryDefaultsResponse resultUpper = forexService.resolveCountryDefaults("IN");
+        assertEquals("INR", resultUpper.currency());
+        assertTrue(resultUpper.timezones().contains("Asia/Kolkata"));
 
-        String resultLower = forexService.resolveNativeCurrencyFromCountryCode("us");
-        assertEquals("USD", resultLower);
+        CountryDefaultsResponse resultLower = forexService.resolveCountryDefaults("us");
+        assertEquals("USD", resultLower.currency());
+        assertTrue(resultLower.timezones().contains("America/New_York"));
     }
 
     @Test
-    void resolveNativeCurrencyFromCountryCode_InvalidCode_ReturnsNull() {
-        assertNull(forexService.resolveNativeCurrencyFromCountryCode(null));
-        assertNull(forexService.resolveNativeCurrencyFromCountryCode(""));
-        assertNull(forexService.resolveNativeCurrencyFromCountryCode("INVALID"));
+    void resolveCountryDefaults_InvalidCode_ReturnsEmptyCurrencyAndUtc() {
+        CountryDefaultsResponse result = forexService.resolveCountryDefaults("INVALID");
+        assertNull(result.currency());
+        assertEquals(List.of("UTC"), result.timezones());
+    }
+
+    @Test
+    void resolveCountryDefaults_NullOrBlankCode_ReturnsEmptyCurrencyAndUtc() {
+        CountryDefaultsResponse nullResult = forexService.resolveCountryDefaults(null);
+        assertNull(nullResult.currency());
+        assertEquals(List.of("UTC"), nullResult.timezones());
+
+        CountryDefaultsResponse blankResult = forexService.resolveCountryDefaults("");
+        assertNull(blankResult.currency());
+        assertEquals(List.of("UTC"), blankResult.timezones());
     }
 }

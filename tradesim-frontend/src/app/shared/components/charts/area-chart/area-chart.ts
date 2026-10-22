@@ -128,7 +128,7 @@ export class AreaChart implements OnDestroy {
   });
 
   readonly yAxisTicks = computed<AxisTick[]>(() => {
-    const { min, max, range } = this.chartExtremes();
+    const { min, range } = this.chartExtremes();
     const ticks: AxisTick[] = [];
     const steps = 6;
     const h = this.currentSvgHeight();

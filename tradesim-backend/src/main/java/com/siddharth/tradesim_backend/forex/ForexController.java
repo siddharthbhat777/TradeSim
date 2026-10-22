@@ -1,5 +1,6 @@
 package com.siddharth.tradesim_backend.forex;
 
+import com.siddharth.tradesim_backend.forex.model.dto.CountryDefaultsResponse;
 import com.siddharth.tradesim_backend.forex.model.dto.CountryResponse;
 import com.siddharth.tradesim_backend.forex.service.ForexService;
 import lombok.RequiredArgsConstructor;
@@ -30,12 +31,8 @@ public class ForexController {
     }
 
     @GetMapping("country-currency/{countryCode}")
-    public ResponseEntity<String> getCurrencyForCountry(@PathVariable String countryCode) {
-        String currency = forexService.resolveNativeCurrencyFromCountryCode(countryCode);
-        if (currency == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(currency);
+    public ResponseEntity<CountryDefaultsResponse> getCountryDefaults(@PathVariable String countryCode) {
+        return ResponseEntity.ok(forexService.resolveCountryDefaults(countryCode));
     }
 
     @GetMapping("rate")

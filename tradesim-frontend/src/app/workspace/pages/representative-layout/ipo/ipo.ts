@@ -20,7 +20,7 @@ import { StockService } from '../../../../services/stock/stock-service';
 import { IpoService } from '../../../../services/ipo/ipo-service';
 import { UserService } from '../../../../services/user/user-service';
 
-import { CompanyResponse, CompanyRepresentativeAssignmentResponse } from '../../../../models/company';
+import { CompanyResponse } from '../../../../models/company';
 import { Stock } from '../../../../models/stock';
 import { IpoOfferResponse, IpoSubscriptionResponse } from '../../../../models/ipo';
 

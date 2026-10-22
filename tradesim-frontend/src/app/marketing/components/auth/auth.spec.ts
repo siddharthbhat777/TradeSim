@@ -28,7 +28,9 @@ describe('Auth', () => {
     fetchCountries: vi.fn().mockReturnValue(of([{ code: 'IN', name: 'India' }])),
     getCountryName: vi.fn().mockReturnValue('India'),
     getSupportedCurrencies: vi.fn().mockReturnValue(of(['INR', 'USD'])),
-    getCurrencyForCountry: vi.fn().mockReturnValue(of('INR'))
+
+    // Updated to return the backend's new JSON payload string format
+    getCurrencyForCountry: vi.fn().mockReturnValue(of('{"currencies":["INR"],"timezones":["Asia/Kolkata"]}'))
   };
 
   const mockToast = {

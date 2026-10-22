@@ -5,11 +5,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subscription, timer, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth/auth-service';
-import { ForexService, Country } from '../../../services/forex/forex-service';
+import { ForexService } from '../../../services/forex/forex-service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
 import { AuthStatus } from '../../../constants/auth';
 import { RegisterRequest } from '../../../models/register-request';
 import { LoginRequest } from '../../../models/login-request';
+import { Country } from '../../../models/forex';
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$\%^&*]).{8,}$/;
 
@@ -260,9 +261,22 @@ export class Auth implements OnInit, OnDestroy {
 
     this.forexService.getCurrencyForCountry(countryCode).pipe(
       catchError(() => of(null))
-    ).subscribe(resolvedCurrency => {
+    ).subscribe(res => {
       this.isResolvingCurrency.set(false);
       const supportedList = this.supportedCurrencies().map(c => c.value);
+
+      let resolvedCurrency = null;
+
+      if (res) {
+        try {
+          const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+          if (parsed && parsed.currency) {
+            resolvedCurrency = parsed.currency;
+          }
+        } catch (e) {
+          resolvedCurrency = res;
+        }
+      }
 
       if (resolvedCurrency && supportedList.includes(resolvedCurrency)) {
         this.needsBaseCurrencySelection.set(false);

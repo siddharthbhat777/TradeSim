@@ -3,10 +3,13 @@
         <div class="exchange-slate__top">
             <div class="exchange-slate__selector">
                 <span class="slate-label">Select Exchange</span>
-                <app-dropdown [options]="exchangeOptions()" [ngModel]="selectedExchangeId()"
-                    (ngModelChange)="onExchangeSelect($event)" size="large" placeholder="Select Exchange"
-                    [showErrors]="false" [reserveMessageSpace]="false">
-                </app-dropdown>
+                <div class="selector-row">
+                    <app-dropdown [options]="exchangeOptions()" [ngModel]="selectedExchangeId()"
+                        (ngModelChange)="onExchangeSelect($event)" size="large" placeholder="Select Exchange"
+                        [showErrors]="false" [reserveMessageSpace]="false">
+                    </app-dropdown>
+                    <app-button variant="primary" (buttonClick)="openCreateModal()">Create Exchange</app-button>
+                </div>
             </div>
 
             @if (currentExchange(); as ex) {
@@ -52,3 +55,54 @@
         }
     </div>
 </app-card>
+
+@if (showCreateModal()) {
+<app-modal ariaLabel="Create Exchange" [closeOnBackdropClick]="false" (closed)="closeCreateModal()">
+    <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="modal-form">
+        <h2 class="heading-lg m-0 mb-4">Create Exchange</h2>
+
+        <div class="form-grid">
+            <app-input class="full-width" label="Exchange Name" [required]="true">
+                <input appInput type="text" formControlName="name" placeholder="e.g. National Stock Exchange" />
+            </app-input>
+
+            <app-input label="Exchange Code" [required]="true" helperText="Uppercase letters and numbers only">
+                <input appInput type="text" formControlName="code" placeholder="e.g. NSE" />
+            </app-input>
+
+            <app-dropdown label="Country" [options]="countryOptions()" [formControl]="createForm.controls.countryCode"
+                [searchable]="true" searchPlaceholder="Search country..." placeholder="Select Country"
+                [required]="true">
+            </app-dropdown>
+
+            @if (createForm.controls.countryCode.value) {
+            <app-dropdown label="Base Currency" [options]="dynamicCurrencyOptions()"
+                [formControl]="createForm.controls.currency" [searchable]="true" searchPlaceholder="Search currency..."
+                placeholder="Select Currency" [required]="true">
+            </app-dropdown>
+
+            <app-dropdown label="Timezone" [options]="dynamicTimezoneOptions()"
+                [formControl]="createForm.controls.timezone" [searchable]="true" searchPlaceholder="Search timezone..."
+                placeholder="Select Timezone" [required]="true">
+            </app-dropdown>
+            }
+
+            <app-input label="Market Open Time" [required]="true" helperText="Auto-formatted (HH:mm:ss)">
+                <input appInput type="text" formControlName="marketOpenTime" placeholder="09:15:00" maxlength="8"
+                    (input)="onTimeInput($event, 'marketOpenTime')" />
+            </app-input>
+
+            <app-input label="Market Close Time" [required]="true" helperText="Auto-formatted (HH:mm:ss)">
+                <input appInput type="text" formControlName="marketCloseTime" placeholder="15:30:00" maxlength="8"
+                    (input)="onTimeInput($event, 'marketCloseTime')" />
+            </app-input>
+        </div>
+
+        <div class="modal-actions">
+            <app-button type="button" variant="outline" (buttonClick)="closeCreateModal()">Cancel</app-button>
+            <app-button type="submit" variant="primary" [isLoading]="isCreating() || isLoadingDefaults()"
+                [disabled]="isLoadingDefaults()">Create Exchange</app-button>
+        </div>
+    </form>
+</app-modal>
+}

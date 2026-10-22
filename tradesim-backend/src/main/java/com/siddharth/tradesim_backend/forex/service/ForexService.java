@@ -1,8 +1,10 @@
 package com.siddharth.tradesim_backend.forex.service;
 
+import com.ibm.icu.util.TimeZone;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryDefaultsResponse;
 import com.siddharth.tradesim_backend.forex.model.dto.CountryResponse;
 import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
 import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
@@ -58,16 +60,30 @@ public class ForexService {
                 .toList();
     }
 
-    public String resolveNativeCurrencyFromCountryCode(String countryCode) {
+    public CountryDefaultsResponse resolveCountryDefaults(String countryCode) {
         if (countryCode == null || countryCode.isBlank()) {
-            return null;
+            return new CountryDefaultsResponse(null, List.of("UTC"));
         }
+
+        String formattedCode = countryCode.trim().toUpperCase();
+        String currency = null;
+
         try {
-            Locale locale = Locale.of("", countryCode.trim().toUpperCase());
-            return Currency.getInstance(locale).getCurrencyCode();
+            Locale locale = Locale.of("", formattedCode);
+            Currency javaCurrency = Currency.getInstance(locale);
+            if (javaCurrency != null) {
+                currency = javaCurrency.getCurrencyCode();
+            }
         } catch (IllegalArgumentException e) {
-            return null;
+            System.err.println("Invalid country code for currency resolution: " + formattedCode);
         }
+
+        String[] icuTimezones = TimeZone.getAvailableIDs(formattedCode);
+        List<String> timezones = (icuTimezones != null && icuTimezones.length > 0)
+                ? List.of(icuTimezones)
+                : List.of("UTC");
+
+        return new CountryDefaultsResponse(currency, timezones);
     }
 
     private BigDecimal getInrRate(String currency) {

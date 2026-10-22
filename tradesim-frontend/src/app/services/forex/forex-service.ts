@@ -3,11 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environment/environment';
 import { skipInterceptors } from '../../shared/utils/http-context';
 import { Observable, tap } from 'rxjs';
-
-export interface Country {
-  code: string;
-  name: string;
-}
+import { Country, CountryDefaultsResponse } from '../../models/forex';
 
 @Injectable({
   providedIn: 'root'
@@ -55,9 +51,8 @@ export class ForexService {
     });
   }
 
-  getCurrencyForCountry(countryCode: string): Observable<string> {
-    return this.http.get(`${this.forexURL}/country-currency/${countryCode}`, {
-      responseType: 'text',
+  getCurrencyForCountry(countryCode: string): Observable<CountryDefaultsResponse> {
+    return this.http.get<CountryDefaultsResponse>(`${this.forexURL}/country-currency/${countryCode}`, {
       context: skipInterceptors({ loader: true })
     });
   }

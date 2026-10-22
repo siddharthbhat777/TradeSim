@@ -143,7 +143,7 @@ export class CandlestickChart implements OnDestroy {
   });
 
   readonly yAxisTicks = computed<AxisTick[]>(() => {
-    const { min, max, range } = this.chartExtremes();
+    const { min, range } = this.chartExtremes();
     const ticks: AxisTick[] = [];
     const steps = 6;
     const h = this.currentSvgHeight();
@@ -190,7 +190,6 @@ export class CandlestickChart implements OnDestroy {
     if (items.length === 0 || range === 0) return [];
 
     const xStep = drawWidth / items.length;
-    const dynamicCandleWidth = Math.min(this.candleWidth(), (xStep * 0.6));
 
     return items.map((candle, index) => {
       const isBullish = candle.close >= candle.open;
