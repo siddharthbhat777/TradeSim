@@ -22,7 +22,7 @@ public record CreateExchangeRequest(
 
         @NotBlank(message = "Country is required")
         @Size(max = 60, message = "Country must not exceed 60 characters")
-        String country,
+        String countryCode,
 
         @NotBlank(message = "Timezone is required")
         @Size(max = 50, message = "Timezone must not exceed 50 characters")

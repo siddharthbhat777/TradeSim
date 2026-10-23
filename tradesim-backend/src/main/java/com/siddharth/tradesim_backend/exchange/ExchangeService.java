@@ -80,7 +80,7 @@ public class ExchangeService {
             Exchange exchange = Exchange.builder()
                     .name(request.name())
                     .code(request.code())
-                    .countryCode(request.country())
+                    .countryCode(request.countryCode())
                     .timezone(zoneId.getId())
                     .currency(request.currency())
                     .marketOpenTime(request.marketOpenTime())

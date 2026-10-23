@@ -54,6 +54,9 @@
 .workspace__mobile-brand {
   display: flex;
   align-items: center;
+  text-decoration: none;
+  color: inherit;
+  outline: none;
 }
 
 .workspace__sidebar {
@@ -149,6 +152,9 @@
   display: flex;
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: inherit;
+  outline: none;
 }
 
 .workspace__context-switcher {

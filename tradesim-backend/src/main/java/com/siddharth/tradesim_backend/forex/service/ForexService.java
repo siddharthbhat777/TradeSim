@@ -1,8 +1,11 @@
 package com.siddharth.tradesim_backend.forex.service;
 
+import com.ibm.icu.util.TimeZone;
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
 import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryDefaultsResponse;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryResponse;
 import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
 import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +50,40 @@ public class ForexService {
         }
 
         return currencies;
+    }
+
+    public List<CountryResponse> fetchAllCountries() {
+        return Arrays.stream(Locale.getISOCountries())
+                .map(code -> new CountryResponse(code, Locale.of("", code).getDisplayCountry(Locale.ENGLISH)))
+                .filter(country -> country.name() != null && !country.name().isBlank())
+                .sorted(Comparator.comparing(CountryResponse::name))
+                .toList();
+    }
+
+    public CountryDefaultsResponse resolveCountryDefaults(String countryCode) {
+        if (countryCode == null || countryCode.isBlank()) {
+            return new CountryDefaultsResponse(null, List.of("UTC"));
+        }
+
+        String formattedCode = countryCode.trim().toUpperCase();
+        String currency = null;
+
+        try {
+            Locale locale = Locale.of("", formattedCode);
+            Currency javaCurrency = Currency.getInstance(locale);
+            if (javaCurrency != null) {
+                currency = javaCurrency.getCurrencyCode();
+            }
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid country code for currency resolution: " + formattedCode);
+        }
+
+        String[] icuTimezones = TimeZone.getAvailableIDs(formattedCode);
+        List<String> timezones = (icuTimezones != null && icuTimezones.length > 0)
+                ? List.of(icuTimezones)
+                : List.of("UTC");
+
+        return new CountryDefaultsResponse(currency, timezones);
     }
 
     private BigDecimal getInrRate(String currency) {

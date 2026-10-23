@@ -2,7 +2,11 @@ package com.siddharth.tradesim_backend.forex.service;
 
 import com.siddharth.tradesim_backend.common.exceptions.BusinessException;
 import com.siddharth.tradesim_backend.forex.model.ExchangeRate;
+import com.siddharth.tradesim_backend.forex.model.SupportedCurrency;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryDefaultsResponse;
+import com.siddharth.tradesim_backend.forex.model.dto.CountryResponse;
 import com.siddharth.tradesim_backend.forex.repository.ExchangeRateRepository;
+import com.siddharth.tradesim_backend.forex.repository.SupportedCurrencyRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,10 +15,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -22,6 +26,9 @@ class ForexServiceTest {
 
     @Mock
     private ExchangeRateRepository exchangeRateRepository;
+
+    @Mock
+    private SupportedCurrencyRepository supportedCurrencyRepository;
 
     @InjectMocks
     private ForexService forexService;
@@ -75,5 +82,57 @@ class ForexServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
         assertEquals("FOREX_RATE_NOT_FOUND", exception.getErrorCode());
+    }
+
+    @Test
+    void fetchActiveSupportedCurrencies_ReturnsActiveAndAlwaysIncludesInr() {
+        SupportedCurrency usd = SupportedCurrency.builder().code("USD").isActive(true).build();
+        SupportedCurrency eur = SupportedCurrency.builder().code("EUR").isActive(false).build();
+
+        when(supportedCurrencyRepository.findAll()).thenReturn(List.of(usd, eur));
+
+        List<String> result = forexService.fetchActiveSupportedCurrencies();
+
+        assertTrue(result.contains("USD"));
+        assertFalse(result.contains("EUR"));
+        assertTrue(result.contains("INR"));
+    }
+
+    @Test
+    void fetchAllCountries_ReturnsValidList() {
+        List<CountryResponse> result = forexService.fetchAllCountries();
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.stream().anyMatch(c -> c.code().equals("IN") && c.name().equals("India")));
+    }
+
+    @Test
+    void resolveCountryDefaults_ValidCode_ReturnsCurrencyAndTimezones() {
+        CountryDefaultsResponse resultUpper = forexService.resolveCountryDefaults("IN");
+        assertEquals("INR", resultUpper.currency());
+        assertTrue(resultUpper.timezones().contains("Asia/Kolkata"));
+
+        CountryDefaultsResponse resultLower = forexService.resolveCountryDefaults("us");
+        assertEquals("USD", resultLower.currency());
+        assertTrue(resultLower.timezones().contains("America/New_York"));
+    }
+
+    @Test
+    void resolveCountryDefaults_InvalidCode_ReturnsEmptyCurrencyAndUtc() {
+        CountryDefaultsResponse result = forexService.resolveCountryDefaults("INVALID");
+        assertNull(result.currency());
+        assertEquals(List.of("UTC"), result.timezones());
+    }
+
+    @Test
+    void resolveCountryDefaults_NullOrBlankCode_ReturnsEmptyCurrencyAndUtc() {
+        CountryDefaultsResponse nullResult = forexService.resolveCountryDefaults(null);
+        assertNull(nullResult.currency());
+        assertEquals(List.of("UTC"), nullResult.timezones());
+
+        CountryDefaultsResponse blankResult = forexService.resolveCountryDefaults("");
+        assertNull(blankResult.currency());
+        assertEquals(List.of("UTC"), blankResult.timezones());
     }
 }

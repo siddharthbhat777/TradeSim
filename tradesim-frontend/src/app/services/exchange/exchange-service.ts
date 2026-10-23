@@ -17,6 +17,12 @@ export class ExchangeService {
     });
   }
 
+  createExchange(data: any) {
+    return this.http.post<Exchange>(this.exchangeURL, data, {
+      context: skipInterceptors({ loader: true, toast: true })
+    });
+  }
+
   getExchange(exchangeId: string) {
     return this.http.get<Exchange>(`${this.exchangeURL}/${exchangeId}`, {
       context: skipInterceptors({ loader: true })

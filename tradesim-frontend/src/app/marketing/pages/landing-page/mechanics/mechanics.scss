@@ -1,0 +1,353 @@
+$bg-color: #050814;
+$surface-color: #0f172a;
+$surface-light: #1e293b;
+$text-primary: #f8fafc;
+$text-secondary: #94a3b8;
+$accent-blue: #3b82f6;
+$success: #10b981;
+$danger: #ef4444;
+$warning: #f59e0b;
+
+.mechanics-section {
+  padding: 100px 1.5rem;
+  background-color: $bg-color;
+  position: relative;
+}
+
+.mechanics-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 80px;
+
+  h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: $text-primary;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.5px;
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.stepper-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.stepper-line {
+  position: absolute;
+  left: 24px;
+  top: 25px;
+  bottom: 25px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  z-index: 1;
+
+  @media (max-width: 768px) {
+    left: 16px;
+  }
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+}
+
+.stepper-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(180deg, $accent-blue 0%, rgba(59, 130, 246, 0.5) 100%);
+  transition: height 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.step-item {
+  display: flex;
+  gap: 4rem;
+  position: relative;
+  z-index: 2;
+
+  .step-indicator {
+    opacity: 0.4;
+    transition: all 0.5s ease;
+  }
+
+  .step-content {
+    opacity: 0.35;
+    filter: blur(4px) grayscale(70%);
+    transform: scale(0.97);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    gap: 2rem;
+  }
+
+  &.active {
+    .step-indicator {
+      opacity: 1;
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+
+      &::after {
+        background: $accent-blue;
+        box-shadow: 0 0 12px $accent-blue;
+      }
+    }
+
+    .step-content {
+      opacity: 1;
+      filter: blur(0) grayscale(0);
+      transform: scale(1);
+      border-color: rgba(59, 130, 246, 0.3);
+      pointer-events: auto;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    }
+  }
+}
+
+.step-indicator {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: $surface-color;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background: $surface-light;
+    border-radius: 50%;
+    transition: all 0.5s ease;
+  }
+
+  @media (max-width: 768px) {
+    width: 34px;
+    height: 34px;
+
+    &::after {
+      width: 8px;
+      height: 8px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+}
+
+.step-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 3rem;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  @media (max-width: 640px) {
+    padding: 1.5rem;
+  }
+}
+
+.step-text {
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 1rem 0;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.step-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.abstract-ui {
+  width: 100%;
+  max-width: 320px;
+  background: $surface-color;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.order-book {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .ob-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: monospace;
+    font-size: 0.9rem;
+
+    &.ask .ob-price {
+      color: $danger;
+    }
+    &.bid .ob-price {
+      color: $success;
+    }
+    .ob-qty {
+      color: $text-secondary;
+    }
+  }
+
+  .ob-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0.25rem 0;
+  }
+}
+
+.ipo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .ipo-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: rgba(16, 185, 129, 0.1);
+    color: $success;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .ipo-bar-bg {
+    height: 6px;
+    background: $surface-light;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
+
+  .ipo-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: $accent-blue;
+    border-radius: 4px;
+  }
+
+  .ipo-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: $text-secondary;
+
+    span:last-child {
+      color: $text-primary;
+      font-weight: 600;
+    }
+  }
+}
+
+.ledger-table {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .ledger-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    &:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+  }
+
+  .l-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+
+    &.success {
+      background: rgba(16, 185, 129, 0.1);
+    }
+    &.warning {
+      background: rgba(245, 158, 11, 0.1);
+    }
+    &.danger {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  .l-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+
+    .l-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: $text-primary;
+    }
+
+    .l-time {
+      font-size: 0.75rem;
+      color: $text-secondary;
+    }
+  }
+
+  .l-amount {
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: monospace;
+
+    &.success {
+      color: $success;
+    }
+    &.warning {
+      color: $warning;
+    }
+    &.danger {
+      color: $danger;
+    }
+  }
+}

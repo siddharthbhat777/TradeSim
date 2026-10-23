@@ -1,5 +1,5 @@
 @if (isVisible()) {
-<div class="drawer-backdrop" [class.is-open]="isAnimating()" (click)="onBackdropClick($event)">
+<div class="drawer-backdrop" [class.is-open]="isAnimating()" (click)="onBackdropClick()">
     <div class="drawer-panel" [class]="'drawer-panel--' + position()" [class.is-open]="isAnimating()"
         (click)="$event.stopPropagation()">
         @if (!hideCloseButton()) {

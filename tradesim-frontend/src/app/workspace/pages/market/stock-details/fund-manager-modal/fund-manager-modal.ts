@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { Modal } from '../../../../../shared/components/modal/modal';
 import { FundManager, FundManagerMode } from '../../../../components/fund-manager/fund-manager';
 

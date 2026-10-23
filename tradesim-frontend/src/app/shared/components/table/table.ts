@@ -16,7 +16,7 @@ export class TableExpandedRowDirective {
 }
 
 export interface TableColumn<T = any> {
-  key: string;
+  key: string | Extract<keyof T, string>;
   header: string;
   align?: 'left' | 'center' | 'right';
   width?: string;

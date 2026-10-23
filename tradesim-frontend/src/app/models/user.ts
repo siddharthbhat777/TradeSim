@@ -53,10 +53,6 @@ export interface ResetPasswordRequest {
     newPassword: string;
 }
 
-export interface UpdateThemeRequest {
-    theme: string;
-}
-
 export interface InitiateEmailChangeRequest {
     newEmail: string;
 }

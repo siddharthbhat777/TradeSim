@@ -1,28 +1,41 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, effect, HostListener, inject, signal } from '@angular/core';
 import { RouterLink } from "@angular/router";
+import { CommonModule } from '@angular/common';
 import { Auth } from "../../components/auth/auth";
 import { AuthService } from '../../../services/auth/auth-service';
 import { AuthStatus } from '../../../constants/auth';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { Hero } from './hero/hero';
+import { Mechanics } from './mechanics/mechanics';
+import { Infrastructure } from './infrastructure/infrastructure';
+import { Cta } from './cta/cta';
 
 @Component({
   selector: 'app-landing-page',
-  imports: [RouterLink, Auth],
+  imports: [CommonModule, RouterLink, Auth, Hero, Mechanics, Infrastructure, Cta],
   templateUrl: './landing-page.html',
-  styleUrl: './landing-page.scss',
+  styleUrl: './landing-page.scss'
 })
 export class LandingPage {
   showAuth = signal(false);
-  isLoginSelected = signal(false);
   readonly authStatus = AuthStatus;
 
-  private authService = inject(AuthService);
-  readonly userDetails = this.authService.currentUser;
+  isMobile = signal(typeof window !== 'undefined' ? window.innerWidth <= 480 : false);
+
+  private readonly authService = inject(AuthService);
+  private readonly dialogService = inject(DialogService);
+
   readonly isLoggedIn = this.authService.isLoggedIn;
 
   constructor() {
     effect(() => {
       this.showAuth.set(this.authService.showAuthDialog().show);
-    });
+    }, { allowSignalWrites: true });
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.isMobile.set(window.innerWidth <= 480);
   }
 
   showAuthDialog(status: AuthStatus) {
@@ -33,9 +46,13 @@ export class LandingPage {
   }
 
   logoutUser() {
-    this.authService.logout().subscribe({
-      error: (error) => {
-        console.log(error.message);
+    this.dialogService.open({
+      title: 'Log Out',
+      message: 'Are you sure you want to log out of your session?',
+      primaryLabel: 'Log Out',
+      secondaryLabel: 'Cancel',
+      onPrimary: () => {
+        this.authService.logout().subscribe();
       }
     });
   }

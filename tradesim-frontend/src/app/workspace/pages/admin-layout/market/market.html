@@ -11,7 +11,7 @@
     } @else {
     <app-exchange-slate [exchanges]="exchanges()" [selectedExchangeId]="selectedExchangeId()" [clocks]="clocks()"
         [stocksCount]="exchangeStocks().length" [indicesCount]="exchangeIndices().length"
-        (exchangeChange)="onExchangeSelect($event)">
+        (exchangeChange)="onExchangeSelect($event)" (exchangeCreated)="onExchangeCreated($event)">
     </app-exchange-slate>
 
     <div class="toolbar">

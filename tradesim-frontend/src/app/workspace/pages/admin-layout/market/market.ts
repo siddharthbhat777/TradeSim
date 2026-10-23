@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Card } from '../../../../shared/components/card/card';
 import { SegmentedControl, SegmentOption } from '../../../../shared/components/segmented-control/segmented-control';
@@ -24,6 +24,7 @@ export type MarketTab = 'Stocks' | 'Indices' | 'Forex';
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     Card,
     SegmentedControl,
     ExchangeSlate,
@@ -77,6 +78,7 @@ export class Market implements OnInit, OnDestroy {
   private clockTimer: any;
 
   ngOnInit(): void {
+    this.forexService.loadCountries();
     this.loadData();
     this.clockTimer = setInterval(() => this.tickClocks(), 1000);
   }
@@ -97,6 +99,14 @@ export class Market implements OnInit, OnDestroy {
         setTimeout(() => this.selectedExchangeId.set(current));
       }
     }
+  }
+
+  onExchangeCreated(newEx: Exchange): void {
+    this.exchanges.update(arr => [...arr, newEx]);
+    if (!this.selectedExchangeId()) {
+      this.selectedExchangeId.set(newEx.id);
+    }
+    this.loadMarketClock(newEx.id);
   }
 
   private loadData(): void {
@@ -181,7 +191,7 @@ export class Market implements OnInit, OnDestroy {
   }
 
   getFallbackCurrency(): string {
-    return this.currentExchange()?.currency || (this.exchanges().length > 0 ? this.exchanges()[0].currency : 'USD');
+    return this.currentExchange()?.currency || (this.exchanges().length > 0 ? this.exchanges()[0].currency : 'INR');
   }
 
   onStockUpdated(updatedStock: Stock): void {

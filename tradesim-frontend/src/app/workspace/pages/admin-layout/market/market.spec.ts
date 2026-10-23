@@ -8,6 +8,7 @@ import { ExchangeService } from '../../../../services/exchange/exchange-service'
 import { StockService } from '../../../../services/stock/stock-service';
 import { MarketIndexService } from '../../../../services/market-index/market-index-service';
 import { ForexService } from '../../../../services/forex/forex-service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 
 describe('Market', () => {
   let component: Market;
@@ -39,7 +40,8 @@ describe('Market', () => {
           provide: ExchangeService,
           useValue: {
             getExchanges: vi.fn().mockReturnValue(of([])),
-            getMarketClock: vi.fn().mockReturnValue(of({}))
+            getMarketClock: vi.fn().mockReturnValue(of({})),
+            createExchange: vi.fn().mockReturnValue(of({}))
           }
         },
         {
@@ -55,7 +57,16 @@ describe('Market', () => {
         },
         {
           provide: ForexService,
-          useValue: { getSupportedCurrencies: vi.fn().mockReturnValue(of([])) }
+          useValue: {
+            countries: vi.fn().mockReturnValue([]),
+            loadCountries: vi.fn(),
+            getSupportedCurrencies: vi.fn().mockReturnValue(of([])),
+            getCurrencyForCountry: vi.fn().mockReturnValue(of('{"currencies":["INR"],"timezones":["Asia/Kolkata"]}'))
+          }
+        },
+        {
+          provide: ToastService,
+          useValue: { success: vi.fn(), danger: vi.fn() }
         }
       ]
     }).compileComponents();
