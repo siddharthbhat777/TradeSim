@@ -55,7 +55,8 @@ public class SecurityConfig {
                                 "/auth/password/reset",
                                 "/forex/currencies",
                                 "/forex/countries",
-                                "/forex/country-currency/*"
+                                "/forex/country-currency/*",
+                                "/ws/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

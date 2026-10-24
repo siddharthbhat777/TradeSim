@@ -4,6 +4,7 @@ import { WalletService } from '../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { LedgerService } from '../../../services/ledger/ledger-service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { ForexService } from '../../../services/forex/forex-service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
@@ -38,7 +39,8 @@ describe('Wallet', () => {
     const mockWalletService = {
       wallet: signal({
         multiCurrencyStatus: 'APPROVED',
-        buckets: [{ currency: 'USD', balance: 1000 }]
+        buckets: [{ currency: 'USD', balance: 1000 }],
+        rejectionReason: null
       }),
       loadWallet: vi.fn(),
       requestMultiCurrency: vi.fn().mockReturnValue(of({}))
@@ -61,6 +63,12 @@ describe('Wallet', () => {
       success: vi.fn()
     };
 
+    const mockDialogService = {
+      open: vi.fn().mockImplementation((config: any) => {
+        if (config.onPrimary) config.onPrimary();
+      })
+    };
+
     const mockForexService = {
       countries: signal([{ code: 'IN', name: 'India' }]),
       isCountriesLoaded: signal(true),
@@ -79,6 +87,7 @@ describe('Wallet', () => {
         { provide: TradingAccountService, useValue: mockTradingAccountService },
         { provide: LedgerService, useValue: mockLedgerService },
         { provide: ToastService, useValue: mockToastService },
+        { provide: DialogService, useValue: mockDialogService },
         { provide: ForexService, useValue: mockForexService }
       ]
     }).compileComponents();

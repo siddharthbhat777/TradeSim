@@ -45,7 +45,8 @@
             <div class="mc-card__header">
                 <h3>Multi-Currency Wallets</h3>
                 @if (multiCurrencyStatus() !== 'APPROVED') {
-                <app-badge [color]="multiCurrencyStatus() === 'PENDING' ? 'warning' : 'secondary'">
+                <app-badge
+                    [color]="multiCurrencyStatus() === 'PENDING' ? 'warning' : (multiCurrencyStatus() === 'REJECTED' ? 'danger' : 'secondary')">
                     {{ multiCurrencyStatus() | titlecase }}
                 </app-badge>
                 }
@@ -101,10 +102,17 @@
                     </div>
                     <span class="mc-overlay__title">Restricted Access</span>
                     <p class="mc-overlay__desc">Unlock global markets by enabling multi-currency features.</p>
-                    <app-button variant="primary" size="small"
-                        [disabled]="multiCurrencyStatus() === 'PENDING' || multiCurrencyStatus() === 'REJECTED'"
+
+                    @if (multiCurrencyStatus() === 'REJECTED' && rejectionReason()) {
+                    <div class="mc-overlay__rejection">
+                        <strong>Reason:</strong> {{ rejectionReason() }}
+                    </div>
+                    }
+
+                    <app-button variant="primary" size="small" [disabled]="multiCurrencyStatus() === 'PENDING'"
                         [isLoading]="isRequestingAccess()" (buttonClick)="requestMultiCurrencyAccess()">
-                        {{ multiCurrencyStatus() === 'PENDING' ? 'Request Pending' : 'Apply Now' }}
+                        {{ multiCurrencyStatus() === 'PENDING' ? 'Request Pending' : (multiCurrencyStatus() ===
+                        'REJECTED' ? 'Apply Again' : 'Apply Now') }}
                     </app-button>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 package com.siddharth.tradesim_backend.auth.repository;
 
 import com.siddharth.tradesim_backend.auth.enums.AccountStatus;
+import com.siddharth.tradesim_backend.auth.enums.Role;
 import com.siddharth.tradesim_backend.auth.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,4 +25,6 @@ public interface AuthRepository extends JpaRepository<User, UUID> {
     Optional<User> findByUsernameOrEmail(@Param("input") String input);
 
     List<User> findByAccountStatus(AccountStatus status);
+
+    List<User> findByRole(Role role);
 }

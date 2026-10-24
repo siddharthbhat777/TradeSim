@@ -5,6 +5,7 @@ import { WalletService } from '../../../services/wallet/wallet-service';
 import { TradingAccountService } from '../../../services/trading-account/trading-account-service';
 import { LedgerService } from '../../../services/ledger/ledger-service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { LedgerEntryResponse, LedgerEntryType } from '../../../models/ledger';
 import { Card } from '../../../shared/components/card/card';
 import { Button } from '../../../shared/components/button/button';
@@ -51,6 +52,7 @@ export class Wallet implements OnInit {
   private readonly tradingAccountService = inject(TradingAccountService);
   private readonly ledgerService = inject(LedgerService);
   private readonly toastService = inject(ToastService);
+  private readonly dialogService = inject(DialogService);
 
   readonly wallet = computed(() => this.walletService.wallet());
   readonly baseCurrency = computed(() => this.tradingAccountService.tradingAccount()?.baseCurrency || 'INR');
@@ -65,6 +67,7 @@ export class Wallet implements OnInit {
 
   readonly isMultiCurrencyApproved = computed(() => this.wallet()?.multiCurrencyStatus === 'APPROVED');
   readonly multiCurrencyStatus = computed(() => this.wallet()?.multiCurrencyStatus ?? 'UNREQUESTED');
+  readonly rejectionReason = computed(() => this.wallet()?.rejectionReason ?? null);
 
   readonly ledgerData = signal<LedgerEntryResponse[]>([]);
   readonly isLedgerLoading = signal<boolean>(true);
@@ -254,15 +257,28 @@ export class Wallet implements OnInit {
   }
 
   requestMultiCurrencyAccess(): void {
-    this.isRequestingAccess.set(true);
-    this.walletService.requestMultiCurrency().subscribe({
-      next: () => {
-        this.toastService.success('Multi-currency request submitted successfully.');
-        this.walletService.loadWallet();
-        this.isRequestingAccess.set(false);
-      },
-      error: () => {
-        this.isRequestingAccess.set(false);
+    const isReapply = this.multiCurrencyStatus() === 'REJECTED';
+
+    this.dialogService.open({
+      title: isReapply ? 'Re-apply for Multi-Currency' : 'Request Multi-Currency',
+      message: isReapply
+        ? 'Are you sure you want to submit a new application for multi-currency access? Ensure you have addressed the previous rejection reason.'
+        : 'Are you sure you want to apply for multi-currency wallet access? This request will undergo admin review.',
+      primaryLabel: 'Submit Request',
+      secondaryLabel: 'Cancel',
+      primaryVariant: 'primary',
+      onPrimary: () => {
+        this.isRequestingAccess.set(true);
+        this.walletService.requestMultiCurrency().subscribe({
+          next: () => {
+            this.toastService.success('Multi-currency request submitted successfully.');
+            this.walletService.loadWallet();
+            this.isRequestingAccess.set(false);
+          },
+          error: () => {
+            this.isRequestingAccess.set(false);
+          }
+        });
       }
     });
   }
