@@ -9,16 +9,16 @@
     </div>
 
     @if (tabControl.value === 'Listing') {
-    <app-listing-approvals [highlightedId]="highlightedId()" [data]="listings()" [users]="users()"
-        [isLoading]="isLoading()" (processed)="onListingProcessed($event)">
+    <app-listing-approvals [data]="listings()" [users]="users()" [isLoading]="isLoading()"
+        (processed)="onListingProcessed($event)">
     </app-listing-approvals>
     } @else if (tabControl.value === 'IPO') {
-    <app-ipo-approvals [highlightedId]="highlightedId()" [pendingData]="iposPending()" [readyData]="iposReady()"
-        [isLoading]="isLoading()" (processed)="onIpoProcessed($event)" (finalized)="onIpoFinalized($event)">
+    <app-ipo-approvals [pendingData]="iposPending()" [readyData]="iposReady()" [isLoading]="isLoading()"
+        (processed)="onIpoProcessed($event)" (finalized)="onIpoFinalized($event)">
     </app-ipo-approvals>
     } @else if (tabControl.value === 'Wallet') {
-    <app-wallet-approvals [highlightedId]="highlightedId()" [data]="wallets()" [users]="users()"
-        [isLoading]="isLoading()" (processed)="onWalletProcessed($event)">
+    <app-wallet-approvals [data]="wallets()" [users]="users()" [isLoading]="isLoading()"
+        (processed)="onWalletProcessed($event)">
     </app-wallet-approvals>
     }
 </div>

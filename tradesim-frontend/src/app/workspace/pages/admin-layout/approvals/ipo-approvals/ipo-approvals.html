@@ -24,8 +24,8 @@
 <app-card class="approval-card">
     <app-table variant="flush" [columns]="pendingColumns()" [data]="pendingData()" [paginated]="true">
 
-        <ng-template tableCell="symbol" let-val let-row="row">
-            <span class="font-semibold" [class.highlight]="isHighlighted(row.id)">{{ val }}</span>
+        <ng-template tableCell="symbol" let-val>
+            <span class="font-semibold">{{ val }}</span>
         </ng-template>
 
         <ng-template tableCell="issuePrice" let-val let-row="row">
@@ -99,8 +99,8 @@
 <app-card class="approval-card">
     <app-table variant="flush" [columns]="readyColumns()" [data]="readyData()" [paginated]="true">
 
-        <ng-template tableCell="symbol" let-val let-row="row">
-            <span class="font-semibold" [class.highlight]="isHighlighted(row.id)">{{ val }}</span>
+        <ng-template tableCell="symbol" let-val>
+            <span class="font-semibold">{{ val }}</span>
         </ng-template>
 
         <ng-template tableCell="issuePrice" let-val let-row="row">

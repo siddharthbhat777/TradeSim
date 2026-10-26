@@ -40,7 +40,6 @@ import { UserListResponse } from '../../../../../models/user';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ListingApprovals {
-  readonly highlightedId = input<string | null>(null);
   readonly data = input.required<ListingRequestResponse[]>();
   readonly users = input.required<UserListResponse[]>();
   readonly isLoading = input.required<boolean>();
@@ -138,9 +137,5 @@ export class ListingApprovals {
         this.toast.success('User ID copied to clipboard');
       });
     }
-  }
-
-  isHighlighted(id: string): boolean {
-    return this.highlightedId() === id;
   }
 }

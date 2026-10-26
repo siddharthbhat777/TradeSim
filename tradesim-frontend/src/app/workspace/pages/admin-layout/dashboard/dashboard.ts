@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
 import { Card } from '../../../../shared/components/card/card';
 import { Badge } from '../../../../shared/components/badge/badge';
 import { Table, TableColumn, TableCellDirective } from '../../../../shared/components/table/table';
@@ -12,7 +11,6 @@ import { Dropdown, DropdownOption } from '../../../../shared/components/dropdown
 import { CandlestickChart, CandlestickData } from '../../../../shared/components/charts/candlestick-chart/candlestick-chart';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { Button } from '../../../../shared/components/button/button';
-
 import { ExchangeService } from '../../../../services/exchange/exchange-service';
 import { MarketIndexService } from '../../../../services/market-index/market-index-service';
 import { UserService } from '../../../../services/user/user-service';
@@ -20,7 +18,6 @@ import { CompanyService } from '../../../../services/company/company-service';
 import { IpoService } from '../../../../services/ipo/ipo-service';
 import { ListingService } from '../../../../services/listing/listing-service';
 import { WalletService } from '../../../../services/wallet/wallet-service';
-
 import { Exchange } from '../../../../models/exchange';
 import { MarketIndex } from '../../../../models/market-index';
 

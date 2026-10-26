@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, PLATFORM_
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { take } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { SegmentedControl, SegmentOption } from '../../../../shared/components/segmented-control/segmented-control';
 import { ListingApprovals } from './listing-approvals/listing-approvals';
@@ -44,7 +43,6 @@ export class Approvals implements OnInit {
   private readonly userService = inject(UserService);
 
   readonly isMobile = signal(false);
-  readonly highlightedId = signal<string | null>(null);
 
   readonly listings = signal<ListingRequestResponse[]>([]);
   readonly iposPending = signal<IpoOfferResponse[]>([]);
@@ -83,28 +81,12 @@ export class Approvals implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.queryParams.pipe(take(1)).subscribe(params => {
-      let hasParams = false;
-
+    this.route.queryParams.subscribe(params => {
       if (params['type']) {
         const type = params['type'] as ApprovalTab;
         if (['Listing', 'IPO', 'Wallet'].includes(type)) {
           this.tabControl.setValue(type);
         }
-        hasParams = true;
-      }
-
-      if (params['id']) {
-        this.highlightedId.set(params['id']);
-        hasParams = true;
-      }
-
-      if (hasParams) {
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: {},
-          replaceUrl: true
-        });
       }
     });
 
@@ -132,6 +114,13 @@ export class Approvals implements OnInit {
         this.wallets.set(wallets);
         this.users.set(users);
         this.isLoading.set(false);
+
+        const typeParam = this.route.snapshot.queryParamMap.get('type') as ApprovalTab;
+        if (typeParam && ['Listing', 'IPO', 'Wallet'].includes(typeParam)) {
+          setTimeout(() => {
+            this.tabControl.setValue(typeParam);
+          }, 0);
+        }
       },
       error: () => {
         this.isLoading.set(false);

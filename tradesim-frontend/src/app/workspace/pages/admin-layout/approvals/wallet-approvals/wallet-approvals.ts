@@ -40,7 +40,6 @@ import { TimeAgoPipe } from '../../../../../shared/pipes/time-ago-pipe';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WalletApprovals {
-  readonly highlightedId = input<string | null>(null);
   readonly data = input.required<Wallet[]>();
   readonly users = input.required<UserListResponse[]>();
   readonly isLoading = input.required<boolean>();
@@ -134,9 +133,5 @@ export class WalletApprovals {
         this.toast.success('User ID copied to clipboard');
       });
     }
-  }
-
-  isHighlighted(id: string): boolean {
-    return this.highlightedId() === id;
   }
 }

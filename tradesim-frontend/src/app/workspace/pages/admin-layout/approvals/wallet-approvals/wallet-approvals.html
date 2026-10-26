@@ -15,8 +15,8 @@
 <app-card class="approval-card">
     <app-table variant="flush" [columns]="columns()" [data]="data()" [paginated]="true">
 
-        <ng-template tableCell="userId" let-val let-row="row">
-            <div class="id-cell-wrapper" [class.highlight]="isHighlighted(row.id)">
+        <ng-template tableCell="userId" let-val>
+            <div class="id-cell-wrapper">
                 <span class="font-mono text-muted text-sm">{{ val | slice:0:8 }}...</span>
                 <button type="button" class="copy-btn" (click)="copyId(val)" aria-label="Copy User ID">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

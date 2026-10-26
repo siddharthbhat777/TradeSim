@@ -42,7 +42,6 @@ import { IpoOfferResponse } from '../../../../../models/ipo';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class IpoApprovals {
-  readonly highlightedId = input<string | null>(null);
   readonly pendingData = input.required<IpoOfferResponse[]>();
   readonly readyData = input.required<IpoOfferResponse[]>();
   readonly isLoading = input.required<boolean>();
@@ -161,9 +160,5 @@ export class IpoApprovals {
       },
       error: () => this.isProcessing.set(false)
     });
-  }
-
-  isHighlighted(id: string): boolean {
-    return this.highlightedId() === id;
   }
 }
