@@ -206,12 +206,16 @@ export class Dashboard implements OnInit {
             entityName: i.symbol,
             submittedAt: i.createdAt
           })),
-          ...pendingWallets.map(w => ({
-            id: w.id,
-            type: 'Wallet' as const,
-            entityName: `User ID: ${w.userId}`,
-            submittedAt: w.createdAt || now
-          }))
+          ...pendingWallets.map(w => {
+            const matchedUser = users.find(u => u.id === w.userId);
+            const displayName = matchedUser ? matchedUser.fullName : `User ID: ${w.userId}`;
+            return {
+              id: w.id,
+              type: 'Wallet' as const,
+              entityName: `${displayName} (Wallet Upgrade)`,
+              submittedAt: w.createdAt || now
+            };
+          })
         ];
 
         actions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
