@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,7 @@ import { AuthService } from '../services/auth/auth-service';
 import { DialogService } from '../shared/components/dialog/dialog.service';
 import { CompanyService } from '../services/company/company-service';
 import { UserService } from '../services/user/user-service';
+import { DataSyncService } from '../services/data-sync/data-sync-service';
 import { Role } from '../constants/auth';
 import { CompanyResponse } from '../models/company';
 import { UserProfile } from '../models/user';
@@ -56,11 +57,12 @@ const ADMIN_MENU: NavItem[] = [
   styleUrl: './workspace.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Workspace implements OnInit {
+export class Workspace implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private dialogService = inject(DialogService);
   private companyService = inject(CompanyService);
+  private dataSyncService = inject(DataSyncService);
   private router = inject(Router);
 
   readonly isCollapsed = signal(false);
@@ -128,8 +130,16 @@ export class Workspace implements OnInit {
         } else {
           this.syncStateWithUrl();
         }
+
+        if (profile.role === Role.admin) {
+          this.dataSyncService.connect();
+        }
       });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.dataSyncService.disconnect();
   }
 
   private syncStateWithUrl(): void {

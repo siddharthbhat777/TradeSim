@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Card } from '../../../../shared/components/card/card';
@@ -18,6 +19,7 @@ import { CompanyService } from '../../../../services/company/company-service';
 import { IpoService } from '../../../../services/ipo/ipo-service';
 import { ListingService } from '../../../../services/listing/listing-service';
 import { WalletService } from '../../../../services/wallet/wallet-service';
+import { DataSyncService } from '../../../../services/data-sync/data-sync-service';
 import { Exchange } from '../../../../models/exchange';
 import { MarketIndex } from '../../../../models/market-index';
 
@@ -63,6 +65,9 @@ export class Dashboard implements OnInit {
   private readonly ipoService = inject(IpoService);
   private readonly listingService = inject(ListingService);
   private readonly walletService = inject(WalletService);
+  private readonly dataSync = inject(DataSyncService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly stats = signal<DashboardStats | null>(null);
 
@@ -124,6 +129,12 @@ export class Dashboard implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboardData();
+
+    this.dataSync.syncEvents$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
+      if (event.type === 'WALLET_UPDATE') {
+        this.loadDashboardData();
+      }
+    });
   }
 
   onExchangeChange(val: string | null): void {
@@ -220,6 +231,8 @@ export class Dashboard implements OnInit {
 
         actions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
         this.pendingActions.set(actions.slice(0, 5));
+
+        this.cdr.markForCheck();
       }
     });
   }
@@ -233,6 +246,7 @@ export class Dashboard implements OnInit {
         } else {
           this.selectedIndexId.set(null);
         }
+        this.cdr.markForCheck();
       }
     });
   }

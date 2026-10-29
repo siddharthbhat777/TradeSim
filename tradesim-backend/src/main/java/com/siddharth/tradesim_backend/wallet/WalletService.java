@@ -18,6 +18,7 @@ import com.siddharth.tradesim_backend.wallet.repository.WalletBucketRepository;
 import com.siddharth.tradesim_backend.wallet.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ public class WalletService {
     private final ForexService forexService;
     private final FxFeeService fxFeeService;
     private final LedgerService ledgerService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public void createWalletForUser(UUID userId, String baseCurrency) {
@@ -161,8 +163,11 @@ public class WalletService {
 
         wallet.setMultiCurrencyStatus(MultiCurrencyStatus.PENDING);
         wallet.setRejectionReason(null);
-        walletRepository.save(wallet);
-        return toResponse(wallet);
+        Wallet savedWallet = walletRepository.save(wallet);
+
+        messagingTemplate.convertAndSend("/topic/admin-sync", "{\"type\": \"WALLET_UPDATE\"}");
+
+        return toResponse(savedWallet);
     }
 
     @Transactional(readOnly = true)

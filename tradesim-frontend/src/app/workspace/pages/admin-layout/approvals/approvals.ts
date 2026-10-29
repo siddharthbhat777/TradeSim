@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, PLATFORM_ID, signal, DestroyRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 import { SegmentedControl, SegmentOption } from '../../../../shared/components/segmented-control/segmented-control';
 import { ListingApprovals } from './listing-approvals/listing-approvals';
@@ -11,6 +12,7 @@ import { ListingService } from '../../../../services/listing/listing-service';
 import { IpoService } from '../../../../services/ipo/ipo-service';
 import { WalletService } from '../../../../services/wallet/wallet-service';
 import { UserService } from '../../../../services/user/user-service';
+import { DataSyncService } from '../../../../services/data-sync/data-sync-service';
 import { ListingRequestResponse } from '../../../../models/listing';
 import { IpoOfferResponse } from '../../../../models/ipo';
 import { Wallet } from '../../../../models/wallet';
@@ -36,11 +38,13 @@ export class Approvals implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly listingService = inject(ListingService);
   private readonly ipoService = inject(IpoService);
   private readonly walletService = inject(WalletService);
   private readonly userService = inject(UserService);
+  private readonly dataSyncService = inject(DataSyncService);
 
   readonly isMobile = signal(false);
 
@@ -81,7 +85,7 @@ export class Approvals implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       if (params['type']) {
         const type = params['type'] as ApprovalTab;
         if (['Listing', 'IPO', 'Wallet'].includes(type)) {
@@ -91,6 +95,12 @@ export class Approvals implements OnInit {
     });
 
     this.loadData();
+
+    this.dataSyncService.syncEvents$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
+      if (event.type === 'WALLET_UPDATE') {
+        this.loadData();
+      }
+    });
   }
 
   private loadData(): void {
