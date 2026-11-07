@@ -3,6 +3,7 @@ package com.siddharth.tradesim_backend.config;
 import com.siddharth.tradesim_backend.auth.service.CustomizeUserDetailsService;
 import com.siddharth.tradesim_backend.auth.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -44,8 +45,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
             @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+            public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                assert accessor != null;
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
