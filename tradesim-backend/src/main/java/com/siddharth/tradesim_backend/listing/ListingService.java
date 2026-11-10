@@ -24,6 +24,7 @@ import com.siddharth.tradesim_backend.stock.enums.StockStatus;
 import com.siddharth.tradesim_backend.stock.model.dto.StockResponse;
 import com.siddharth.tradesim_backend.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ public class ListingService {
     private final CompanyRepresentativeAssignmentRepository assignmentRepository;
     private final StockService stockService;
     private final PositionRepository positionRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public ListingRequestResponse submitListingRequest(UUID companyId, UUID actingUserId, CreateListingRequest request) {
@@ -105,6 +107,11 @@ public class ListingService {
         }
 
         ListingRequest saved = listingRequestRepository.save(listingRequest);
+
+        if (saved.getStatus() == ListingStatus.PENDING_EXCHANGE_APPROVAL) {
+            messagingTemplate.convertAndSend("/topic/admin-sync", "{\"type\": \"LISTING_UPDATE\"}");
+        }
+
         return toResponse(saved);
     }
 
@@ -143,7 +150,11 @@ public class ListingService {
         companyRepresentativeAssignmentService.assertPrimaryContactAssignment(listingRequest.getCompanyId(), actingUserId);
 
         listingRequest.setStatus(ListingStatus.PENDING_EXCHANGE_APPROVAL);
-        return toResponse(listingRequestRepository.save(listingRequest));
+        ListingRequest saved = listingRequestRepository.save(listingRequest);
+
+        messagingTemplate.convertAndSend("/topic/admin-sync", "{\"type\": \"LISTING_UPDATE\"}");
+
+        return toResponse(saved);
     }
 
     @Transactional

@@ -39,6 +39,7 @@ import com.siddharth.tradesim_backend.wallet.model.Wallet;
 import com.siddharth.tradesim_backend.wallet.model.WalletBucket;
 import com.siddharth.tradesim_backend.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +65,7 @@ public class IpoService {
     private final ExchangeRepository exchangeRepository;
     private final ForexService forexService;
     private final FxFeeService fxFeeService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public IpoOfferResponse submitIpoOffer(UUID companyId, UUID stockId, UUID actingUserId, CreateIpoOfferRequest request) {
@@ -94,6 +96,9 @@ public class IpoService {
                 .build();
 
         IpoOffer saved = ipoOfferRepository.save(ipoOffer);
+
+        messagingTemplate.convertAndSend("/topic/admin-sync", "{\"type\": \"IPO_UPDATE\"}");
+
         return toOfferResponse(saved);
     }
 

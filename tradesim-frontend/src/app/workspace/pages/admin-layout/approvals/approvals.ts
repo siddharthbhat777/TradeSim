@@ -97,7 +97,7 @@ export class Approvals implements OnInit {
     this.loadData();
 
     this.dataSyncService.syncEvents$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
-      if (event.type === 'WALLET_UPDATE') {
+      if (['WALLET_UPDATE', 'LISTING_UPDATE', 'IPO_UPDATE'].includes(event.type)) {
         this.loadData();
       }
     });

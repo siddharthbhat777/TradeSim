@@ -131,7 +131,7 @@ export class Dashboard implements OnInit {
     this.loadDashboardData();
 
     this.dataSync.syncEvents$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
-      if (event.type === 'WALLET_UPDATE') {
+      if (['WALLET_UPDATE', 'LISTING_UPDATE', 'IPO_UPDATE'].includes(event.type)) {
         this.loadDashboardData();
       }
     });
